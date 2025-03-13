@@ -25,15 +25,16 @@ jobs:
           echo "VULKAN_SDK=C:/vulkan-sdk" >> $GITHUB_ENV
           echo "PATH=$VULKAN_SDK/bin:$PATH" >> $GITHUB_ENV
 
-      # - name: Cache Vulkan SDK
-      #   uses: actions/cache@v2
-      #   with:
-      #     path: C:/vulkan-sdk
-      #     key: ${{ runner.os }}-vulkan-sdk-${{ hashFiles('**/*.cpp') }}
-
-      - name: Build project
+      - name: Build project (Release)
         run: |
           mkdir build
           cd build
           cmake -G "Visual Studio 17 2022" -DVULKAN_SDK=$VULKAN_SDK ..
           cmake --build . --config Release
+
+      - name: Build project (Debug)
+        run: |
+          mkdir build-debug
+          cd build-debug
+          cmake -G "Visual Studio 17 2022" -DVULKAN_SDK=$VULKAN_SDK -DCMAKE_BUILD_TYPE=Debug ..
+          cmake --build . --config Debug
