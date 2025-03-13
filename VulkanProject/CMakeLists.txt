@@ -16,3 +16,5 @@ target_link_libraries(${EXECUTABLE_NAME}
         Libs           # Aggregated target from Libs folder (GLFW, GLM, etc.)
         Vulkan::Vulkan # Vulkan SDK (ensure it is installed and found)
 )
+
+target_compile_features(${EXECUTABLE_NAME} PUBLIC cxx_std_20)
