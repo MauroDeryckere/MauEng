@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.6)
+cmake_minimum_required(VERSION 3.27)
 
 # Create the executable target
 add_executable(${EXECUTABLE_NAME}

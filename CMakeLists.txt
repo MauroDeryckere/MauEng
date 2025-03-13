@@ -26,7 +26,7 @@ endif()
 # @REGION SOURCE FILES & LIBRARIES
 
 # Include sub-projects.
-add_subdirectory ("Libs" EXCLUDE_FROM_ALL)
+add_subdirectory ("Libs")
 message(STATUS "Libs dir created! ")
 add_subdirectory ("VulkanProject")
 message(STATUS "VulkanProject created! ")

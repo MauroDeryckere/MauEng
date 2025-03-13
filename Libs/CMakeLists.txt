@@ -1,6 +1,6 @@
 # Add sub directories for any third party libraries
 
-cmake_minimum_required(VERSION 3.6)
+cmake_minimum_required(VERSION 3.27)
 project(Libs)
 
 add_library(Libs INTERFACE)
