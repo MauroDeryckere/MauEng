@@ -1,0 +1,33 @@
+name: Windows Build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Install Vulkan SDK
+      run: choco install vulkan-sdk --yes
+
+    - name: Add Vulkan SDK to PATH
+      run: |
+        echo "VULKAN_SDK=$Env:VULKAN_SDK" >> $env:GITHUB_ENV
+        echo "$Env:VULKAN_SDK\Bin" >> $env:GITHUB_PATH
+        echo "$Env:VULKAN_SDK\Lib" >> $env:GITHUB_PATH
+        echo "$Env:VULKAN_SDK\Include" >> $env:GITHUB_PATH
+
+    - name: Configure CMake
+      run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+
+    - name: Build
+      run: cmake --build build --config Release
