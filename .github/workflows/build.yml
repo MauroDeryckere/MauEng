@@ -18,18 +18,18 @@ jobs:
         with:
           vulkan-query-version: 1.3.296.0
           vulkan-components: Vulkan-Headers, Vulkan-Loader
-          vulkan-use-cache: true
+          vulkan-use-cache: false
 
       - name: Set environment variable for Vulkan SDK
         run: |
           echo "VULKAN_SDK=C:/vulkan-sdk" >> $GITHUB_ENV
           echo "PATH=$VULKAN_SDK/bin:$PATH" >> $GITHUB_ENV
 
-      - name: Cache Vulkan SDK
-        uses: actions/cache@v2
-        with:
-          path: C:/vulkan-sdk
-          key: ${{ runner.os }}-vulkan-sdk-${{ hashFiles('**/*.cpp') }}
+      # - name: Cache Vulkan SDK
+      #   uses: actions/cache@v2
+      #   with:
+      #     path: C:/vulkan-sdk
+      #     key: ${{ runner.os }}-vulkan-sdk-${{ hashFiles('**/*.cpp') }}
 
       - name: Build project
         run: |
