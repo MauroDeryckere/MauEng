@@ -1,29 +1,65 @@
-
-#include <glm/glm.hpp>
+#define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
-#include <iostream>
 
+#include <iostream>
+#include <stdexcept>
+#include <cassert>
+
+GLFWwindow* g_Window{ nullptr };
+
+void InitWindow()
+{
+	glfwInit();
+
+	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+
+	uint32_t constexpr WIDTH{ 800 };
+	uint32_t constexpr HEIGHT{ 600 };
+
+	g_Window = glfwCreateWindow(WIDTH, HEIGHT, "Mauro Deryckere - Vulkan Project", nullptr, nullptr);
+
+}
+
+void InitVulkan()
+{
+
+}
+
+void MainLoop()
+{
+	assert(g_Window);
+	while (!glfwWindowShouldClose(g_Window))
+	{
+		glfwPollEvents();
+	}
+}
+
+void Cleanup()
+{
+	glfwDestroyWindow(g_Window);
+	glfwTerminate();
+}
+
+void Run()
+{
+    InitWindow();
+	InitVulkan();
+    MainLoop();
+    Cleanup();
+}
 
 int main()
 {
-    glm::vec3 position(1.0f, 2.0f, 3.0f);
-    std::cout << "GLM vec3: ("
-        << position.x << ", "
-        << position.y << ", "
-        << position.z << ")\n";
-
-    // Test GLFW: initialize and terminate
-    if (!glfwInit()) {
-        std::cerr << "Failed to initialize GLFW!\n";
-        return -1;
-    }
-    std::cout << "GLFW initialized successfully.\n";
-    glfwTerminate();
-
-
-	while (true)
+	try 
 	{
-		
+		Run();
 	}
-	return 0;
+	catch (const std::exception& e) 
+	{
+		std::cerr << e.what() << std::endl;
+		return EXIT_FAILURE;
+	}
+
+	return EXIT_SUCCESS;
 }
