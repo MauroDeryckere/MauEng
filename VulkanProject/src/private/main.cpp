@@ -10,10 +10,17 @@
 #include <stdexcept>
 #include <cassert>
 #include <algorithm>
-#include <span>
+
+#include <optional>
+
+
+// globals, to be moved to the renderer in the future
 
 GLFWwindow* g_Window{ nullptr };
 VkInstance g_Instance;
+// This object will be implicitly destroyed when the VkInstance is destroyed, so we won't need to do anything new in the cleanup function.
+VkPhysicalDevice g_PhysicalDevice{ VK_NULL_HANDLE };
+
 
 VkDebugUtilsMessengerEXT g_DebugMessenger;
 
@@ -25,6 +32,7 @@ VkDebugUtilsMessengerEXT g_DebugMessenger;
 
 std::vector const VULKAN_VALIDATION_LAYERS{ "VK_LAYER_KHRONOS_validation" };
 
+bool constexpr AUTO_SELECT_PHYSICAL_DEVICE{ true };
 
 void InitWindow()
 {
@@ -40,7 +48,7 @@ void InitWindow()
 
 }
 
-static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback( VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
+[[nodiscard]] static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback( VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
 {
 	std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
 
@@ -48,7 +56,7 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback( VkDebugUtilsMessageSeverity
 }
 
 // Checks if all requested validation layers are available
-bool CheckvalidationLayerSupport()
+[[nodiscard]] bool CheckvalidationLayerSupport()
 {
 	uint32_t layerCount{ 0 };
 	vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
@@ -71,10 +79,10 @@ bool CheckvalidationLayerSupport()
 		});
 }
 
-std::vector<char const*> GetRequiredExtensions()
+[[nodiscard]] std::vector<char const*> GetRequiredExtensions()
 {
 	// Need an extension to interface with the window system
-	// GLFW returns the extensions it needs to that -> pass to struct
+	// GLFW returns the extensions it needs to do that -> pass to struct
 	uint32_t glfwExtensionCount{ 0 };
 	char const** glfwExtensions{ glfwGetRequiredInstanceExtensions(&glfwExtensionCount) };
 
@@ -89,7 +97,7 @@ std::vector<char const*> GetRequiredExtensions()
 }
 
 // Checks if all requested extensions are available
-bool CheckExtensionsSupport(uint32_t extensionCount, std::vector<char const*> const& extensions, std::vector<VkExtensionProperties> const& availableExtensions)
+[[nodiscard]] bool CheckExtensionsSupport(uint32_t extensionCount, std::vector<char const*> const& extensions, std::vector<VkExtensionProperties> const& availableExtensions)
 {
 	std::cout << "\n";
 
@@ -198,7 +206,7 @@ void CreateVulkanInstance()
 	}
 }
 
-VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerCreateInfoEXT const* pCreateInfo, VkAllocationCallbacks const* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger)
+[[nodiscard]] VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerCreateInfoEXT const* pCreateInfo, VkAllocationCallbacks const* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger)
 {
 	if (auto func{ (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT") })
 	{
@@ -207,6 +215,7 @@ VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessenger
 
 	return VK_ERROR_EXTENSION_NOT_PRESENT;
 }
+
 void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, VkAllocationCallbacks const* pAllocator)
 {
 	// ! Make sure that this function is either a static class function or a function outside the class.
@@ -231,10 +240,143 @@ void SetupDebugMessenger()
 
 }
 
+struct QueueFamilyIndices final
+{
+	std::optional<uint32_t> graphicsFamily;
+
+	[[nodiscard]] bool IsComplete() noexcept
+	{
+		return graphicsFamily.has_value();
+	}
+};
+
+[[nodiscard]] QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device)
+{
+	QueueFamilyIndices indices{};
+
+	uint32_t queueFamilyCount = 0;
+	vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
+
+	std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
+	vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
+
+	for (uint32_t i{ 0 }; i < static_cast<uint32_t>(queueFamilies.size()); ++i)
+	{
+		if (queueFamilies[i].queueFlags & VK_QUEUE_GRAPHICS_BIT)
+		{
+			indices.graphicsFamily = i;
+		}
+
+		// Temporary
+		if (indices.IsComplete())
+		{
+			break;
+		}
+	}
+	return indices;
+}
+
+// Is a physical device suitable for our application
+[[nodiscard]] bool IsPhysicalDeviceSuitable(VkPhysicalDevice device)
+{
+	QueueFamilyIndices indices{ FindQueueFamilies(device) };
+
+	VkPhysicalDeviceProperties deviceProperties;
+	vkGetPhysicalDeviceProperties(device, &deviceProperties);
+
+	VkPhysicalDeviceFeatures deviceFeatures;
+	vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
+
+	return indices.IsComplete();
+}
+
+// Give a physical device a rating to allow automatically selecting the "best" option
+[[nodiscard]] uint32_t RateDeviceSuitability(VkPhysicalDevice device)
+{
+	assert(IsPhysicalDeviceSuitable(device));
+
+	VkPhysicalDeviceProperties deviceProperties;
+	vkGetPhysicalDeviceProperties(device, &deviceProperties);
+
+	VkPhysicalDeviceFeatures deviceFeatures;
+	vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
+
+	uint32_t score{ 0 };
+	if (deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) 
+	{
+		score += 1000;
+	}
+
+	score += deviceProperties.limits.maxImageDimension2D;
+
+	return score;
+}
+
+
+// Select which physical device vulkan will use
+void SelectPhysicalDevice()
+{
+	uint32_t deviceCount{ 0 };
+	vkEnumeratePhysicalDevices(g_Instance, &deviceCount, nullptr);
+
+	if (deviceCount == 0) 
+	{
+		throw std::runtime_error("failed to find GPUs with Vulkan support!");
+	}
+
+	std::vector<VkPhysicalDevice> devices(deviceCount);
+	vkEnumeratePhysicalDevices(g_Instance, &deviceCount, devices.data());
+
+	std::cout << "\nSelecting physical device.\n";
+
+	// Automatically select best option
+	uint32_t bestScore{ 0 };
+	if constexpr (AUTO_SELECT_PHYSICAL_DEVICE)
+	{
+		std::cout << "Available Vulkan physical devices:\n";
+
+		for (auto const& device : devices)
+		{
+			if (IsPhysicalDeviceSuitable(device))
+			{
+				VkPhysicalDeviceProperties props;
+				vkGetPhysicalDeviceProperties(device, &props);
+
+				std::cout << "\t" << props.deviceName << "\n";
+
+
+				auto const score{ RateDeviceSuitability(device) };
+				if (score > bestScore)
+				{
+					bestScore = score;
+					g_PhysicalDevice = device;
+				}
+			}
+		}
+
+		if (g_PhysicalDevice == VK_NULL_HANDLE)
+		{
+			throw std::runtime_error("failed to find a suitable GPU!");
+		}
+
+		VkPhysicalDeviceProperties selectedProps;
+		vkGetPhysicalDeviceProperties(g_PhysicalDevice, &selectedProps);
+		std::cout << "\nSelected GPU: " << selectedProps.deviceName << " (score: " << bestScore << ")\n";
+	}
+
+	// TODO
+	// Allow user to manually select 
+	else
+	{
+		throw std::runtime_error("Manual GPU selection currently not supported! ");
+	}
+}
+
 void InitVulkan()
 {
 	CreateVulkanInstance();
 	SetupDebugMessenger();
+	SelectPhysicalDevice();
 }
 
 void MainLoop()
