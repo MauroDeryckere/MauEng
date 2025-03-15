@@ -1,3 +1,7 @@
+/* Sources
+ * https://vulkan-tutorial.com/Introduction
+ */
+
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
@@ -10,6 +14,15 @@
 
 GLFWwindow* g_Window{ nullptr };
 VkInstance g_Instance;
+
+#ifdef NDEBUG
+	bool constexpr ENABLE_VULKAN_VALIDATION_LAYERS{ false };
+#else
+	bool constexpr ENABLE_VULKAN_VALIDATION_LAYERS{ true  };
+#endif
+
+std::vector const VULKAN_VALIDATION_LAYERS{ "VK_LAYER_KHRONOS_validation" };
+
 
 void InitWindow()
 {
@@ -25,25 +38,64 @@ void InitWindow()
 
 }
 
+// Checks if all requested validation layers are available
+bool CheckvalidationLayerSupport()
+{
+	uint32_t layerCount{ 0 };
+	vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
+
+	std::vector<VkLayerProperties> availableLayers(layerCount);
+	vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
+
+	std::cout << "\n";
+
+	return std::ranges::all_of(VULKAN_VALIDATION_LAYERS, [&](std::string_view layerName)
+		{
+			if (std::ranges::any_of(availableLayers, [&](const VkLayerProperties& props) { return layerName == props.layerName; }))
+			{
+				std::cout << "Required validation layer \"" << layerName << "\" is supported.\n";
+				return true;
+			}
+
+			std::cerr << "Required validation layer \"" << layerName << "\" is not supported.\n";
+			return false;
+		});
+}
+
+// Checks if all requested extensions are available
 bool CheckExtensionsSupport(uint32_t glfwExtensionCount, char const** glfwExtensions, std::vector<VkExtensionProperties> const& availableExtensions)
 {
 	std::span requiredExtensions(glfwExtensions, glfwExtensionCount);
+
+	std::cout << "\n";
 
 	return std::ranges::all_of(requiredExtensions, [&](std::string_view ext) 
 			{
 				if (std::ranges::any_of(availableExtensions, [ext](const VkExtensionProperties& availableExt){ return ext == availableExt.extensionName; }))
 				{
-					std::cerr << "Required extension \"" << ext << "\" is supported.\n";
+					std::cout << "Required extension \"" << ext << "\" is supported.\n";
 					return true;
 				}
 
-				std::cout << "Required extension \"" << ext << "\" is not supported.\n";
+				std::cerr << "Required extension \"" << ext << "\" is not supported.\n";
 				return false;
 			});
 }
 
 void CreateVulkanInstance()
 {
+	if (ENABLE_VULKAN_VALIDATION_LAYERS)
+	{
+		if (CheckvalidationLayerSupport())
+		{
+			std::cout << "All required validation layers are supported.\n";
+		}
+		else
+		{
+			throw std::runtime_error("validation layers requested, but not available!");
+		}
+	}
+
 	VkApplicationInfo appInfo{};
 	appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
 	appInfo.pApplicationName = "Mauro Deryckere - Vulkan Project";
@@ -81,11 +133,16 @@ void CreateVulkanInstance()
 	createInfo.enabledExtensionCount = glfwExtensionCount;
 	createInfo.ppEnabledExtensionNames = glfwExtensions;
 
-	// TODO
-	// The last two members of the struct determine the global validation layers to enable.
-	// We'll talk about these more in-depth in the next chapter, so just leave these empty for now
-
-	createInfo.enabledLayerCount = 0; // No validation layers for now
+	// Setup validation layers (in debug mode)
+	if constexpr (ENABLE_VULKAN_VALIDATION_LAYERS) 
+	{
+		createInfo.enabledLayerCount = static_cast<uint32_t>(VULKAN_VALIDATION_LAYERS.size());
+		createInfo.ppEnabledLayerNames = VULKAN_VALIDATION_LAYERS.data();
+	}
+	else 
+	{
+		createInfo.enabledLayerCount = 0;
+	}
 
 	if (!CheckExtensionsSupport(glfwExtensionCount, glfwExtensions, availableExtensions))
 	{
