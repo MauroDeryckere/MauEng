@@ -32,7 +32,7 @@ VkDebugUtilsMessengerEXT g_DebugMessenger;
 
 std::vector const VULKAN_VALIDATION_LAYERS{ "VK_LAYER_KHRONOS_validation" };
 
-bool constexpr AUTO_SELECT_PHYSICAL_DEVICE{ true };
+bool constexpr AUTO_SELECT_PHYSICAL_DEVICE{ false };
 
 void InitWindow()
 {
@@ -368,7 +368,39 @@ void SelectPhysicalDevice()
 	// Allow user to manually select 
 	else
 	{
-		throw std::runtime_error("Manual GPU selection currently not supported! ");
+		// Pair<Device, score>
+		std::vector<std::pair<VkPhysicalDevice, uint32_t>> selectableDevices{};
+		std::cout << "Available Vulkan physical devices:\n";
+
+		for (auto const& device : devices)
+		{
+			if (IsPhysicalDeviceSuitable(device))
+			{
+				auto const score{ RateDeviceSuitability(device) };
+				selectableDevices.emplace_back(device, score);
+
+				VkPhysicalDeviceProperties props;
+				vkGetPhysicalDeviceProperties(device, &props);
+
+				std::cout << selectableDevices.size() - 1 << "\t" << props.deviceName << " score: " << score << ")\n";
+			}
+		}
+
+		if (selectableDevices.empty())
+		{
+			throw std::runtime_error("failed to find a suitable GPU!");
+		}
+
+		int selectedIndex = -1;
+		std::cout << "\nEnter the index of the GPU to use: ";
+		std::cin >> selectedIndex;
+
+		selectedIndex = std::clamp(selectedIndex, 0, static_cast<int>(selectableDevices.size()));
+
+		g_PhysicalDevice = selectableDevices[selectedIndex].first;
+		VkPhysicalDeviceProperties selectedProps;
+		vkGetPhysicalDeviceProperties(g_PhysicalDevice, &selectedProps);
+		std::cout << "Selected GPU: " << selectedProps.deviceName << "\n";
 	}
 }
 
