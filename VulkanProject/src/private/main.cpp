@@ -21,6 +21,10 @@ VkInstance g_Instance;
 // This object will be implicitly destroyed when the VkInstance is destroyed, so we won't need to do anything new in the cleanup function.
 VkPhysicalDevice g_PhysicalDevice{ VK_NULL_HANDLE };
 
+VkDevice g_LogicalDevice;
+
+// Device queues are implicitly cleaned up when the device is destroyed, so we don't need to do anything in cleanup.
+VkQueue g_GraphicsQueue;
 
 VkDebugUtilsMessengerEXT g_DebugMessenger;
 
@@ -32,7 +36,7 @@ VkDebugUtilsMessengerEXT g_DebugMessenger;
 
 std::vector const VULKAN_VALIDATION_LAYERS{ "VK_LAYER_KHRONOS_validation" };
 
-bool constexpr AUTO_SELECT_PHYSICAL_DEVICE{ false };
+bool constexpr AUTO_SELECT_PHYSICAL_DEVICE{ true };
 
 void InitWindow()
 {
@@ -244,7 +248,7 @@ struct QueueFamilyIndices final
 {
 	std::optional<uint32_t> graphicsFamily;
 
-	[[nodiscard]] bool IsComplete() noexcept
+	[[nodiscard]] bool IsComplete() const noexcept
 	{
 		return graphicsFamily.has_value();
 	}
@@ -404,11 +408,57 @@ void SelectPhysicalDevice()
 	}
 }
 
+void CreateLogicalDevice()
+{
+	QueueFamilyIndices const indices{ FindQueueFamilies(g_PhysicalDevice) };
+	assert(indices.IsComplete());
+
+	// This structure describes the number of queues we want for a single queue family. Right now we're only interested in a queue with graphics capabilities.
+	VkDeviceQueueCreateInfo queueCreateInfo{};
+	queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+	queueCreateInfo.queueFamilyIndex = indices.graphicsFamily.value();
+	queueCreateInfo.queueCount = 1;
+
+	float constexpr queuePriority{ 1.0f };
+	queueCreateInfo.pQueuePriorities = &queuePriority;
+
+	// TODO
+	VkPhysicalDeviceFeatures deviceFeatures{};
+
+	VkDeviceCreateInfo createInfo{};
+	createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+
+	createInfo.pQueueCreateInfos = &queueCreateInfo;
+	createInfo.queueCreateInfoCount = 1;
+
+	createInfo.pEnabledFeatures = &deviceFeatures;
+
+	createInfo.enabledExtensionCount = 0;
+
+	if constexpr (ENABLE_VULKAN_VALIDATION_LAYERS) 
+	{
+		createInfo.enabledLayerCount = static_cast<uint32_t>(VULKAN_VALIDATION_LAYERS.size());
+		createInfo.ppEnabledLayerNames = VULKAN_VALIDATION_LAYERS.data();
+	}
+	else 
+	{
+		createInfo.enabledLayerCount = 0;
+	}
+
+	if (vkCreateDevice(g_PhysicalDevice, &createInfo, nullptr, &g_LogicalDevice) != VK_SUCCESS) 
+	{
+		throw std::runtime_error("failed to create logical device!");
+	}
+
+	vkGetDeviceQueue(g_LogicalDevice, indices.graphicsFamily.value(), 0, &g_GraphicsQueue);
+}
+
 void InitVulkan()
 {
 	CreateVulkanInstance();
 	SetupDebugMessenger();
 	SelectPhysicalDevice();
+	CreateLogicalDevice();
 }
 
 void MainLoop()
@@ -422,6 +472,8 @@ void MainLoop()
 
 void Cleanup()
 {
+	vkDestroyDevice(g_LogicalDevice, nullptr);
+
 	if constexpr (ENABLE_VULKAN_VALIDATION_LAYERS) 
 	{
 		DestroyDebugUtilsMessengerEXT(g_Instance, g_DebugMessenger, nullptr);
