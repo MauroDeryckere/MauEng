@@ -13,6 +13,7 @@
 
 #include <optional>
 
+#include <set>
 
 // globals, to be moved to the renderer in the future
 
@@ -25,8 +26,18 @@ VkDevice g_LogicalDevice;
 
 // Device queues are implicitly cleaned up when the device is destroyed, so we don't need to do anything in cleanup.
 VkQueue g_GraphicsQueue;
+VkQueue g_PresentQueue;
+
+// Using a unified queue may result in less overhead and a performance boost
+bool constexpr FORCE_SEPARATE_GRAPHICS_PRESENT_QUEUES{ true };
+
+bool g_IsUsingUnifiedGraphicsPresentQueue{ false };
+VkQueue g_UnifiedGraphicsPresentQueue;
+
 
 VkDebugUtilsMessengerEXT g_DebugMessenger;
+
+VkSurfaceKHR g_WindowSurface;
 
 #ifdef NDEBUG
 	bool constexpr ENABLE_VULKAN_VALIDATION_LAYERS{ false };
@@ -37,6 +48,59 @@ VkDebugUtilsMessengerEXT g_DebugMessenger;
 std::vector const VULKAN_VALIDATION_LAYERS{ "VK_LAYER_KHRONOS_validation" };
 
 bool constexpr AUTO_SELECT_PHYSICAL_DEVICE{ true };
+
+struct QueueFamilyIndices final
+{
+	std::optional<uint32_t> graphicsFamily;
+	std::optional<uint32_t> presentFamily;
+
+	[[nodiscard]] bool IsComplete() const noexcept
+	{
+		return graphicsFamily.has_value() and presentFamily.has_value();
+	}
+
+	[[nodiscard]] bool IsGraphicsPresentUnified() const noexcept
+	{
+		return (graphicsFamily.has_value() and presentFamily.has_value())
+			and graphicsFamily.value() == presentFamily.value();
+	}
+};
+
+[[nodiscard]] QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device)
+{
+	QueueFamilyIndices indices{};
+
+	uint32_t queueFamilyCount = 0;
+	vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
+
+	std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
+	vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
+
+
+	for (uint32_t i{ 0 }; i < static_cast<uint32_t>(queueFamilies.size()); ++i)
+	{
+		VkBool32 presentSupport{ false };
+		vkGetPhysicalDeviceSurfaceSupportKHR(device, i, g_WindowSurface, &presentSupport);
+
+		if (presentSupport) 
+		{
+			indices.presentFamily = i;
+		}
+
+		if (queueFamilies[i].queueFlags & VK_QUEUE_GRAPHICS_BIT)
+		{
+			indices.graphicsFamily = i;
+		}
+
+		// Temporary
+		if (indices.IsComplete())
+		{
+			break;
+		}
+	}
+	return indices;
+}
+
 
 void InitWindow()
 {
@@ -244,46 +308,10 @@ void SetupDebugMessenger()
 
 }
 
-struct QueueFamilyIndices final
-{
-	std::optional<uint32_t> graphicsFamily;
-
-	[[nodiscard]] bool IsComplete() const noexcept
-	{
-		return graphicsFamily.has_value();
-	}
-};
-
-[[nodiscard]] QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device)
-{
-	QueueFamilyIndices indices{};
-
-	uint32_t queueFamilyCount = 0;
-	vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
-
-	std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
-	vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
-
-	for (uint32_t i{ 0 }; i < static_cast<uint32_t>(queueFamilies.size()); ++i)
-	{
-		if (queueFamilies[i].queueFlags & VK_QUEUE_GRAPHICS_BIT)
-		{
-			indices.graphicsFamily = i;
-		}
-
-		// Temporary
-		if (indices.IsComplete())
-		{
-			break;
-		}
-	}
-	return indices;
-}
-
 // Is a physical device suitable for our application
 [[nodiscard]] bool IsPhysicalDeviceSuitable(VkPhysicalDevice device)
 {
-	QueueFamilyIndices indices{ FindQueueFamilies(device) };
+	QueueFamilyIndices const indices{ FindQueueFamilies(device) };
 
 	VkPhysicalDeviceProperties deviceProperties;
 	vkGetPhysicalDeviceProperties(device, &deviceProperties);
@@ -297,6 +325,8 @@ struct QueueFamilyIndices final
 // Give a physical device a rating to allow automatically selecting the "best" option
 [[nodiscard]] uint32_t RateDeviceSuitability(VkPhysicalDevice device)
 {
+	QueueFamilyIndices const indices{ FindQueueFamilies(device) };
+
 	assert(IsPhysicalDeviceSuitable(device));
 
 	VkPhysicalDeviceProperties deviceProperties;
@@ -312,6 +342,12 @@ struct QueueFamilyIndices final
 	}
 
 	score += deviceProperties.limits.maxImageDimension2D;
+
+	// Prefer devices with unified graphics & present queue family
+	if (indices.IsGraphicsPresentUnified())
+	{
+		score += 500;
+	}
 
 	return score;
 }
@@ -368,7 +404,6 @@ void SelectPhysicalDevice()
 		std::cout << "\nSelected GPU: " << selectedProps.deviceName << " (score: " << bestScore << ")\n";
 	}
 
-	// TODO
 	// Allow user to manually select 
 	else
 	{
@@ -413,23 +448,32 @@ void CreateLogicalDevice()
 	QueueFamilyIndices const indices{ FindQueueFamilies(g_PhysicalDevice) };
 	assert(indices.IsComplete());
 
-	// This structure describes the number of queues we want for a single queue family. Right now we're only interested in a queue with graphics capabilities.
-	VkDeviceQueueCreateInfo queueCreateInfo{};
-	queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-	queueCreateInfo.queueFamilyIndex = indices.graphicsFamily.value();
-	queueCreateInfo.queueCount = 1;
+	std::set<uint32_t> uniqueQueueFamilies;
+
+	uniqueQueueFamilies.insert(indices.graphicsFamily.value());
+	uniqueQueueFamilies.insert(indices.presentFamily.value());
 
 	float constexpr queuePriority{ 1.0f };
-	queueCreateInfo.pQueuePriorities = &queuePriority;
 
-	// TODO
+	std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
+	for (auto const queueFamily : uniqueQueueFamilies) 
+	{
+		VkDeviceQueueCreateInfo queueCreateInfo{};
+		queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+		queueCreateInfo.queueFamilyIndex = queueFamily;
+		queueCreateInfo.queueCount = 1;
+		queueCreateInfo.pQueuePriorities = &queuePriority;
+		queueCreateInfos.emplace_back(queueCreateInfo);
+	}
+
+	// TODO Enable Vulkan device features -not necessary currenrly 
 	VkPhysicalDeviceFeatures deviceFeatures{};
 
 	VkDeviceCreateInfo createInfo{};
 	createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 
-	createInfo.pQueueCreateInfos = &queueCreateInfo;
-	createInfo.queueCreateInfoCount = 1;
+	createInfo.pQueueCreateInfos = queueCreateInfos.data();
+	createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size()); // Since it's a set, only the unique amt of families are added.
 
 	createInfo.pEnabledFeatures = &deviceFeatures;
 
@@ -447,16 +491,50 @@ void CreateLogicalDevice()
 
 	if (vkCreateDevice(g_PhysicalDevice, &createInfo, nullptr, &g_LogicalDevice) != VK_SUCCESS) 
 	{
-		throw std::runtime_error("failed to create logical device!");
+		throw std::runtime_error("Failed to create logical device!");
 	}
 
-	vkGetDeviceQueue(g_LogicalDevice, indices.graphicsFamily.value(), 0, &g_GraphicsQueue);
+	if constexpr (not FORCE_SEPARATE_GRAPHICS_PRESENT_QUEUES)
+	{
+		// If the families are the same (unified), we can just use one queue for both
+		if (indices.IsGraphicsPresentUnified())
+		{
+			std::cout << "\nLog: Using unified graphics & present queue \n";
+
+			g_IsUsingUnifiedGraphicsPresentQueue = true;
+
+			vkGetDeviceQueue(g_LogicalDevice, indices.graphicsFamily.value(), 0, &g_UnifiedGraphicsPresentQueue);
+		}
+		else
+		{
+			std::cout << "\nLog: Using separate graphics & present queue \n";
+
+			vkGetDeviceQueue(g_LogicalDevice, indices.graphicsFamily.value(), 0, &g_GraphicsQueue);
+			vkGetDeviceQueue(g_LogicalDevice, indices.presentFamily.value(), 0, &g_PresentQueue);
+		}
+	}
+	else
+	{
+		std::cout << "\nLog: Using separate graphics & present queue \n";
+
+		vkGetDeviceQueue(g_LogicalDevice, indices.graphicsFamily.value(), 0, &g_GraphicsQueue);
+		vkGetDeviceQueue(g_LogicalDevice, indices.presentFamily.value(), 0, &g_PresentQueue);
+	}
+}
+
+void CreateWindowSurface()
+{
+	if (glfwCreateWindowSurface(g_Instance, g_Window, nullptr, &g_WindowSurface) != VK_SUCCESS) 
+	{
+		throw std::runtime_error("Failed to create window surface!");
+	}
 }
 
 void InitVulkan()
 {
 	CreateVulkanInstance();
 	SetupDebugMessenger();
+	CreateWindowSurface();
 	SelectPhysicalDevice();
 	CreateLogicalDevice();
 }
@@ -478,6 +556,8 @@ void Cleanup()
 	{
 		DestroyDebugUtilsMessengerEXT(g_Instance, g_DebugMessenger, nullptr);
 	}
+
+	vkDestroySurfaceKHR(g_Instance, g_WindowSurface, nullptr);
 
 	vkDestroyInstance(g_Instance, nullptr);
 
