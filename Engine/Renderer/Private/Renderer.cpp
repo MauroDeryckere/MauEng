@@ -1,3 +1,5 @@
+#include "Renderer.h"
+
 /* Sources
  * https://vulkan-tutorial.com/Introduction
  */
@@ -15,7 +17,7 @@
 
 #include <set>
 
-// globals, to be moved to the renderer in the future
+ // globals, to be moved to the renderer in the future
 
 GLFWwindow* g_Window{ nullptr };
 VkInstance g_Instance;
@@ -48,9 +50,9 @@ VkExtent2D g_SwapChainExtent;
 std::vector<VkImageView> g_SwapChainImageViews;
 
 #ifdef NDEBUG
-	bool constexpr ENABLE_VULKAN_VALIDATION_LAYERS{ false };
+bool constexpr ENABLE_VULKAN_VALIDATION_LAYERS{ false };
 #else
-	bool constexpr ENABLE_VULKAN_VALIDATION_LAYERS{ true  };
+bool constexpr ENABLE_VULKAN_VALIDATION_LAYERS{ true };
 #endif
 
 std::vector const VULKAN_VALIDATION_LAYERS
@@ -98,7 +100,7 @@ struct QueueFamilyIndices final
 		VkBool32 presentSupport{ false };
 		vkGetPhysicalDeviceSurfaceSupportKHR(device, i, g_WindowSurface, &presentSupport);
 
-		if (presentSupport) 
+		if (presentSupport)
 		{
 			indices.presentFamily = i;
 		}
@@ -121,7 +123,7 @@ struct QueueFamilyIndices final
 void InitWindow()
 {
 	glfwInit();
- 
+
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
@@ -132,7 +134,7 @@ void InitWindow()
 
 }
 
-[[nodiscard]] static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback( VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
+[[nodiscard]] static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
 {
 	std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
 
@@ -172,7 +174,7 @@ void InitWindow()
 
 	std::vector<char const*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
 
-	if constexpr (ENABLE_VULKAN_VALIDATION_LAYERS) 
+	if constexpr (ENABLE_VULKAN_VALIDATION_LAYERS)
 	{
 		extensions.emplace_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 	}
@@ -186,16 +188,16 @@ void InitWindow()
 	std::cout << "\n";
 
 	return std::ranges::all_of(extensions, [&](std::string_view ext)
+		{
+			if (std::ranges::any_of(availableExtensions, [ext](const VkExtensionProperties& availableExt) { return ext == availableExt.extensionName; }))
 			{
-				if (std::ranges::any_of(availableExtensions, [ext](const VkExtensionProperties& availableExt){ return ext == availableExt.extensionName; }))
-				{
-					std::cout << "Required extension \"" << ext << "\" is supported.\n";
-					return true;
-				}
+				std::cout << "Required extension \"" << ext << "\" is supported.\n";
+				return true;
+			}
 
-				std::cerr << "Required extension \"" << ext << "\" is not supported.\n";
-				return false;
-			});
+			std::cerr << "Required extension \"" << ext << "\" is not supported.\n";
+			return false;
+		});
 }
 
 // Checks if all requested extensions are available
@@ -309,7 +311,7 @@ void CreateVulkanInstance()
 
 
 
-	if (vkCreateInstance(&createInfo, nullptr, &g_Instance) != VK_SUCCESS) 
+	if (vkCreateInstance(&createInfo, nullptr, &g_Instance) != VK_SUCCESS)
 	{
 		throw std::runtime_error("failed to create instance!");
 	}
@@ -342,7 +344,7 @@ void SetupDebugMessenger()
 	VkDebugUtilsMessengerCreateInfoEXT createInfo;
 	PopulateDebugMessengerCreateInfo(createInfo);
 
-	if (CreateDebugUtilsMessengerEXT(g_Instance, &createInfo, nullptr, &g_DebugMessenger) != VK_SUCCESS) 
+	if (CreateDebugUtilsMessengerEXT(g_Instance, &createInfo, nullptr, &g_DebugMessenger) != VK_SUCCESS)
 	{
 		throw std::runtime_error("failed to set up debug messenger!");
 	}
@@ -400,7 +402,7 @@ SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice device)
 	bool const extensionsSupported{ CheckPhysicalDeviceExtensionSupport(device) };
 
 	bool swapChainAdequate{ false };
-	if (extensionsSupported) 
+	if (extensionsSupported)
 	{
 		SwapChainSupportDetails const swapChainSupport{ QuerySwapChainSupport(device) };
 		swapChainAdequate = not swapChainSupport.formats.empty() && not swapChainSupport.presentModes.empty();
@@ -421,7 +423,7 @@ SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice device)
 	vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
 
 	uint32_t score{ 0 };
-	if (deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) 
+	if (deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
 	{
 		score += 1000;
 	}
@@ -444,7 +446,7 @@ void SelectPhysicalDevice()
 	uint32_t deviceCount{ 0 };
 	vkEnumeratePhysicalDevices(g_Instance, &deviceCount, nullptr);
 
-	if (deviceCount == 0) 
+	if (deviceCount == 0)
 	{
 		throw std::runtime_error("failed to find GPUs with Vulkan support!");
 	}
@@ -541,7 +543,7 @@ void CreateLogicalDevice()
 	float constexpr queuePriority{ 1.0f };
 
 	std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
-	for (auto const queueFamily : uniqueQueueFamilies) 
+	for (auto const queueFamily : uniqueQueueFamilies)
 	{
 		VkDeviceQueueCreateInfo queueCreateInfo{};
 		queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
@@ -565,17 +567,17 @@ void CreateLogicalDevice()
 	createInfo.enabledExtensionCount = static_cast<uint32_t>(DEVICE_EXTENSIONS.size());
 	createInfo.ppEnabledExtensionNames = DEVICE_EXTENSIONS.data();
 
-	if constexpr (ENABLE_VULKAN_VALIDATION_LAYERS) 
+	if constexpr (ENABLE_VULKAN_VALIDATION_LAYERS)
 	{
 		createInfo.enabledLayerCount = static_cast<uint32_t>(VULKAN_VALIDATION_LAYERS.size());
 		createInfo.ppEnabledLayerNames = VULKAN_VALIDATION_LAYERS.data();
 	}
-	else 
+	else
 	{
 		createInfo.enabledLayerCount = 0;
 	}
 
-	if (vkCreateDevice(g_PhysicalDevice, &createInfo, nullptr, &g_LogicalDevice) != VK_SUCCESS) 
+	if (vkCreateDevice(g_PhysicalDevice, &createInfo, nullptr, &g_LogicalDevice) != VK_SUCCESS)
 	{
 		throw std::runtime_error("Failed to create logical device!");
 	}
@@ -615,7 +617,7 @@ VkSurfaceFormatKHR ChooseSwapSurfaceFormat(std::vector<VkSurfaceFormatKHR> const
 	// It is also pretty much the standard color space for images.
 	for (auto const& availableFormat : availableFormats)
 	{
-		if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) 
+		if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
 		{
 			return availableFormat;
 		}
@@ -630,7 +632,7 @@ VkPresentModeKHR ChooseSwapPresentMode(std::vector<VkPresentModeKHR> const& avai
 {
 	for (auto const& availablePresentMode : availablePresentModes)
 	{
-		if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR) 
+		if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR)
 		{
 			return availablePresentMode;
 		}
@@ -642,7 +644,7 @@ VkPresentModeKHR ChooseSwapPresentMode(std::vector<VkPresentModeKHR> const& avai
 
 VkExtent2D ChooseSwapExtent(VkSurfaceCapabilitiesKHR const& capabilities)
 {
-	if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()) 
+	if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max())
 	{
 		return capabilities.currentExtent;
 	}
@@ -680,7 +682,7 @@ void CreateSwapChain()
 	}
 
 	// 0 is a special value that means that there is no maximum
-	if (swapChainSupport.capabilities.maxImageCount > 0 && imageCount > swapChainSupport.capabilities.maxImageCount) 
+	if (swapChainSupport.capabilities.maxImageCount > 0 && imageCount > swapChainSupport.capabilities.maxImageCount)
 	{
 		imageCount = swapChainSupport.capabilities.maxImageCount;
 	}
@@ -697,7 +699,7 @@ void CreateSwapChain()
 	createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
 	QueueFamilyIndices indices = FindQueueFamilies(g_PhysicalDevice);
-	uint32_t queueFamilyIndices[] { indices.graphicsFamily.value(), indices.presentFamily.value() };
+	uint32_t queueFamilyIndices[]{ indices.graphicsFamily.value(), indices.presentFamily.value() };
 
 	if (g_IsUsingUnifiedGraphicsPresentQueue)
 	{
@@ -706,7 +708,7 @@ void CreateSwapChain()
 		createInfo.pQueueFamilyIndices = nullptr; // Optional
 
 	}
-	else 
+	else
 	{
 		createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
 		createInfo.queueFamilyIndexCount = 2;
@@ -720,7 +722,7 @@ void CreateSwapChain()
 	createInfo.clipped = VK_TRUE;
 	createInfo.oldSwapchain = VK_NULL_HANDLE;
 
-	if (vkCreateSwapchainKHR(g_LogicalDevice, &createInfo, nullptr, &g_SwapChain) != VK_SUCCESS) 
+	if (vkCreateSwapchainKHR(g_LogicalDevice, &createInfo, nullptr, &g_SwapChain) != VK_SUCCESS)
 	{
 		throw std::runtime_error("failed to create swap chain!");
 	}
@@ -739,7 +741,7 @@ void CreateSwapChain()
 
 void CreateWindowSurface()
 {
-	if (glfwCreateWindowSurface(g_Instance, g_Window, nullptr, &g_WindowSurface) != VK_SUCCESS) 
+	if (glfwCreateWindowSurface(g_Instance, g_Window, nullptr, &g_WindowSurface) != VK_SUCCESS)
 	{
 		throw std::runtime_error("Failed to create window surface!");
 	}
@@ -748,7 +750,7 @@ void CreateWindowSurface()
 void CreateImageViews()
 {
 	g_SwapChainImageViews.resize(g_SwapChainImages.size());
-	for (size_t i = 0; i < g_SwapChainImages.size(); i++) 
+	for (size_t i = 0; i < g_SwapChainImages.size(); i++)
 	{
 		VkImageViewCreateInfo createInfo{};
 		createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -793,7 +795,7 @@ void MainLoop()
 
 void Cleanup()
 {
-	for (auto const& imageView : g_SwapChainImageViews) 
+	for (auto const& imageView : g_SwapChainImageViews)
 	{
 		vkDestroyImageView(g_LogicalDevice, imageView, nullptr);
 	}
@@ -802,7 +804,7 @@ void Cleanup()
 
 	vkDestroyDevice(g_LogicalDevice, nullptr);
 
-	if constexpr (ENABLE_VULKAN_VALIDATION_LAYERS) 
+	if constexpr (ENABLE_VULKAN_VALIDATION_LAYERS)
 	{
 		DestroyDebugUtilsMessengerEXT(g_Instance, g_DebugMessenger, nullptr);
 	}
@@ -817,23 +819,23 @@ void Cleanup()
 
 void Run()
 {
-    InitWindow();
+	InitWindow();
 	InitVulkan();
-    MainLoop();
-    Cleanup();
+	MainLoop();
+	Cleanup();
 }
 
-int main()
+void Renderer::Renderer::RenderRun()
 {
-	try 
+	try
 	{
 		Run();
 	}
-	catch (const std::exception& e) 
+	catch (const std::exception& e)
 	{
 		std::cerr << e.what() << std::endl;
-		return EXIT_FAILURE;
+	//	return EXIT_FAILURE;
 	}
 
-	return EXIT_SUCCESS;
+//	return EXIT_SUCCESS;
 }

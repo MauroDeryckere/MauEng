@@ -1,6 +1,12 @@
 ﻿# Top level CMake file for the project
 
+# Documentation
+# Currently all libs are in a general "libs" sub dir, this is not the cleanest approach and should be refactored as the engine grows
+
 # @REGION PROJECT SETUP
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 cmake_minimum_required (VERSION 3.27)
 
@@ -9,10 +15,10 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/$<CONFIGURATION>")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/$<CONFIGURATION>")
 
 # Project name
-project ("VulkanProject")
+project ("VulkanEngine")
 
 # Set the name of the executable
-set(EXECUTABLE_NAME ${PROJECT_NAME})
+set(EXECUTABLE_NAME "VulkanEngine")
 
 if(MSVC)
     if(NOT CMAKE_GENERATOR STREQUAL "Ninja")
@@ -28,8 +34,12 @@ endif()
 # Include sub-projects.
 add_subdirectory ("Libs")
 message(STATUS "Libs dir created! ")
-add_subdirectory ("VulkanProject")
-message(STATUS "VulkanProject created! ")
+
+add_subdirectory ("Engine")
+message(STATUS "Engine dir created! ")
+
+add_subdirectory ("Game")
+message(STATUS "Game dir created! ")
 
 # @ENDREGION SOURCE FILES & LIBRARIES
 
@@ -39,7 +49,7 @@ message(STATUS "VulkanProject created! ")
 # @ENDREGION PLATFORMS AND RESOURCES
 
 # on Visual Studio, set our app as the default project
-set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT VulkanProject)
+set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT Game)
 
 
 
