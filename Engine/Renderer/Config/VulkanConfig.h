@@ -1,0 +1,31 @@
+#ifndef MAUREN_VULKANCONFIG_H
+#define MAUREN_VULKANCONFIG_H
+
+// Would be cleaner when moved to some other place than just a header but this is easier for now, can refactor later (// TODO)
+
+namespace MauRen
+{
+	#ifdef NDEBUG
+		bool constexpr ENABLE_VULKAN_VALIDATION_LAYERS{ false };
+	#else
+		bool constexpr ENABLE_VULKAN_VALIDATION_LAYERS{ true };
+
+		std::vector<char const*> const VULKAN_VALIDATION_LAYERS
+		{
+			"VK_LAYER_KHRONOS_validation",
+		};
+	#endif
+
+	// Using a unified queue may result in less overhead and a performance boost
+	bool constexpr FORCE_SEPARATE_GRAPHICS_PRESENT_QUEUES{ false };
+
+	bool constexpr AUTO_SELECT_PHYSICAL_DEVICE{ true };
+
+
+	std::vector<char const*> const DEVICE_EXTENSIONS
+	{
+		VK_KHR_SWAPCHAIN_EXTENSION_NAME
+	};
+}
+
+#endif // MAUREN_VULKANCONFIG_H

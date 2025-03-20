@@ -5,8 +5,8 @@
 
 namespace MauRen {
 	// Only vulkan renderer for now, factory pattern may be expanded in the future
-	std::unique_ptr<Renderer> CreateRenderer()
+	std::unique_ptr<Renderer> CreateRenderer(GLFWwindow* pWindow)
 	{
-		return std::make_unique<VulkanRenderer>();
+		return std::make_unique<VulkanRenderer>(pWindow);
 	}
 }

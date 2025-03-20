@@ -6,7 +6,7 @@
 
 namespace MauRen
 {
-	std::unique_ptr<Renderer> CreateRenderer();
+	std::unique_ptr<Renderer> CreateRenderer(GLFWwindow* pWindow);
 }
 
 #endif // RENDERRENDERERFACTORY_H

@@ -2,7 +2,12 @@
 
 namespace MauRen
 {
-	VulkanRenderer::VulkanRenderer()
+	VulkanRenderer::VulkanRenderer(GLFWwindow* pWindow) :
+		Renderer{ pWindow },
+		m_InstanceContext{},
+		m_SurfaceContext{ m_InstanceContext, pWindow },
+		m_DebugContext{ m_InstanceContext }
+
 	{
 
 	}
@@ -25,117 +30,19 @@ namespace MauRen
 
 	void VulkanRenderer::InitVulkan()
 	{
-		CreateVulkanInstance();
-		SetupDebugMessenger();
-		CreateWindowSurface();
+	//	CreateVulkanInstance();
+	//	SetupDebugMessenger();
+	//	CreateWindowSurface();
 		SelectPhysicalDevice();
 		CreateLogicalDevice();
 		CreateSwapChain();
 		CreateImageViews();
 	}
 
-	void VulkanRenderer::CreateVulkanInstance()
-	{
-		if constexpr (ENABLE_VULKAN_VALIDATION_LAYERS)
-		{
-			if (CheckValidationLayerSupport())
-			{
-				std::cout << "All required validation layers are supported.\n";
-			}
-			else
-			{
-				throw std::runtime_error("validation layers requested, but not available!");
-			}
-		}
-
-		VkApplicationInfo appInfo{};
-		appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-		appInfo.pApplicationName = "Mauro Deryckere - Vulkan Project";
-		appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
-		appInfo.pEngineName = "No Engine";
-		appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
-		appInfo.apiVersion = VK_API_VERSION_1_0;
-
-		// Provide details about Vulkan support
-		uint32_t extensionCount{ 0 };
-		vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
-		std::vector<VkExtensionProperties> availableExtensions(extensionCount);
-
-		vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, availableExtensions.data());
-
-		std::cout << "available extensions:\n";
-
-		for (const auto& [extensionName, specVersion] : availableExtensions)
-		{
-			std::cout << "\tExtension: " << extensionName << ", Version: " << specVersion << '\n';
-		}
-		// -------------------------------------
-
-
-		// Which global extensions and validation layers do we want to use
-		// ! For entire program, not a specific device
-		VkInstanceCreateInfo createInfo{ };
-		createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-		createInfo.pApplicationInfo = &appInfo;
-
-		auto const& extensions{ GetRequiredExtensions() };
-		createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
-		createInfo.ppEnabledExtensionNames = extensions.data();
-
-		// Setup validation layers (in debug mode)
-		VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
-		if constexpr (ENABLE_VULKAN_VALIDATION_LAYERS)
-		{
-			createInfo.enabledLayerCount = static_cast<uint32_t>(VULKAN_VALIDATION_LAYERS.size());
-			createInfo.ppEnabledLayerNames = VULKAN_VALIDATION_LAYERS.data();
-
-			PopulateDebugMessengerCreateInfo(debugCreateInfo);
-			createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*)&debugCreateInfo;
-		}
-		else
-		{
-			createInfo.enabledLayerCount = 0;
-			createInfo.pNext = nullptr;
-		}
-
-		if (!CheckInstanceExtensionsSupport(static_cast<uint32_t>(extensions.size()), extensions, availableExtensions))
-		{
-			throw std::runtime_error("Not all required extensions are supported!");
-		}
-		std::cout << "All required extensions are supported.\n";
-
-
-
-		if (vkCreateInstance(&createInfo, nullptr, &m_Instance) != VK_SUCCESS)
-		{
-			throw std::runtime_error("failed to create instance!");
-		}
-	}
-	void VulkanRenderer::SetupDebugMessenger()
-	{
-		if constexpr (!ENABLE_VULKAN_VALIDATION_LAYERS) return;
-
-		VkDebugUtilsMessengerCreateInfoEXT createInfo;
-		PopulateDebugMessengerCreateInfo(createInfo);
-
-		if (CreateDebugUtilsMessengerEXT(m_Instance, &createInfo, nullptr, &m_DebugMessenger) != VK_SUCCESS)
-		{
-			throw std::runtime_error("failed to set up debug messenger!");
-		}
-	}
-
-	void VulkanRenderer::CreateWindowSurface()
-	{
-		if (glfwCreateWindowSurface(m_Instance, m_pWindow, nullptr, &m_WindowSurface) != VK_SUCCESS)
-		{
-			throw std::runtime_error("Failed to create window surface!");
-		}
-	}
-
 	void VulkanRenderer::SelectPhysicalDevice()
 	{
 		uint32_t deviceCount{ 0 };
-		vkEnumeratePhysicalDevices(m_Instance, &deviceCount, nullptr);
+		vkEnumeratePhysicalDevices(m_InstanceContext.GetInstance(), &deviceCount, nullptr);
 
 		if (deviceCount == 0)
 		{
@@ -143,7 +50,7 @@ namespace MauRen
 		}
 
 		std::vector<VkPhysicalDevice> devices(deviceCount);
-		vkEnumeratePhysicalDevices(m_Instance, &deviceCount, devices.data());
+		vkEnumeratePhysicalDevices(m_InstanceContext.GetInstance(), &deviceCount, devices.data());
 
 		std::cout << "\nSelecting physical device.\n";
 
@@ -325,7 +232,7 @@ namespace MauRen
 
 		VkSwapchainCreateInfoKHR createInfo{};
 		createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-		createInfo.surface = m_WindowSurface;
+		createInfo.surface = m_SurfaceContext.GetWindowSurface();
 
 		createInfo.minImageCount = imageCount;
 		createInfo.imageFormat = surfaceFormat.format;
@@ -413,14 +320,7 @@ namespace MauRen
 
 		vkDestroyDevice(m_LogicalDevice, nullptr);
 
-		if constexpr (ENABLE_VULKAN_VALIDATION_LAYERS)
-		{
-			DestroyDebugUtilsMessengerEXT(m_Instance, m_DebugMessenger, nullptr);
-		}
 
-		vkDestroySurfaceKHR(m_Instance, m_WindowSurface, nullptr);
-
-		vkDestroyInstance(m_Instance, nullptr);
 	}
 }
 

@@ -5,28 +5,21 @@
 
 #include "Renderer.h"
 
-#define GLFW_INCLUDE_VULKAN
-#include "GLFW/glfw3.h"
+#include "VulkanInstanceContext.h"
+#include "VulkanSurfaceContext.h"
+#include "VulkanDebugContext.h"
 
 
+#include "VulkanQueueManager.h"
+#include "VulkanDeviceContext.h"
+#include "VulkanSwapchainContext.h"
 
 namespace MauRen
 {
-#ifdef NDEBUG
-	bool constexpr ENABLE_VULKAN_VALIDATION_LAYERS{ false };
-#else
-	bool constexpr ENABLE_VULKAN_VALIDATION_LAYERS{ true };
-#endif
-
-// Using a unified queue may result in less overhead and a performance boost
-bool constexpr FORCE_SEPARATE_GRAPHICS_PRESENT_QUEUES{ false };
-
-bool constexpr AUTO_SELECT_PHYSICAL_DEVICE{ true };
-
 	class VulkanRenderer final : public Renderer
 	{
 	public:
-		VulkanRenderer();
+		explicit VulkanRenderer(GLFWwindow* pWindow);
 		virtual ~VulkanRenderer() override;
 
 		virtual void Initialize(GLFWwindow* pWindow) override;
@@ -42,8 +35,14 @@ bool constexpr AUTO_SELECT_PHYSICAL_DEVICE{ true };
 		//MUST BE MOVED LATER TODO
 		GLFWwindow* m_pWindow;
 
-		// globals, to be moved to the renderer in the future
-		VkInstance m_Instance;
+		VulkanInstanceContext m_InstanceContext;
+		VulkanSurfaceContext m_SurfaceContext;
+		VulkanDebugContext m_DebugContext;
+
+		// Surface ctxt
+		// ...
+
+
 		// This object will be implicitly destroyed when the VkInstance is destroyed, so we won't need to do anything new in the cleanup function.
 		VkPhysicalDevice m_PhysicalDevice{ VK_NULL_HANDLE };
 
@@ -53,15 +52,8 @@ bool constexpr AUTO_SELECT_PHYSICAL_DEVICE{ true };
 		VkQueue m_GraphicsQueue;
 		VkQueue m_PresentQueue;
 
-
-
 		bool m_IsUsingUnifiedGraphicsPresentQueue{ false };
 		VkQueue m_UnifiedGraphicsPresentQueue;
-
-
-		VkDebugUtilsMessengerEXT m_DebugMessenger;
-
-		VkSurfaceKHR m_WindowSurface;
 
 		VkSwapchainKHR m_SwapChain;
 
@@ -70,17 +62,6 @@ bool constexpr AUTO_SELECT_PHYSICAL_DEVICE{ true };
 		VkExtent2D m_SwapChainExtent;
 
 		std::vector<VkImageView> m_SwapChainImageViews;
-
-
-		std::vector<char const*> const VULKAN_VALIDATION_LAYERS
-		{
-			"VK_LAYER_KHRONOS_validation",
-		};
-
-		std::vector<char const*> const DEVICE_EXTENSIONS
-		{
-			VK_KHR_SWAPCHAIN_EXTENSION_NAME
-		};
 
 
 		struct QueueFamilyIndices final
@@ -114,7 +95,7 @@ bool constexpr AUTO_SELECT_PHYSICAL_DEVICE{ true };
 			for (uint32_t i{ 0 }; i < static_cast<uint32_t>(queueFamilies.size()); ++i)
 			{
 				VkBool32 presentSupport{ false };
-				vkGetPhysicalDeviceSurfaceSupportKHR(device, i, m_WindowSurface, &presentSupport);
+				vkGetPhysicalDeviceSurfaceSupportKHR(device, i, m_SurfaceContext.GetWindowSurface(), &presentSupport);
 
 				if (presentSupport)
 				{
@@ -133,72 +114,6 @@ bool constexpr AUTO_SELECT_PHYSICAL_DEVICE{ true };
 				}
 			}
 			return indices;
-		}
-
-		[[nodiscard]] static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
-		{
-			std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
-
-			return VK_FALSE;
-		}
-
-		// Checks if all requested validation layers are available
-		[[nodiscard]] bool CheckValidationLayerSupport()
-		{
-			uint32_t layerCount{ 0 };
-			vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
-
-			std::vector<VkLayerProperties> availableLayers(layerCount);
-			vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
-
-			std::cout << "\n";
-
-			return std::ranges::all_of(VULKAN_VALIDATION_LAYERS, [&](std::string_view layerName)
-				{
-					if (std::ranges::any_of(availableLayers, [&](const VkLayerProperties& props) { return layerName == props.layerName; }))
-					{
-						std::cout << "Required validation layer \"" << layerName << "\" is supported.\n";
-						return true;
-					}
-
-					std::cerr << "Required validation layer \"" << layerName << "\" is not supported.\n";
-					return false;
-				});
-		}
-
-		[[nodiscard]] std::vector<char const*> GetRequiredExtensions()
-		{
-			// Need an extension to interface with the window system
-			// GLFW returns the extensions it needs to do that -> pass to struct
-			uint32_t glfwExtensionCount{ 0 };
-			char const** glfwExtensions{ glfwGetRequiredInstanceExtensions(&glfwExtensionCount) };
-
-			std::vector<char const*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
-
-			if constexpr (ENABLE_VULKAN_VALIDATION_LAYERS)
-			{
-				extensions.emplace_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
-			}
-
-			return extensions;
-		}
-
-		// Checks if all requested extensions are available
-		[[nodiscard]] bool CheckInstanceExtensionsSupport(uint32_t extensionCount, std::vector<char const*> const& extensions, std::vector<VkExtensionProperties> const& availableExtensions)
-		{
-			std::cout << "\n";
-
-			return std::ranges::all_of(extensions, [&](std::string_view ext)
-				{
-					if (std::ranges::any_of(availableExtensions, [ext](const VkExtensionProperties& availableExt) { return ext == availableExt.extensionName; }))
-					{
-						std::cout << "Required extension \"" << ext << "\" is supported.\n";
-						return true;
-					}
-
-					std::cerr << "Required extension \"" << ext << "\" is not supported.\n";
-					return false;
-				});
 		}
 
 		// Checks if all requested extensions are available
@@ -226,39 +141,6 @@ bool constexpr AUTO_SELECT_PHYSICAL_DEVICE{ true };
 
 		}
 
-		void PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo)
-		{
-			// "I've specified all types except for VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT here to receive notifications about possible problems while leaving out verbose general debug info."
-			// https://docs.vulkan.org/spec/latest/chapters/debugging.html#VK_EXT_debug_utils
-
-			createInfo = {};
-			createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
-			createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
-			createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
-			createInfo.pfnUserCallback = DebugCallback;
-			createInfo.pUserData = nullptr; // Optional
-		}
-
-		[[nodiscard]] VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerCreateInfoEXT const* pCreateInfo, VkAllocationCallbacks const* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger)
-		{
-			if (auto func{ (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT") })
-			{
-				return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
-			}
-
-			return VK_ERROR_EXTENSION_NOT_PRESENT;
-		}
-
-		void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, VkAllocationCallbacks const* pAllocator)
-		{
-			// ! Make sure that this function is either a static class function or a function outside the class.
-
-			if (auto func{ (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT") })
-			{
-				func(instance, debugMessenger, pAllocator);
-			}
-		}
-
 
 		struct SwapChainSupportDetails final
 		{
@@ -272,26 +154,26 @@ bool constexpr AUTO_SELECT_PHYSICAL_DEVICE{ true };
 			SwapChainSupportDetails details;
 
 			// basic surface capabilities
-			vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, m_WindowSurface, &details.capabilities);
+			vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, m_SurfaceContext.GetWindowSurface(), &details.capabilities);
 
 			// querying the supported surface formats
 			uint32_t formatCount;
-			vkGetPhysicalDeviceSurfaceFormatsKHR(device, m_WindowSurface, &formatCount, nullptr);
+			vkGetPhysicalDeviceSurfaceFormatsKHR(device, m_SurfaceContext.GetWindowSurface(), &formatCount, nullptr);
 
 			if (formatCount != 0)
 			{
 				details.formats.resize(formatCount);
-				vkGetPhysicalDeviceSurfaceFormatsKHR(device, m_WindowSurface, &formatCount, details.formats.data());
+				vkGetPhysicalDeviceSurfaceFormatsKHR(device, m_SurfaceContext.GetWindowSurface(), &formatCount, details.formats.data());
 			}
 
 			// querying the supported presentation modes
 			uint32_t presentModeCount;
-			vkGetPhysicalDeviceSurfacePresentModesKHR(device, m_WindowSurface, &presentModeCount, nullptr);
+			vkGetPhysicalDeviceSurfacePresentModesKHR(device, m_SurfaceContext.GetWindowSurface(), &presentModeCount, nullptr);
 
 			if (presentModeCount != 0)
 			{
 				details.presentModes.resize(presentModeCount);
-				vkGetPhysicalDeviceSurfacePresentModesKHR(device, m_WindowSurface, &presentModeCount, details.presentModes.data());
+				vkGetPhysicalDeviceSurfacePresentModesKHR(device, m_SurfaceContext.GetWindowSurface(), &presentModeCount, details.presentModes.data());
 			}
 
 			return details;
@@ -405,9 +287,9 @@ bool constexpr AUTO_SELECT_PHYSICAL_DEVICE{ true };
 
 		void InitVulkan();
 
-		void CreateVulkanInstance();
-		void SetupDebugMessenger();
-		void CreateWindowSurface();
+		//void CreateVulkanInstance();
+		//void SetupDebugMessenger();
+		//void CreateWindowSurface();
 		void SelectPhysicalDevice();
 		void CreateLogicalDevice();
 		void CreateSwapChain();

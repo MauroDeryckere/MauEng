@@ -19,4 +19,10 @@
 #include <algorithm>
 #include <optional>
 
+// do this using macros in the future if more than 1 renderer support
+#define GLFW_INCLUDE_VULKAN
+#include "GLFW/glfw3.h"
+
+#include "../Config/VulkanConfig.h"
+
 #endif

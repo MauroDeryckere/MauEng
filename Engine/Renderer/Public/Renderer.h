@@ -8,7 +8,7 @@ namespace MauRen
 	class Renderer
 	{
 	public:
-		Renderer() = default;
+		explicit Renderer(GLFWwindow* pWindow) { }
 		virtual ~Renderer() = default;
 
 		virtual void Initialize(GLFWwindow* pWindow) = 0;
@@ -24,7 +24,10 @@ namespace MauRen
 	class NullRenderer final : public Renderer
 	{
 	public:
-		NullRenderer() = default;
+		explicit NullRenderer(GLFWwindow* pWindow) :
+		Renderer{ pWindow }
+		{}
+
 		virtual ~NullRenderer() override = default;
 
 		virtual void Initialize(GLFWwindow* pWindow) override {}
