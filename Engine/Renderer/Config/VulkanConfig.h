@@ -9,11 +9,6 @@ namespace MauRen
 		bool constexpr ENABLE_VULKAN_VALIDATION_LAYERS{ false };
 	#else
 		bool constexpr ENABLE_VULKAN_VALIDATION_LAYERS{ true };
-
-		std::vector<char const*> const VULKAN_VALIDATION_LAYERS
-		{
-			"VK_LAYER_KHRONOS_validation",
-		};
 	#endif
 
 	// Using a unified queue may result in less overhead and a performance boost
@@ -21,6 +16,10 @@ namespace MauRen
 
 	bool constexpr AUTO_SELECT_PHYSICAL_DEVICE{ true };
 
+	std::vector<char const*> const VULKAN_VALIDATION_LAYERS
+	{
+		"VK_LAYER_KHRONOS_validation",
+	};
 
 	std::vector<char const*> const DEVICE_EXTENSIONS
 	{
