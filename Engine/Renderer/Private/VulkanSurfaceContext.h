@@ -8,28 +8,32 @@ namespace MauRen
 	class VulkanSurfaceContext final
 	{
 	public:
-		VulkanSurfaceContext(VulkanInstanceContext const& vulkanInstanceContext, GLFWwindow* pWindow):
-		m_VulkanInstanceContext{ vulkanInstanceContext }
+		VulkanSurfaceContext(VulkanInstanceContext* pVulkanInstanceContext, GLFWwindow* pWindow):
+			m_pVulkanInstanceContext{ pVulkanInstanceContext }
+
 		{
-			if (glfwCreateWindowSurface(vulkanInstanceContext.GetInstance(), pWindow, nullptr, &m_WindowSurface) != VK_SUCCESS)
+			if (glfwCreateWindowSurface(m_pVulkanInstanceContext->GetInstance(), pWindow, nullptr, &m_WindowSurface) != VK_SUCCESS)
 			{
 				throw std::runtime_error("Failed to create window surface!");
 			}
 		}
+
 		~VulkanSurfaceContext()
 		{
-			// needs to be moved between instance & debyg ctxt
-			vkDestroySurfaceKHR(m_VulkanInstanceContext.GetInstance(), m_WindowSurface, nullptr);
+			vkDestroySurfaceKHR(m_pVulkanInstanceContext->GetInstance(), m_WindowSurface, nullptr);
 		}
+
+		VulkanSurfaceContext(VulkanSurfaceContext const&) = delete;
+		VulkanSurfaceContext(VulkanSurfaceContext&&) = delete;
+		VulkanSurfaceContext& operator=(VulkanSurfaceContext const&) = delete;
+		VulkanSurfaceContext& operator=(VulkanSurfaceContext&&) = delete;
+
 
 		[[nodiscard]] VkSurfaceKHR GetWindowSurface() const noexcept { return m_WindowSurface; }
 
 	private:
-		VulkanInstanceContext const& m_VulkanInstanceContext;
+		VulkanInstanceContext* m_pVulkanInstanceContext;
 		VkSurfaceKHR m_WindowSurface;
-
-
-
 	};
 }
 

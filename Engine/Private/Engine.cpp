@@ -25,10 +25,9 @@ namespace MauEng
 		load();
 
 		using namespace MauRen;
-		// Get all the systems we wish to use during the game loop
-		std::unique_ptr<Renderer> renderer { MauRen::CreateRenderer(m_Window->window)};
-		renderer->Initialize(m_Window->window);
 
+		// Get all the systems we wish to use during the game loop
+		std::unique_ptr<Renderer> const renderer { CreateRenderer(m_Window->window)};
 
 		// TODO
 		// The Game loop

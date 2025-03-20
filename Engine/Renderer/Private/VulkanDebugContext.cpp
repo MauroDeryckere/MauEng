@@ -2,8 +2,8 @@
 
 namespace MauRen
 {
-	VulkanDebugContext::VulkanDebugContext(VulkanInstanceContext const& vulkanInstanceContext) :
-		m_VulkanInstanceContext{ vulkanInstanceContext }
+	VulkanDebugContext::VulkanDebugContext(VulkanInstanceContext* vulkanInstanceContext) :
+		m_pVulkanInstanceContext{ vulkanInstanceContext }
 
 	{
 		SetupDebugMessenger();
@@ -11,7 +11,7 @@ namespace MauRen
 
 	VulkanDebugContext::~VulkanDebugContext()
 	{
-		DestroyDebugUtilsMessengerEXT(m_VulkanInstanceContext.GetInstance(), m_DebugMessenger, nullptr);
+		DestroyDebugUtilsMessengerEXT(m_pVulkanInstanceContext->GetInstance(), m_DebugMessenger, nullptr);
 	}
 
 	void VulkanDebugContext::PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo)
@@ -41,7 +41,7 @@ namespace MauRen
 		VkDebugUtilsMessengerCreateInfoEXT createInfo;
 		PopulateDebugMessengerCreateInfo(createInfo);
 
-		if (CreateDebugUtilsMessengerEXT(m_VulkanInstanceContext.GetInstance(), &createInfo, nullptr, &m_DebugMessenger) != VK_SUCCESS)
+		if (CreateDebugUtilsMessengerEXT(m_pVulkanInstanceContext->GetInstance(), &createInfo, nullptr, &m_DebugMessenger) != VK_SUCCESS)
 		{
 			throw std::runtime_error("failed to set up debug messenger!");
 		}

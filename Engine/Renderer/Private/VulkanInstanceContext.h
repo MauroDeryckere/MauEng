@@ -19,7 +19,7 @@ namespace MauRen
 		[[nodiscard]] VkInstance GetInstance() const noexcept { return m_Instance; }
 
 	private:
-		VkInstance m_Instance;
+		VkInstance m_Instance{ VK_NULL_HANDLE };
 
 		void CreateVulkanInstance();
 

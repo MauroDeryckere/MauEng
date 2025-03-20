@@ -11,8 +11,6 @@ namespace MauRen
 		explicit Renderer(GLFWwindow* pWindow) { }
 		virtual ~Renderer() = default;
 
-		virtual void Initialize(GLFWwindow* pWindow) = 0;
-
 		virtual void Render() = 0;
 
 		Renderer(Renderer const&) = delete;
@@ -29,8 +27,6 @@ namespace MauRen
 		{}
 
 		virtual ~NullRenderer() override = default;
-
-		virtual void Initialize(GLFWwindow* pWindow) override {}
 
 		virtual void Render() override {}
 

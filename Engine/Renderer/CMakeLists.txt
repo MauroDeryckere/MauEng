@@ -1,5 +1,8 @@
 # Renderer CMake file
 
+set(CMAKE_CXX_STANDARD 20)  # C++20 is the closest to C++2, since C++2 is not an official version
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 set(RENDERER_PUBLIC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/public")
 set(RENDERER_PRIVATE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/private")
 
