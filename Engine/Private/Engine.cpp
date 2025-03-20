@@ -1,11 +1,15 @@
 #include "Engine.h"
 
+#include <algorithm>
 #include "Renderer.h"
+#include "RendererFactory.h"
 
+#include "Core/GLFWWindow.h"
 
 namespace MauEng
 {
-	Engine::Engine()
+	Engine::Engine():
+		m_Window{ std::make_unique<GLFWWindow>() }
 	{
 		// Initialize all core dependences & singletons
 	}
@@ -20,11 +24,11 @@ namespace MauEng
 		// First load everything the user wants us to load using their "load function"
 		load();
 
+		using namespace MauRen;
 		// Get all the systems we wish to use during the game loop
-		MauRen::Renderer renderer{};
+		std::unique_ptr<Renderer> renderer { MauRen::CreateRenderer()};
+		renderer->Initialize(m_Window->window);
 
-		// TODO refactor renderer
-		renderer.RenderRun();
 
 		// TODO
 		// The Game loop
@@ -34,6 +38,13 @@ namespace MauEng
 		{
 			// TODO setup time class
 			//time.Update();
+
+
+			glfwPollEvents();
+			if (glfwWindowShouldClose(m_Window->window))
+			{
+				doContinue = false;
+			}
 
 			// TODO setup input class
 			//doContinue = input.ProcessInput();
@@ -45,7 +56,8 @@ namespace MauEng
 			//}
 
 			//sceneManager.Update();
-			//renderer.Render();
+
+			renderer->Render();
 
 			//std::this_thread::sleep_for(time.SleepTime());
 		}

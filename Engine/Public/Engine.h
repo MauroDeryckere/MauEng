@@ -2,10 +2,13 @@
 #define MAUENG_ENGINE_H
 
 #include <functional>
+#include <memory>
 
 namespace MauEng
 {
-	class Engine
+	struct GLFWWindow;
+
+	class Engine final
 	{
 	public:
 		explicit Engine();
@@ -17,7 +20,9 @@ namespace MauEng
 		Engine(Engine&&) = delete;
 		Engine& operator=(Engine const&) = delete;
 		Engine& operator=(Engine&&) = delete;
+
 	private:
+		std::unique_ptr<GLFWWindow> m_Window{ nullptr };
 	};
 }
 

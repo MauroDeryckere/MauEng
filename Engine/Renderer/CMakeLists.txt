@@ -27,6 +27,7 @@ find_package(Vulkan REQUIRED)
 target_link_libraries(Renderer
     PRIVATE
         Libs
+        PUBLIC # Link Vulkan publicly because we need it fr the window in the engine, later on this can be cleaned up
         Vulkan::Vulkan # Link Vulkan SDK
 )
 
@@ -35,4 +36,9 @@ target_include_directories(Renderer
         ${RENDERER_PUBLIC_DIR}        # Public headers for Renderer
     PRIVATE
         ${RENDERER_PRIVATE_DIR}       # Private headers for Renderer
+)
+
+# Enable precompiled header support for Engine
+target_precompile_headers(Renderer PRIVATE 
+    "${RENDERER_PRIVATE_DIR}/RendererPCH.h"
 )
