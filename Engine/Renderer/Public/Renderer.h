@@ -1,12 +1,12 @@
 #pragma once
 
-namespace Renderer
+namespace MauRen
 {
 	class Renderer
 	{
 	public:
-		Renderer(){};
-		~Renderer(){};
+		Renderer();
+		~Renderer();
 
 		// Temp for testing of the refactor
 		void RenderRun();

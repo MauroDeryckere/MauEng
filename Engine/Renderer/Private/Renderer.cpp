@@ -1,5 +1,7 @@
 #include "Renderer.h"
 
+//TODO refactor this large "main" function
+
 /* Sources
  * https://vulkan-tutorial.com/Introduction
  */
@@ -825,17 +827,32 @@ void Run()
 	Cleanup();
 }
 
-void Renderer::Renderer::RenderRun()
+namespace MauRen
 {
-	try
+	Renderer::Renderer()
 	{
-		Run();
-	}
-	catch (const std::exception& e)
-	{
-		std::cerr << e.what() << std::endl;
-	//	return EXIT_FAILURE;
+
 	}
 
-//	return EXIT_SUCCESS;
+	Renderer::~Renderer()
+	{
+	}
+
+	void Renderer::RenderRun()
+	{
+		try
+		{
+			Run();
+		}
+		catch (std::exception const& e)
+		{
+			std::cerr << e.what() << std::endl;
+			//	return EXIT_FAILURE;
+		}
+
+		//	return EXIT_SUCCESS;
+	}
 }
+
+
+
