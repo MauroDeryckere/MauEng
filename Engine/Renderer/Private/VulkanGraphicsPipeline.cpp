@@ -2,18 +2,66 @@
 
 namespace MauRen
 {
-	VulkanGraphicsPipeline::VulkanGraphicsPipeline(VulkanDeviceContext* pDeviceContex, VulkanSwapchainContext* pVulkanSwapchainContext) :
-		m_pDeviceContext{ pDeviceContex }
+	VulkanGraphicsPipeline::VulkanGraphicsPipeline(VulkanDeviceContext* pDeviceContext, VulkanSwapchainContext* pSwapChainContext) :
+		m_pDeviceContext{ pDeviceContext }
+	{
+		CreateRenderPass(pSwapChainContext);
+		CreateGraphicsPipeline(pSwapChainContext);
+	}
+
+	VulkanGraphicsPipeline::~VulkanGraphicsPipeline()
+	{
+		vkDestroyPipeline(m_pDeviceContext->GetLogicalDevice(), m_GraphicsPipeline, nullptr);
+		vkDestroyPipelineLayout(m_pDeviceContext->GetLogicalDevice(), m_PipelineLayout, nullptr);
+		vkDestroyRenderPass(m_pDeviceContext->GetLogicalDevice(), m_RenderPass, nullptr);
+	}
+
+	void VulkanGraphicsPipeline::CreateRenderPass(VulkanSwapchainContext* pSwapChainContext)
+	{
+		VkAttachmentDescription colorAttachment{};
+		colorAttachment.format = pSwapChainContext->GetImageFormat();
+		colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+		colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+		colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+
+		colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+
+		colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+
+		VkAttachmentReference colorAttachmentRef{};
+		colorAttachmentRef.attachment = 0; // Only have a single description currenrly 
+		colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+
+		VkSubpassDescription subpass{};
+		subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+		subpass.colorAttachmentCount = 1; // Only have a single description currenrly 
+		subpass.pColorAttachments = &colorAttachmentRef;
+
+		VkRenderPassCreateInfo renderPassInfo{};
+		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+		renderPassInfo.attachmentCount = 1;
+		renderPassInfo.pAttachments = &colorAttachment;
+		renderPassInfo.subpassCount = 1;
+		renderPassInfo.pSubpasses = &subpass;
+
+		if (vkCreateRenderPass(m_pDeviceContext->GetLogicalDevice(), &renderPassInfo, nullptr, &m_RenderPass) != VK_SUCCESS) 
+		{
+			throw std::runtime_error("Failed to create render pass!");
+		}
+	}
+
+	void VulkanGraphicsPipeline::CreateGraphicsPipeline(VulkanSwapchainContext* pSwapChainContext)
 	{
 		auto const vertShaderCode{ ReadFile("shaders/shader.vert.spv") };
-		auto const fragShaderCode { ReadFile("shaders/shader.vert.spv") };
+		auto const fragShaderCode{ ReadFile("shaders/shader.frag.spv") };
 
 		// Shader modules are linked internally, the VkShaderModule is just a wrapper so we do not need to store it.
 		VkShaderModule const vertShaderModule{ CreateShaderModule(vertShaderCode) };
 		VkShaderModule const fragShaderModule{ CreateShaderModule(fragShaderCode) };
-
-		vkDestroyShaderModule(m_pDeviceContext->GetLogicalDevice(), fragShaderModule, nullptr);
-		vkDestroyShaderModule(m_pDeviceContext->GetLogicalDevice(), vertShaderModule, nullptr);
 
 		VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
 		vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -27,9 +75,9 @@ namespace MauRen
 		fragShaderStageInfo.module = fragShaderModule;
 		fragShaderStageInfo.pName = "main";
 
-		VkPipelineShaderStageCreateInfo const shaderStages[] { vertShaderStageInfo, fragShaderStageInfo };
+		VkPipelineShaderStageCreateInfo const shaderStages[]{ vertShaderStageInfo, fragShaderStageInfo };
 
-		std::vector<VkDynamicState> dynamicStates {
+		std::vector<VkDynamicState> dynamicStates{
 			VK_DYNAMIC_STATE_VIEWPORT,
 			VK_DYNAMIC_STATE_SCISSOR
 		};
@@ -57,14 +105,14 @@ namespace MauRen
 		VkViewport viewport{};
 		viewport.x = 0.0f;
 		viewport.y = 0.0f;
-		viewport.width = static_cast<float>(pVulkanSwapchainContext->GetExtent().width);
-		viewport.height = static_cast<float>(pVulkanSwapchainContext->GetExtent().height);
+		viewport.width = static_cast<float>(pSwapChainContext->GetExtent().width);
+		viewport.height = static_cast<float>(pSwapChainContext->GetExtent().height);
 		viewport.minDepth = 0.0f;
 		viewport.maxDepth = 1.0f;
 
 		VkRect2D scissor{};
 		scissor.offset = { 0, 0 };
-		scissor.extent = pVulkanSwapchainContext->GetExtent();
+		scissor.extent = pSwapChainContext->GetExtent();
 
 		VkPipelineViewportStateCreateInfo viewportState{};
 		viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
@@ -127,14 +175,78 @@ namespace MauRen
 		pipelineLayoutInfo.pushConstantRangeCount = 0; // Optional
 		pipelineLayoutInfo.pPushConstantRanges = nullptr; // Optional
 
-		if (vkCreatePipelineLayout(m_pDeviceContext->GetLogicalDevice(), &pipelineLayoutInfo, nullptr, &m_PipelineLayout) != VK_SUCCESS) 
+		if (vkCreatePipelineLayout(m_pDeviceContext->GetLogicalDevice(), &pipelineLayoutInfo, nullptr, &m_PipelineLayout) != VK_SUCCESS)
 		{
-			throw std::runtime_error("failed to create pipeline layout!");
+			throw std::runtime_error("Failed to create pipeline layout!");
 		}
+
+		VkGraphicsPipelineCreateInfo pipelineInfo{};
+		pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+		pipelineInfo.stageCount = 2;
+		pipelineInfo.pStages = shaderStages;
+
+		pipelineInfo.pVertexInputState = &vertexInputInfo;
+		pipelineInfo.pInputAssemblyState = &inputAssembly;
+		pipelineInfo.pViewportState = &viewportState;
+		pipelineInfo.pRasterizationState = &rasterizer;
+		pipelineInfo.pMultisampleState = &multisampling;
+		pipelineInfo.pDepthStencilState = nullptr; // Optional
+		pipelineInfo.pColorBlendState = &colorBlending;
+		pipelineInfo.pDynamicState = &dynamicState;
+
+		pipelineInfo.layout = m_PipelineLayout;
+
+		pipelineInfo.renderPass = m_RenderPass;
+		pipelineInfo.subpass = 0;
+
+		// Note: These values are only used if the VK_PIPELINE_CREATE_DERIVATIVE_BIT flag is also specified in the flags field of VkGraphicsPipelineCreateInfo.
+		pipelineInfo.basePipelineHandle = VK_NULL_HANDLE; // Optional
+		pipelineInfo.basePipelineIndex = -1; // Optional
+
+		if (vkCreateGraphicsPipelines(m_pDeviceContext->GetLogicalDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_GraphicsPipeline) != VK_SUCCESS) 
+		{
+			throw std::runtime_error("Failed to create graphics pipeline!");
+		}
+
+		vkDestroyShaderModule(m_pDeviceContext->GetLogicalDevice(), fragShaderModule, nullptr);
+		vkDestroyShaderModule(m_pDeviceContext->GetLogicalDevice(), vertShaderModule, nullptr);
 	}
 
-	VulkanGraphicsPipeline::~VulkanGraphicsPipeline()
+	std::vector<char> VulkanGraphicsPipeline::ReadFile(std::filesystem::path const& filepath)
 	{
-		vkDestroyPipelineLayout(m_pDeviceContext->GetLogicalDevice(), m_PipelineLayout, nullptr);
+		assert(std::filesystem::exists(filepath));
+
+		std::ifstream file(filepath, std::ios::ate | std::ios::binary);
+
+		if (!file.is_open())
+		{
+			throw std::runtime_error("failed to open file!");
+		}
+
+		size_t fileSize = (size_t)file.tellg();
+		std::vector<char> buffer(fileSize);
+
+		file.seekg(0);
+		file.read(buffer.data(), fileSize);
+
+		file.close();
+
+		return buffer;
+	}
+
+	VkShaderModule VulkanGraphicsPipeline::CreateShaderModule(std::vector<char> const& code) const
+	{
+		VkShaderModuleCreateInfo createInfo{};
+		createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+		createInfo.codeSize = code.size();
+		createInfo.pCode = reinterpret_cast<const uint32_t*>(code.data());
+
+		VkShaderModule shaderModule;
+		if (vkCreateShaderModule(m_pDeviceContext->GetLogicalDevice(), &createInfo, nullptr, &shaderModule) != VK_SUCCESS)
+		{
+			throw std::runtime_error("failed to create shader module!");
+		}
+
+		return shaderModule;
 	}
 }

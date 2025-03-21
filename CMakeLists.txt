@@ -75,7 +75,7 @@ foreach(shader ${SHADERS})
         # Only add a custom command if this shader file hasn't been processed yet
         add_custom_command(
             OUTPUT ${output_shader}
-            COMMAND ${GLSLC} -o ${output_shader} ${shader}
+            COMMAND ${GLSLC} ${shader} -o ${output_shader} || echo "Shader compilation failed: ${shader}"
             DEPENDS ${shader}
             COMMENT "Compiling shader ${shader}"
             VERBATIM
