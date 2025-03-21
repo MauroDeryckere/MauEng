@@ -9,7 +9,7 @@ namespace MauRen
 		m_DebugContext{ std::make_unique<VulkanDebugContext>(m_InstanceContext.get()) },
 		m_DeviceContext{ std::make_unique<VulkanDeviceContext>(m_SurfaceContext.get(), m_InstanceContext.get())},
 		m_SwapChainContext{ std::make_unique<VulkanSwapchainContext>(pWindow, m_SurfaceContext.get(), m_DeviceContext.get()) },
-		m_GraphicsPipeline{ std::make_unique<VulkanGraphicsPipeline>() }
+		m_GraphicsPipeline{ std::make_unique<VulkanGraphicsPipeline>(m_DeviceContext.get(), m_SwapChainContext.get() ) }
 	{
 	}
 

@@ -23,6 +23,7 @@ namespace MauRen
 
 		// Query if swap chain is supported for a given physical device & window surface
 		static SwapChainSupportDetails QuerySwapchainSupport(VkPhysicalDevice device, VkSurfaceKHR windowSurface);
+		[[nodiscard]] VkExtent2D GetExtent() const noexcept { return m_SwapChainExtent; }
 
 		VulkanSwapchainContext(VulkanSwapchainContext const&) = delete;
 		VulkanSwapchainContext(VulkanSwapchainContext&&) = delete;

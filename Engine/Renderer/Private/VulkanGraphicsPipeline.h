@@ -3,6 +3,7 @@
 
 #include "RendererPCH.h"
 #include "VulkanDeviceContext.h"
+#include "VulkanSwapchainContext.h"
 #include <filesystem>
 #include <fstream>
 
@@ -11,11 +12,17 @@ namespace MauRen
 	class VulkanGraphicsPipeline final
 	{
 	public:
-		VulkanGraphicsPipeline(VulkanDeviceContext* pDeviceContext);
+		VulkanGraphicsPipeline(VulkanDeviceContext* pDeviceContext, VulkanSwapchainContext* pSwapChainContext);
 		~VulkanGraphicsPipeline();
+
+		VulkanGraphicsPipeline(VulkanGraphicsPipeline const&) = delete;
+		VulkanGraphicsPipeline(VulkanGraphicsPipeline&&) = delete;
+		VulkanGraphicsPipeline& operator=(VulkanGraphicsPipeline const&) = delete;
+		VulkanGraphicsPipeline& operator=(VulkanGraphicsPipeline&&) = delete;
 
 	private:
 		VulkanDeviceContext* m_pDeviceContext;
+		VkPipelineLayout m_PipelineLayout;
 
 		static std::vector<char> ReadFile(std::filesystem::path const& filepath)
 		{
@@ -51,6 +58,8 @@ namespace MauRen
 			{
 				throw std::runtime_error("failed to create shader module!");
 			}
+
+			return shaderModule;
 		}
 	};
 }
