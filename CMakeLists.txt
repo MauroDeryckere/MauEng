@@ -45,7 +45,52 @@ message(STATUS "Game dir created! ")
 
 
 # @REGION PLATFORMS AND RESOURCES
-# Nothing here yet
+
+# Define where the shader files are located
+
+set(SHADER_DIR "${CMAKE_SOURCE_DIR}/resources/shaders")
+set(SHADER_OUTPUT_DIR "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/shaders")
+
+# Find the GLSL compiler (glslc)
+find_program(GLSLC glslc REQUIRED)
+
+# List your shaders here
+set(SHADERS
+    ${SHADER_DIR}/shader.vert
+    ${SHADER_DIR}/shader.frag
+)
+
+# Declare a list to hold all compiled shader output files
+set(COMPILED_SHADERS)
+
+# Compile each shader
+foreach(shader ${SHADERS})
+    # Determine the output file path for the compiled shader (SPIR-V format)
+    get_filename_component(shader_name ${shader} NAME) # Get the base filename without extension
+    set(output_shader "${SHADER_OUTPUT_DIR}/${shader_name}.spv")
+
+    # Add the output shader file to the list
+    list(APPEND COMPILED_SHADERS ${output_shader})
+
+        # Only add a custom command if this shader file hasn't been processed yet
+        add_custom_command(
+            OUTPUT ${output_shader}
+            COMMAND ${GLSLC} -o ${output_shader} ${shader}
+            DEPENDS ${shader}
+            COMMENT "Compiling shader ${shader}"
+            VERBATIM
+        )
+endforeach()
+
+# Add a custom target to ensure shaders are compiled during the build
+add_custom_target(
+    shaders ALL
+    DEPENDS ${COMPILED_SHADERS}
+)
+
+# Ensure your main project depends on the shader compilation
+add_dependencies(${EXECUTABLE_NAME} shaders)
+
 # @ENDREGION PLATFORMS AND RESOURCES
 
 # on Visual Studio, set our app as the default project

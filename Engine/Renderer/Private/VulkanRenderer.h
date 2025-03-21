@@ -10,6 +10,7 @@
 #include "VulkanDebugContext.h"
 #include "VulkanDeviceContext.h"
 #include "VulkanSwapchainContext.h"
+#include "VulkanGraphicsPipeline.h"
 
 namespace MauRen
 {
@@ -33,6 +34,7 @@ namespace MauRen
 		std::unique_ptr<VulkanDebugContext> m_DebugContext;
 		std::unique_ptr<VulkanDeviceContext> m_DeviceContext;
 		std::unique_ptr<VulkanSwapchainContext> m_SwapChainContext;
+		std::unique_ptr<VulkanGraphicsPipeline> m_GraphicsPipeline;
 	};
 }
 
