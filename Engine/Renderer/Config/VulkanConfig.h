@@ -25,6 +25,9 @@ namespace MauRen
 	{
 		VK_KHR_SWAPCHAIN_EXTENSION_NAME
 	};
+
+	uint32_t constexpr MAX_FRAMES_IN_FLIGHT{ 2 };
+	static_assert(MAX_FRAMES_IN_FLIGHT > 0);
 }
 
 #endif // MAUREN_VULKANCONFIG_H

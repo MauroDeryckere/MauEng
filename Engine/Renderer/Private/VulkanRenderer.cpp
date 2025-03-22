@@ -13,7 +13,7 @@ namespace MauRen
 	{
 		CreateFrameBuffers();
 		CreateCommandPool();
-		CreateCommandBuffer();
+		CreateCommandBuffers();
 		CreateSyncObjects();
 	}
 
@@ -22,9 +22,12 @@ namespace MauRen
 		// Wait for GPU to finish everything
 		vkDeviceWaitIdle(m_DeviceContext->GetLogicalDevice());
 
-		vkDestroySemaphore(m_DeviceContext->GetLogicalDevice(), m_ImageAvailableSemaphore, nullptr);
-		vkDestroySemaphore(m_DeviceContext->GetLogicalDevice(), m_RenderFinishedSemaphore, nullptr);
-		vkDestroyFence(m_DeviceContext->GetLogicalDevice(), m_InFlightFence, nullptr);
+		for (size_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; ++i)
+		{
+			vkDestroySemaphore(m_DeviceContext->GetLogicalDevice(), m_ImageAvailableSemaphores[i], nullptr);
+			vkDestroySemaphore(m_DeviceContext->GetLogicalDevice(), m_RenderFinishedSemaphores[i], nullptr);
+			vkDestroyFence(m_DeviceContext->GetLogicalDevice(), m_InFlightFences[i], nullptr);
+		}
 
 		vkDestroyCommandPool(m_DeviceContext->GetLogicalDevice(), m_CommandPool, nullptr);
 
@@ -81,8 +84,10 @@ namespace MauRen
 		}
 	}
 
-	void VulkanRenderer::CreateCommandBuffer()
+	void VulkanRenderer::CreateCommandBuffers()
 	{
+		m_CommandBuffers.resize(MAX_FRAMES_IN_FLIGHT);
+
 		VkCommandBufferAllocateInfo allocInfo{};
 		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 		allocInfo.commandPool = m_CommandPool;
@@ -90,11 +95,10 @@ namespace MauRen
 		// VK_COMMAND_BUFFER_LEVEL_PRIMARY: Can be submitted to a queue for execution, but cannot be called from other command buffers.
 		// VK_COMMAND_BUFFER_LEVEL_SECONDARY: Cannot be submitted directly, but can be called from primary command buffers.
 		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+		allocInfo.commandBufferCount = static_cast<uint32_t>(m_CommandBuffers.size());
 
-		allocInfo.commandBufferCount = 1;
-			
 
-		if (vkAllocateCommandBuffers(m_DeviceContext->GetLogicalDevice(), &allocInfo, &m_CommandBuffer) != VK_SUCCESS) 
+		if (vkAllocateCommandBuffers(m_DeviceContext->GetLogicalDevice(), &allocInfo, m_CommandBuffers.data()) != VK_SUCCESS) 
 		{
 			throw std::runtime_error("Failed to allocate command buffers!");
 		}
@@ -160,6 +164,10 @@ namespace MauRen
 
 	void VulkanRenderer::CreateSyncObjects()
 	{
+		m_ImageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
+		m_RenderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
+		m_InFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
+
 		VkSemaphoreCreateInfo semaphoreInfo{};
 		semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
@@ -168,46 +176,48 @@ namespace MauRen
 		// Create the fence in the signaled state, so that the first call to vkWaitForFences() returns immediately since the fence is already signaled
 		fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
-
-		if (vkCreateSemaphore(m_DeviceContext->GetLogicalDevice(), &semaphoreInfo, nullptr, &m_ImageAvailableSemaphore) != VK_SUCCESS 
-		 || vkCreateSemaphore(m_DeviceContext->GetLogicalDevice(), &semaphoreInfo, nullptr, &m_RenderFinishedSemaphore) != VK_SUCCESS 
-		 || vkCreateFence(m_DeviceContext->GetLogicalDevice(), &fenceInfo, nullptr, &m_InFlightFence) != VK_SUCCESS) 
+		for (size_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; ++i)
 		{
-			throw std::runtime_error("failed to create semaphores!");
+			if (vkCreateSemaphore(m_DeviceContext->GetLogicalDevice(), &semaphoreInfo, nullptr, &m_ImageAvailableSemaphores[i]) != VK_SUCCESS
+				|| vkCreateSemaphore(m_DeviceContext->GetLogicalDevice(), &semaphoreInfo, nullptr, &m_RenderFinishedSemaphores[i]) != VK_SUCCESS
+				|| vkCreateFence(m_DeviceContext->GetLogicalDevice(), &fenceInfo, nullptr, &m_InFlightFences[i]) != VK_SUCCESS)
+			{
+				throw std::runtime_error("Failed to create synchronization objects for a frame!");
+			}
 		}
 	}
 
 	void VulkanRenderer::DrawFrame()
 	{
 		// At the start of the frame, we want to wait until the previous frame has finished, so that the command buffer and semaphores are available to use.
-		vkWaitForFences(m_DeviceContext->GetLogicalDevice(), 1, &m_InFlightFence, VK_TRUE, UINT64_MAX);
-		vkResetFences(m_DeviceContext->GetLogicalDevice(), 1, &m_InFlightFence);
+		vkWaitForFences(m_DeviceContext->GetLogicalDevice(), 1, &m_InFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
+		vkResetFences(m_DeviceContext->GetLogicalDevice(), 1, &m_InFlightFences[currentFrame]);
 
 		uint32_t imageIndex;
 		//TODO error handling
-		vkAcquireNextImageKHR(m_DeviceContext->GetLogicalDevice(), m_SwapChainContext->GetSwapchain(), UINT64_MAX, m_ImageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
+		vkAcquireNextImageKHR(m_DeviceContext->GetLogicalDevice(), m_SwapChainContext->GetSwapchain(), UINT64_MAX, m_ImageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
 
-		vkResetCommandBuffer(m_CommandBuffer, 0);
-		RecordCommandBuffer(m_CommandBuffer, imageIndex);
+		vkResetCommandBuffer(m_CommandBuffers[currentFrame], 0);
+		RecordCommandBuffer(m_CommandBuffers[currentFrame], imageIndex);
 
 		VkSubmitInfo submitInfo{};
 		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
-		VkSemaphore const waitSemaphores[] { m_ImageAvailableSemaphore };
+		VkSemaphore const waitSemaphores[] { m_ImageAvailableSemaphores[currentFrame] };
 		VkPipelineStageFlags const waitStages[] { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
 		submitInfo.waitSemaphoreCount = 1;
 		submitInfo.pWaitSemaphores = waitSemaphores;
 		submitInfo.pWaitDstStageMask = waitStages;
 
 		submitInfo.commandBufferCount = 1;
-		submitInfo.pCommandBuffers = &m_CommandBuffer;
+		submitInfo.pCommandBuffers = &m_CommandBuffers[currentFrame];
 
-		VkSemaphore const signalSemaphores[] { m_RenderFinishedSemaphore };
+		VkSemaphore const signalSemaphores[] { m_RenderFinishedSemaphores[currentFrame] };
 		submitInfo.signalSemaphoreCount = 1;
 		submitInfo.pSignalSemaphores = signalSemaphores;
 
-		// m_InFlightFence here effectively means, this submit must be finished before our next render may start
-		if (vkQueueSubmit(m_DeviceContext->GetGraphicsQueue(), 1, &submitInfo, m_InFlightFence) != VK_SUCCESS) 
+		// m_InFlightFences here effectively means, this submit must be finished before our next render may start
+		if (vkQueueSubmit(m_DeviceContext->GetGraphicsQueue(), 1, &submitInfo, m_InFlightFences[currentFrame]) != VK_SUCCESS)
 		{
 			throw std::runtime_error("Failed to submit draw command buffer!");
 		}
@@ -229,6 +239,8 @@ namespace MauRen
 
 		//TODO error handling
 		vkQueuePresentKHR(m_DeviceContext->GetPresentQueue(), &presentInfo);
+
+		currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 	}
 }
 
