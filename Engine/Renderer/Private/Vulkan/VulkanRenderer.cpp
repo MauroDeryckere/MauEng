@@ -1,5 +1,7 @@
 #include "VulkanRenderer.h"
 
+#include "Utils.h"
+
 namespace MauRen
 {
 	VulkanRenderer::VulkanRenderer(GLFWwindow* pWindow) :
@@ -14,6 +16,7 @@ namespace MauRen
 	{
 		CreateFrameBuffers();
 		CreateCommandPool();
+		CreateVertexBuffer();
 		CreateCommandBuffers();
 		CreateSyncObjects();
 	}
@@ -29,6 +32,9 @@ namespace MauRen
 			vkDestroySemaphore(m_DeviceContext->GetLogicalDevice(), m_RenderFinishedSemaphores[i], nullptr);
 			vkDestroyFence(m_DeviceContext->GetLogicalDevice(), m_InFlightFences[i], nullptr);
 		}
+
+		vkDestroyBuffer(m_DeviceContext->GetLogicalDevice(), m_VertexBuffer, nullptr);
+		vkFreeMemory(m_DeviceContext->GetLogicalDevice(), m_VertexBufferMemory, nullptr);
 
 		vkDestroyCommandPool(m_DeviceContext->GetLogicalDevice(), m_CommandPool, nullptr);
 
@@ -90,6 +96,42 @@ namespace MauRen
 		}
 	}
 
+	void VulkanRenderer::CreateVertexBuffer()
+	{
+		VkBufferCreateInfo bufferInfo{};
+		bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+		bufferInfo.size = sizeof(m_Vertices[0]) * m_Vertices.size();
+
+		bufferInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+
+		bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+		if (vkCreateBuffer(m_DeviceContext->GetLogicalDevice(), &bufferInfo, nullptr, &m_VertexBuffer) != VK_SUCCESS) 
+		{
+			throw std::runtime_error("Failed to create vertex buffer!");
+		}
+
+		vkGetBufferMemoryRequirements(m_DeviceContext->GetLogicalDevice(), m_VertexBuffer, &m_MemRequirements);
+
+		VkMemoryAllocateInfo allocInfo{};
+		allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+		allocInfo.allocationSize = m_MemRequirements.size;
+		allocInfo.memoryTypeIndex = FindMemoryType(m_MemRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+		if (vkAllocateMemory(m_DeviceContext->GetLogicalDevice(), &allocInfo, nullptr, &m_VertexBufferMemory) != VK_SUCCESS) 
+		{
+			throw std::runtime_error("Failed to allocate vertex buffer memory!");
+		}
+
+		vkBindBufferMemory(m_DeviceContext->GetLogicalDevice(), m_VertexBuffer, m_VertexBufferMemory, 0);
+
+		void* data;
+		vkMapMemory(m_DeviceContext->GetLogicalDevice(), m_VertexBufferMemory, 0, bufferInfo.size, 0, &data);
+
+		memcpy(data, m_Vertices.data(), static_cast<size_t>(bufferInfo.size));
+		vkUnmapMemory(m_DeviceContext->GetLogicalDevice(), m_VertexBufferMemory);
+	}
+
 	void VulkanRenderer::CreateCommandBuffers()
 	{
 		m_CommandBuffers.resize(MAX_FRAMES_IN_FLIGHT);
@@ -142,6 +184,12 @@ namespace MauRen
 
 		vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipeline->GetPipeline() );
+
+		VkBuffer vertexBuffers[] { m_VertexBuffer };
+		VkDeviceSize offsets[] { 0 };
+		vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+
+		vkCmdDraw(commandBuffer, static_cast<uint32_t>(m_Vertices.size()), 1, 0, 0);
 
 		VkViewport viewport{};
 		viewport.x = 0.0f;
@@ -307,6 +355,22 @@ namespace MauRen
 		m_SwapChainContext = std::make_unique<VulkanSwapchainContext>(m_pWindow, m_SurfaceContext.get(), m_DeviceContext.get());
 
 		CreateFrameBuffers();
+	}
+
+	uint32_t VulkanRenderer::FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties)
+	{
+		VkPhysicalDeviceMemoryProperties memProperties;
+		vkGetPhysicalDeviceMemoryProperties(m_DeviceContext->GetPhysicalDevice(), &memProperties);
+
+		for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) 
+		{
+			if (typeFilter & (1 << i) and (memProperties.memoryTypes[i].propertyFlags & properties) == properties)
+			{
+				return i;
+			}
+		}
+
+		throw std::runtime_error("Failed to find suitable memory type!");
 	}
 }
 

@@ -1,5 +1,7 @@
 #include "VulkanGraphicsPipeline.h"
 
+#include "Utils.h"
+
 namespace MauRen
 {
 	VulkanGraphicsPipeline::VulkanGraphicsPipeline(VulkanDeviceContext* pDeviceContext, VulkanSwapchainContext* pSwapChainContext) :
@@ -103,10 +105,15 @@ namespace MauRen
 
 		VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
 		vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-		vertexInputInfo.vertexBindingDescriptionCount = 0;
-		vertexInputInfo.pVertexBindingDescriptions = nullptr; // Optional
-		vertexInputInfo.vertexAttributeDescriptionCount = 0;
-		vertexInputInfo.pVertexAttributeDescriptions = nullptr; // Optional
+
+		auto const bindingDescription{ Utils::GetVertexBindingDescription() };
+		auto const attributeDescriptions{ Utils::GetVertexAttributeDescriptions() };
+
+		vertexInputInfo.vertexBindingDescriptionCount = 1;
+		vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
+
+		vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
+		vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
 
 
 		VkPipelineInputAssemblyStateCreateInfo inputAssembly{};

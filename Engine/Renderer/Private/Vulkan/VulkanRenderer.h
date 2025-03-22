@@ -12,6 +12,8 @@
 #include "VulkanSwapchainContext.h"
 #include "VulkanGraphicsPipeline.h"
 
+#include "Vertex.h"
+
 // Sources
 // https://github.com/KhronosGroup/Vulkan-Docs/wiki/Synchronization-Examples#swapchain-image-acquire-and-present
 
@@ -63,8 +65,21 @@ namespace MauRen
 
 		bool m_FramebufferResized{ false };
 
+		VkBuffer m_VertexBuffer;
+		VkDeviceMemory m_VertexBufferMemory;
+		VkMemoryRequirements m_MemRequirements;
+
+		// Temporary
+		const std::vector<Vertex> m_Vertices
+		{
+			{{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+			{{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
+			{{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
+		};
+
 		void CreateFrameBuffers();
 		void CreateCommandPool();
+		void CreateVertexBuffer();
 		void CreateCommandBuffers();
 
 		void RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
@@ -74,6 +89,8 @@ namespace MauRen
 		void DrawFrame();
 
 		void RecreateSwapchain();
+
+		uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 
 	};
 }
