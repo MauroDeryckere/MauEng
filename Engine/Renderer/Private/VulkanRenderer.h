@@ -44,11 +44,24 @@ namespace MauRen
 		// Automatically freed when their pool is destroyed
 		VkCommandBuffer m_CommandBuffer;
 
+		// Signal that an image has been acquired from the swapchain and is ready for rendering
+		VkSemaphore m_ImageAvailableSemaphore;
+		
+		// Signal that rendering has finished and presentation can happen
+		VkSemaphore m_RenderFinishedSemaphore;
+
+		// Fence to make sure only one frame is rendering at a time
+		VkFence m_InFlightFence;
+
 		void CreateFrameBuffers();
 		void CreateCommandPool();
 		void CreateCommandBuffer();
 
 		void RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
+
+		void CreateSyncObjects();
+
+		void DrawFrame();
 
 	};
 }

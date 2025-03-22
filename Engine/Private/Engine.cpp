@@ -60,6 +60,5 @@ namespace MauEng
 
 			//std::this_thread::sleep_for(time.SleepTime());
 		}
-
 	}
 }

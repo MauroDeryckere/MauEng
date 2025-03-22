@@ -24,6 +24,7 @@ namespace MauRen
 		// Query if swap chain is supported for a given physical device & window surface
 		static SwapChainSupportDetails QuerySwapchainSupport(VkPhysicalDevice device, VkSurfaceKHR windowSurface);
 
+		[[nodiscard]] VkSwapchainKHR GetSwapchain() const noexcept { return m_SwapChain; }
 		[[nodiscard]] std::vector<VkImageView> const& GetImageViews() const noexcept { return m_SwapChainImageViews; }
 
 		[[nodiscard]] VkExtent2D GetExtent() const noexcept { return m_SwapChainExtent; }

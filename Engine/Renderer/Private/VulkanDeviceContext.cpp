@@ -135,7 +135,7 @@ namespace MauRen
 			queueCreateInfos.emplace_back(queueCreateInfo);
 		}
 
-		// TODO Enable Vulkan device features -not necessary currenrly 
+		// TODO Enable Vulkan device features - not necessary currently 
 		VkPhysicalDeviceFeatures deviceFeatures{};
 
 		VkDeviceCreateInfo createInfo{};
