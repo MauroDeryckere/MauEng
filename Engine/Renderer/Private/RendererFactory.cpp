@@ -1,7 +1,7 @@
 #include "RendererPCH.h"
 
 #include "RendererFactory.h"
-#include "VulkanRenderer.h"
+#include "Vulkan/VulkanRenderer.h"
 
 namespace MauRen {
 	// Only vulkan renderer for now, factory pattern may be expanded in the future
