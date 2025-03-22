@@ -16,6 +16,7 @@ namespace MauRen
 		~VulkanGraphicsPipeline();
 
 		[[nodiscard]] VkRenderPass GetRenderPass() const noexcept { return m_RenderPass; }
+		[[nodiscard]] VkPipeline GetPipeline() const noexcept { return m_GraphicsPipeline; }
 
 		VulkanGraphicsPipeline(VulkanGraphicsPipeline const&) = delete;
 		VulkanGraphicsPipeline(VulkanGraphicsPipeline&&) = delete;

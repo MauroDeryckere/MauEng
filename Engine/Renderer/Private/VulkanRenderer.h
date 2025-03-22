@@ -39,7 +39,17 @@ namespace MauRen
 		// no unique ptr owned contxt for this currently, can be moved if the logic grows a lot
 		std::vector<VkFramebuffer> m_SwapChainFramebuffers;
 
+		// no unique ptr owned contxt for this currently, can be moved if the logic grows a lot
+		VkCommandPool m_CommandPool;
+		// Automatically freed when their pool is destroyed
+		VkCommandBuffer m_CommandBuffer;
+
 		void CreateFrameBuffers();
+		void CreateCommandPool();
+		void CreateCommandBuffer();
+
+		void RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
+
 	};
 }
 
