@@ -15,6 +15,8 @@ namespace MauRen
 		VulkanGraphicsPipeline(VulkanDeviceContext* pDeviceContext, VulkanSwapchainContext* pSwapChainContext);
 		~VulkanGraphicsPipeline();
 
+		[[nodiscard]] VkRenderPass GetRenderPass() const noexcept { return m_RenderPass; }
+
 		VulkanGraphicsPipeline(VulkanGraphicsPipeline const&) = delete;
 		VulkanGraphicsPipeline(VulkanGraphicsPipeline&&) = delete;
 		VulkanGraphicsPipeline& operator=(VulkanGraphicsPipeline const&) = delete;

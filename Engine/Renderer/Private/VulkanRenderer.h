@@ -35,6 +35,11 @@ namespace MauRen
 		std::unique_ptr<VulkanDeviceContext> m_DeviceContext;
 		std::unique_ptr<VulkanSwapchainContext> m_SwapChainContext;
 		std::unique_ptr<VulkanGraphicsPipeline> m_GraphicsPipeline;
+
+		// no unique ptr owned contxt for this currently, can be moved if the logic grows a lot
+		std::vector<VkFramebuffer> m_SwapChainFramebuffers;
+
+		void CreateFrameBuffers();
 	};
 }
 
