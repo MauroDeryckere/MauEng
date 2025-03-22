@@ -4,6 +4,11 @@
 #include <functional>
 #include <memory>
 
+namespace MauRen
+{
+	class Renderer;
+}
+
 namespace MauEng
 {
 	struct GLFWWindow;
@@ -23,6 +28,7 @@ namespace MauEng
 
 	private:
 		std::unique_ptr<GLFWWindow> m_Window{ nullptr };
+		std::unique_ptr<MauRen::Renderer> m_Renderer{ nullptr };
 	};
 }
 

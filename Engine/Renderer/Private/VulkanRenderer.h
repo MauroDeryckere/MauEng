@@ -24,7 +24,7 @@ namespace MauRen
 		virtual ~VulkanRenderer() override;
 
 		virtual void Render() override;
-
+		virtual void ResizeWindow() override;
 
 		VulkanRenderer(VulkanRenderer const&) = delete;
 		VulkanRenderer(VulkanRenderer&&) = delete;
@@ -32,6 +32,9 @@ namespace MauRen
 		VulkanRenderer& operator=(VulkanRenderer&&) = delete;
 
 	private:
+		// "reference" to the window
+		GLFWwindow* m_pWindow;
+
 		std::unique_ptr<VulkanInstanceContext> m_InstanceContext;
 		std::unique_ptr<VulkanSurfaceContext> m_SurfaceContext;
 		std::unique_ptr<VulkanDebugContext> m_DebugContext;
@@ -56,7 +59,9 @@ namespace MauRen
 		// Fence to make sure only one frame is rendering at a time
 		std::vector<VkFence> m_InFlightFences;
 
-		uint32_t currentFrame{ 0 };
+		uint32_t m_CurrentFrame{ 0 };
+
+		bool m_FramebufferResized{ false };
 
 		void CreateFrameBuffers();
 		void CreateCommandPool();
@@ -67,6 +72,8 @@ namespace MauRen
 		void CreateSyncObjects();
 
 		void DrawFrame();
+
+		void RecreateSwapchain();
 
 	};
 }

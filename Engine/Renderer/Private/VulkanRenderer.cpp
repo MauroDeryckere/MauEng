@@ -4,6 +4,7 @@ namespace MauRen
 {
 	VulkanRenderer::VulkanRenderer(GLFWwindow* pWindow) :
 		Renderer{ pWindow },
+		m_pWindow{ pWindow },
 		m_InstanceContext{ std::make_unique<VulkanInstanceContext>() },
 		m_SurfaceContext{ std::make_unique<VulkanSurfaceContext>(m_InstanceContext.get(), pWindow) },
 		m_DebugContext{ std::make_unique<VulkanDebugContext>(m_InstanceContext.get()) },
@@ -40,6 +41,11 @@ namespace MauRen
 	void VulkanRenderer::Render()
 	{
 		DrawFrame();
+	}
+
+	void VulkanRenderer::ResizeWindow()
+	{
+		m_FramebufferResized = true;
 	}
 
 	void VulkanRenderer::CreateFrameBuffers()
@@ -190,34 +196,50 @@ namespace MauRen
 	void VulkanRenderer::DrawFrame()
 	{
 		// At the start of the frame, we want to wait until the previous frame has finished, so that the command buffer and semaphores are available to use.
-		vkWaitForFences(m_DeviceContext->GetLogicalDevice(), 1, &m_InFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
-		vkResetFences(m_DeviceContext->GetLogicalDevice(), 1, &m_InFlightFences[currentFrame]);
+		vkWaitForFences(m_DeviceContext->GetLogicalDevice(), 1, &m_InFlightFences[m_CurrentFrame], VK_TRUE, UINT64_MAX);
 
 		uint32_t imageIndex;
-		//TODO error handling
-		vkAcquireNextImageKHR(m_DeviceContext->GetLogicalDevice(), m_SwapChainContext->GetSwapchain(), UINT64_MAX, m_ImageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
+		VkResult const acquireNextImageResult{ vkAcquireNextImageKHR(m_DeviceContext->GetLogicalDevice(), m_SwapChainContext->GetSwapchain(), UINT64_MAX, m_ImageAvailableSemaphores[m_CurrentFrame], VK_NULL_HANDLE, &imageIndex) };
 
-		vkResetCommandBuffer(m_CommandBuffers[currentFrame], 0);
-		RecordCommandBuffer(m_CommandBuffers[currentFrame], imageIndex);
+		if (acquireNextImageResult == VK_ERROR_OUT_OF_DATE_KHR)
+		{
+			RecreateSwapchain();
+			return;
+		}
+
+		// TODO
+		// You could also decide to do that if the swap chain is suboptimal, but I've chosen to proceed anyway in that case because we've already acquired an image.
+		// Both VK_SUCCESS and VK_SUBOPTIMAL_KHR are considered "success" return codes.
+		if (acquireNextImageResult != VK_SUCCESS && acquireNextImageResult != VK_SUBOPTIMAL_KHR)
+		{
+			throw std::runtime_error("Failed to acquire swap chain image!");
+		}
+
+		// Only reset the fence if we are submitting work
+		vkResetFences(m_DeviceContext->GetLogicalDevice(), 1, &m_InFlightFences[m_CurrentFrame]);
+
+
+		vkResetCommandBuffer(m_CommandBuffers[m_CurrentFrame], 0);
+		RecordCommandBuffer(m_CommandBuffers[m_CurrentFrame], imageIndex);
 
 		VkSubmitInfo submitInfo{};
 		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
-		VkSemaphore const waitSemaphores[] { m_ImageAvailableSemaphores[currentFrame] };
+		VkSemaphore const waitSemaphores[] { m_ImageAvailableSemaphores[m_CurrentFrame] };
 		VkPipelineStageFlags const waitStages[] { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
 		submitInfo.waitSemaphoreCount = 1;
 		submitInfo.pWaitSemaphores = waitSemaphores;
 		submitInfo.pWaitDstStageMask = waitStages;
 
 		submitInfo.commandBufferCount = 1;
-		submitInfo.pCommandBuffers = &m_CommandBuffers[currentFrame];
+		submitInfo.pCommandBuffers = &m_CommandBuffers[m_CurrentFrame];
 
-		VkSemaphore const signalSemaphores[] { m_RenderFinishedSemaphores[currentFrame] };
+		VkSemaphore const signalSemaphores[] { m_RenderFinishedSemaphores[m_CurrentFrame] };
 		submitInfo.signalSemaphoreCount = 1;
 		submitInfo.pSignalSemaphores = signalSemaphores;
 
 		// m_InFlightFences here effectively means, this submit must be finished before our next render may start
-		if (vkQueueSubmit(m_DeviceContext->GetGraphicsQueue(), 1, &submitInfo, m_InFlightFences[currentFrame]) != VK_SUCCESS)
+		if (vkQueueSubmit(m_DeviceContext->GetGraphicsQueue(), 1, &submitInfo, m_InFlightFences[m_CurrentFrame]) != VK_SUCCESS)
 		{
 			throw std::runtime_error("Failed to submit draw command buffer!");
 		}
@@ -237,10 +259,54 @@ namespace MauRen
 		// Not necessary when using a single swapchain
 		presentInfo.pResults = nullptr; // Optional
 
-		//TODO error handling
-		vkQueuePresentKHR(m_DeviceContext->GetPresentQueue(), &presentInfo);
+		VkResult const queuePresentResult{ vkQueuePresentKHR(m_DeviceContext->GetPresentQueue(), &presentInfo) };
+		if (queuePresentResult == VK_ERROR_OUT_OF_DATE_KHR || queuePresentResult == VK_SUBOPTIMAL_KHR || m_FramebufferResized)
+		{
+			m_FramebufferResized = false;
+			RecreateSwapchain();
+		}
+		
+		// TODO
+		// You could also decide to do that if the swap chain is suboptimal, but I've chosen to proceed anyway in that case because we've already acquired an image.
+		// Both VK_SUCCESS and VK_SUBOPTIMAL_KHR are considered "success" return codes.
+		else if (queuePresentResult != VK_SUCCESS) 
+		{
+			throw std::runtime_error("Failed to present swap chain image!");
+		}
 
-		currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
+		m_CurrentFrame = (m_CurrentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
+	}
+
+	void VulkanRenderer::RecreateSwapchain()
+	{
+		// TODO 
+		// It is possible to create a new swap chain while drawing commands on an image from the old swap chain are still in - flight.
+		// You need to pass the previous swap chain to the oldSwapChain field in the VkSwapchainCreateInfoKHR struct and destroy the old swap chain as soon as you've finished using it.
+
+
+		// This essentially pauses until the window is in the foreground again
+		int width{};
+		int height{};
+		glfwGetFramebufferSize(m_pWindow, &width, &height);
+
+		while (width == 0 || height == 0) 
+		{
+			glfwGetFramebufferSize(m_pWindow, &width, &height);
+			glfwWaitEvents();
+		}
+
+		vkDeviceWaitIdle(m_DeviceContext->GetLogicalDevice());
+
+		// since it's a unique ptr, this "destroys" it
+		m_SwapChainContext = nullptr;
+		for (auto const& framebuffer : m_SwapChainFramebuffers)
+		{
+			vkDestroyFramebuffer(m_DeviceContext->GetLogicalDevice(), framebuffer, nullptr);
+		}
+
+		m_SwapChainContext = std::make_unique<VulkanSwapchainContext>(m_pWindow, m_SurfaceContext.get(), m_DeviceContext.get());
+
+		CreateFrameBuffers();
 	}
 }
 

@@ -13,6 +13,8 @@ namespace MauRen
 
 		virtual void Render() = 0;
 
+		virtual void ResizeWindow() = 0;
+
 		Renderer(Renderer const&) = delete;
 		Renderer(Renderer&&) = delete;
 		Renderer& operator=(Renderer const&) = delete;
@@ -29,6 +31,7 @@ namespace MauRen
 		virtual ~NullRenderer() override = default;
 
 		virtual void Render() override {}
+		virtual void ResizeWindow() override {};
 
 		NullRenderer(NullRenderer const&) = delete;
 		NullRenderer(NullRenderer&&) = delete;

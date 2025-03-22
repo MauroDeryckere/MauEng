@@ -9,8 +9,14 @@
 #define GLFW_INCLUDE_VULKAN
 #include "GLFW/glfw3.h"
 
+namespace MauRen
+{
+	class Renderer;
+}
+
 namespace MauEng
 {
+
 	struct GLFWWindow final
 	{
 		GLFWwindow* window{ nullptr };
@@ -19,8 +25,13 @@ namespace MauEng
 
 		std::string windowTitle{ "VulkanProject" };
 
+		static void FramebufferResizeCallback(GLFWwindow* window, int width, int height);
+
 		GLFWWindow();
 		~GLFWWindow();
+
+		void Initialize(MauRen::Renderer* pRenderer);
+
 
 		GLFWWindow(GLFWWindow const&) = delete;
 		GLFWWindow(GLFWWindow&&) = delete;

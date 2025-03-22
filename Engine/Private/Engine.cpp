@@ -9,9 +9,11 @@
 namespace MauEng
 {
 	Engine::Engine():
-		m_Window{ std::make_unique<GLFWWindow>() }
+		m_Window{ std::make_unique<GLFWWindow>() },
+		m_Renderer{ MauRen::CreateRenderer(m_Window->window) }
 	{
 		// Initialize all core dependences & singletons
+		m_Window->Initialize(m_Renderer.get());
 	}
 
 	Engine::~Engine()
@@ -27,7 +29,6 @@ namespace MauEng
 		using namespace MauRen;
 
 		// Get all the systems we wish to use during the game loop
-		std::unique_ptr<Renderer> const renderer { CreateRenderer(m_Window->window)};
 
 		// TODO
 		// The Game loop
@@ -56,7 +57,7 @@ namespace MauEng
 
 			//sceneManager.Update();
 
-			renderer->Render();
+			m_Renderer->Render();
 
 			//std::this_thread::sleep_for(time.SleepTime());
 		}
