@@ -17,6 +17,7 @@ namespace MauRen
 		CreateFrameBuffers();
 		CreateCommandPool();
 		CreateVertexBuffer();
+		CreateIndexBuffer();
 		CreateCommandBuffers();
 		CreateSyncObjects();
 	}
@@ -32,6 +33,9 @@ namespace MauRen
 			vkDestroySemaphore(m_DeviceContext->GetLogicalDevice(), m_RenderFinishedSemaphores[i], nullptr);
 			vkDestroyFence(m_DeviceContext->GetLogicalDevice(), m_InFlightFences[i], nullptr);
 		}
+
+		vkDestroyBuffer(m_DeviceContext->GetLogicalDevice(), m_IndexBuffer, nullptr);
+		vkFreeMemory(m_DeviceContext->GetLogicalDevice(), m_IndexBufferMemory, nullptr);
 
 		vkDestroyBuffer(m_DeviceContext->GetLogicalDevice(), m_VertexBuffer, nullptr);
 		vkFreeMemory(m_DeviceContext->GetLogicalDevice(), m_VertexBufferMemory, nullptr);
@@ -121,6 +125,35 @@ namespace MauRen
 					m_VertexBufferMemory);
 
 		CopyBuffer(stagingBuffer, m_VertexBuffer, bufferSize);
+
+		vkDestroyBuffer(m_DeviceContext->GetLogicalDevice(), stagingBuffer, nullptr);
+		vkFreeMemory(m_DeviceContext->GetLogicalDevice(), stagingBufferMemory, nullptr);
+	}
+
+	void VulkanRenderer::CreateIndexBuffer()
+	{
+		VkDeviceSize const bufferSize{ sizeof(m_Indices[0]) * m_Indices.size() };
+
+		VkBuffer stagingBuffer;
+		VkDeviceMemory stagingBufferMemory;
+		CreateBuffer(bufferSize, 
+ 					VK_BUFFER_USAGE_TRANSFER_SRC_BIT, 
+					VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, 
+					stagingBuffer, 
+					stagingBufferMemory);
+
+		void* data;
+		vkMapMemory(m_DeviceContext->GetLogicalDevice(), stagingBufferMemory, 0, bufferSize, 0, &data);
+		memcpy(data, m_Indices.data(), static_cast<size_t>(bufferSize));
+		vkUnmapMemory(m_DeviceContext->GetLogicalDevice(), stagingBufferMemory);
+			
+		CreateBuffer(bufferSize, 
+					 VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, 
+			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, 
+					m_IndexBuffer, 
+					m_IndexBufferMemory);
+
+		CopyBuffer(stagingBuffer, m_IndexBuffer, bufferSize);
 
 		vkDestroyBuffer(m_DeviceContext->GetLogicalDevice(), stagingBuffer, nullptr);
 		vkFreeMemory(m_DeviceContext->GetLogicalDevice(), stagingBufferMemory, nullptr);
@@ -263,37 +296,46 @@ namespace MauRen
 		renderPassInfo.pClearValues = &clearColor;
 
 		vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipeline->GetPipeline() );
+			vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipeline->GetPipeline() );
 
-		VkBuffer vertexBuffers[] { m_VertexBuffer };
-		VkDeviceSize offsets[] { 0 };
-		vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+			VkViewport viewport{};
+			viewport.x = 0.0f;
+			viewport.y = 0.0f;
+			viewport.width = static_cast<float>(m_SwapChainContext->GetExtent().width);
+			viewport.height = static_cast<float>(m_SwapChainContext->GetExtent().height);
+			viewport.minDepth = 0.0f;
+			viewport.maxDepth = 1.0f;
+			vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
 
-		vkCmdDraw(commandBuffer, static_cast<uint32_t>(m_Vertices.size()), 1, 0, 0);
+			VkRect2D scissor{};
+			scissor.offset = { 0, 0 };
+			scissor.extent = m_SwapChainContext->GetExtent();
+			vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-		VkViewport viewport{};
-		viewport.x = 0.0f;
-		viewport.y = 0.0f;
-		viewport.width = static_cast<float>(m_SwapChainContext->GetExtent().width);
-		viewport.height = static_cast<float>(m_SwapChainContext->GetExtent().height);
-		viewport.minDepth = 0.0f;
-		viewport.maxDepth = 1.0f;
-		vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+			VkBuffer vertexBuffers[] { m_VertexBuffer };
+			VkDeviceSize offsets[] { 0 };
+			vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
 
-		VkRect2D scissor{};
-		scissor.offset = { 0, 0 };
-		scissor.extent = m_SwapChainContext->GetExtent();
-		vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+			// you can only have a single index buffer. It's unfortunately not possible to use different indices for each vertex attribute,
+			// so we do still have to completely duplicate vertex data even if just one attribute varies.
+			vkCmdBindIndexBuffer(commandBuffer, m_IndexBuffer, 0, VK_INDEX_TYPE_UINT16);
+			static_assert(sizeof(m_Indices[0]) == 2);
 
-		vkCmdDraw(commandBuffer, 3, 1, 0, 0);
-
-
+			vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(m_Indices.size()), 1, 0, 0, 0);
 		vkCmdEndRenderPass(commandBuffer);
 
 		if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) 
 		{
 			throw std::runtime_error("Failed to record command buffer!");
 		}
+
+		//TODO
+		/*Driver developers recommend that you also store multiple buffers, like the vertex and index buffer, into a single VkBuffer
+		 *and use offsets in commands like vkCmdBindVertexBuffers.
+		 *The advantage is that your data is more cache friendly in that case, because it's closer together.
+		 *It is even possible to reuse the same chunk of memory for multiple resources if they are not used during the same render operations,
+		 *provided that their data is refreshed, of course. This is known as aliasing and some Vulkan functions have explicit flags to specify that you want to do this.
+		 */
 	}
 
 	void VulkanRenderer::CreateSyncObjects()
