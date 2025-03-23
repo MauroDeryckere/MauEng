@@ -12,7 +12,8 @@ add_subdirectory(glfw)
 target_link_libraries(Libs INTERFACE glfw)
 
 # Add the Libs/ directory to the include paths
-include_directories(${PROJECT_SOURCE_DIR}/Libs/stb)
+add_library(stb INTERFACE)
+target_include_directories(stb INTERFACE ${CMAKE_SOURCE_DIR}/Libs/stb)
+target_link_libraries(Libs INTERFACE stb)
 
-# Set common include directories if needed
 

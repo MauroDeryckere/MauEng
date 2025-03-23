@@ -138,6 +138,8 @@ namespace MauRen
 
 		uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 
+		void CreateTextureImage();
+
 	};
 }
 

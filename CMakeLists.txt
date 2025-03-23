@@ -48,8 +48,8 @@ message(STATUS "Game dir created! ")
 
 # Define where the shader files are located
 
-set(SHADER_DIR "${CMAKE_SOURCE_DIR}/resources/shaders")
-set(SHADER_OUTPUT_DIR "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/shaders")
+set(SHADER_DIR "${CMAKE_SOURCE_DIR}/Resources/Shaders")
+set(SHADER_OUTPUT_DIR "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Shaders")
 
 # Find the GLSL compiler (glslc)
 find_program(GLSLC glslc REQUIRED)
@@ -82,20 +82,55 @@ foreach(shader ${SHADERS})
         )
 endforeach()
 
-# Add a custom target to ensure shaders are compiled during the build
 add_custom_target(
     shaders ALL
     DEPENDS ${COMPILED_SHADERS}
 )
 
-# Ensure your main project depends on the shader compilation
+# Ensure main project depends on the shader compilation
 add_dependencies(${EXECUTABLE_NAME} shaders)
+
+# Define texture source and destination directories
+set(TEXTURE_DIR "${CMAKE_SOURCE_DIR}/Resources/Textures")
+set(TEXTURE_OUTPUT_DIR "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Textures")
+
+file(GLOB TEXTURES "${TEXTURE_DIR}/*.png" "${TEXTURE_DIR}/*.jpg" "${TEXTURE_DIR}/*.bmp")
+
+if(TEXTURES)
+    # Declare a list to hold custom commands for copying textures
+    set(COPY_TEXTURE_COMMANDS)
+    foreach(texture ${TEXTURES})
+        # Get the filename without the directory
+        get_filename_component(texture_name ${texture} NAME)
+
+        # Define the full destination path for the texture
+        set(destination_texture "${TEXTURE_OUTPUT_DIR}/${texture_name}")
+
+        set(destination_texture "${TEXTURE_OUTPUT_DIR}/${texture_name}")
+        add_custom_command(
+            OUTPUT ${destination_texture}
+            COMMAND ${CMAKE_COMMAND} -E copy ${texture} ${destination_texture} || echo "Texture copy failed: ${texture}"
+            DEPENDS ${texture}
+            COMMENT "Copying texture ${texture_name}"
+            VERBATIM
+        )
+
+        # Add the custom command to the list
+        list(APPEND COPY_TEXTURE_COMMANDS ${destination_texture})
+    endforeach()
+else()
+    message(STATUS "No textures to copy.")
+endif()
+
+# Add a custom target for copying textures
+    add_custom_target(
+        copy_textures ALL
+        DEPENDS ${COPY_TEXTURE_COMMANDS}
+    )
+
+add_dependencies(${EXECUTABLE_NAME} copy_textures)
 
 # @ENDREGION PLATFORMS AND RESOURCES
 
 # on Visual Studio, set our app as the default project
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT Game)
-
-
-
-

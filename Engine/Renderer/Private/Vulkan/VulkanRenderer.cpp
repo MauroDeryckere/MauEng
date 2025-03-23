@@ -8,6 +8,10 @@
 
 #include <chrono>
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
+
 namespace MauRen
 {
 	VulkanRenderer::VulkanRenderer(GLFWwindow* pWindow) :
@@ -27,6 +31,9 @@ namespace MauRen
 
 		CreateFrameBuffers();
 		CreateCommandPool();
+
+		CreateTextureImage();
+
 		CreateVertexBuffer();
 		CreateIndexBuffer();
 		CreateUniformBuffers();
@@ -648,6 +655,11 @@ namespace MauRen
 		}
 
 		throw std::runtime_error("Failed to find suitable memory type!");
+	}
+
+	void VulkanRenderer::CreateTextureImage()
+	{
+
 	}
 }
 
