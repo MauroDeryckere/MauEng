@@ -34,6 +34,7 @@ namespace MauRen
 
 		CreateTextureImage();
 		CreateTextureImageView();
+		CreateTextureSampler();
 
 		CreateVertexBuffer();
 		CreateIndexBuffer();
@@ -61,6 +62,8 @@ namespace MauRen
 		DestroyBuffer(m_IndexBuffer);
 		DestroyBuffer(m_VertexBuffer);
 
+		vkDestroySampler(m_DeviceContext->GetLogicalDevice(), m_TextureSampler, nullptr);
+		vkDestroyImageView(m_DeviceContext->GetLogicalDevice(), m_TextureImageView, nullptr);
 		DestroyImage(m_TextureImage);
 
 		vkDestroyCommandPool(m_DeviceContext->GetLogicalDevice(), m_CommandPool, nullptr);
@@ -807,7 +810,56 @@ namespace MauRen
 
 	void VulkanRenderer::CreateTextureImageView()
 	{
+		VkImageViewCreateInfo viewInfo{};
+		viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+		viewInfo.image = m_TextureImage.image;
+		viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+		viewInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
+		viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		viewInfo.subresourceRange.baseMipLevel = 0;
+		viewInfo.subresourceRange.levelCount = 1;
+		viewInfo.subresourceRange.baseArrayLayer = 0;
+		viewInfo.subresourceRange.layerCount = 1;
 
+		if (vkCreateImageView(m_DeviceContext->GetLogicalDevice(), &viewInfo, nullptr, &m_TextureImageView) != VK_SUCCESS) 
+		{
+			throw std::runtime_error("Failed to create texture image view!");
+		}
+	}
+
+	void VulkanRenderer::CreateTextureSampler()
+	{
+		VkSamplerCreateInfo samplerInfo{};
+		samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+		samplerInfo.magFilter = VK_FILTER_LINEAR;
+		samplerInfo.minFilter = VK_FILTER_LINEAR;
+
+		// If addressed outside of bounds, repeat (tileable texture)
+		samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+		samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+		samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+
+		samplerInfo.anisotropyEnable = VK_TRUE;
+		VkPhysicalDeviceProperties properties{};
+		vkGetPhysicalDeviceProperties(m_DeviceContext->GetPhysicalDevice(), &properties);
+
+		// If we want to go for maximum quality, we can simply use the limit directly
+		samplerInfo.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
+		samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+		samplerInfo.unnormalizedCoordinates = VK_FALSE;
+
+		samplerInfo.compareEnable = VK_FALSE;
+		samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
+
+		samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+		samplerInfo.mipLodBias = 0.0f;
+		samplerInfo.minLod = 0.0f;
+		samplerInfo.maxLod = 0.0f;
+
+		if (vkCreateSampler(m_DeviceContext->GetLogicalDevice(), &samplerInfo, nullptr, &m_TextureSampler) != VK_SUCCESS) 
+		{
+			throw std::runtime_error("failed to create texture sampler!");
+		}
 	}
 
 	VkCommandBuffer VulkanRenderer::BeginSingleTimeCommands()

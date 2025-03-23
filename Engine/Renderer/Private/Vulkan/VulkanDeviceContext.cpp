@@ -135,8 +135,9 @@ namespace MauRen
 			queueCreateInfos.emplace_back(queueCreateInfo);
 		}
 
-		// TODO Enable Vulkan device features - not necessary currently 
+		// Enable all required device features
 		VkPhysicalDeviceFeatures deviceFeatures{};
+		deviceFeatures.samplerAnisotropy = VK_TRUE;
 
 		VkDeviceCreateInfo createInfo{};
 		createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
@@ -259,7 +260,9 @@ namespace MauRen
 		if (extensionsSupported)
 		{
 			SwapChainSupportDetails const swapChainSupport{ VulkanSwapchainContext::QuerySwapchainSupport(device, m_pVulkanSurfaceContext->GetWindowSurface()) };
-			swapChainAdequate = not swapChainSupport.formats.empty() && not swapChainSupport.presentModes.empty();
+			swapChainAdequate = not swapChainSupport.formats.empty()
+							&& not swapChainSupport.presentModes.empty()
+							&& deviceFeatures.samplerAnisotropy; // Could also not enforce and set a bool that's reused here 
 		}
 
 		return indices.IsComplete() and extensionsSupported and swapChainAdequate;

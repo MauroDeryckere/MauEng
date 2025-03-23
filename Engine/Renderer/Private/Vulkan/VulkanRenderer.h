@@ -112,11 +112,13 @@ namespace MauRen
 
 		struct VulkanImage final
 		{
-			VkImage image;
-			VkDeviceMemory imageMemory;
+			VkImage image{ VK_NULL_HANDLE };
+			VkDeviceMemory imageMemory{ VK_NULL_HANDLE };
 		};
 
-		VulkanImage m_TextureImage;
+		VulkanImage m_TextureImage{};
+		VkImageView m_TextureImageView{ VK_NULL_HANDLE };
+		VkSampler m_TextureSampler{ VK_NULL_HANDLE };
 
 		void CreateDescriptorSetLayout();
 		void CreateDescriptorPool();
@@ -152,7 +154,9 @@ namespace MauRen
 		void DestroyImage(VulkanImage const& image);
 		void TransitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
 
+		// TODO refactor
 		void CreateTextureImageView();
+		void CreateTextureSampler();
 
 		VkCommandBuffer BeginSingleTimeCommands();
 		void EndSingleTimeCommands(VkCommandBuffer commandBuffer);
