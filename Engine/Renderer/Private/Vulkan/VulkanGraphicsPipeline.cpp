@@ -4,11 +4,11 @@
 
 namespace MauRen
 {
-	VulkanGraphicsPipeline::VulkanGraphicsPipeline(VulkanDeviceContext* pDeviceContext, VulkanSwapchainContext* pSwapChainContext) :
+	VulkanGraphicsPipeline::VulkanGraphicsPipeline(VulkanDeviceContext* pDeviceContext, VulkanSwapchainContext* pSwapChainContext, VkDescriptorSetLayout descriptorSetLayout, uint32_t descriptorSetLayoutCount) :
 		m_pDeviceContext{ pDeviceContext }
 	{
 		CreateRenderPass(pSwapChainContext);
-		CreateGraphicsPipeline(pSwapChainContext);
+		CreateGraphicsPipeline(pSwapChainContext, descriptorSetLayout, descriptorSetLayoutCount);
 	}
 
 	VulkanGraphicsPipeline::~VulkanGraphicsPipeline()
@@ -69,7 +69,7 @@ namespace MauRen
 		}
 	}
 
-	void VulkanGraphicsPipeline::CreateGraphicsPipeline(VulkanSwapchainContext* pSwapChainContext)
+	void VulkanGraphicsPipeline::CreateGraphicsPipeline(VulkanSwapchainContext* pSwapChainContext, VkDescriptorSetLayout descriptorSetLayout, uint32_t descriptorSetLayoutCount)
 	{
 		auto const vertShaderCode{ ReadFile("shaders/shader.vert.spv") };
 		auto const fragShaderCode{ ReadFile("shaders/shader.frag.spv") };
@@ -149,7 +149,7 @@ namespace MauRen
 		rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
 		rasterizer.lineWidth = 1.0f;
 		rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
-		rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
+		rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
 		rasterizer.depthBiasEnable = VK_FALSE;
 		rasterizer.depthBiasConstantFactor = 0.0f; // Optional
 		rasterizer.depthBiasClamp = 0.0f; // Optional
@@ -190,8 +190,8 @@ namespace MauRen
 
 		VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 		pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-		pipelineLayoutInfo.setLayoutCount = 0; // Optional
-		pipelineLayoutInfo.pSetLayouts = nullptr; // Optional
+		pipelineLayoutInfo.setLayoutCount = descriptorSetLayoutCount;
+		pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
 		pipelineLayoutInfo.pushConstantRangeCount = 0; // Optional
 		pipelineLayoutInfo.pPushConstantRanges = nullptr; // Optional
 

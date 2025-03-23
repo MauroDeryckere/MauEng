@@ -70,6 +70,10 @@ namespace MauRen
 		VkBuffer m_IndexBuffer;
 		VkDeviceMemory m_IndexBufferMemory;
 
+		std::vector<VkBuffer> m_UniformBuffers;
+		std::vector<VkDeviceMemory> m_UniformBuffersMemory;
+		std::vector<void*> m_UniformBuffersMapped;
+
 		// Temporary
 		const std::vector<Vertex> m_Vertices
 		{
@@ -83,11 +87,28 @@ namespace MauRen
 			0, 1, 2, 2, 3, 0
 		};
 
+		struct UniformBufferObject final
+		{
+			alignas(16) glm::mat4 model;
+			alignas(16) glm::mat4 view;
+			alignas(16) glm::mat4 proj;
+		};
+
+		VkDescriptorSetLayout m_DescriptorSetLayout;
+		VkDescriptorPool m_DescriptorPool;
+		std::vector<VkDescriptorSet> m_DescriptorSets;
+
+		void CreateDescriptorSetLayout();
+		void CreateDescriptorPool();
+		void CreateDescriptorSets();
+
+
 		void CreateFrameBuffers();
 		void CreateCommandPool();
 		void CreateVertexBuffer();
 		void CreateIndexBuffer();
 		void CreateCommandBuffers();
+		void CreateUniformBuffers();
 
 		void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
 		void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
@@ -98,7 +119,7 @@ namespace MauRen
 		void CreateSyncObjects();
 
 		void DrawFrame();
-
+		void UpdateUniformBuffer(uint32_t currentImage);
 		void RecreateSwapchain();
 
 		uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);

@@ -12,11 +12,12 @@ namespace MauRen
 	class VulkanGraphicsPipeline final
 	{
 	public:
-		VulkanGraphicsPipeline(VulkanDeviceContext* pDeviceContext, VulkanSwapchainContext* pSwapChainContext);
+		VulkanGraphicsPipeline(VulkanDeviceContext* pDeviceContext, VulkanSwapchainContext* pSwapChainContext, VkDescriptorSetLayout descriptorSetLayout, uint32_t descriptorSetLayoutCount);
 		~VulkanGraphicsPipeline();
 
 		[[nodiscard]] VkRenderPass GetRenderPass() const noexcept { return m_RenderPass; }
 		[[nodiscard]] VkPipeline GetPipeline() const noexcept { return m_GraphicsPipeline; }
+		[[nodiscard]] VkPipelineLayout GetPipelineLayout() const noexcept { return m_PipelineLayout; }
 
 		VulkanGraphicsPipeline(VulkanGraphicsPipeline const&) = delete;
 		VulkanGraphicsPipeline(VulkanGraphicsPipeline&&) = delete;
@@ -30,7 +31,7 @@ namespace MauRen
 		VkPipeline m_GraphicsPipeline;
 
 		void CreateRenderPass(VulkanSwapchainContext* pSwapChainContext);
-		void CreateGraphicsPipeline(VulkanSwapchainContext* pSwapChainContext);
+		void CreateGraphicsPipeline(VulkanSwapchainContext* pSwapChainContext, VkDescriptorSetLayout descriptorSetLayout, uint32_t descriptorSetLayoutCount);
 
 		static std::vector<char> ReadFile(std::filesystem::path const& filepath);
 		[[nodiscard]] VkShaderModule CreateShaderModule(std::vector<char> const& code) const;

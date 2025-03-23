@@ -2,22 +2,38 @@
 
 #include "Utils.h"
 
+#define GLM_FORCE_RADIANS
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
+#include <chrono>
+
 namespace MauRen
 {
 	VulkanRenderer::VulkanRenderer(GLFWwindow* pWindow) :
 		Renderer{ pWindow },
-		m_pWindow{ pWindow },
-		m_InstanceContext{ std::make_unique<VulkanInstanceContext>() },
-		m_SurfaceContext{ std::make_unique<VulkanSurfaceContext>(m_InstanceContext.get(), pWindow) },
-		m_DebugContext{ std::make_unique<VulkanDebugContext>(m_InstanceContext.get()) },
-		m_DeviceContext{ std::make_unique<VulkanDeviceContext>(m_SurfaceContext.get(), m_InstanceContext.get())},
-		m_SwapChainContext{ std::make_unique<VulkanSwapchainContext>(pWindow, m_SurfaceContext.get(), m_DeviceContext.get()) },
-		m_GraphicsPipeline{ std::make_unique<VulkanGraphicsPipeline>(m_DeviceContext.get(), m_SwapChainContext.get() ) }
+		m_pWindow{ pWindow }
 	{
+		m_InstanceContext = std::make_unique<VulkanInstanceContext>();
+		m_SurfaceContext = std::make_unique<VulkanSurfaceContext>(m_InstanceContext.get(), pWindow),
+		m_DebugContext = std::make_unique<VulkanDebugContext>(m_InstanceContext.get());
+		m_DeviceContext = std::make_unique<VulkanDeviceContext>(m_SurfaceContext.get(), m_InstanceContext.get());
+		m_SwapChainContext = std::make_unique<VulkanSwapchainContext>(pWindow, m_SurfaceContext.get(), m_DeviceContext.get());
+
+		// These need to be created before the graphics pipeline becaue they're needed there
+		CreateDescriptorSetLayout();
+
+		m_GraphicsPipeline = std::make_unique<VulkanGraphicsPipeline>(m_DeviceContext.get(), m_SwapChainContext.get(), m_DescriptorSetLayout, 1u);
+
 		CreateFrameBuffers();
 		CreateCommandPool();
 		CreateVertexBuffer();
 		CreateIndexBuffer();
+		CreateUniformBuffers();
+
+		CreateDescriptorPool();
+		CreateDescriptorSets();
+
 		CreateCommandBuffers();
 		CreateSyncObjects();
 	}
@@ -46,6 +62,16 @@ namespace MauRen
 		{
 			vkDestroyFramebuffer(m_DeviceContext->GetLogicalDevice(), framebuffer, nullptr);
 		}
+		m_SwapChainContext = nullptr;
+
+		for (size_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; ++i)
+		{
+			vkDestroyBuffer(m_DeviceContext->GetLogicalDevice(), m_UniformBuffers[i], nullptr);
+			vkFreeMemory(m_DeviceContext->GetLogicalDevice(), m_UniformBuffersMemory[i], nullptr);
+		}
+
+		vkDestroyDescriptorPool(m_DeviceContext->GetLogicalDevice(), m_DescriptorPool, nullptr);
+		vkDestroyDescriptorSetLayout(m_DeviceContext->GetLogicalDevice(), m_DescriptorSetLayout, nullptr);
 	}
 
 	void VulkanRenderer::Render()
@@ -58,13 +84,96 @@ namespace MauRen
 		m_FramebufferResized = true;
 	}
 
+	void VulkanRenderer::CreateDescriptorSetLayout()
+	{
+		VkDescriptorSetLayoutBinding uboLayoutBinding{};
+		uboLayoutBinding.binding = 0;
+		uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		// This could be used to specify a transformation for each of the bones in a skeleton for skeletal animation, for example.
+		// Our MVP transformation is in a single uniform buffer object, so we're using a descriptorCount of 1.
+		uboLayoutBinding.descriptorCount = 1;
+
+		uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+		uboLayoutBinding.pImmutableSamplers = nullptr; // Optional
+
+		VkDescriptorSetLayoutCreateInfo layoutInfo{};
+		layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+		layoutInfo.bindingCount = 1;
+		layoutInfo.pBindings = &uboLayoutBinding;
+
+		if (vkCreateDescriptorSetLayout(m_DeviceContext->GetLogicalDevice(), &layoutInfo, nullptr, &m_DescriptorSetLayout) != VK_SUCCESS) 
+		{
+			throw std::runtime_error("Failed to create descriptor set layout!");
+		}
+	}
+
+	void VulkanRenderer::CreateDescriptorPool()
+	{
+		VkDescriptorPoolSize poolSize{};
+		poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		poolSize.descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+
+		VkDescriptorPoolCreateInfo poolInfo{};
+		poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+		poolInfo.poolSizeCount = 1;
+		poolInfo.pPoolSizes = &poolSize;
+
+		poolInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+
+		if (vkCreateDescriptorPool(m_DeviceContext->GetLogicalDevice(), &poolInfo, nullptr, &m_DescriptorPool) != VK_SUCCESS) {
+
+			throw std::runtime_error("Failed to create descriptor pool!");
+		}
+	}
+
+	void VulkanRenderer::CreateDescriptorSets()
+	{
+		std::vector<VkDescriptorSetLayout> const layouts(MAX_FRAMES_IN_FLIGHT, m_DescriptorSetLayout);
+
+		VkDescriptorSetAllocateInfo allocInfo{};
+		allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+		allocInfo.descriptorPool = m_DescriptorPool;
+		allocInfo.descriptorSetCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+		allocInfo.pSetLayouts = layouts.data();
+
+
+		m_DescriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
+		if (vkAllocateDescriptorSets(m_DeviceContext->GetLogicalDevice(), &allocInfo, m_DescriptorSets.data()) != VK_SUCCESS)
+		{
+			throw std::runtime_error("Failed to allocate descriptor sets!");
+		}
+
+		for (size_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; ++i)
+		{
+			VkDescriptorBufferInfo bufferInfo{};
+			bufferInfo.buffer = m_UniformBuffers[i];
+			bufferInfo.offset = 0;
+			bufferInfo.range = sizeof(UniformBufferObject);
+
+			VkWriteDescriptorSet descriptorWrite{};
+			descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+			descriptorWrite.dstSet = m_DescriptorSets[i];
+			descriptorWrite.dstBinding = 0;
+			descriptorWrite.dstArrayElement = 0;
+
+			descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+			descriptorWrite.descriptorCount = 1;
+
+			descriptorWrite.pBufferInfo = &bufferInfo;
+			descriptorWrite.pImageInfo = nullptr; // Optional
+			descriptorWrite.pTexelBufferView = nullptr; // Optional
+
+			vkUpdateDescriptorSets(m_DeviceContext->GetLogicalDevice(), 1, &descriptorWrite, 0, nullptr);
+		}
+	}
+
 	void VulkanRenderer::CreateFrameBuffers()
 	{
 		auto const& imageViews{ m_SwapChainContext->GetImageViews() };
 
 		m_SwapChainFramebuffers.resize(imageViews.size());
 
-		for (size_t i{0}; i < imageViews.size(); ++i)
+		for (size_t i{ 0 }; i < imageViews.size(); ++i)
 		{
 			VkImageView const attachments[] { imageViews[i]};
 			
@@ -176,6 +285,27 @@ namespace MauRen
 		if (vkAllocateCommandBuffers(m_DeviceContext->GetLogicalDevice(), &allocInfo, m_CommandBuffers.data()) != VK_SUCCESS) 
 		{
 			throw std::runtime_error("Failed to allocate command buffers!");
+		}
+	}
+
+	void VulkanRenderer::CreateUniformBuffers()
+	{
+		VkDeviceSize constexpr bufferSize{ sizeof(UniformBufferObject) };
+
+		m_UniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
+		m_UniformBuffersMemory.resize(MAX_FRAMES_IN_FLIGHT);
+		m_UniformBuffersMapped.resize(MAX_FRAMES_IN_FLIGHT);
+
+		for (size_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; ++i)
+		{
+			CreateBuffer(bufferSize, 
+						 VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, 
+						 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, 
+					  m_UniformBuffers[i],
+					  m_UniformBuffersMemory[i]);
+
+			// Persistent mapping
+			vkMapMemory(m_DeviceContext->GetLogicalDevice(), m_UniformBuffersMemory[i], 0, bufferSize, 0, &m_UniformBuffersMapped[i]);
 		}
 	}
 
@@ -321,6 +451,8 @@ namespace MauRen
 			vkCmdBindIndexBuffer(commandBuffer, m_IndexBuffer, 0, VK_INDEX_TYPE_UINT16);
 			static_assert(sizeof(m_Indices[0]) == 2);
 
+			vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipeline->GetPipelineLayout(), 0, 1, &m_DescriptorSets[m_CurrentFrame], 0, nullptr);
+
 			vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(m_Indices.size()), 1, 0, 0, 0);
 		vkCmdEndRenderPass(commandBuffer);
 
@@ -388,6 +520,7 @@ namespace MauRen
 		// Only reset the fence if we are submitting work
 		vkResetFences(m_DeviceContext->GetLogicalDevice(), 1, &m_InFlightFences[m_CurrentFrame]);
 
+		UpdateUniformBuffer(m_CurrentFrame);
 
 		vkResetCommandBuffer(m_CommandBuffers[m_CurrentFrame], 0);
 		RecordCommandBuffer(m_CommandBuffers[m_CurrentFrame], imageIndex);
@@ -445,6 +578,27 @@ namespace MauRen
 		}
 
 		m_CurrentFrame = (m_CurrentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
+	}
+
+	void VulkanRenderer::UpdateUniformBuffer(uint32_t currentImage)
+	{
+		//TODO push constants
+
+		static auto startTime{ std::chrono::high_resolution_clock::now() };
+
+		auto const currentTime{ std::chrono::high_resolution_clock::now() };
+		float const time{ std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count() };
+
+		UniformBufferObject ubo{};
+		ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+
+		ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+
+		ubo.proj = glm::perspective(glm::radians(45.0f), static_cast<float>(m_SwapChainContext->GetExtent().width) / static_cast<float>(m_SwapChainContext->GetExtent().width), 0.1f, 10.0f);
+
+		ubo.proj[1][1] *= -1;
+
+		memcpy(m_UniformBuffersMapped[currentImage], &ubo, sizeof(ubo));
 	}
 
 	void VulkanRenderer::RecreateSwapchain()
