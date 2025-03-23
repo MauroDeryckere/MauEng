@@ -206,7 +206,7 @@ namespace MauRen
 		 * The maximum number of simultaneous memory allocations is limited by the maxMemoryAllocationCount physical device limit, which may be as low as 4096 even on high end hardware like an NVIDIA GTX 1080.
 		 * The right way to allocate memory for a large number of objects at the same time is to create a custom allocator that splits up a single allocation among many different objects by using the offset parameters that we've seen in many functions.
 
-		 * You can either implement such an allocator yourself, or use the VulkanMemoryAllocator library provided by the GPUOpen initiative.
+		 * You can either implement such an allocator yourself, or use the VulkanMemoryAllocator library provided by the GPUOpen initiative. // https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator
 		 * However, for this tutorial it's okay to use a separate allocation for every resource, because we won't come close to hitting any of these limits for now.
 		 */
 
@@ -274,7 +274,7 @@ namespace MauRen
 		// VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT : The command buffer can be resubmitted while it is also already pending execution.
 		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
-		beginInfo.flags = 0; // Optional
+		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT; // Optional
 		beginInfo.pInheritanceInfo = nullptr; // Optional; only relevant for secondary
 
 		//Note: if the command buffer was already recorded once, then a call to vkBeginCommandBuffer will implicitly reset it.
@@ -291,7 +291,7 @@ namespace MauRen
 		renderPassInfo.renderArea.offset = { 0, 0 };
 		renderPassInfo.renderArea.extent = m_SwapChainContext->GetExtent();
 
-		VkClearValue constexpr clearColor {0.0f, 0.0f, 0.0f, 1.0f} ;
+		VkClearValue constexpr clearColor{ 0.0f, 0.0f, 0.0f, 0.0f };
 		renderPassInfo.clearValueCount = 1;
 		renderPassInfo.pClearValues = &clearColor;
 

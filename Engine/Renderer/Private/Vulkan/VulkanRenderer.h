@@ -70,8 +70,6 @@ namespace MauRen
 		VkBuffer m_IndexBuffer;
 		VkDeviceMemory m_IndexBufferMemory;
 
-		VkMemoryRequirements m_MemRequirements;
-
 		// Temporary
 		const std::vector<Vertex> m_Vertices
 		{
