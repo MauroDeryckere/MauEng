@@ -50,11 +50,8 @@ namespace MauRen
 			vkDestroyFence(m_DeviceContext->GetLogicalDevice(), m_InFlightFences[i], nullptr);
 		}
 
-		vkDestroyBuffer(m_DeviceContext->GetLogicalDevice(), m_IndexBuffer, nullptr);
-		vkFreeMemory(m_DeviceContext->GetLogicalDevice(), m_IndexBufferMemory, nullptr);
-
-		vkDestroyBuffer(m_DeviceContext->GetLogicalDevice(), m_VertexBuffer, nullptr);
-		vkFreeMemory(m_DeviceContext->GetLogicalDevice(), m_VertexBufferMemory, nullptr);
+		DestroyBuffer(m_IndexBuffer);
+		DestroyBuffer(m_VertexBuffer);
 
 		vkDestroyCommandPool(m_DeviceContext->GetLogicalDevice(), m_CommandPool, nullptr);
 
@@ -66,8 +63,7 @@ namespace MauRen
 
 		for (size_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; ++i)
 		{
-			vkDestroyBuffer(m_DeviceContext->GetLogicalDevice(), m_UniformBuffers[i], nullptr);
-			vkFreeMemory(m_DeviceContext->GetLogicalDevice(), m_UniformBuffersMemory[i], nullptr);
+			DestroyBuffer(m_MappedUniformBuffers[i].buffer);
 		}
 
 		vkDestroyDescriptorPool(m_DeviceContext->GetLogicalDevice(), m_DescriptorPool, nullptr);
@@ -146,7 +142,7 @@ namespace MauRen
 		for (size_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; ++i)
 		{
 			VkDescriptorBufferInfo bufferInfo{};
-			bufferInfo.buffer = m_UniformBuffers[i];
+			bufferInfo.buffer = m_MappedUniformBuffers[i].buffer.buffer;
 			bufferInfo.offset = 0;
 			bufferInfo.range = sizeof(UniformBufferObject);
 
@@ -213,30 +209,28 @@ namespace MauRen
 	{
 		VkDeviceSize const bufferSize{ sizeof(m_Vertices[0]) * m_Vertices.size() };
 
-		VkBuffer stagingBuffer;
-		VkDeviceMemory stagingBufferMemory;
+		VulkanBuffer stagingBuffer;
 		CreateBuffer(bufferSize, 
 					 VK_BUFFER_USAGE_TRANSFER_SRC_BIT, 
 					 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, 
-					 stagingBuffer, 
-					 stagingBufferMemory);
+					stagingBuffer.buffer,
+					stagingBuffer.bufferMemory);
 
 
 		void* data;
-		vkMapMemory(m_DeviceContext->GetLogicalDevice(), stagingBufferMemory, 0, bufferSize, 0, &data);
+		vkMapMemory(m_DeviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory, 0, bufferSize, 0, &data);
 		memcpy(data, m_Vertices.data(), static_cast<size_t>(bufferSize));
-		vkUnmapMemory(m_DeviceContext->GetLogicalDevice(), stagingBufferMemory);
+		vkUnmapMemory(m_DeviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory);
 
 		CreateBuffer(bufferSize, 
 					 VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
 			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, 
-					m_VertexBuffer, 
-					m_VertexBufferMemory);
+					m_VertexBuffer.buffer, 
+					m_VertexBuffer.bufferMemory);
 
-		CopyBuffer(stagingBuffer, m_VertexBuffer, bufferSize);
+		CopyBuffer(stagingBuffer.buffer, m_VertexBuffer.buffer, bufferSize);
 
-		vkDestroyBuffer(m_DeviceContext->GetLogicalDevice(), stagingBuffer, nullptr);
-		vkFreeMemory(m_DeviceContext->GetLogicalDevice(), stagingBufferMemory, nullptr);
+		DestroyBuffer(stagingBuffer);
 	}
 
 	void VulkanRenderer::CreateIndexBuffer()
@@ -255,14 +249,15 @@ namespace MauRen
 		vkMapMemory(m_DeviceContext->GetLogicalDevice(), stagingBufferMemory, 0, bufferSize, 0, &data);
 		memcpy(data, m_Indices.data(), static_cast<size_t>(bufferSize));
 		vkUnmapMemory(m_DeviceContext->GetLogicalDevice(), stagingBufferMemory);
-			
+
+
 		CreateBuffer(bufferSize, 
 					 VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, 
 			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, 
-					m_IndexBuffer, 
-					m_IndexBufferMemory);
+					m_IndexBuffer.buffer,
+					m_IndexBuffer.bufferMemory);
 
-		CopyBuffer(stagingBuffer, m_IndexBuffer, bufferSize);
+		CopyBuffer(stagingBuffer, m_IndexBuffer.buffer, bufferSize);
 
 		vkDestroyBuffer(m_DeviceContext->GetLogicalDevice(), stagingBuffer, nullptr);
 		vkFreeMemory(m_DeviceContext->GetLogicalDevice(), stagingBufferMemory, nullptr);
@@ -292,20 +287,18 @@ namespace MauRen
 	{
 		VkDeviceSize constexpr bufferSize{ sizeof(UniformBufferObject) };
 
-		m_UniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
-		m_UniformBuffersMemory.resize(MAX_FRAMES_IN_FLIGHT);
-		m_UniformBuffersMapped.resize(MAX_FRAMES_IN_FLIGHT);
+		m_MappedUniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
 
 		for (size_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; ++i)
 		{
 			CreateBuffer(bufferSize, 
 						 VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, 
 						 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, 
-					  m_UniformBuffers[i],
-					  m_UniformBuffersMemory[i]);
+						m_MappedUniformBuffers[i].buffer.buffer,
+						m_MappedUniformBuffers[i].buffer.bufferMemory);
 
 			// Persistent mapping
-			vkMapMemory(m_DeviceContext->GetLogicalDevice(), m_UniformBuffersMemory[i], 0, bufferSize, 0, &m_UniformBuffersMapped[i]);
+			vkMapMemory(m_DeviceContext->GetLogicalDevice(), m_MappedUniformBuffers[i].buffer.bufferMemory, 0, bufferSize, 0, &m_MappedUniformBuffers[i].mapped);
 		}
 	}
 
@@ -346,6 +339,14 @@ namespace MauRen
 		}
 
 		vkBindBufferMemory(m_DeviceContext->GetLogicalDevice(), buffer, bufferMemory, 0);
+	}
+
+	void VulkanRenderer::DestroyBuffer(VulkanBuffer const& buffer)
+	{
+		assert(m_DeviceContext);
+
+		vkDestroyBuffer(m_DeviceContext->GetLogicalDevice(), buffer.buffer, nullptr);
+		vkFreeMemory(m_DeviceContext->GetLogicalDevice(), buffer.bufferMemory, nullptr);
 	}
 
 	void VulkanRenderer::CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
@@ -442,13 +443,13 @@ namespace MauRen
 			scissor.extent = m_SwapChainContext->GetExtent();
 			vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-			VkBuffer vertexBuffers[] { m_VertexBuffer };
+			VkBuffer vertexBuffers[] { m_VertexBuffer.buffer };
 			VkDeviceSize offsets[] { 0 };
 			vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
 
 			// you can only have a single index buffer. It's unfortunately not possible to use different indices for each vertex attribute,
 			// so we do still have to completely duplicate vertex data even if just one attribute varies.
-			vkCmdBindIndexBuffer(commandBuffer, m_IndexBuffer, 0, VK_INDEX_TYPE_UINT16);
+			vkCmdBindIndexBuffer(commandBuffer, m_IndexBuffer.buffer, 0, VK_INDEX_TYPE_UINT16);
 			static_assert(sizeof(m_Indices[0]) == 2);
 
 			vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipeline->GetPipelineLayout(), 0, 1, &m_DescriptorSets[m_CurrentFrame], 0, nullptr);
@@ -598,7 +599,7 @@ namespace MauRen
 
 		ubo.proj[1][1] *= -1;
 
-		memcpy(m_UniformBuffersMapped[currentImage], &ubo, sizeof(ubo));
+		memcpy(m_MappedUniformBuffers[currentImage].mapped, &ubo, sizeof(ubo));
 	}
 
 	void VulkanRenderer::RecreateSwapchain()

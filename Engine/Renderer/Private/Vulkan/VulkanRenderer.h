@@ -65,14 +65,21 @@ namespace MauRen
 
 		bool m_FramebufferResized{ false };
 
-		VkBuffer m_VertexBuffer;
-		VkDeviceMemory m_VertexBufferMemory;
-		VkBuffer m_IndexBuffer;
-		VkDeviceMemory m_IndexBufferMemory;
+		struct VulkanBuffer final
+		{
+			VkBuffer buffer {VK_NULL_HANDLE};
+			VkDeviceMemory bufferMemory{ VK_NULL_HANDLE };
+		};
 
-		std::vector<VkBuffer> m_UniformBuffers;
-		std::vector<VkDeviceMemory> m_UniformBuffersMemory;
-		std::vector<void*> m_UniformBuffersMapped;
+		struct VulkanMappedBuffer final
+		{
+			VulkanBuffer buffer{  };
+			void* mapped{ nullptr };
+		};
+
+		VulkanBuffer m_VertexBuffer;
+		VulkanBuffer m_IndexBuffer;
+		std::vector<VulkanMappedBuffer> m_MappedUniformBuffers;
 
 		// Temporary
 		const std::vector<Vertex> m_Vertices
@@ -111,6 +118,8 @@ namespace MauRen
 		void CreateUniformBuffers();
 
 		void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
+		void DestroyBuffer(VulkanBuffer const& buffer);
+
 		void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 
 
