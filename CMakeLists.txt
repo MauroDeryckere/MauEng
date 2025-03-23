@@ -120,6 +120,14 @@ file(GLOB TEXTURES "${TEXTURE_DIR}/*.png" "${TEXTURE_DIR}/*.jpg" "${TEXTURE_DIR}
 if(TEXTURES)
     # Declare a list to hold custom commands for copying textures
     set(COPY_TEXTURE_COMMANDS)
+
+    add_custom_command(
+        OUTPUT ${TEXTURE_OUTPUT_DIR}
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${TEXTURE_OUTPUT_DIR}"
+        COMMENT "Creating Textures output directory"
+        VERBATIM
+    )
+
     foreach(texture ${TEXTURES})
         # Get the filename without the directory
         get_filename_component(texture_name ${texture} NAME)
@@ -144,10 +152,10 @@ else()
 endif()
 
 # Add a custom target for copying textures
-    add_custom_target(
-        copy_textures ALL
-        DEPENDS ${COPY_TEXTURE_COMMANDS}
-    )
+add_custom_target(
+    copy_textures ALL
+    DEPENDS ${TEXTURE_OUTPUT_DIR} ${COPY_TEXTURE_COMMANDS}
+)
 
 add_dependencies(${EXECUTABLE_NAME} copy_textures)
 
