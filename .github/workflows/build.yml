@@ -12,8 +12,7 @@ jobs:
     steps:
       - name: Clean up previous build
         run: |
-            rm -rf ${{ github.workspace }}/build
-
+            Remove-Item -Recurse -Force "${{ github.workspace }}/build"
       - name: Checkout code
         uses: actions/checkout@v2
         with:
