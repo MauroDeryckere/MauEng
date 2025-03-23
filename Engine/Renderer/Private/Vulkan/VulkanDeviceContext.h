@@ -37,7 +37,7 @@ namespace MauRen
 		[[nodiscard]] bool IsUsingUnifiedGraphicsPresentQueue() const noexcept { return m_IsUsingUnifiedGraphicsPresentQueue; }
 
 		[[nodiscard]] VkQueue GetGraphicsQueue() const noexcept { return m_IsUsingUnifiedGraphicsPresentQueue ? m_UnifiedGraphicsPresentQueue : m_GraphicsQueue; }
-		[[nodiscard]] VkQueue GetPresentQueue() const noexcept { return m_IsUsingUnifiedGraphicsPresentQueue ? m_UnifiedGraphicsPresentQueue : m_GraphicsQueue; }
+		[[nodiscard]] VkQueue GetPresentQueue() const noexcept { return m_IsUsingUnifiedGraphicsPresentQueue ? m_UnifiedGraphicsPresentQueue : m_PresentQueue; }
 
 		VulkanDeviceContext(VulkanDeviceContext const&) = delete;
 		VulkanDeviceContext(VulkanDeviceContext&&) = delete;
