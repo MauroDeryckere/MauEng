@@ -21,15 +21,3 @@ target_link_libraries(${EXECUTABLE_NAME}
     PRIVATE
         Engine
 )
-
-set(LAYER_SETTINGS_SRC "${CMAKE_CURRENT_SOURCE_DIR}/../Engine/Renderer/Config/vk_layer_settings.txt")
-set(LAYER_SETTINGS_DEST "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
-
-
-# Copy it after building the target
-add_custom_command(
-    TARGET ${EXECUTABLE_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "${LAYER_SETTINGS_SRC}"
-        "${LAYER_SETTINGS_DEST}"
-)

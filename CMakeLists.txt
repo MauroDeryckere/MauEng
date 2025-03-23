@@ -46,8 +46,28 @@ message(STATUS "Game dir created! ")
 
 # @REGION PLATFORMS AND RESOURCES
 
-# Define where the shader files are located
 
+# Define where the layer settings file is located
+set(LAYER_SETTINGS_SRC "${CMAKE_SOURCE_DIR}/Engine/Renderer/Config/vk_layer_settings.txt")
+set(LAYER_SETTINGS_DEST "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
+
+add_custom_command(
+    OUTPUT ${LAYER_SETTINGS_DEST}
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${LAYER_SETTINGS_SRC}" "${LAYER_SETTINGS_DEST}"
+    DEPENDS ${LAYER_SETTINGS_SRC}
+    COMMENT "Copying Vulkan layer settings file"
+    VERBATIM
+)
+
+add_custom_target(
+    copy_layer_settings ALL
+    DEPENDS ${LAYER_SETTINGS_DEST}
+)
+
+add_dependencies(${EXECUTABLE_NAME} copy_layer_settings)
+
+
+# Define where the shader files are located
 set(SHADER_DIR "${CMAKE_SOURCE_DIR}/Resources/Shaders")
 set(SHADER_OUTPUT_DIR "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Shaders")
 
