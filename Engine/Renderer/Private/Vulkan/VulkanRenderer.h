@@ -152,6 +152,8 @@ namespace MauRen
 		void DestroyImage(VulkanImage const& image);
 		void TransitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
 
+		void CreateTextureImageView();
+
 		VkCommandBuffer BeginSingleTimeCommands();
 		void EndSingleTimeCommands(VkCommandBuffer commandBuffer);
 

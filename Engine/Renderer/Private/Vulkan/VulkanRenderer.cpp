@@ -33,6 +33,7 @@ namespace MauRen
 		CreateCommandPool();
 
 		CreateTextureImage();
+		CreateTextureImageView();
 
 		CreateVertexBuffer();
 		CreateIndexBuffer();
@@ -802,6 +803,11 @@ namespace MauRen
 							1, &barrier );
 
 		EndSingleTimeCommands(commandBuffer);
+	}
+
+	void VulkanRenderer::CreateTextureImageView()
+	{
+
 	}
 
 	VkCommandBuffer VulkanRenderer::BeginSingleTimeCommands()
