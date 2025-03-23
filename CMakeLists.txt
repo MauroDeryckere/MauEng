@@ -50,7 +50,7 @@ message(STATUS "Game dir created! ")
 
 # Define where the layer settings file is located
 set(LAYER_SETTINGS_SRC "${CMAKE_SOURCE_DIR}/Engine/Renderer/Config/vk_layer_settings.txt")
-set(LAYER_SETTINGS_DEST "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
+set(LAYER_SETTINGS_DEST "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/vk_layer_settings.txt")
 
 add_custom_command(
     OUTPUT ${LAYER_SETTINGS_DEST}
