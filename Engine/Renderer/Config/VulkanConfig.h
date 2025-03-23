@@ -28,6 +28,22 @@ namespace MauRen
 
 	uint32_t constexpr MAX_FRAMES_IN_FLIGHT{ 2 };
 	static_assert(MAX_FRAMES_IN_FLIGHT > 0);
+
+	// Debug output colours
+
+	// White (default)
+	static auto constexpr colorReset{ "\033[0m" };
+	// Red
+	static auto constexpr colorError{ "\033[1;31m" };
+	// Yellow
+	static auto constexpr colorWarning{ "\033[1;33m" };
+	// Cyan
+	static auto constexpr colorInfo{ "\033[1;36m" };
+	// Gray
+	static auto constexpr colorGeneral{ "\033[1;90m" };
+	// Blue
+	static auto constexpr colorCategory{ "\033[1;34m" };
+
 }
 
 #endif // MAUREN_VULKANCONFIG_H

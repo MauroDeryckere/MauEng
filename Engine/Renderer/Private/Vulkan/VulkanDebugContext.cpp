@@ -29,28 +29,40 @@ namespace MauRen
 
 	VKAPI_ATTR VkBool32 VKAPI_CALL VulkanDebugContext::DebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
 	{
-		static auto constexpr colorReset{ "\033[0m" };
-		static auto constexpr colorRed{ "\033[1;31m" };
-		static auto constexpr colorYellow{ "\033[1;33m" };
-		static auto constexpr colorCyan{ "\033[1;36m" };
-		static auto constexpr colorGray{ "\033[1;90m" };
+		const char* currColor{ colorGeneral };
 
-		const char* currColor = colorGray;
+		std::string typeStr{ };
+		if (messageType & VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT)
+		{
+			typeStr += "General";
+		}
+		if (messageType & VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT)
+		{
+			typeStr += (typeStr.empty() ? "" : ", ") + std::string("Validation");
+		}
+		if (messageType & VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT)
+		{
+			typeStr += (typeStr.empty() ? "" : ", ") + std::string("Performance");
+		}
+		if (messageType & VK_DEBUG_UTILS_MESSAGE_TYPE_DEVICE_ADDRESS_BINDING_BIT_EXT)
+		{
+			typeStr += (typeStr.empty() ? "" : ", ") + std::string("DeviceAddress");
+		}
 
 		if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
 		{
-			currColor = colorRed;
+			currColor = colorError;
 		}
 		else if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
 		{
-			currColor = colorYellow;
+			currColor = colorWarning;
 		}
 		else if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT)
 		{
-			currColor = colorCyan;
+			currColor = colorInfo;
 		}
 
-		std::cerr << currColor << "[Vulkan] " << pCallbackData->pMessage << colorReset << std::endl;
+		std::cerr << colorCategory <<  "[VulkanRenderer - " << typeStr << "] " << currColor << pCallbackData->pMessage << colorReset << std::endl;
 
 		return VK_FALSE;
 	}
