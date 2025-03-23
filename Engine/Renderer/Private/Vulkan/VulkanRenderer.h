@@ -82,18 +82,19 @@ namespace MauRen
 		std::vector<VulkanMappedBuffer> m_MappedUniformBuffers;
 
 		// Temporary
-		const std::vector<Vertex> m_Vertices
+		std::vector<Vertex> const m_Vertices
 		{
 			{{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
 			{{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
 			{{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
 			{{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}
 		};
-		const std::vector<uint16_t> m_Indices
+		std::vector<uint16_t> const m_Indices
 		{
 			0, 1, 2, 2, 3, 0
 		};
 
+		// TODO should this be a push costant?
 		struct UniformBufferObject final
 		{
 			alignas(16) glm::mat4 model;
@@ -103,6 +104,10 @@ namespace MauRen
 
 		VkDescriptorSetLayout m_DescriptorSetLayout;
 		VkDescriptorPool m_DescriptorPool;
+
+		// !
+		// common practice to rank from ‘least updated’ descriptor set(index 0) to ‘most frequent updated’
+		// descriptor set(index N)!This way, we can avoid rebinding as much as possible!
 		std::vector<VkDescriptorSet> m_DescriptorSets;
 
 		void CreateDescriptorSetLayout();
