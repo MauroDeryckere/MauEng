@@ -11,5 +11,8 @@ target_link_libraries(Libs INTERFACE glm)
 add_subdirectory(glfw)
 target_link_libraries(Libs INTERFACE glfw)
 
+# Add the Libs/ directory to the include paths
+include_directories(${PROJECT_SOURCE_DIR}/Libs/stb)
+
 # Set common include directories if needed
 
