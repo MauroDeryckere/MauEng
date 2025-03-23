@@ -110,6 +110,14 @@ namespace MauRen
 		// descriptor set(index N)!This way, we can avoid rebinding as much as possible!
 		std::vector<VkDescriptorSet> m_DescriptorSets;
 
+		struct VulkanImage final
+		{
+			VkImage image;
+			VkDeviceMemory imageMemory;
+		};
+
+		VulkanImage m_TextureImage;
+
 		void CreateDescriptorSetLayout();
 		void CreateDescriptorPool();
 		void CreateDescriptorSets();
@@ -139,6 +147,11 @@ namespace MauRen
 		uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 
 		void CreateTextureImage();
+		void CreateImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VulkanImage& image);
+		void TransitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
+
+		VkCommandBuffer BeginSingleTimeCommands();
+		void EndSingleTimeCommands(VkCommandBuffer commandBuffer);
 
 	};
 }

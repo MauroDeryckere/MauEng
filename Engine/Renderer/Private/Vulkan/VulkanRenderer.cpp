@@ -365,20 +365,7 @@ namespace MauRen
 		 * You should use the VK_COMMAND_POOL_CREATE_TRANSIENT_BIT flag during command pool generation in that case.
 		 */
 
-		VkCommandBufferAllocateInfo allocInfo{};
-		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-		allocInfo.commandPool = m_CommandPool;
-		allocInfo.commandBufferCount = 1;
-
-		VkCommandBuffer commandBuffer;
-		vkAllocateCommandBuffers(m_DeviceContext->GetLogicalDevice(), &allocInfo, &commandBuffer);
-
-		VkCommandBufferBeginInfo beginInfo{};
-		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-		vkBeginCommandBuffer(commandBuffer, &beginInfo);
+		VkCommandBuffer commandBuffer{ BeginSingleTimeCommands() };
 
 		VkBufferCopy copyRegion{};
 		copyRegion.srcOffset = 0; // Optional
@@ -388,19 +375,7 @@ namespace MauRen
 
 		vkEndCommandBuffer(commandBuffer);
 
-		VkSubmitInfo submitInfo{};
-		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-		submitInfo.commandBufferCount = 1;
-		submitInfo.pCommandBuffers = &commandBuffer;
-
-		// TODO 
-		// A fence would allow you to schedule multiple transfers simultaneously and wait for all of them complete, instead of executing one at a time.
-		// That may give the driver more opportunities to optimize.
-
-		vkQueueSubmit(m_DeviceContext->GetGraphicsQueue(), 1, &submitInfo, VK_NULL_HANDLE);
-		vkQueueWaitIdle(m_DeviceContext->GetGraphicsQueue());
-
-		vkFreeCommandBuffers(m_DeviceContext->GetLogicalDevice(), m_CommandPool, 1, &commandBuffer);
+		EndSingleTimeCommands(commandBuffer);
 	}
 
 	void VulkanRenderer::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex)
@@ -659,7 +634,124 @@ namespace MauRen
 
 	void VulkanRenderer::CreateTextureImage()
 	{
+		int texWidth{};
+		int texHeight{};
+		int texChannels{};
 
+		stbi_uc* const pixels{ stbi_load("Textures/TestTexture.jpg", &texWidth, &texHeight, &texChannels, STBI_rgb_alpha) };
+		VkDeviceSize const imageSize{ static_cast<uint32_t>(texWidth * texHeight * 4) };
+
+		if (!pixels) 
+		{
+			throw std::runtime_error("Failed to load texture image!");
+		}
+
+		VulkanBuffer stagingBuffer{};
+		CreateBuffer(imageSize, 
+					 VK_BUFFER_USAGE_TRANSFER_SRC_BIT, 
+					 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, 
+					 stagingBuffer.buffer, 
+					 stagingBuffer.bufferMemory);
+
+		void* data;
+		vkMapMemory(m_DeviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory , 0, imageSize, 0, &data);
+		memcpy(data, pixels, static_cast<size_t>(imageSize));
+		vkUnmapMemory(m_DeviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory);
+
+		stbi_image_free(pixels);
+
+		CreateImage(texWidth, 
+					texHeight, 
+					VK_FORMAT_R8G8B8A8_SRGB, 
+					VK_IMAGE_TILING_OPTIMAL, 
+					VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, 
+					VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, 
+					m_TextureImage);
+	}
+
+	void VulkanRenderer::CreateImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VulkanImage& image)
+	{
+		VkImageCreateInfo imageInfo{};
+		imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+		imageInfo.imageType = VK_IMAGE_TYPE_2D;
+		imageInfo.extent.width = static_cast<uint32_t>(width);
+		imageInfo.extent.height = static_cast<uint32_t>(height);
+		imageInfo.extent.depth = 1;
+		imageInfo.mipLevels = 1;
+		imageInfo.arrayLayers = 1;
+
+		imageInfo.format = format;
+		imageInfo.tiling = tiling;
+		imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+
+		imageInfo.usage = usage;
+		imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+		imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+		imageInfo.flags = 0; // Optional
+
+		if (vkCreateImage(m_DeviceContext->GetLogicalDevice(), &imageInfo, nullptr, &image.image) != VK_SUCCESS)
+		{
+			throw std::runtime_error("Failed to create image!");
+		}
+
+		VkMemoryRequirements memRequirements;
+		vkGetImageMemoryRequirements(m_DeviceContext->GetLogicalDevice(), image.image, &memRequirements);
+
+		VkMemoryAllocateInfo allocInfo{};
+		allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+		allocInfo.allocationSize = memRequirements.size;
+		allocInfo.memoryTypeIndex = FindMemoryType(memRequirements.memoryTypeBits, properties);
+
+		if (vkAllocateMemory(m_DeviceContext->GetLogicalDevice(), &allocInfo, nullptr, &image.imageMemory) != VK_SUCCESS)
+		{
+			throw std::runtime_error("failed to allocate image memory!");
+		}
+
+		vkBindImageMemory(m_DeviceContext->GetLogicalDevice(), image.image, image.imageMemory, 0);
+	}
+
+	void VulkanRenderer::TransitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout)
+	{
+
+	}
+
+	VkCommandBuffer VulkanRenderer::BeginSingleTimeCommands()
+	{
+		VkCommandBufferAllocateInfo allocInfo{};
+		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+		allocInfo.commandPool = m_CommandPool;
+		allocInfo.commandBufferCount = 1;
+
+		VkCommandBuffer commandBuffer;
+		vkAllocateCommandBuffers(m_DeviceContext->GetLogicalDevice(), &allocInfo, &commandBuffer);
+
+		VkCommandBufferBeginInfo beginInfo{};
+		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+		vkBeginCommandBuffer(commandBuffer, &beginInfo);
+
+		return commandBuffer;
+	}
+
+	void VulkanRenderer::EndSingleTimeCommands(VkCommandBuffer commandBuffer)
+	{
+		vkEndCommandBuffer(commandBuffer);
+
+		VkSubmitInfo submitInfo{};
+		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		submitInfo.commandBufferCount = 1;
+		submitInfo.pCommandBuffers = &commandBuffer;
+
+		vkQueueSubmit(m_DeviceContext->GetGraphicsQueue(), 1, &submitInfo, VK_NULL_HANDLE);
+		vkQueueWaitIdle(m_DeviceContext->GetGraphicsQueue());
+
+		vkFreeCommandBuffers(m_DeviceContext->GetLogicalDevice(), m_CommandPool, 1, &commandBuffer);
+
+		// TODO 
+		// A fence would allow you to schedule multiple transfers simultaneously and wait for all of them complete, instead of executing one at a time.
+		// That may give the driver more opportunities to optimize.
 	}
 }
 
