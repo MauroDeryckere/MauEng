@@ -60,6 +60,8 @@ namespace MauRen
 		DestroyBuffer(m_IndexBuffer);
 		DestroyBuffer(m_VertexBuffer);
 
+		DestroyImage(m_TextureImage);
+
 		vkDestroyCommandPool(m_DeviceContext->GetLogicalDevice(), m_CommandPool, nullptr);
 
 		for (auto const& framebuffer : m_SwapChainFramebuffers) 
@@ -373,7 +375,32 @@ namespace MauRen
 		copyRegion.size = size;
 		vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
 
-		vkEndCommandBuffer(commandBuffer);
+		EndSingleTimeCommands(commandBuffer);
+	}
+
+	void VulkanRenderer::CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height)
+	{
+		VkCommandBuffer commandBuffer{ BeginSingleTimeCommands() };
+
+		VkBufferImageCopy region{};
+		region.bufferOffset = 0;
+		region.bufferRowLength = 0;
+		region.bufferImageHeight = 0;
+
+		region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		region.imageSubresource.mipLevel = 0;
+		region.imageSubresource.baseArrayLayer = 0;
+		region.imageSubresource.layerCount = 1;
+
+		region.imageOffset = { 0, 0, 0 };
+		region.imageExtent = { width, height, 1 };
+
+		vkCmdCopyBufferToImage( commandBuffer,
+								buffer,
+								image,
+								VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+								1,
+								&region );
 
 		EndSingleTimeCommands(commandBuffer);
 	}
@@ -667,6 +694,12 @@ namespace MauRen
 					VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, 
 					VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, 
 					m_TextureImage);
+
+		TransitionImageLayout(m_TextureImage.image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+		CopyBufferToImage(stagingBuffer.buffer, m_TextureImage.image, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
+		TransitionImageLayout(m_TextureImage.image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+		DestroyBuffer(stagingBuffer);
 	}
 
 	void VulkanRenderer::CreateImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VulkanImage& image)
@@ -710,9 +743,65 @@ namespace MauRen
 		vkBindImageMemory(m_DeviceContext->GetLogicalDevice(), image.image, image.imageMemory, 0);
 	}
 
+	void VulkanRenderer::DestroyImage(VulkanImage const& image)
+	{
+		vkDestroyImage(m_DeviceContext->GetLogicalDevice(), image.image, nullptr);
+		vkFreeMemory(m_DeviceContext->GetLogicalDevice(), image.imageMemory, nullptr);
+	}
+
 	void VulkanRenderer::TransitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout)
 	{
+		VkCommandBuffer commandBuffer{ BeginSingleTimeCommands() };
 
+		VkImageMemoryBarrier barrier{};
+
+		barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+		barrier.oldLayout = oldLayout;
+		barrier.newLayout = newLayout;
+
+		barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+
+		barrier.image = image;
+		barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		barrier.subresourceRange.baseMipLevel = 0;
+		barrier.subresourceRange.levelCount = 1;
+		barrier.subresourceRange.baseArrayLayer = 0;
+		barrier.subresourceRange.layerCount = 1;
+
+		VkPipelineStageFlags sourceStage;
+		VkPipelineStageFlags destinationStage;
+
+		if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL) 
+		{
+			barrier.srcAccessMask = 0;
+			barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+
+			sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+			destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+		}
+		else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) 
+		{
+			barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+			barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+			sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+			destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+		}
+		else 
+		{
+			throw std::invalid_argument("Unsupported layout transition!");
+		}
+
+		// https://docs.vulkan.org/spec/latest/chapters/synchronization.html#synchronization-access-types-supported
+		vkCmdPipelineBarrier(commandBuffer,
+							sourceStage, destinationStage,
+							0,
+							0, nullptr,
+							0, nullptr,
+							1, &barrier );
+
+		EndSingleTimeCommands(commandBuffer);
 	}
 
 	VkCommandBuffer VulkanRenderer::BeginSingleTimeCommands()
