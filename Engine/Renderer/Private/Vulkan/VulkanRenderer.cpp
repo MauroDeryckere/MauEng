@@ -74,6 +74,11 @@ namespace MauRen
 
 		CleanupSwapchain();
 
+		for (size_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; ++i)
+		{
+			DestroyBuffer(m_MappedUniformBuffers[i].buffer);
+		}
+
 		vkDestroyDescriptorPool(m_DeviceContext->GetLogicalDevice(), m_DescriptorPool, nullptr);
 		vkDestroyDescriptorSetLayout(m_DeviceContext->GetLogicalDevice(), m_DescriptorSetLayout, nullptr);
 	}
@@ -542,6 +547,7 @@ namespace MauRen
 
 		if (acquireNextImageResult == VK_ERROR_OUT_OF_DATE_KHR)
 		{
+			m_FramebufferResized = false;
 			RecreateSwapchain();
 			return;
 		}
@@ -965,10 +971,6 @@ namespace MauRen
 		vkDestroyImageView(m_DeviceContext->GetLogicalDevice(), m_DepthImageView, nullptr);
 
 		m_SwapChainContext = nullptr;
-		for (size_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; ++i)
-		{
-			DestroyBuffer(m_MappedUniformBuffers[i].buffer);
-		}
 	}
 }
 
