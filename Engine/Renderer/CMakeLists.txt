@@ -6,7 +6,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(RENDERER_PUBLIC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/public")
 set(RENDERER_PRIVATE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/private")
 
-# Define directories for public and private headers
+# for loading models, only used in the renderer.
+add_subdirectory("Libs/Tinyobjloader")
 
 # Gather all source files
 file(GLOB RENDERER_PUBLIC_SOURCES
@@ -30,6 +31,7 @@ find_package(Vulkan REQUIRED)
 
 target_link_libraries(Renderer
     PRIVATE
+        tinyobjloader # for loading models, only used in the renderer.
         Libs
         PUBLIC # Link Vulkan publicly because we need it fr the window in the engine, later on this can be cleaned up
         MauEngCore
@@ -39,7 +41,7 @@ target_link_libraries(Renderer
 target_include_directories(Renderer
     PUBLIC
         ${RENDERER_PUBLIC_DIR}        # Public headers for Renderer
-    PRIVATE
+    PRIVATE  
         ${RENDERER_PRIVATE_DIR}       # Private headers for Renderer
 )
 
@@ -47,3 +49,4 @@ target_include_directories(Renderer
 target_precompile_headers(Renderer PRIVATE 
     "${RENDERER_PRIVATE_DIR}/RendererPCH.h"
 )
+

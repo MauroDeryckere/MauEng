@@ -7,3 +7,6 @@
 [submodule "Libs/stb"]
 	path = Libs/stb
 	url = https://github.com/nothings/stb
+[submodule "Engine/Renderer/Libs/Tinyobjloader"]
+	path = Engine/Renderer/Libs/Tinyobjloader
+	url = https://github.com/tinyobjloader/tinyobjloader.git
