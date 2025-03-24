@@ -120,6 +120,7 @@ namespace MauRen
 		{
 			VkImage image{ VK_NULL_HANDLE };
 			VkDeviceMemory imageMemory{ VK_NULL_HANDLE };
+			uint32_t mipLevels{ 1 };
 		};
 
 		VulkanImage m_TextureImage{};
@@ -162,11 +163,13 @@ namespace MauRen
 		void CreateTextureImage();
 		void CreateImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VulkanImage& image);
 		void DestroyImage(VulkanImage const& image);
-		void TransitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
+		void TransitionImageLayout(VulkanImage const& image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
+
+		void GenerateMipmaps(VulkanImage const& image, VkFormat imageFormat, int32_t texWidth, int32_t texHeight);
 
 		// TODO refactor
 
-		VkImageView CreateImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
+		VkImageView CreateImageView(VulkanImage const& image, VkFormat format, VkImageAspectFlags aspectFlags);
 
 		void CreateTextureImageView();
 		void CreateTextureSampler();
