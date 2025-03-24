@@ -7,6 +7,7 @@ set(RENDERER_PUBLIC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/public")
 set(RENDERER_PRIVATE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/private")
 
 # for loading models, only used in the renderer.
+# should be moved to engine later on when we have a resource manager or similar
 add_subdirectory("Libs/Tinyobjloader")
 
 # Gather all source files
