@@ -115,49 +115,39 @@ add_dependencies(${EXECUTABLE_NAME} shaders)
 set(TEXTURE_DIR "${CMAKE_SOURCE_DIR}/Resources/Textures")
 set(TEXTURE_OUTPUT_DIR "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Textures")
 
-file(GLOB TEXTURES "${TEXTURE_DIR}/*.png" "${TEXTURE_DIR}/*.jpg" "${TEXTURE_DIR}/*.bmp")
-
-if(TEXTURES)
-    # Declare a list to hold custom commands for copying textures
-    set(COPY_TEXTURE_COMMANDS)
-
-    add_custom_command(
-        OUTPUT ${TEXTURE_OUTPUT_DIR}
-        COMMAND ${CMAKE_COMMAND} -E make_directory "${TEXTURE_OUTPUT_DIR}"
-        COMMENT "Creating Textures output directory"
-        VERBATIM
-    )
-
-    foreach(texture ${TEXTURES})
-        # Get the filename without the directory
-        get_filename_component(texture_name ${texture} NAME)
-
-        # Define the full destination path for the texture
-        set(destination_texture "${TEXTURE_OUTPUT_DIR}/${texture_name}")
-
-        set(destination_texture "${TEXTURE_OUTPUT_DIR}/${texture_name}")
-        add_custom_command(
-            OUTPUT ${destination_texture}
-            COMMAND ${CMAKE_COMMAND} -E copy ${texture} ${destination_texture} || echo "Texture copy failed: ${texture}"
-            DEPENDS ${texture}
-            COMMENT "Copying texture ${texture_name}"
-            VERBATIM
-        )
-
-        # Add the custom command to the list
-        list(APPEND COPY_TEXTURE_COMMANDS ${destination_texture})
-    endforeach()
-else()
-    message(STATUS "No textures to copy.")
-endif()
+add_custom_command(
+    OUTPUT ${TEXTURE_OUTPUT_DIR}
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "${TEXTURE_DIR}" "${TEXTURE_OUTPUT_DIR}"
+    COMMENT "Copying all textures to output directory"
+    VERBATIM
+)
 
 # Add a custom target for copying textures
 add_custom_target(
     copy_textures ALL
-    DEPENDS ${TEXTURE_OUTPUT_DIR} ${COPY_TEXTURE_COMMANDS}
+    DEPENDS ${TEXTURE_OUTPUT_DIR}
 )
 
 add_dependencies(${EXECUTABLE_NAME} copy_textures)
+
+# Define texture source and destination directories
+set(MODELS_DIR "${CMAKE_SOURCE_DIR}/Resources/Models")
+set(MODELS_OUTPUT_DIR "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Models")
+
+add_custom_command(
+    OUTPUT ${MODELS_OUTPUT_DIR}
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "${MODELS_DIR}" "${MODELS_OUTPUT_DIR}"
+    COMMENT "Copying all models to output directory"
+    VERBATIM
+)
+
+# Add a custom target for copying models
+add_custom_target(
+    copy_models ALL
+    DEPENDS ${MODELS_OUTPUT_DIR}
+)
+
+add_dependencies(${EXECUTABLE_NAME} copy_models)
 
 # @ENDREGION PLATFORMS AND RESOURCES
 
