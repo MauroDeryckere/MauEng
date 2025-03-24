@@ -36,6 +36,9 @@ endif()
 add_subdirectory ("Libs")
 message(STATUS "Libs dir created! ")
 
+add_subdirectory ("Core")
+message(STATUS "Core dir created! ")
+
 add_subdirectory ("Engine")
 message(STATUS "Engine dir created! ")
 

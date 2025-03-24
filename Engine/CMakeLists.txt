@@ -33,6 +33,8 @@ add_subdirectory(Renderer)
 
 # Link the Renderer to the Engine
 target_link_libraries(Engine
+    PUBLIC
+        MauEngCore
     PRIVATE
         Libs
         Renderer

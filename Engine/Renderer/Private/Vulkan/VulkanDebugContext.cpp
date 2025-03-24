@@ -30,7 +30,7 @@ namespace MauRen
 	VKAPI_ATTR VkBool32 VKAPI_CALL VulkanDebugContext::DebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
 	{
 		using namespace MauEng;
-		const char* currColor{ colorGeneral };
+		const char* currColor{ LOG_COLOR_GENERAL };
 
 		std::string typeStr{ };
 		if (messageType & VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT)
@@ -52,18 +52,18 @@ namespace MauRen
 
 		if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
 		{
-			currColor = colorError;
+			currColor = LOG_COLOR_ERROR;
 		}
 		else if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
 		{
-			currColor = colorWarning;
+			currColor = LOG_COLOR_WARNING;
 		}
 		else if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT)
 		{
-			currColor = colorInfo;
+			currColor = LOG_COLOR_INFO;
 		}
 
-		std::cerr << colorCategory <<  "[VulkanRenderer - " << typeStr << "] " << currColor << pCallbackData->pMessage << colorReset << std::endl;
+		std::cerr << LOG_COLOR_CATEGORY <<  "[VulkanRenderer - " << typeStr << "] " << currColor << pCallbackData->pMessage << LOG_COLOR_RESET << std::endl;
 
 		return VK_FALSE;
 	}

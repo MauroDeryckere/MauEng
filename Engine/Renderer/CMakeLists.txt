@@ -32,6 +32,7 @@ target_link_libraries(Renderer
     PRIVATE
         Libs
         PUBLIC # Link Vulkan publicly because we need it fr the window in the engine, later on this can be cleaned up
+        MauEngCore
         Vulkan::Vulkan # Link Vulkan SDK
 )
 
