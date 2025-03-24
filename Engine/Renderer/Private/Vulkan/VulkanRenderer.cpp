@@ -12,7 +12,6 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-
 namespace MauRen
 {
 	VulkanRenderer::VulkanRenderer(GLFWwindow* pWindow) :
@@ -38,6 +37,8 @@ namespace MauRen
 		CreateTextureImage();
 		CreateTextureImageView();
 		CreateTextureSampler();
+
+		Utils::LoadModel("Models/VikingRoom.obj", m_Vertices, m_Indices);
 
 		CreateVertexBuffer();
 		CreateIndexBuffer();
@@ -483,8 +484,9 @@ namespace MauRen
 
 			// you can only have a single index buffer. It's unfortunately not possible to use different indices for each vertex attribute,
 			// so we do still have to completely duplicate vertex data even if just one attribute varies.
-			vkCmdBindIndexBuffer(commandBuffer, m_IndexBuffer.buffer, 0, VK_INDEX_TYPE_UINT16);
-			static_assert(sizeof(m_Indices[0]) == 2);
+			vkCmdBindIndexBuffer(commandBuffer, m_IndexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
+			//static_assert(sizeof(m_Indices[0]) == 2);
+			static_assert(sizeof(m_Indices[0]) == 4);
 
 			vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipeline->GetPipelineLayout(), 0, 1, &m_DescriptorSets[m_CurrentFrame], 0, nullptr);
 
@@ -686,7 +688,7 @@ namespace MauRen
 		int texHeight{};
 		int texChannels{};
 
-		stbi_uc* const pixels{ stbi_load("Textures/TestTexture.jpg", &texWidth, &texHeight, &texChannels, STBI_rgb_alpha) };
+		stbi_uc* const pixels{ stbi_load("Textures/VikingRoom.png", &texWidth, &texHeight, &texChannels, STBI_rgb_alpha) };
 		VkDeviceSize const imageSize{ static_cast<uint32_t>(texWidth * texHeight * 4) };
 
 		if (!pixels) 

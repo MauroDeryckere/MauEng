@@ -82,7 +82,7 @@ namespace MauRen
 		std::vector<VulkanMappedBuffer> m_MappedUniformBuffers;
 
 		// Temporary
-		std::vector<Vertex> const m_Vertices
+		std::vector<Vertex> m_Vertices
 		{
 		{{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
 		{{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
@@ -94,7 +94,7 @@ namespace MauRen
 		{{0.5f, 0.5f, -0.5f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
 		{{-0.5f, 0.5f, -0.5f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}}
 		};
-		std::vector<uint16_t> const m_Indices
+		std::vector<uint32_t>  m_Indices
 		{
 			0, 1, 2, 2, 3, 0,
 			4, 5, 6, 6, 7, 4
