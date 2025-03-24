@@ -29,6 +29,7 @@ namespace MauRen
 
 	VKAPI_ATTR VkBool32 VKAPI_CALL VulkanDebugContext::DebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
 	{
+		using namespace MauEng;
 		const char* currColor{ colorGeneral };
 
 		std::string typeStr{ };

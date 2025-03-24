@@ -27,4 +27,6 @@
 
 #include "../Config/VulkanConfig.h"
 
+#include "../../Engine/Public/Config/EngineConfig.h"
+
 #endif

@@ -15,4 +15,6 @@
 #include <stdexcept>
 #include <cassert>
 
+#include "Config/EngineConfig.h"
+
 #endif // MAUENG_ENGINE_PCH_H
