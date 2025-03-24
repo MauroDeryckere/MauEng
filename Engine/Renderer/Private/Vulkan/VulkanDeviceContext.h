@@ -36,6 +36,9 @@ namespace MauRen
 		[[nodiscard]] QueueFamilyIndices FindQueueFamilies() const noexcept;
 		[[nodiscard]] bool IsUsingUnifiedGraphicsPresentQueue() const noexcept { return m_IsUsingUnifiedGraphicsPresentQueue; }
 
+		[[nodiscard]] VkFormat FindDepthFormat() const noexcept;
+		[[nodiscard]] static bool HasStencilComponent(VkFormat format) noexcept;
+
 		[[nodiscard]] VkQueue GetGraphicsQueue() const noexcept { return m_IsUsingUnifiedGraphicsPresentQueue ? m_UnifiedGraphicsPresentQueue : m_GraphicsQueue; }
 		[[nodiscard]] VkQueue GetPresentQueue() const noexcept { return m_IsUsingUnifiedGraphicsPresentQueue ? m_UnifiedGraphicsPresentQueue : m_PresentQueue; }
 
@@ -71,8 +74,9 @@ namespace MauRen
 		// Is a physical device suitable for our application
 		[[nodiscard]] bool IsPhysicalDeviceSuitable(VkPhysicalDevice device);
 
-
 		[[nodiscard]] QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device) const noexcept;
+
+		[[nodiscard]] VkFormat FindSupportedFormat(std::vector<VkFormat> const& candidates, VkImageTiling tiling, VkFormatFeatureFlags features) const noexcept;
 	};
 }
 

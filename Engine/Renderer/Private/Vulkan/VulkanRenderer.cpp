@@ -3,6 +3,7 @@
 #include "Utils.h"
 
 #define GLM_FORCE_RADIANS
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -19,7 +20,7 @@ namespace MauRen
 		m_pWindow{ pWindow }
 	{
 		m_InstanceContext = std::make_unique<VulkanInstanceContext>();
-		m_SurfaceContext = std::make_unique<VulkanSurfaceContext>(m_InstanceContext.get(), pWindow),
+		m_SurfaceContext = std::make_unique<VulkanSurfaceContext>(m_InstanceContext.get(), pWindow);
 		m_DebugContext = std::make_unique<VulkanDebugContext>(m_InstanceContext.get());
 		m_DeviceContext = std::make_unique<VulkanDeviceContext>(m_SurfaceContext.get(), m_InstanceContext.get());
 		m_SwapChainContext = std::make_unique<VulkanSwapchainContext>(pWindow, m_SurfaceContext.get(), m_DeviceContext.get());
@@ -29,8 +30,10 @@ namespace MauRen
 
 		m_GraphicsPipeline = std::make_unique<VulkanGraphicsPipeline>(m_DeviceContext.get(), m_SwapChainContext.get(), m_DescriptorSetLayout, 1u);
 
-		CreateFrameBuffers();
 		CreateCommandPool();
+
+		CreateDepthResources();
+		CreateFrameBuffers();
 
 		CreateTextureImage();
 		CreateTextureImageView();
@@ -68,16 +71,7 @@ namespace MauRen
 
 		vkDestroyCommandPool(m_DeviceContext->GetLogicalDevice(), m_CommandPool, nullptr);
 
-		for (auto const& framebuffer : m_SwapChainFramebuffers) 
-		{
-			vkDestroyFramebuffer(m_DeviceContext->GetLogicalDevice(), framebuffer, nullptr);
-		}
-		m_SwapChainContext = nullptr;
-
-		for (size_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; ++i)
-		{
-			DestroyBuffer(m_MappedUniformBuffers[i].buffer);
-		}
+		CleanupSwapchain();
 
 		vkDestroyDescriptorPool(m_DeviceContext->GetLogicalDevice(), m_DescriptorPool, nullptr);
 		vkDestroyDescriptorSetLayout(m_DeviceContext->GetLogicalDevice(), m_DescriptorSetLayout, nullptr);
@@ -207,13 +201,13 @@ namespace MauRen
 
 		for (size_t i{ 0 }; i < imageViews.size(); ++i)
 		{
-			VkImageView const attachments[] { imageViews[i]};
+			std::array<VkImageView, 2> const attachments{ imageViews[i], m_DepthImageView };
 			
 			VkFramebufferCreateInfo framebufferInfo{};
 			framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
 			framebufferInfo.renderPass = m_GraphicsPipeline->GetRenderPass();
-			framebufferInfo.attachmentCount = 1;
-			framebufferInfo.pAttachments = attachments;
+			framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+			framebufferInfo.pAttachments = attachments.data();
 			framebufferInfo.width = m_SwapChainContext->GetExtent().width;
 			framebufferInfo.height = m_SwapChainContext->GetExtent().height;
 			framebufferInfo.layers = 1;
@@ -458,9 +452,13 @@ namespace MauRen
 		renderPassInfo.renderArea.offset = { 0, 0 };
 		renderPassInfo.renderArea.extent = m_SwapChainContext->GetExtent();
 
-		VkClearValue constexpr clearColor{ 0.0f, 0.0f, 0.0f, 0.0f };
-		renderPassInfo.clearValueCount = 1;
-		renderPassInfo.pClearValues = &clearColor;
+		VkClearColorValue constexpr clearColor{ 0.0f, 0.0f, 0.0f, 0.0f };
+		std::array<VkClearValue, 2> clearValues{};
+		clearValues[0].color = clearColor;
+		clearValues[1].depthStencil = { 1.0f, 0 };
+
+		renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+		renderPassInfo.pClearValues = clearValues.data();
 
 		vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 			vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipeline->GetPipeline() );
@@ -658,15 +656,11 @@ namespace MauRen
 
 		vkDeviceWaitIdle(m_DeviceContext->GetLogicalDevice());
 
-		// since it's a unique ptr, this "destroys" it
-		m_SwapChainContext = nullptr;
-		for (auto const& framebuffer : m_SwapChainFramebuffers)
-		{
-			vkDestroyFramebuffer(m_DeviceContext->GetLogicalDevice(), framebuffer, nullptr);
-		}
+		CleanupSwapchain();
 
 		m_SwapChainContext = std::make_unique<VulkanSwapchainContext>(m_pWindow, m_SurfaceContext.get(), m_DeviceContext.get());
 
+		CreateDepthResources();
 		CreateFrameBuffers();
 	}
 
@@ -840,23 +834,31 @@ namespace MauRen
 		EndSingleTimeCommands(commandBuffer);
 	}
 
-	void VulkanRenderer::CreateTextureImageView()
+	VkImageView VulkanRenderer::CreateImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags)
 	{
 		VkImageViewCreateInfo viewInfo{};
 		viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-		viewInfo.image = m_TextureImage.image;
+		viewInfo.image = image;
 		viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-		viewInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
-		viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		viewInfo.format = format;
+		viewInfo.subresourceRange.aspectMask = aspectFlags;
 		viewInfo.subresourceRange.baseMipLevel = 0;
 		viewInfo.subresourceRange.levelCount = 1;
 		viewInfo.subresourceRange.baseArrayLayer = 0;
 		viewInfo.subresourceRange.layerCount = 1;
 
-		if (vkCreateImageView(m_DeviceContext->GetLogicalDevice(), &viewInfo, nullptr, &m_TextureImageView) != VK_SUCCESS) 
+		VkImageView imageView;
+		if (vkCreateImageView(m_DeviceContext->GetLogicalDevice(), &viewInfo, nullptr, &imageView) != VK_SUCCESS) 
 		{
 			throw std::runtime_error("Failed to create texture image view!");
 		}
+
+		return imageView;
+	}
+
+	void VulkanRenderer::CreateTextureImageView()
+	{
+		m_TextureImageView = CreateImageView(m_TextureImage.image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
 	}
 
 	void VulkanRenderer::CreateTextureSampler()
@@ -931,6 +933,40 @@ namespace MauRen
 		// TODO 
 		// A fence would allow you to schedule multiple transfers simultaneously and wait for all of them complete, instead of executing one at a time.
 		// That may give the driver more opportunities to optimize.
+	}
+
+	void VulkanRenderer::CreateDepthResources()
+	{
+		VkFormat const depthFormat{ m_DeviceContext->FindDepthFormat() };
+
+		CreateImage(m_SwapChainContext->GetExtent().width, 
+					m_SwapChainContext->GetExtent().height, 
+					depthFormat, 
+					VK_IMAGE_TILING_OPTIMAL, 
+					VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, 
+					VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, 
+					m_DepthImage);
+
+		m_DepthImageView = CreateImageView(m_DepthImage.image, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
+
+		// No need to transition since we will do this in the render pass.
+	}
+
+	void VulkanRenderer::CleanupSwapchain()
+	{
+		for (auto const& framebuffer : m_SwapChainFramebuffers)
+		{
+			vkDestroyFramebuffer(m_DeviceContext->GetLogicalDevice(), framebuffer, nullptr);
+		}
+
+		DestroyImage(m_DepthImage);
+		vkDestroyImageView(m_DeviceContext->GetLogicalDevice(), m_DepthImageView, nullptr);
+
+		m_SwapChainContext = nullptr;
+		for (size_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; ++i)
+		{
+			DestroyBuffer(m_MappedUniformBuffers[i].buffer);
+		}
 	}
 }
 

@@ -84,14 +84,20 @@ namespace MauRen
 		// Temporary
 		std::vector<Vertex> const m_Vertices
 		{
-		{{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-		{{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
-		{{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
-		{{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}}
+		{{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
+		{{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
+		{{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
+		{{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}},
+
+		{ { -0.5f, -0.5f, -0.5f }, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f} },
+		{{0.5f, -0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
+		{{0.5f, 0.5f, -0.5f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
+		{{-0.5f, 0.5f, -0.5f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}}
 		};
 		std::vector<uint16_t> const m_Indices
 		{
-			0, 1, 2, 2, 3, 0
+			0, 1, 2, 2, 3, 0,
+			4, 5, 6, 6, 7, 4
 		};
 
 		// TODO should this be a push costant?
@@ -119,6 +125,10 @@ namespace MauRen
 		VulkanImage m_TextureImage{};
 		VkImageView m_TextureImageView{ VK_NULL_HANDLE };
 		VkSampler m_TextureSampler{ VK_NULL_HANDLE };
+
+		VulkanImage m_DepthImage{};
+		VkImageView m_DepthImageView{ VK_NULL_HANDLE };
+
 
 		void CreateDescriptorSetLayout();
 		void CreateDescriptorPool();
@@ -155,11 +165,18 @@ namespace MauRen
 		void TransitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
 
 		// TODO refactor
+
+		VkImageView CreateImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
+
 		void CreateTextureImageView();
 		void CreateTextureSampler();
 
 		VkCommandBuffer BeginSingleTimeCommands();
 		void EndSingleTimeCommands(VkCommandBuffer commandBuffer);
+
+		void CreateDepthResources();
+
+		void CleanupSwapchain();
 
 	};
 }
