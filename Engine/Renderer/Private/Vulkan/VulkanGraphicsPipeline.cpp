@@ -1,6 +1,6 @@
 #include "VulkanGraphicsPipeline.h"
 
-#include "Utils.h"
+#include "VulkanUtils.h"
 
 namespace MauRen
 {
@@ -121,8 +121,8 @@ namespace MauRen
 		VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
 		vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 
-		auto const bindingDescription{ Utils::GetVertexBindingDescription() };
-		auto const attributeDescriptions{ Utils::GetVertexAttributeDescriptions() };
+		auto const bindingDescription{ VulkanUtils::GetVertexBindingDescription() };
+		auto const attributeDescriptions{ VulkanUtils::GetVertexAttributeDescriptions() };
 
 		vertexInputInfo.vertexBindingDescriptionCount = 1;
 		vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());

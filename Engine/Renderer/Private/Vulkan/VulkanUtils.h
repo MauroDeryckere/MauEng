@@ -1,12 +1,12 @@
-#ifndef MAUREN_UTILS_H
-#define MAUREN_UTILS_H
+#ifndef MAUREN_VULKAN_UTILS_H
+#define MAUREN_VULKAN_UTILS_H
 
 #include "RendererPCH.h"
 #include "Vertex.h"
 
 namespace MauRen
 {
-	namespace Utils
+	namespace VulkanUtils
 	{
 #pragma region Vertices
 		static VkVertexInputBindingDescription GetVertexBindingDescription() noexcept
@@ -48,4 +48,4 @@ namespace MauRen
 	}
 }
 
-#endif // MAUREN_UTILS_H
+#endif // MAUREN_VULKAN_UTILS_H
