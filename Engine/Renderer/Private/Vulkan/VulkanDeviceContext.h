@@ -42,6 +42,8 @@ namespace MauRen
 		[[nodiscard]] VkQueue GetGraphicsQueue() const noexcept { return m_IsUsingUnifiedGraphicsPresentQueue ? m_UnifiedGraphicsPresentQueue : m_GraphicsQueue; }
 		[[nodiscard]] VkQueue GetPresentQueue() const noexcept { return m_IsUsingUnifiedGraphicsPresentQueue ? m_UnifiedGraphicsPresentQueue : m_PresentQueue; }
 
+		[[nodiscard]] VkSampleCountFlagBits GetSampleCount() const noexcept { return m_MsaaSamples; }
+
 		VulkanDeviceContext(VulkanDeviceContext const&) = delete;
 		VulkanDeviceContext(VulkanDeviceContext&&) = delete;
 		VulkanDeviceContext& operator=(VulkanDeviceContext const&) = delete;
@@ -62,6 +64,8 @@ namespace MauRen
 		bool m_IsUsingUnifiedGraphicsPresentQueue{ false };
 		VkQueue m_UnifiedGraphicsPresentQueue{ VK_NULL_HANDLE };
 
+		VkSampleCountFlagBits m_MsaaSamples;
+
 		void SelectPhysicalDevice();
 		void CreateLogicalDevice();
 
@@ -77,6 +81,8 @@ namespace MauRen
 		[[nodiscard]] QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device) const noexcept;
 
 		[[nodiscard]] VkFormat FindSupportedFormat(std::vector<VkFormat> const& candidates, VkImageTiling tiling, VkFormatFeatureFlags features) const noexcept;
+
+		[[nodiscard]] VkSampleCountFlagBits GetMaxUsableSampleCount() const noexcept;
 	};
 }
 

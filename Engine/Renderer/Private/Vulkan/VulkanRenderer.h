@@ -131,6 +131,9 @@ namespace MauRen
 		VkImageView m_DepthImageView{ VK_NULL_HANDLE };
 
 
+		VulkanImage m_ColorImage{};
+		VkImageView m_ColorImageView{ VK_NULL_HANDLE };;
+
 		void CreateDescriptorSetLayout();
 		void CreateDescriptorPool();
 		void CreateDescriptorSets();
@@ -161,7 +164,7 @@ namespace MauRen
 		uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 
 		void CreateTextureImage();
-		void CreateImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VulkanImage& image);
+		void CreateImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkSampleCountFlagBits numSamples, VulkanImage& image);
 		void DestroyImage(VulkanImage const& image);
 		void TransitionImageLayout(VulkanImage const& image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
 
@@ -181,6 +184,7 @@ namespace MauRen
 
 		void CleanupSwapchain();
 
+		void CreateColorResources();
 	};
 }
 

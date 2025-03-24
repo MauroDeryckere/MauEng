@@ -31,6 +31,7 @@ namespace MauRen
 
 		CreateCommandPool();
 
+		CreateColorResources();
 		CreateDepthResources();
 		CreateFrameBuffers();
 
@@ -67,6 +68,7 @@ namespace MauRen
 		DestroyBuffer(m_VertexBuffer);
 
 		vkDestroySampler(m_DeviceContext->GetLogicalDevice(), m_TextureSampler, nullptr);
+
 		vkDestroyImageView(m_DeviceContext->GetLogicalDevice(), m_TextureImageView, nullptr);
 		DestroyImage(m_TextureImage);
 
@@ -207,7 +209,7 @@ namespace MauRen
 
 		for (size_t i{ 0 }; i < imageViews.size(); ++i)
 		{
-			std::array<VkImageView, 2> const attachments{ imageViews[i], m_DepthImageView };
+			std::array<VkImageView, 3> const attachments{ m_ColorImageView, m_DepthImageView,  imageViews[i] };
 			
 			VkFramebufferCreateInfo framebufferInfo{};
 			framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
@@ -668,6 +670,7 @@ namespace MauRen
 
 		m_SwapChainContext = std::make_unique<VulkanSwapchainContext>(m_pWindow, m_SurfaceContext.get(), m_DeviceContext.get());
 
+		CreateColorResources();
 		CreateDepthResources();
 		CreateFrameBuffers();
 	}
@@ -723,7 +726,8 @@ namespace MauRen
 					VK_FORMAT_R8G8B8A8_SRGB, 
 					VK_IMAGE_TILING_OPTIMAL, 
 					VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-					VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, 
+					VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+					VK_SAMPLE_COUNT_1_BIT,
 					m_TextureImage);
 
 		TransitionImageLayout(m_TextureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
@@ -735,7 +739,7 @@ namespace MauRen
 		DestroyBuffer(stagingBuffer);
 	}
 
-	void VulkanRenderer::CreateImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VulkanImage& image)
+	void VulkanRenderer::CreateImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkSampleCountFlagBits numSamples, VulkanImage& image)
 	{
 		VkImageCreateInfo imageInfo{};
 		imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -752,7 +756,7 @@ namespace MauRen
 
 		imageInfo.usage = usage;
 		imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-		imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+		imageInfo.samples = numSamples;
 		imageInfo.flags = 0; // Optional
 
 		if (vkCreateImage(m_DeviceContext->GetLogicalDevice(), &imageInfo, nullptr, &image.image) != VK_SUCCESS)
@@ -1070,6 +1074,7 @@ namespace MauRen
 					VK_IMAGE_TILING_OPTIMAL, 
 					VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, 
 					VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, 
+					m_DeviceContext->GetSampleCount(),
 					m_DepthImage);
 
 		m_DepthImageView = CreateImageView(m_DepthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
@@ -1084,10 +1089,30 @@ namespace MauRen
 			vkDestroyFramebuffer(m_DeviceContext->GetLogicalDevice(), framebuffer, nullptr);
 		}
 
-		DestroyImage(m_DepthImage);
 		vkDestroyImageView(m_DeviceContext->GetLogicalDevice(), m_DepthImageView, nullptr);
+		DestroyImage(m_DepthImage);
+
+
+		vkDestroyImageView(m_DeviceContext->GetLogicalDevice(), m_ColorImageView, nullptr);
+		DestroyImage(m_ColorImage);
 
 		m_SwapChainContext = nullptr;
+	}
+
+	void VulkanRenderer::CreateColorResources()
+	{
+		VkFormat const colorFormat{ m_SwapChainContext->GetImageFormat() };
+
+		CreateImage(m_SwapChainContext->GetExtent().width,
+					m_SwapChainContext->GetExtent().height, 
+					colorFormat, 
+					VK_IMAGE_TILING_OPTIMAL, 
+					VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, 
+					VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, 
+					m_DeviceContext->GetSampleCount(), 
+					m_ColorImage);
+
+		m_ColorImageView = CreateImageView(m_ColorImage, colorFormat, VK_IMAGE_ASPECT_COLOR_BIT);
 	}
 }
 
