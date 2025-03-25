@@ -76,31 +76,17 @@ namespace MauRen
 			VulkanBuffer buffer{  };
 			void* mapped{ nullptr };
 		};
-
-		VulkanBuffer m_VertexBuffer;
-		VulkanBuffer m_IndexBuffer;
 		std::vector<VulkanMappedBuffer> m_MappedUniformBuffers;
 
+		// TODO make a mesh
+		VulkanBuffer m_VertexBuffer;
+		VulkanBuffer m_IndexBuffer;
+
 		// Temporary
-		std::vector<Vertex> m_Vertices
-		{
-		{{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
-		{{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
-		{{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
-		{{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}},
+		std::vector<Vertex> m_Vertices;
+		std::vector<uint32_t> m_Indices;
 
-		{ { -0.5f, -0.5f, -0.5f }, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f} },
-		{{0.5f, -0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
-		{{0.5f, 0.5f, -0.5f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
-		{{-0.5f, 0.5f, -0.5f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}}
-		};
-		std::vector<uint32_t>  m_Indices
-		{
-			0, 1, 2, 2, 3, 0,
-			4, 5, 6, 6, 7, 4
-		};
-
-		// TODO should this be a push costant?
+		// TODO model -> push constant
 		struct UniformBufferObject final
 		{
 			alignas(16) glm::mat4 model;
@@ -120,6 +106,8 @@ namespace MauRen
 		{
 			VkImage image{ VK_NULL_HANDLE };
 			VkDeviceMemory imageMemory{ VK_NULL_HANDLE };
+			uint32_t width{ 0 };
+			uint32_t height{ 0 };
 			uint32_t mipLevels{ 1 };
 		};
 
@@ -130,9 +118,8 @@ namespace MauRen
 		VulkanImage m_DepthImage{};
 		VkImageView m_DepthImageView{ VK_NULL_HANDLE };
 
-
 		VulkanImage m_ColorImage{};
-		VkImageView m_ColorImageView{ VK_NULL_HANDLE };;
+		VkImageView m_ColorImageView{ VK_NULL_HANDLE };
 
 		void CreateDescriptorSetLayout();
 		void CreateDescriptorPool();
@@ -159,32 +146,31 @@ namespace MauRen
 
 		void DrawFrame();
 		void UpdateUniformBuffer(uint32_t currentImage);
-		void RecreateSwapchain();
 
 		uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 
+		// TODO refactor
 		void CreateTextureImage();
-		void CreateImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkSampleCountFlagBits numSamples, VulkanImage& image);
+		void CreateImage(VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkSampleCountFlagBits numSamples, VulkanImage& image);
 		void DestroyImage(VulkanImage const& image);
 		void TransitionImageLayout(VulkanImage const& image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
-
-		void GenerateMipmaps(VulkanImage const& image, VkFormat imageFormat, int32_t texWidth, int32_t texHeight);
-
-		// TODO refactor
+		void GenerateMipmaps(VulkanImage const& image, VkFormat imageFormat);
 
 		VkImageView CreateImageView(VulkanImage const& image, VkFormat format, VkImageAspectFlags aspectFlags);
-
 		void CreateTextureImageView();
+
 		void CreateTextureSampler();
+
 
 		VkCommandBuffer BeginSingleTimeCommands();
 		void EndSingleTimeCommands(VkCommandBuffer commandBuffer);
 
-		void CreateDepthResources();
-
-		void CleanupSwapchain();
 
 		void CreateColorResources();
+		void CreateDepthResources();
+
+		void RecreateSwapchain();
+		void CleanupSwapchain();
 	};
 }
 

@@ -700,12 +700,14 @@ namespace MauRen
 		stbi_uc* const pixels{ stbi_load("Textures/VikingRoom.png", &texWidth, &texHeight, &texChannels, STBI_rgb_alpha) };
 		VkDeviceSize const imageSize{ static_cast<uint32_t>(texWidth * texHeight * 4) };
 
-		m_TextureImage.mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(texWidth, texHeight)))) + 1;
-
 		if (!pixels) 
 		{
 			throw std::runtime_error("Failed to load texture image!");
 		}
+
+		m_TextureImage.mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(texWidth, texHeight)))) + 1;
+		m_TextureImage.width = texHeight;
+		m_TextureImage.height = texHeight;
 
 		VulkanBuffer stagingBuffer{};
 		CreateBuffer(imageSize, 
@@ -721,9 +723,7 @@ namespace MauRen
 
 		stbi_image_free(pixels);
 
-		CreateImage(texWidth, 
-					texHeight, 
-					VK_FORMAT_R8G8B8A8_SRGB, 
+		CreateImage(VK_FORMAT_R8G8B8A8_SRGB, 
 					VK_IMAGE_TILING_OPTIMAL, 
 					VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
 					VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
@@ -732,20 +732,20 @@ namespace MauRen
 
 		TransitionImageLayout(m_TextureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 		CopyBufferToImage(stagingBuffer.buffer, m_TextureImage.image, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
-		//transitioned to VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL while generating mipmaps
+		// is transitioned to VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL while generating mipmaps
 
-		GenerateMipmaps(m_TextureImage, VK_FORMAT_R8G8B8A8_SRGB, texWidth, texHeight);
+		GenerateMipmaps(m_TextureImage, VK_FORMAT_R8G8B8A8_SRGB);
 
 		DestroyBuffer(stagingBuffer);
 	}
 
-	void VulkanRenderer::CreateImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkSampleCountFlagBits numSamples, VulkanImage& image)
+	void VulkanRenderer::CreateImage(VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkSampleCountFlagBits numSamples, VulkanImage& image)
 	{
 		VkImageCreateInfo imageInfo{};
 		imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
 		imageInfo.imageType = VK_IMAGE_TYPE_2D;
-		imageInfo.extent.width = static_cast<uint32_t>(width);
-		imageInfo.extent.height = static_cast<uint32_t>(height);
+		imageInfo.extent.width = image.width;
+		imageInfo.extent.height = image.height;
 		imageInfo.extent.depth = 1;
 		imageInfo.mipLevels = image.mipLevels;
 		imageInfo.arrayLayers = 1;
@@ -850,7 +850,7 @@ namespace MauRen
 		EndSingleTimeCommands(commandBuffer);
 	}
 
-	void VulkanRenderer::GenerateMipmaps(VulkanImage const& image, VkFormat imageFormat, int32_t texWidth, int32_t texHeight)
+	void VulkanRenderer::GenerateMipmaps(VulkanImage const& image, VkFormat imageFormat)
 	{
 		VkCommandBuffer const commandBuffer{ BeginSingleTimeCommands() };
 
@@ -886,8 +886,8 @@ namespace MauRen
 		barrier.subresourceRange.layerCount = 1;
 		barrier.subresourceRange.levelCount = 1;
 
-		int32_t mipWidth{ texWidth };
-		int32_t mipHeight{ texHeight };
+		int32_t mipWidth{ static_cast<int32_t>(image.width) };
+		int32_t mipHeight{ static_cast<int32_t>(image.height) };
 
 		for (uint32_t i{ 1 }; i < image.mipLevels; i++)
 		{
@@ -1068,9 +1068,10 @@ namespace MauRen
 	{
 		VkFormat const depthFormat{ m_DeviceContext->FindDepthFormat() };
 
-		CreateImage(m_SwapChainContext->GetExtent().width, 
-					m_SwapChainContext->GetExtent().height, 
-					depthFormat, 
+		m_DepthImage.width = m_SwapChainContext->GetExtent().width;
+		m_DepthImage.height = m_SwapChainContext->GetExtent().height;
+
+		CreateImage(depthFormat, 
 					VK_IMAGE_TILING_OPTIMAL, 
 					VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, 
 					VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, 
@@ -1078,7 +1079,6 @@ namespace MauRen
 					m_DepthImage);
 
 		m_DepthImageView = CreateImageView(m_DepthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
-
 		// No need to transition since we will do this in the render pass.
 	}
 
@@ -1103,9 +1103,10 @@ namespace MauRen
 	{
 		VkFormat const colorFormat{ m_SwapChainContext->GetImageFormat() };
 
-		CreateImage(m_SwapChainContext->GetExtent().width,
-					m_SwapChainContext->GetExtent().height, 
-					colorFormat, 
+		m_ColorImage.width = m_SwapChainContext->GetExtent().width;
+		m_ColorImage.height = m_SwapChainContext->GetExtent().height;
+
+		CreateImage(colorFormat, 
 					VK_IMAGE_TILING_OPTIMAL, 
 					VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, 
 					VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, 
