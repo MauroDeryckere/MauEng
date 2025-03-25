@@ -28,6 +28,8 @@ namespace MauRen
 		virtual void Render() override;
 		virtual void ResizeWindow() override;
 
+		[[nodiscard]] VulkanDeviceContext* GetDeviceContext() const noexcept { return m_DeviceContext.get(); }
+
 		VulkanRenderer(VulkanRenderer const&) = delete;
 		VulkanRenderer(VulkanRenderer&&) = delete;
 		VulkanRenderer& operator=(VulkanRenderer const&) = delete;
@@ -106,20 +108,33 @@ namespace MauRen
 		{
 			VkImage image{ VK_NULL_HANDLE };
 			VkDeviceMemory imageMemory{ VK_NULL_HANDLE };
+			VkFormat format{ VK_FORMAT_UNDEFINED };
+
+			// Currently only work with one view but may support multiple later
+			std::vector<VkImageView> imageViews{ };
+
 			uint32_t width{ 0 };
 			uint32_t height{ 0 };
 			uint32_t mipLevels{ 1 };
+
+			VulkanImage() = default;
+			VulkanImage(VulkanRenderer* pRenderer, VkFormat imgFormat, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkSampleCountFlagBits numSamples, uint32_t imgWidth, uint32_t imgHeight, uint32_t imgMipLevels = 1);
+
+			void Destroy(VulkanDeviceContext* pDeviceContext);
+			void TransitionImageLayout(VulkanRenderer* pRenderer, VkImageLayout oldLayout, VkImageLayout newLayout);
+			void GenerateMipmaps(VulkanRenderer* pRenderer);
+			uint32_t CreateImageView(VulkanRenderer* pRenderer, VkImageAspectFlags aspectFlags);
 		};
 
+		void CreateTextureImage();
+
 		VulkanImage m_TextureImage{};
-		VkImageView m_TextureImageView{ VK_NULL_HANDLE };
+		VulkanImage m_DepthImage{};
+		VulkanImage m_ColorImage{};
+
+		// Should be managedin e.g a texturemanager
 		VkSampler m_TextureSampler{ VK_NULL_HANDLE };
 
-		VulkanImage m_DepthImage{};
-		VkImageView m_DepthImageView{ VK_NULL_HANDLE };
-
-		VulkanImage m_ColorImage{};
-		VkImageView m_ColorImageView{ VK_NULL_HANDLE };
 
 		void CreateDescriptorSetLayout();
 		void CreateDescriptorPool();
@@ -127,10 +142,13 @@ namespace MauRen
 
 
 		void CreateFrameBuffers();
+
 		void CreateCommandPool();
 		void CreateVertexBuffer();
 		void CreateIndexBuffer();
+
 		void CreateCommandBuffers();
+
 		void CreateUniformBuffers();
 
 		void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
@@ -149,21 +167,11 @@ namespace MauRen
 
 		uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 
-		// TODO refactor
-		void CreateTextureImage();
-		void CreateImage(VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkSampleCountFlagBits numSamples, VulkanImage& image);
-		void DestroyImage(VulkanImage const& image);
-		void TransitionImageLayout(VulkanImage const& image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
-		void GenerateMipmaps(VulkanImage const& image, VkFormat imageFormat);
-
-		VkImageView CreateImageView(VulkanImage const& image, VkFormat format, VkImageAspectFlags aspectFlags);
-		void CreateTextureImageView();
-
 		void CreateTextureSampler();
 
 
-		VkCommandBuffer BeginSingleTimeCommands();
-		void EndSingleTimeCommands(VkCommandBuffer commandBuffer);
+		static VkCommandBuffer BeginSingleTimeCommands(VulkanDeviceContext* pDeviceContext, VkCommandPool commandPool);
+		static void EndSingleTimeCommands(VulkanDeviceContext* pDeviceContext, VkCommandPool commandPool, VkCommandBuffer commandBuffer);
 
 
 		void CreateColorResources();
