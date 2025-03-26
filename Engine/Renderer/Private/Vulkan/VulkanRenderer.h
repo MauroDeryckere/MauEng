@@ -169,7 +169,7 @@ namespace MauRen
 
 		void CreateTextureSampler();
 
-
+		//TODO abstract Command away in a struct with a Destroy thats basicallyRAII
 		static VkCommandBuffer BeginSingleTimeCommands(VulkanDeviceContext* pDeviceContext, VkCommandPool commandPool);
 		static void EndSingleTimeCommands(VulkanDeviceContext* pDeviceContext, VkCommandPool commandPool, VkCommandBuffer commandBuffer);
 
