@@ -22,12 +22,13 @@ namespace MauRen
 		m_SurfaceContext = std::make_unique<VulkanSurfaceContext>(m_InstanceContext.get(), pWindow);
 		m_DebugContext = std::make_unique<VulkanDebugContext>(m_InstanceContext.get());
 		m_DeviceContext = std::make_unique<VulkanDeviceContext>(m_SurfaceContext.get(), m_InstanceContext.get());
+		m_DescriptorContext = std::make_unique<VulkanDescriptorContext>(m_DeviceContext.get()),
 		m_SwapChainContext = std::make_unique<VulkanSwapchainContext>(pWindow, m_SurfaceContext.get(), m_DeviceContext.get());
 
 		// These need to be created before the graphics pipeline becaue they're needed there
-		CreateDescriptorSetLayout();
+		m_DescriptorContext->CreateDescriptorSetLayout();
 
-		m_GraphicsPipeline = std::make_unique<VulkanGraphicsPipeline>(m_DeviceContext.get(), m_SwapChainContext.get(), m_DescriptorSetLayout, 1u);
+		m_GraphicsPipeline = std::make_unique<VulkanGraphicsPipeline>(m_DeviceContext.get(), m_SwapChainContext.get(), m_DescriptorContext->GetDescriptorSetLayout(), 1u);
 
 		CreateCommandPool();
 
@@ -38,14 +39,27 @@ namespace MauRen
 		CreateTextureImage();
 		CreateTextureSampler();
 
+
 		Utils::LoadModel("Models/VikingRoom.obj", m_Vertices, m_Indices);
 
 		CreateVertexBuffer();
 		CreateIndexBuffer();
 		CreateUniformBuffers();
 
-		CreateDescriptorPool();
-		CreateDescriptorSets();
+		//CreateGlobalBuffers();
+
+		m_DescriptorContext->CreateDescriptorPool();
+		std::vector<VkBuffer> tempUniformBuffers;
+		for (auto const& b : m_MappedUniformBuffers)
+		{
+			tempUniformBuffers.emplace_back(b.buffer.buffer);
+		}
+		m_DescriptorContext->CreateDescriptorSets(tempUniformBuffers,
+												0, 
+												sizeof(UniformBufferObject), 
+												VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, 
+												m_TextureImage.imageViews, 
+												m_TextureSampler);
 
 		CreateCommandBuffers();
 		CreateSyncObjects();
@@ -79,8 +93,7 @@ namespace MauRen
 			DestroyBuffer(m_MappedUniformBuffers[i].buffer);
 		}
 
-		vkDestroyDescriptorPool(m_DeviceContext->GetLogicalDevice(), m_DescriptorPool, nullptr);
-		vkDestroyDescriptorSetLayout(m_DeviceContext->GetLogicalDevice(), m_DescriptorSetLayout, nullptr);
+		m_DescriptorContext->Destroy();
 	}
 
 	void VulkanRenderer::Render()
@@ -91,112 +104,6 @@ namespace MauRen
 	void VulkanRenderer::ResizeWindow()
 	{
 		m_FramebufferResized = true;
-	}
-
-	void VulkanRenderer::CreateDescriptorSetLayout()
-	{
-		VkDescriptorSetLayoutBinding uboLayoutBinding{};
-		uboLayoutBinding.binding = 0;
-		uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		// This could be used to specify a transformation for each of the bones in a skeleton for skeletal animation, for example.
-		// Our MVP transformation is in a single uniform buffer object, so we're using a descriptorCount of 1.
-		uboLayoutBinding.descriptorCount = 1;
-
-		uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-		uboLayoutBinding.pImmutableSamplers = nullptr; // Optional
-
-		VkDescriptorSetLayoutBinding samplerLayoutBinding{};
-		samplerLayoutBinding.binding = 1;
-		samplerLayoutBinding.descriptorCount = 1;
-		samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		samplerLayoutBinding.pImmutableSamplers = nullptr;
-		samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-		std::array<VkDescriptorSetLayoutBinding, 2> const bindings { uboLayoutBinding, samplerLayoutBinding };
-
-		VkDescriptorSetLayoutCreateInfo layoutInfo{};
-		layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-		layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
-		layoutInfo.pBindings = bindings.data();
-
-		if (vkCreateDescriptorSetLayout(m_DeviceContext->GetLogicalDevice(), &layoutInfo, nullptr, &m_DescriptorSetLayout) != VK_SUCCESS) 
-		{
-			throw std::runtime_error("Failed to create descriptor set layout!");
-		}
-	}
-
-	void VulkanRenderer::CreateDescriptorPool()
-	{
-		std::array<VkDescriptorPoolSize, 2> poolSizes{};
-		poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		poolSizes[0].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-		poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		poolSizes[1].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-
-		VkDescriptorPoolCreateInfo poolInfo{};
-		poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-		poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
-		poolInfo.pPoolSizes = poolSizes.data();
-		poolInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-
-		if (vkCreateDescriptorPool(m_DeviceContext->GetLogicalDevice(), &poolInfo, nullptr, &m_DescriptorPool) != VK_SUCCESS) {
-
-			throw std::runtime_error("Failed to create descriptor pool!");
-		}
-	}
-
-	void VulkanRenderer::CreateDescriptorSets()
-	{
-		std::vector<VkDescriptorSetLayout> const layouts(MAX_FRAMES_IN_FLIGHT, m_DescriptorSetLayout);
-
-		VkDescriptorSetAllocateInfo allocInfo{};
-		allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-		allocInfo.descriptorPool = m_DescriptorPool;
-		allocInfo.descriptorSetCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-		allocInfo.pSetLayouts = layouts.data();
-
-
-		m_DescriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
-		if (vkAllocateDescriptorSets(m_DeviceContext->GetLogicalDevice(), &allocInfo, m_DescriptorSets.data()) != VK_SUCCESS)
-		{
-			throw std::runtime_error("Failed to allocate descriptor sets!");
-		}
-
-		for (size_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; ++i)
-		{
-			VkDescriptorBufferInfo bufferInfo{};
-			bufferInfo.buffer = m_MappedUniformBuffers[i].buffer.buffer;
-			bufferInfo.offset = 0;
-			bufferInfo.range = sizeof(UniformBufferObject);
-
-			VkDescriptorImageInfo imageInfo{};
-			imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-			imageInfo.imageView = m_TextureImage.imageViews[0];
-			imageInfo.sampler = m_TextureSampler;
-
-			std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
-			descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-			descriptorWrites[0].dstSet = m_DescriptorSets[i];
-			descriptorWrites[0].dstBinding = 0;
-			descriptorWrites[0].dstArrayElement = 0;
-			descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-			descriptorWrites[0].descriptorCount = 1;
-			descriptorWrites[0].pBufferInfo = &bufferInfo;
-			descriptorWrites[0].pImageInfo = nullptr;
-			descriptorWrites[0].pTexelBufferView = nullptr;
-
-			descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-			descriptorWrites[1].dstSet = m_DescriptorSets[i];
-			descriptorWrites[1].dstBinding = 1;
-			descriptorWrites[1].dstArrayElement = 0;
-			descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-			descriptorWrites[1].descriptorCount = 1;
-			descriptorWrites[1].pBufferInfo = nullptr;
-			descriptorWrites[1].pImageInfo = &imageInfo;
-			descriptorWrites[1].pTexelBufferView = nullptr;
-
-			vkUpdateDescriptorSets(m_DeviceContext->GetLogicalDevice(), descriptorWrites.size(), descriptorWrites.data(), 0, nullptr);
-		}
 	}
 
 	void VulkanRenderer::CreateFrameBuffers()
@@ -356,7 +263,8 @@ namespace MauRen
 
 		VkMemoryAllocateInfo allocInfo{};
 		allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-		allocInfo.allocationSize = memRequirements.size;
+		//allocInfo.allocationSize = memRequirements.size;
+		allocInfo.allocationSize = size;
 		allocInfo.memoryTypeIndex = FindMemoryType(memRequirements.memoryTypeBits, properties);
 
 		//TODO
@@ -493,7 +401,7 @@ namespace MauRen
 			//static_assert(sizeof(m_Indices[0]) == 2);
 			static_assert(sizeof(m_Indices[0]) == 4);
 
-			vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipeline->GetPipelineLayout(), 0, 1, &m_DescriptorSets[m_CurrentFrame], 0, nullptr);
+			vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipeline->GetPipelineLayout(), 0, 1, &m_DescriptorContext->GetDescriptorSets()[m_CurrentFrame], 0, nullptr);
 
 			vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(m_Indices.size()), 1, 0, 0, 0);
 		vkCmdEndRenderPass(commandBuffer);
@@ -848,6 +756,27 @@ namespace MauRen
 		m_ColorImage.Destroy(m_DeviceContext.get());
 
 		m_SwapChainContext = nullptr;
+	}
+
+	void VulkanRenderer::CreateGlobalBuffers()
+	{
+		CreateBuffer(MAX_VERTEX_BUFFER_SIZE,
+					VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+					VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+					m_GlobalVertexBuffer.buffer,
+					m_GlobalVertexBuffer.bufferMemory);
+
+		CreateBuffer(MAX_INDEX_BUFFER_SIZE,
+					VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+					VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+					m_GlobalIndexBuffer.buffer,
+					m_GlobalIndexBuffer.bufferMemory);
+
+		CreateBuffer(MAX_INSTANCE_BUFFER_SIZE,
+					VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+					VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+					m_InstanceDataBuffer.buffer,
+					m_InstanceDataBuffer.bufferMemory);
 	}
 
 	void VulkanRenderer::CreateColorResources()

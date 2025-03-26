@@ -9,6 +9,7 @@
 #include "VulkanSurfaceContext.h"
 #include "VulkanDebugContext.h"
 #include "VulkanDeviceContext.h"
+#include "VulkanDescriptorContext.h"
 #include "VulkanSwapchainContext.h"
 #include "VulkanGraphicsPipeline.h"
 
@@ -43,6 +44,7 @@ namespace MauRen
 		std::unique_ptr<VulkanSurfaceContext> m_SurfaceContext;
 		std::unique_ptr<VulkanDebugContext> m_DebugContext;
 		std::unique_ptr<VulkanDeviceContext> m_DeviceContext;
+		std::unique_ptr< VulkanDescriptorContext> m_DescriptorContext;
 		std::unique_ptr<VulkanSwapchainContext> m_SwapChainContext;
 		std::unique_ptr<VulkanGraphicsPipeline> m_GraphicsPipeline;
 
@@ -71,7 +73,18 @@ namespace MauRen
 		{
 			VkBuffer buffer {VK_NULL_HANDLE};
 			VkDeviceMemory bufferMemory{ VK_NULL_HANDLE };
+			VkDeviceSize size{ 0 };
 		};
+		// Using a fixed size for now to test the system, until moving on to use the allocator
+		const VkDeviceSize MAX_VERTEX_BUFFER_SIZE{ 64 * 1024 * 1024 }; // 64MB
+		const VkDeviceSize MAX_INDEX_BUFFER_SIZE{ 32 * 1024 * 1024 };  // 32MB
+		const VkDeviceSize MAX_INSTANCE_BUFFER_SIZE{ 16 * 1024 * 1024 }; // 16MB
+		//const VkDeviceSize MAX_MESH_DATA_SIZE = 1024 * sizeof(MeshData); // 1024 meshes
+		//const VkDeviceSize MAX_DRAW_COMMANDS = 1024 * sizeof(DrawCommand); // 1024 draw calls
+
+		VulkanBuffer m_GlobalVertexBuffer{};
+		VulkanBuffer m_GlobalIndexBuffer{};
+		VulkanBuffer m_InstanceDataBuffer{};  // Holds per-instance data
 
 		struct VulkanMappedBuffer final
 		{
@@ -95,14 +108,6 @@ namespace MauRen
 			alignas(16) glm::mat4 view;
 			alignas(16) glm::mat4 proj;
 		};
-
-		VkDescriptorSetLayout m_DescriptorSetLayout;
-		VkDescriptorPool m_DescriptorPool;
-
-		// !
-		// common practice to rank from ‘least updated’ descriptor set(index 0) to ‘most frequent updated’
-		// descriptor set(index N)!This way, we can avoid rebinding as much as possible!
-		std::vector<VkDescriptorSet> m_DescriptorSets;
 
 		struct VulkanImage final
 		{
@@ -134,12 +139,6 @@ namespace MauRen
 
 		// Should be managedin e.g a texturemanager
 		VkSampler m_TextureSampler{ VK_NULL_HANDLE };
-
-
-		void CreateDescriptorSetLayout();
-		void CreateDescriptorPool();
-		void CreateDescriptorSets();
-
 
 		void CreateFrameBuffers();
 
@@ -179,6 +178,8 @@ namespace MauRen
 
 		void RecreateSwapchain();
 		void CleanupSwapchain();
+
+		void CreateGlobalBuffers();
 	};
 }
 
