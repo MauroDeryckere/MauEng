@@ -4,25 +4,28 @@
 
 namespace MauRen
 {
-	VulkanGraphicsPipeline::VulkanGraphicsPipeline(VulkanDeviceContext* pDeviceContext, VulkanSwapchainContext* pSwapChainContext, VkDescriptorSetLayout descriptorSetLayout, uint32_t descriptorSetLayoutCount) :
-		m_pDeviceContext{ pDeviceContext }
+	void VulkanGraphicsPipeline::Initialize(VulkanSwapchainContext* pSwapChainContext, VkDescriptorSetLayout descriptorSetLayout, uint32_t descriptorSetLayoutCount)
 	{
 		CreateRenderPass(pSwapChainContext);
 		CreateGraphicsPipeline(pSwapChainContext, descriptorSetLayout, descriptorSetLayoutCount);
 	}
 
-	VulkanGraphicsPipeline::~VulkanGraphicsPipeline()
+	void VulkanGraphicsPipeline::Destroy()
 	{
-		vkDestroyPipeline(m_pDeviceContext->GetLogicalDevice(), m_GraphicsPipeline, nullptr);
-		vkDestroyPipelineLayout(m_pDeviceContext->GetLogicalDevice(), m_PipelineLayout, nullptr);
-		vkDestroyRenderPass(m_pDeviceContext->GetLogicalDevice(), m_RenderPass, nullptr);
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+
+		VulkanUtils::SafeDestroy(deviceContext->GetLogicalDevice(), m_GraphicsPipeline, nullptr);
+		VulkanUtils::SafeDestroy(deviceContext->GetLogicalDevice(), m_PipelineLayout, nullptr);
+		VulkanUtils::SafeDestroy(deviceContext->GetLogicalDevice(), m_RenderPass, nullptr);
 	}
 
 	void VulkanGraphicsPipeline::CreateRenderPass(VulkanSwapchainContext* pSwapChainContext)
 	{
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+
 		VkAttachmentDescription colorAttachment{};
 		colorAttachment.format = pSwapChainContext->GetImageFormat();
-		colorAttachment.samples = m_pDeviceContext->GetSampleCount();
+		colorAttachment.samples = deviceContext->GetSampleCount();
 		colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 		colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
 
@@ -43,8 +46,8 @@ namespace MauRen
 		colorAttachmentResolve.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
 		VkAttachmentDescription depthAttachment{};
-		depthAttachment.format = m_pDeviceContext->FindDepthFormat();
-		depthAttachment.samples = m_pDeviceContext->GetSampleCount();
+		depthAttachment.format = deviceContext->FindDepthFormat();
+		depthAttachment.samples = deviceContext->GetSampleCount();
 		depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 		depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 		depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
@@ -93,7 +96,7 @@ namespace MauRen
 		renderPassInfo.dependencyCount = 1;
 		renderPassInfo.pDependencies = &dependency;
 
-		if (vkCreateRenderPass(m_pDeviceContext->GetLogicalDevice(), &renderPassInfo, nullptr, &m_RenderPass) != VK_SUCCESS) 
+		if (vkCreateRenderPass(deviceContext->GetLogicalDevice(), &renderPassInfo, nullptr, &m_RenderPass) != VK_SUCCESS)
 		{
 			throw std::runtime_error("Failed to create render pass!");
 		}
@@ -101,12 +104,14 @@ namespace MauRen
 
 	void VulkanGraphicsPipeline::CreateGraphicsPipeline(VulkanSwapchainContext* pSwapChainContext, VkDescriptorSetLayout descriptorSetLayout, uint32_t descriptorSetLayoutCount)
 	{
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+
 		auto const vertShaderCode{ ReadFile("shaders/shader.vert.spv") };
 		auto const fragShaderCode{ ReadFile("shaders/shader.frag.spv") };
 
 		// Shader modules are linked internally, the VkShaderModule is just a wrapper so we do not need to store it.
-		VkShaderModule const vertShaderModule{ CreateShaderModule(vertShaderCode) };
-		VkShaderModule const fragShaderModule{ CreateShaderModule(fragShaderCode) };
+		VkShaderModule vertShaderModule{ CreateShaderModule(vertShaderCode) };
+		VkShaderModule fragShaderModule{ CreateShaderModule(fragShaderCode) };
 
 		VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
 		vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -189,7 +194,7 @@ namespace MauRen
 		VkPipelineMultisampleStateCreateInfo multisampling{};
 		multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
 		multisampling.sampleShadingEnable = VK_FALSE;
-		multisampling.rasterizationSamples = m_pDeviceContext->GetSampleCount();
+		multisampling.rasterizationSamples = deviceContext->GetSampleCount();
 		multisampling.minSampleShading = 1.0f; // Optional
 		multisampling.pSampleMask = nullptr; // Optional
 		multisampling.alphaToCoverageEnable = VK_FALSE; // Optional
@@ -240,7 +245,7 @@ namespace MauRen
 		pipelineLayoutInfo.pushConstantRangeCount = 0; // Optional
 		pipelineLayoutInfo.pPushConstantRanges = nullptr; // Optional
 
-		if (vkCreatePipelineLayout(m_pDeviceContext->GetLogicalDevice(), &pipelineLayoutInfo, nullptr, &m_PipelineLayout) != VK_SUCCESS)
+		if (vkCreatePipelineLayout(deviceContext->GetLogicalDevice(), &pipelineLayoutInfo, nullptr, &m_PipelineLayout) != VK_SUCCESS)
 		{
 			throw std::runtime_error("Failed to create pipeline layout!");
 		}
@@ -269,13 +274,13 @@ namespace MauRen
 		pipelineInfo.basePipelineHandle = VK_NULL_HANDLE; // Optional
 		pipelineInfo.basePipelineIndex = -1; // Optional
 
-		if (vkCreateGraphicsPipelines(m_pDeviceContext->GetLogicalDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_GraphicsPipeline) != VK_SUCCESS) 
+		if (vkCreateGraphicsPipelines(deviceContext->GetLogicalDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_GraphicsPipeline) != VK_SUCCESS)
 		{
 			throw std::runtime_error("Failed to create graphics pipeline!");
 		}
 
-		vkDestroyShaderModule(m_pDeviceContext->GetLogicalDevice(), fragShaderModule, nullptr);
-		vkDestroyShaderModule(m_pDeviceContext->GetLogicalDevice(), vertShaderModule, nullptr);
+		VulkanUtils::SafeDestroy(deviceContext->GetLogicalDevice(), fragShaderModule, nullptr);
+		VulkanUtils::SafeDestroy(deviceContext->GetLogicalDevice(), vertShaderModule, nullptr);
 	}
 
 	std::vector<char> VulkanGraphicsPipeline::ReadFile(std::filesystem::path const& filepath)
@@ -298,13 +303,15 @@ namespace MauRen
 
 	VkShaderModule VulkanGraphicsPipeline::CreateShaderModule(std::vector<char> const& code) const
 	{
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+
 		VkShaderModuleCreateInfo createInfo{};
 		createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
 		createInfo.codeSize = code.size();
 		createInfo.pCode = reinterpret_cast<const uint32_t*>(code.data());
 
 		VkShaderModule shaderModule;
-		if (vkCreateShaderModule(m_pDeviceContext->GetLogicalDevice(), &createInfo, nullptr, &shaderModule) != VK_SUCCESS)
+		if (vkCreateShaderModule(deviceContext->GetLogicalDevice(), &createInfo, nullptr, &shaderModule) != VK_SUCCESS)
 		{
 			throw std::runtime_error("failed to create shader module!");
 		}

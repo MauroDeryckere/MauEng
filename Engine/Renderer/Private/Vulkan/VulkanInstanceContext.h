@@ -8,8 +8,11 @@ namespace MauRen
 	class VulkanInstanceContext final
 	{
 	public:
-		VulkanInstanceContext();
-		~VulkanInstanceContext();
+		VulkanInstanceContext() = default;
+		~VulkanInstanceContext() = default;
+
+		void Initialize();
+		void Destroy();
 
 		VulkanInstanceContext(VulkanInstanceContext const&) = delete;
 		VulkanInstanceContext(VulkanInstanceContext&&) = delete;

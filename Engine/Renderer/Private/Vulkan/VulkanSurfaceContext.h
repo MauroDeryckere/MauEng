@@ -8,17 +8,20 @@ namespace MauRen
 	class VulkanSurfaceContext final
 	{
 	public:
-		VulkanSurfaceContext(VulkanInstanceContext* pVulkanInstanceContext, GLFWwindow* pWindow):
-			m_pVulkanInstanceContext{ pVulkanInstanceContext }
+		VulkanSurfaceContext() = default;
+		~VulkanSurfaceContext() = default;
 
+		void Initialize(VulkanInstanceContext* pVulkanInstanceContext, GLFWwindow* pWindow)
 		{
+			m_pVulkanInstanceContext = pVulkanInstanceContext;
+
 			if (glfwCreateWindowSurface(m_pVulkanInstanceContext->GetInstance(), pWindow, nullptr, &m_WindowSurface) != VK_SUCCESS)
 			{
 				throw std::runtime_error("Failed to create window surface!");
 			}
 		}
 
-		~VulkanSurfaceContext()
+		void Destroy()
 		{
 			vkDestroySurfaceKHR(m_pVulkanInstanceContext->GetInstance(), m_WindowSurface, nullptr);
 		}

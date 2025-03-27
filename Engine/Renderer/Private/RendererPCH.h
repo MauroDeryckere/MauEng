@@ -1,32 +1,22 @@
 #ifndef MAUREN_RENDERER_PCH
 #define MAUREN_RENDERER_PCH
 
-#include <iostream>
+#define USING_VULKAN_RENDERER 1
 
 #include "Utils.h"
 
-#include <string>
-#include <cstdint>
+#include "CorePCH.h"
 
-#include <vector>
-#include <array>
-#include <span>
-#include <set>
+#ifdef USING_VULKAN_RENDERER
+	#define GLFW_INCLUDE_VULKAN
+	#include "GLFW/glfw3.h"
 
-#include <memory>
+	#include "../Config/VulkanConfig.h"
 
-#include <stdexcept>
-#include <cassert>
+	#include "Config/EngineConfig.h"
+	#include "Vulkan/VulkanUtils.h"
 
-#include <algorithm>
-#include <optional>
-
-// do this using macros in the future if more than 1 renderer support
-#define GLFW_INCLUDE_VULKAN
-#include "GLFW/glfw3.h"
-
-#include "../Config/VulkanConfig.h"
-
-#include "Config/EngineConfig.h"
+	#include "Vulkan/VulkanDeviceContextManager.h"
+#endif
 
 #endif

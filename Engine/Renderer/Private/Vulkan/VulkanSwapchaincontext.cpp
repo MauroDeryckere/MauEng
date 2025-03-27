@@ -4,23 +4,24 @@
 
 namespace MauRen
 {
-	VulkanSwapchainContext::VulkanSwapchainContext(GLFWwindow* pWindow, VulkanSurfaceContext* pVulkanSurfaceContext, VulkanDeviceContext* pVulkanDeviceContext):
-		m_pSurfaceContext{ pVulkanSurfaceContext },
-		m_pDeviceContext{ pVulkanDeviceContext }
-
+	void VulkanSwapchainContext::Initialize(GLFWwindow* pWindow, VulkanSurfaceContext* pVulkanSurfaceContext)
 	{
+		m_pSurfaceContext = pVulkanSurfaceContext;
+
 		CreateSwapchain(pWindow);
 		CreateImageViews();
 	}
 
-	VulkanSwapchainContext::~VulkanSwapchainContext()
+	void VulkanSwapchainContext::Destroy()
 	{
-		for (auto const& imageView : m_SwapChainImageViews)
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+
+		for (auto& imageView : m_SwapChainImageViews)
 		{
-			vkDestroyImageView(m_pDeviceContext->GetLogicalDevice(), imageView, nullptr);
+			VulkanUtils::SafeDestroy(deviceContext->GetLogicalDevice(), imageView, nullptr);
 		}
 
-		vkDestroySwapchainKHR(m_pDeviceContext->GetLogicalDevice(), m_SwapChain, nullptr);
+		VulkanUtils::SafeDestroy(deviceContext->GetLogicalDevice(), m_SwapChain, nullptr);
 	}
 
 	SwapChainSupportDetails VulkanSwapchainContext::QuerySwapchainSupport(VkPhysicalDevice device, VkSurfaceKHR windowSurface)
@@ -55,7 +56,9 @@ namespace MauRen
 
 	void VulkanSwapchainContext::CreateSwapchain(GLFWwindow* pWindow)
 	{
-		SwapChainSupportDetails const swapChainSupport{ QuerySwapchainSupport( m_pDeviceContext->GetPhysicalDevice(), m_pSurfaceContext->GetWindowSurface()) };
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+
+		SwapChainSupportDetails const swapChainSupport{ QuerySwapchainSupport(deviceContext->GetPhysicalDevice(), m_pSurfaceContext->GetWindowSurface()) };
 
 		VkSurfaceFormatKHR const surfaceFormat{ ChooseSwapSurfaceFormat(swapChainSupport.formats) };
 		VkPresentModeKHR const presentMode{ ChooseSwapPresentMode(swapChainSupport.presentModes) };
@@ -86,10 +89,10 @@ namespace MauRen
 		createInfo.imageArrayLayers = 1;
 		createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-		QueueFamilyIndices indices = m_pDeviceContext->FindQueueFamilies();
+		QueueFamilyIndices indices = deviceContext->FindQueueFamilies();
 		uint32_t queueFamilyIndices[]{ indices.graphicsFamily.value(), indices.presentFamily.value() };
 
-		if (m_pDeviceContext->IsUsingUnifiedGraphicsPresentQueue())
+		if (deviceContext->IsUsingUnifiedGraphicsPresentQueue())
 		{
 			createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
 			createInfo.queueFamilyIndexCount = 0; // Optional
@@ -110,18 +113,19 @@ namespace MauRen
 		createInfo.clipped = VK_TRUE;
 		createInfo.oldSwapchain = VK_NULL_HANDLE;
 
-		if (vkCreateSwapchainKHR(m_pDeviceContext->GetLogicalDevice(), &createInfo, nullptr, &m_SwapChain) != VK_SUCCESS)
+		if (vkCreateSwapchainKHR(deviceContext->GetLogicalDevice(), &createInfo, nullptr, &m_SwapChain) != VK_SUCCESS)
 		{
 			throw std::runtime_error("failed to create swap chain!");
 		}
 
-		vkGetSwapchainImagesKHR(m_pDeviceContext->GetLogicalDevice(), m_SwapChain, &imageCount, nullptr);
+		vkGetSwapchainImagesKHR(deviceContext->GetLogicalDevice(), m_SwapChain, &imageCount, nullptr);
 		m_SwapChainImages.resize(imageCount);
-		vkGetSwapchainImagesKHR(m_pDeviceContext->GetLogicalDevice(), m_SwapChain, &imageCount, m_SwapChainImages.data());
+		vkGetSwapchainImagesKHR(deviceContext->GetLogicalDevice(), m_SwapChain, &imageCount, m_SwapChainImages.data());
 
 		m_SwapChainImageFormat = surfaceFormat.format;
 		m_SwapChainExtent = extent;
 
+		//TODO move to logger when added
 		std::cout << "Swapchain: " << imageCount << " images, Format: " << surfaceFormat.format
 			<< ", Extent: " << extent.width << "x" << extent.height
 			<< ", Present Mode: " << presentMode << std::endl;
@@ -129,8 +133,10 @@ namespace MauRen
 
 	void VulkanSwapchainContext::CreateImageViews()
 	{
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+
 		m_SwapChainImageViews.resize(m_SwapChainImages.size());
-		for (size_t i = 0; i < m_SwapChainImages.size(); i++)
+		for (size_t i{ 0 }; i < m_SwapChainImages.size(); ++i)
 		{
 			VkImageViewCreateInfo createInfo{};
 			createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -147,9 +153,9 @@ namespace MauRen
 			createInfo.subresourceRange.baseArrayLayer = 0;
 			createInfo.subresourceRange.layerCount = 1;
 
-			if (vkCreateImageView(m_pDeviceContext->GetLogicalDevice(), &createInfo, nullptr, &m_SwapChainImageViews[i]) != VK_SUCCESS)
+			if (vkCreateImageView(deviceContext->GetLogicalDevice(), &createInfo, nullptr, &m_SwapChainImageViews[i]) != VK_SUCCESS)
 			{
-				throw std::runtime_error("failed to create image views!");
+				throw std::runtime_error("Failed to create image views!");
 			}
 		}
 	}

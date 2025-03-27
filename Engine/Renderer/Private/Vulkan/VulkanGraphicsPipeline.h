@@ -2,7 +2,7 @@
 #define MAUREN_VULKANGRAPHICSPIPELINE_H
 
 #include "RendererPCH.h"
-#include "VulkanDeviceContext.h"
+
 #include "VulkanSwapchainContext.h"
 #include <filesystem>
 #include <fstream>
@@ -12,8 +12,11 @@ namespace MauRen
 	class VulkanGraphicsPipeline final
 	{
 	public:
-		VulkanGraphicsPipeline(VulkanDeviceContext* pDeviceContext, VulkanSwapchainContext* pSwapChainContext, VkDescriptorSetLayout descriptorSetLayout, uint32_t descriptorSetLayoutCount);
-		~VulkanGraphicsPipeline();
+		VulkanGraphicsPipeline() = default;
+		~VulkanGraphicsPipeline() = default;
+
+		void Initialize(VulkanSwapchainContext* pSwapChainContext, VkDescriptorSetLayout descriptorSetLayout, uint32_t descriptorSetLayoutCount);
+		void Destroy();
 
 		[[nodiscard]] VkRenderPass GetRenderPass() const noexcept { return m_RenderPass; }
 		[[nodiscard]] VkPipeline GetPipeline() const noexcept { return m_GraphicsPipeline; }
@@ -25,10 +28,9 @@ namespace MauRen
 		VulkanGraphicsPipeline& operator=(VulkanGraphicsPipeline&&) = delete;
 
 	private:
-		VulkanDeviceContext* m_pDeviceContext;
-		VkRenderPass m_RenderPass;
-		VkPipelineLayout m_PipelineLayout;
-		VkPipeline m_GraphicsPipeline;
+		VkRenderPass m_RenderPass{ VK_NULL_HANDLE };
+		VkPipelineLayout m_PipelineLayout{ VK_NULL_HANDLE };
+		VkPipeline m_GraphicsPipeline{ VK_NULL_HANDLE };
 
 		void CreateRenderPass(VulkanSwapchainContext* pSwapChainContext);
 		void CreateGraphicsPipeline(VulkanSwapchainContext* pSwapChainContext, VkDescriptorSetLayout descriptorSetLayout, uint32_t descriptorSetLayoutCount);

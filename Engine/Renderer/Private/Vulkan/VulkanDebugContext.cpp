@@ -2,14 +2,13 @@
 
 namespace MauRen
 {
-	VulkanDebugContext::VulkanDebugContext(VulkanInstanceContext* vulkanInstanceContext) :
-		m_pVulkanInstanceContext{ vulkanInstanceContext }
-
+	void VulkanDebugContext::Initialize(VulkanInstanceContext* pVulkanInstanceContext)
 	{
+		m_pVulkanInstanceContext = pVulkanInstanceContext;
 		SetupDebugMessenger();
 	}
 
-	VulkanDebugContext::~VulkanDebugContext()
+	void VulkanDebugContext::Destroy()
 	{
 		DestroyDebugUtilsMessengerEXT(m_pVulkanInstanceContext->GetInstance(), m_DebugMessenger, nullptr);
 	}

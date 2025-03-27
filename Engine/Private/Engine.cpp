@@ -10,7 +10,7 @@ namespace MauEng
 {
 	Engine::Engine():
 		m_Window{ std::make_unique<GLFWWindow>() },
-		m_Renderer{ MauRen::CreateRenderer(m_Window->window) }
+		m_Renderer{ MauRen::CreateVulkanRenderer(m_Window->window) }
 	{
 		// Initialize all core dependences & singletons
 		m_Window->Initialize(m_Renderer.get());

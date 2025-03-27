@@ -2,7 +2,7 @@
 #define MAUREN_VULKANDESCRIPTORCONTEXT_H
 
 #include "RendererPCH.h"
-#include "VulkanDeviceContext.h"
+#include "VulkanBuffer.h"
 
 namespace MauRen
 {
@@ -10,8 +10,11 @@ namespace MauRen
 	class VulkanDescriptorContext final
 	{
 	public:
-		explicit VulkanDescriptorContext(VulkanDeviceContext* pDeviceContext);
-		~VulkanDescriptorContext();
+		explicit VulkanDescriptorContext() = default;
+		~VulkanDescriptorContext() = default;
+
+		void Initialize(){}
+		void Destroy();
 
 		[[nodiscard]] VkDescriptorSetLayout GetDescriptorSetLayout() const noexcept { return m_DescriptorSetLayout; }
 		[[nodiscard]] std::vector<VkDescriptorSet> const& GetDescriptorSets() const noexcept { return m_DescriptorSets; }
@@ -19,9 +22,7 @@ namespace MauRen
 
 		void CreateDescriptorSetLayout();
 		void CreateDescriptorPool();
-		void CreateDescriptorSets(std::vector<VkBuffer> const& bufferInfoBuffers, VkDeviceSize offset, VkDeviceSize range, VkImageLayout imageLayout, std::vector<VkImageView> const& imageViews, VkSampler sampler);
-
-		void Destroy();
+		void CreateDescriptorSets(std::vector<VulkanBuffer> const& bufferInfoBuffers, VkDeviceSize offset, VkDeviceSize range, VkImageLayout imageLayout, std::vector<VkImageView> const& imageViews, VkSampler sampler);
 
 		VulkanDescriptorContext(VulkanDescriptorContext const&) = delete;
 		VulkanDescriptorContext(VulkanDescriptorContext&&) = delete;
@@ -29,8 +30,6 @@ namespace MauRen
 		VulkanDescriptorContext& operator=(VulkanDescriptorContext&&) = delete;
 
 	private:
-		VulkanDeviceContext* m_pDeviceContext{ nullptr };
-
 		VkDescriptorSetLayout m_DescriptorSetLayout{ VK_NULL_HANDLE };
 		VkDescriptorPool m_DescriptorPool{ VK_NULL_HANDLE };
 

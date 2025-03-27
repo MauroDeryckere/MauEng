@@ -3,9 +3,10 @@
 #include "RendererFactory.h"
 #include "Vulkan/VulkanRenderer.h"
 
-namespace MauRen {
+namespace MauRen
+{
 	// Only vulkan renderer for now, factory pattern may be expanded in the future
-	std::unique_ptr<Renderer> CreateRenderer(GLFWwindow* pWindow)
+	std::unique_ptr<Renderer> CreateVulkanRenderer(GLFWwindow* pWindow)
 	{
 		return std::make_unique<VulkanRenderer>(pWindow);
 	}

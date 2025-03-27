@@ -9,8 +9,11 @@ namespace MauRen
 	class VulkanDebugContext final
 	{
 	public:
-		VulkanDebugContext(VulkanInstanceContext* pVulkanInstanceContext);
-		~VulkanDebugContext();
+		VulkanDebugContext() = default;
+		~VulkanDebugContext() = default;
+
+		void Initialize(VulkanInstanceContext* pVulkanInstanceContext);
+		void Destroy();
 
 		VulkanDebugContext(VulkanDebugContext const&) = delete;
 		VulkanDebugContext(VulkanDebugContext&&) = delete;
@@ -22,7 +25,7 @@ namespace MauRen
 
 	private:
 		// Need to store the context we use to destroy it later
-		VulkanInstanceContext* m_pVulkanInstanceContext;
+		VulkanInstanceContext* m_pVulkanInstanceContext{ nullptr };
 
 		VkDebugUtilsMessengerEXT m_DebugMessenger { VK_NULL_HANDLE };
 

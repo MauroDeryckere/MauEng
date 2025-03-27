@@ -4,16 +4,15 @@
 
 namespace MauRen
 {
-	VulkanInstanceContext::VulkanInstanceContext()
+	void VulkanInstanceContext::Initialize()
 	{
 		CreateVulkanInstance();
 	}
 
-	VulkanInstanceContext::~VulkanInstanceContext()
+	void VulkanInstanceContext::Destroy()
 	{
 		vkDestroyInstance(m_Instance, nullptr);
 	}
-
 
 	void VulkanInstanceContext::CreateVulkanInstance()
 	{

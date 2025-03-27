@@ -12,14 +12,16 @@ namespace MauRen
 		std::vector<VkPresentModeKHR> presentModes;
 	};
 
-	class VulkanDeviceContext;
 	class VulkanSurfaceContext;
 
 	class VulkanSwapchainContext final
 	{
 	public:
-		VulkanSwapchainContext(GLFWwindow* pWindow, VulkanSurfaceContext* pVulkanSurfaceContext, VulkanDeviceContext* pVulkanDeviceContext);
-		~VulkanSwapchainContext();
+		VulkanSwapchainContext() = default;
+		~VulkanSwapchainContext() = default;
+
+		void Initialize(GLFWwindow* pWindow, VulkanSurfaceContext* pVulkanSurfaceContext);
+		void Destroy();
 
 		// Query if swap chain is supported for a given physical device & window surface
 		static SwapChainSupportDetails QuerySwapchainSupport(VkPhysicalDevice device, VkSurfaceKHR windowSurface);
@@ -37,7 +39,6 @@ namespace MauRen
 
 	private:
 		VulkanSurfaceContext* m_pSurfaceContext;
-		VulkanDeviceContext* m_pDeviceContext;
 
 		VkSwapchainKHR m_SwapChain{ VK_NULL_HANDLE };
 

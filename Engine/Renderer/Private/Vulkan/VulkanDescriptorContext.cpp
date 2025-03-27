@@ -2,17 +2,6 @@
 
 namespace MauRen
 {
-	VulkanDescriptorContext::VulkanDescriptorContext(VulkanDeviceContext* pDeviceContext) :
-		m_pDeviceContext{ pDeviceContext }
-	{
-
-	}
-
-	VulkanDescriptorContext::~VulkanDescriptorContext()
-	{
-		Destroy();
-	}
-
 	void VulkanDescriptorContext::CreateDescriptorSetLayout()
 	{
 		VkDescriptorSetLayoutBinding uboLayoutBinding{};
@@ -40,7 +29,8 @@ namespace MauRen
 		layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
 		layoutInfo.pBindings = bindings.data();
 
-		if (vkCreateDescriptorSetLayout(m_pDeviceContext->GetLogicalDevice(), &layoutInfo, nullptr, &m_DescriptorSetLayout) != VK_SUCCESS)
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+		if (vkCreateDescriptorSetLayout(deviceContext->GetLogicalDevice(), &layoutInfo, nullptr, &m_DescriptorSetLayout) != VK_SUCCESS)
 		{
 			throw std::runtime_error("Failed to create descriptor set layout!");
 		}
@@ -60,13 +50,14 @@ namespace MauRen
 		poolInfo.pPoolSizes = poolSizes.data();
 		poolInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
 
-		if (vkCreateDescriptorPool(m_pDeviceContext->GetLogicalDevice(), &poolInfo, nullptr, &m_DescriptorPool) != VK_SUCCESS) {
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+		if (vkCreateDescriptorPool(deviceContext->GetLogicalDevice(), &poolInfo, nullptr, &m_DescriptorPool) != VK_SUCCESS) {
 
 			throw std::runtime_error("Failed to create descriptor pool!");
 		}
 	}
 
-	void VulkanDescriptorContext::CreateDescriptorSets(std::vector<VkBuffer> const& bufferInfoBuffers, VkDeviceSize offset, VkDeviceSize range, VkImageLayout imageLayout, std::vector<VkImageView> const& imageViews, VkSampler sampler)
+	void VulkanDescriptorContext::CreateDescriptorSets(std::vector<VulkanBuffer> const& bufferInfoBuffers, VkDeviceSize offset, VkDeviceSize range, VkImageLayout imageLayout, std::vector<VkImageView> const& imageViews, VkSampler sampler)
 	{
 		std::vector<VkDescriptorSetLayout> const layouts(MAX_FRAMES_IN_FLIGHT, m_DescriptorSetLayout);
 
@@ -78,7 +69,9 @@ namespace MauRen
 
 
 		m_DescriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
-		if (vkAllocateDescriptorSets(m_pDeviceContext->GetLogicalDevice(), &allocInfo, m_DescriptorSets.data()) != VK_SUCCESS)
+
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+		if (vkAllocateDescriptorSets(deviceContext->GetLogicalDevice(), &allocInfo, m_DescriptorSets.data()) != VK_SUCCESS)
 		{
 			throw std::runtime_error("Failed to allocate descriptor sets!");
 		}
@@ -86,7 +79,7 @@ namespace MauRen
 		for (size_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; ++i)
 		{
 			VkDescriptorBufferInfo bufferInfo{};
-			bufferInfo.buffer = bufferInfoBuffers[i];
+			bufferInfo.buffer = bufferInfoBuffers[i].buffer;
 			bufferInfo.offset = offset;
 			bufferInfo.range = range;
 
@@ -116,21 +109,15 @@ namespace MauRen
 			descriptorWrites[1].pImageInfo = &imageInfo;
 			descriptorWrites[1].pTexelBufferView = nullptr;
 
-			vkUpdateDescriptorSets(m_pDeviceContext->GetLogicalDevice(), descriptorWrites.size(), descriptorWrites.data(), 0, nullptr);
+			vkUpdateDescriptorSets(deviceContext->GetLogicalDevice(), descriptorWrites.size(), descriptorWrites.data(), 0, nullptr);
 		}
 	}
 
 	void VulkanDescriptorContext::Destroy()
 	{
-		if (m_DescriptorPool != VK_NULL_HANDLE)
-		{
-			vkDestroyDescriptorPool(m_pDeviceContext->GetLogicalDevice(), m_DescriptorPool, nullptr);
-			m_DescriptorPool = VK_NULL_HANDLE;
-		}
-		if (m_DescriptorSetLayout != VK_NULL_HANDLE)
-		{
-			vkDestroyDescriptorSetLayout(m_pDeviceContext->GetLogicalDevice(), m_DescriptorSetLayout, nullptr);
-			m_DescriptorSetLayout = VK_NULL_HANDLE;
-		}
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+
+		VulkanUtils::SafeDestroy(deviceContext->GetLogicalDevice(), m_DescriptorPool, nullptr);
+		VulkanUtils::SafeDestroy(deviceContext->GetLogicalDevice(), m_DescriptorSetLayout, nullptr);
 	}
 }

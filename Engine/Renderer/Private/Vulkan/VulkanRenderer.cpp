@@ -18,17 +18,17 @@ namespace MauRen
 		Renderer{ pWindow },
 		m_pWindow{ pWindow }
 	{
-		m_InstanceContext = std::make_unique<VulkanInstanceContext>();
-		m_SurfaceContext = std::make_unique<VulkanSurfaceContext>(m_InstanceContext.get(), pWindow);
-		m_DebugContext = std::make_unique<VulkanDebugContext>(m_InstanceContext.get());
-		m_DeviceContext = std::make_unique<VulkanDeviceContext>(m_SurfaceContext.get(), m_InstanceContext.get());
-		m_DescriptorContext = std::make_unique<VulkanDescriptorContext>(m_DeviceContext.get()),
-		m_SwapChainContext = std::make_unique<VulkanSwapchainContext>(pWindow, m_SurfaceContext.get(), m_DeviceContext.get());
+		m_InstanceContext.Initialize();
+		m_SurfaceContext.Initialize(&m_InstanceContext, pWindow);
+		m_DebugContext.Initialize(&m_InstanceContext);
 
-		// These need to be created before the graphics pipeline becaue they're needed there
-		m_DescriptorContext->CreateDescriptorSetLayout();
+		VulkanDeviceContextManager::GetInstance().Initialize(&m_SurfaceContext, &m_InstanceContext);
 
-		m_GraphicsPipeline = std::make_unique<VulkanGraphicsPipeline>(m_DeviceContext.get(), m_SwapChainContext.get(), m_DescriptorContext->GetDescriptorSetLayout(), 1u);
+		m_DescriptorContext.Initialize();
+		m_SwapChainContext.Initialize(pWindow, &m_SurfaceContext);
+
+		m_DescriptorContext.CreateDescriptorSetLayout();
+		m_GraphicsPipeline.Initialize( &m_SwapChainContext, m_DescriptorContext.GetDescriptorSetLayout(), 1u);
 
 		CreateCommandPool();
 
@@ -48,13 +48,13 @@ namespace MauRen
 
 		//CreateGlobalBuffers();
 
-		m_DescriptorContext->CreateDescriptorPool();
-		std::vector<VkBuffer> tempUniformBuffers;
+		m_DescriptorContext.CreateDescriptorPool();
+		std::vector<VulkanBuffer> tempUniformBuffers;
 		for (auto const& b : m_MappedUniformBuffers)
 		{
-			tempUniformBuffers.emplace_back(b.buffer.buffer);
+			tempUniformBuffers.emplace_back(b.buffer);
 		}
-		m_DescriptorContext->CreateDescriptorSets(tempUniformBuffers,
+		m_DescriptorContext.CreateDescriptorSets(tempUniformBuffers,
 												0, 
 												sizeof(UniformBufferObject), 
 												VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, 
@@ -67,33 +67,46 @@ namespace MauRen
 
 	VulkanRenderer::~VulkanRenderer()
 	{
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+
 		// Wait for GPU to finish everything
-		vkDeviceWaitIdle(m_DeviceContext->GetLogicalDevice());
+		vkDeviceWaitIdle(deviceContext->GetLogicalDevice());
 
 		for (size_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; ++i)
 		{
-			vkDestroySemaphore(m_DeviceContext->GetLogicalDevice(), m_ImageAvailableSemaphores[i], nullptr);
-			vkDestroySemaphore(m_DeviceContext->GetLogicalDevice(), m_RenderFinishedSemaphores[i], nullptr);
-			vkDestroyFence(m_DeviceContext->GetLogicalDevice(), m_InFlightFences[i], nullptr);
+			vkDestroySemaphore(deviceContext->GetLogicalDevice(), m_ImageAvailableSemaphores[i], nullptr);
+			vkDestroySemaphore(deviceContext->GetLogicalDevice(), m_RenderFinishedSemaphores[i], nullptr);
+			vkDestroyFence(deviceContext->GetLogicalDevice(), m_InFlightFences[i], nullptr);
 		}
 
-		DestroyBuffer(m_IndexBuffer);
-		DestroyBuffer(m_VertexBuffer);
+		m_IndexBuffer.Destroy();
+		m_VertexBuffer.Destroy();
 
-		vkDestroySampler(m_DeviceContext->GetLogicalDevice(), m_TextureSampler, nullptr);
 
-		m_TextureImage.Destroy(m_DeviceContext.get());
+		vkDestroySampler(deviceContext->GetLogicalDevice(), m_TextureSampler, nullptr);
 
-		vkDestroyCommandPool(m_DeviceContext->GetLogicalDevice(), m_CommandPool, nullptr);
+		m_TextureImage.Destroy();
+
+		vkDestroyCommandPool(deviceContext->GetLogicalDevice(), m_CommandPool, nullptr);
 
 		CleanupSwapchain();
 
 		for (size_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; ++i)
 		{
-			DestroyBuffer(m_MappedUniformBuffers[i].buffer);
+			m_MappedUniformBuffers[i].buffer.Destroy();
 		}
 
-		m_DescriptorContext->Destroy();
+
+		m_GraphicsPipeline.Destroy();
+
+		m_SwapChainContext.Destroy();
+		m_DescriptorContext.Destroy();
+
+		VulkanDeviceContextManager::GetInstance().Destroy();
+
+		m_DebugContext.Destroy();
+		m_SurfaceContext.Destroy();
+		m_InstanceContext.Destroy();
 	}
 
 	void VulkanRenderer::Render()
@@ -108,7 +121,9 @@ namespace MauRen
 
 	void VulkanRenderer::CreateFrameBuffers()
 	{
-		auto const& imageViews{ m_SwapChainContext->GetImageViews() };
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+
+		auto const& imageViews{ m_SwapChainContext.GetImageViews() };
 
 		m_SwapChainFramebuffers.resize(imageViews.size());
 
@@ -118,14 +133,14 @@ namespace MauRen
 			
 			VkFramebufferCreateInfo framebufferInfo{};
 			framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-			framebufferInfo.renderPass = m_GraphicsPipeline->GetRenderPass();
+			framebufferInfo.renderPass = m_GraphicsPipeline.GetRenderPass();
 			framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
 			framebufferInfo.pAttachments = attachments.data();
-			framebufferInfo.width = m_SwapChainContext->GetExtent().width;
-			framebufferInfo.height = m_SwapChainContext->GetExtent().height;
+			framebufferInfo.width = m_SwapChainContext.GetExtent().width;
+			framebufferInfo.height = m_SwapChainContext.GetExtent().height;
 			framebufferInfo.layers = 1;
 
-			if (vkCreateFramebuffer(m_DeviceContext->GetLogicalDevice(), &framebufferInfo, nullptr, &m_SwapChainFramebuffers[i]) != VK_SUCCESS)
+			if (vkCreateFramebuffer(deviceContext->GetLogicalDevice(), &framebufferInfo, nullptr, &m_SwapChainFramebuffers[i]) != VK_SUCCESS)
 			{
 				throw std::runtime_error("Failed to create framebuffer!");
 			}
@@ -134,15 +149,17 @@ namespace MauRen
 
 	void VulkanRenderer::CreateCommandPool()
 	{
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+
 		// Record commands for drawing, which is why we've chosen the graphics queue family
-		QueueFamilyIndices const queueFamilyIndices{ m_DeviceContext->FindQueueFamilies() };
+		QueueFamilyIndices const queueFamilyIndices{ deviceContext->FindQueueFamilies() };
 
 		VkCommandPoolCreateInfo poolInfo{};
 		poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 		poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 		poolInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily.value();
 
-		if (vkCreateCommandPool(m_DeviceContext->GetLogicalDevice(), &poolInfo, nullptr, &m_CommandPool) != VK_SUCCESS)
+		if (vkCreateCommandPool(deviceContext->GetLogicalDevice(), &poolInfo, nullptr, &m_CommandPool) != VK_SUCCESS)
 		{
 			throw std::runtime_error("Failed to create command pool!");
 		}
@@ -150,64 +167,67 @@ namespace MauRen
 
 	void VulkanRenderer::CreateVertexBuffer()
 	{
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+
 		VkDeviceSize const bufferSize{ sizeof(m_Vertices[0]) * m_Vertices.size() };
 
-		VulkanBuffer stagingBuffer;
-		CreateBuffer(bufferSize, 
-					 VK_BUFFER_USAGE_TRANSFER_SRC_BIT, 
-					 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, 
-					stagingBuffer.buffer,
-					stagingBuffer.bufferMemory);
+		VulkanBuffer stagingBuffer{ bufferSize,
+									VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+									VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT };
+
+		if (stagingBuffer.buffer == VK_NULL_HANDLE || stagingBuffer.bufferMemory == VK_NULL_HANDLE) 
+		{
+			throw std::runtime_error("Failed to create staging buffer.");
+		}
 
 
 		void* data;
-		vkMapMemory(m_DeviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory, 0, bufferSize, 0, &data);
-		memcpy(data, m_Vertices.data(), static_cast<size_t>(bufferSize));
-		vkUnmapMemory(m_DeviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory);
+		if (vkMapMemory(deviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory, 0, bufferSize, 0, &data) != VK_SUCCESS) 
+		{
+			throw std::runtime_error("Failed to map Vulkan buffer memory.");
+		}
 
-		CreateBuffer(bufferSize, 
-					 VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, 
-					m_VertexBuffer.buffer, 
-					m_VertexBuffer.bufferMemory);
+		memcpy(data, m_Vertices.data(), static_cast<size_t>(bufferSize));
+		vkUnmapMemory(deviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory);
+		
+		m_VertexBuffer = { bufferSize,
+							VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+							VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT };
 
 		CopyBuffer(stagingBuffer.buffer, m_VertexBuffer.buffer, bufferSize);
 
-		DestroyBuffer(stagingBuffer);
+		stagingBuffer.Destroy();
 	}
 
 	void VulkanRenderer::CreateIndexBuffer()
 	{
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+
 		VkDeviceSize const bufferSize{ sizeof(m_Indices[0]) * m_Indices.size() };
 
-		VkBuffer stagingBuffer;
-		VkDeviceMemory stagingBufferMemory;
-		CreateBuffer(bufferSize, 
- 					VK_BUFFER_USAGE_TRANSFER_SRC_BIT, 
-					VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, 
-					stagingBuffer, 
-					stagingBufferMemory);
+		VulkanBuffer stagingBuffer{ bufferSize,
+									VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+									VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT };
 
 		void* data;
-		vkMapMemory(m_DeviceContext->GetLogicalDevice(), stagingBufferMemory, 0, bufferSize, 0, &data);
+		vkMapMemory(deviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory, 0, bufferSize, 0, &data);
 		memcpy(data, m_Indices.data(), static_cast<size_t>(bufferSize));
-		vkUnmapMemory(m_DeviceContext->GetLogicalDevice(), stagingBufferMemory);
+		vkUnmapMemory(deviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory);
 
 
-		CreateBuffer(bufferSize, 
-					 VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, 
-			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, 
-					m_IndexBuffer.buffer,
-					m_IndexBuffer.bufferMemory);
+		m_IndexBuffer = { bufferSize,
+							 VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+							VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT };
 
-		CopyBuffer(stagingBuffer, m_IndexBuffer.buffer, bufferSize);
+		CopyBuffer(stagingBuffer.buffer, m_IndexBuffer.buffer, bufferSize);
 
-		vkDestroyBuffer(m_DeviceContext->GetLogicalDevice(), stagingBuffer, nullptr);
-		vkFreeMemory(m_DeviceContext->GetLogicalDevice(), stagingBufferMemory, nullptr);
+		stagingBuffer.Destroy();
 	}
 
 	void VulkanRenderer::CreateCommandBuffers()
 	{
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+
 		m_CommandBuffers.resize(MAX_FRAMES_IN_FLIGHT);
 
 		VkCommandBufferAllocateInfo allocInfo{};
@@ -220,7 +240,7 @@ namespace MauRen
 		allocInfo.commandBufferCount = static_cast<uint32_t>(m_CommandBuffers.size());
 
 
-		if (vkAllocateCommandBuffers(m_DeviceContext->GetLogicalDevice(), &allocInfo, m_CommandBuffers.data()) != VK_SUCCESS) 
+		if (vkAllocateCommandBuffers(deviceContext->GetLogicalDevice(), &allocInfo, m_CommandBuffers.data()) != VK_SUCCESS)
 		{
 			throw std::runtime_error("Failed to allocate command buffers!");
 		}
@@ -228,69 +248,21 @@ namespace MauRen
 
 	void VulkanRenderer::CreateUniformBuffers()
 	{
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+
 		VkDeviceSize constexpr bufferSize{ sizeof(UniformBufferObject) };
 
 		m_MappedUniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
 
 		for (size_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; ++i)
 		{
-			CreateBuffer(bufferSize, 
-						 VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, 
-						 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, 
-						m_MappedUniformBuffers[i].buffer.buffer,
-						m_MappedUniformBuffers[i].buffer.bufferMemory);
+			m_MappedUniformBuffers[i].buffer = { bufferSize,
+												VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+												VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT };
 
 			// Persistent mapping
-			vkMapMemory(m_DeviceContext->GetLogicalDevice(), m_MappedUniformBuffers[i].buffer.bufferMemory, 0, bufferSize, 0, &m_MappedUniformBuffers[i].mapped);
+			vkMapMemory(deviceContext->GetLogicalDevice(), m_MappedUniformBuffers[i].buffer.bufferMemory, 0, bufferSize, 0, &m_MappedUniformBuffers[i].mapped);
 		}
-	}
-
-	void VulkanRenderer::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory)
-	{
-		VkBufferCreateInfo bufferInfo{};
-		bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-		bufferInfo.size = size;
-		bufferInfo.usage = usage;
-		bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-
-		if (vkCreateBuffer(m_DeviceContext->GetLogicalDevice(), &bufferInfo, nullptr, &buffer) != VK_SUCCESS) 
-		{
-			throw std::runtime_error("Failed to create buffer!");
-		}
-
-		VkMemoryRequirements memRequirements;
-		vkGetBufferMemoryRequirements(m_DeviceContext->GetLogicalDevice(), buffer, &memRequirements);
-
-		VkMemoryAllocateInfo allocInfo{};
-		allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-		//allocInfo.allocationSize = memRequirements.size;
-		allocInfo.allocationSize = size;
-		allocInfo.memoryTypeIndex = FindMemoryType(memRequirements.memoryTypeBits, properties);
-
-		//TODO
-		/*
-		 * It should be noted that in a real world application, you're not supposed to actually call vkAllocateMemory for every individual buffer.
-		 * The maximum number of simultaneous memory allocations is limited by the maxMemoryAllocationCount physical device limit, which may be as low as 4096 even on high end hardware like an NVIDIA GTX 1080.
-		 * The right way to allocate memory for a large number of objects at the same time is to create a custom allocator that splits up a single allocation among many different objects by using the offset parameters that we've seen in many functions.
-
-		 * You can either implement such an allocator yourself, or use the VulkanMemoryAllocator library provided by the GPUOpen initiative. // https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator
-		 * However, for this tutorial it's okay to use a separate allocation for every resource, because we won't come close to hitting any of these limits for now.
-		 */
-
-		if (vkAllocateMemory(m_DeviceContext->GetLogicalDevice(), &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS) 
-		{
-			throw std::runtime_error("Failed to allocate buffer memory!");
-		}
-
-		vkBindBufferMemory(m_DeviceContext->GetLogicalDevice(), buffer, bufferMemory, 0);
-	}
-
-	void VulkanRenderer::DestroyBuffer(VulkanBuffer const& buffer)
-	{
-		assert(m_DeviceContext);
-
-		vkDestroyBuffer(m_DeviceContext->GetLogicalDevice(), buffer.buffer, nullptr);
-		vkFreeMemory(m_DeviceContext->GetLogicalDevice(), buffer.bufferMemory, nullptr);
 	}
 
 	void VulkanRenderer::CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
@@ -302,7 +274,7 @@ namespace MauRen
 		 * You should use the VK_COMMAND_POOL_CREATE_TRANSIENT_BIT flag during command pool generation in that case.
 		 */
 
-		VkCommandBuffer commandBuffer{ BeginSingleTimeCommands(m_DeviceContext.get(), m_CommandPool) };
+		VkCommandBuffer commandBuffer{ BeginSingleTimeCommands(m_CommandPool) };
 
 		VkBufferCopy copyRegion{};
 		copyRegion.srcOffset = 0; // Optional
@@ -310,12 +282,12 @@ namespace MauRen
 		copyRegion.size = size;
 		vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
 
-		EndSingleTimeCommands(m_DeviceContext.get(), m_CommandPool, commandBuffer);
+		EndSingleTimeCommands(m_CommandPool, commandBuffer);
 	}
 
 	void VulkanRenderer::CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height)
 	{
-		VkCommandBuffer commandBuffer{ BeginSingleTimeCommands(m_DeviceContext.get(), m_CommandPool) };
+		VkCommandBuffer commandBuffer{ BeginSingleTimeCommands(m_CommandPool) };
 
 		VkBufferImageCopy region{};
 		region.bufferOffset = 0;
@@ -337,7 +309,7 @@ namespace MauRen
 								1,
 								&region );
 
-		EndSingleTimeCommands(m_DeviceContext.get(), m_CommandPool, commandBuffer);
+		EndSingleTimeCommands(m_CommandPool, commandBuffer);
 	}
 
 	void VulkanRenderer::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex)
@@ -360,11 +332,11 @@ namespace MauRen
 
 		VkRenderPassBeginInfo renderPassInfo{};
 		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-		renderPassInfo.renderPass = m_GraphicsPipeline->GetRenderPass();
+		renderPassInfo.renderPass = m_GraphicsPipeline.GetRenderPass();
 		renderPassInfo.framebuffer = m_SwapChainFramebuffers[imageIndex];
 
 		renderPassInfo.renderArea.offset = { 0, 0 };
-		renderPassInfo.renderArea.extent = m_SwapChainContext->GetExtent();
+		renderPassInfo.renderArea.extent = m_SwapChainContext.GetExtent();
 
 		VkClearColorValue constexpr clearColor{ 0.0f, 0.0f, 0.0f, 0.0f };
 		std::array<VkClearValue, 2> clearValues{};
@@ -375,20 +347,20 @@ namespace MauRen
 		renderPassInfo.pClearValues = clearValues.data();
 
 		vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-			vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipeline->GetPipeline() );
+			vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipeline.GetPipeline() );
 
 			VkViewport viewport{};
 			viewport.x = 0.0f;
 			viewport.y = 0.0f;
-			viewport.width = static_cast<float>(m_SwapChainContext->GetExtent().width);
-			viewport.height = static_cast<float>(m_SwapChainContext->GetExtent().height);
+			viewport.width = static_cast<float>(m_SwapChainContext.GetExtent().width);
+			viewport.height = static_cast<float>(m_SwapChainContext.GetExtent().height);
 			viewport.minDepth = 0.0f;
 			viewport.maxDepth = 1.0f;
 			vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
 
 			VkRect2D scissor{};
 			scissor.offset = { 0, 0 };
-			scissor.extent = m_SwapChainContext->GetExtent();
+			scissor.extent = m_SwapChainContext.GetExtent();
 			vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
 			VkBuffer vertexBuffers[] { m_VertexBuffer.buffer };
@@ -401,7 +373,7 @@ namespace MauRen
 			//static_assert(sizeof(m_Indices[0]) == 2);
 			static_assert(sizeof(m_Indices[0]) == 4);
 
-			vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipeline->GetPipelineLayout(), 0, 1, &m_DescriptorContext->GetDescriptorSets()[m_CurrentFrame], 0, nullptr);
+			vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipeline.GetPipelineLayout(), 0, 1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame], 0, nullptr);
 
 			vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(m_Indices.size()), 1, 0, 0, 0);
 		vkCmdEndRenderPass(commandBuffer);
@@ -422,6 +394,8 @@ namespace MauRen
 
 	void VulkanRenderer::CreateSyncObjects()
 	{
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+
 		m_ImageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
 		m_RenderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
 		m_InFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
@@ -436,9 +410,9 @@ namespace MauRen
 
 		for (size_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; ++i)
 		{
-			if (vkCreateSemaphore(m_DeviceContext->GetLogicalDevice(), &semaphoreInfo, nullptr, &m_ImageAvailableSemaphores[i]) != VK_SUCCESS
-				|| vkCreateSemaphore(m_DeviceContext->GetLogicalDevice(), &semaphoreInfo, nullptr, &m_RenderFinishedSemaphores[i]) != VK_SUCCESS
-				|| vkCreateFence(m_DeviceContext->GetLogicalDevice(), &fenceInfo, nullptr, &m_InFlightFences[i]) != VK_SUCCESS)
+			if (vkCreateSemaphore(deviceContext->GetLogicalDevice(), &semaphoreInfo, nullptr, &m_ImageAvailableSemaphores[i]) != VK_SUCCESS
+				|| vkCreateSemaphore(deviceContext->GetLogicalDevice(), &semaphoreInfo, nullptr, &m_RenderFinishedSemaphores[i]) != VK_SUCCESS
+				|| vkCreateFence(deviceContext->GetLogicalDevice(), &fenceInfo, nullptr, &m_InFlightFences[i]) != VK_SUCCESS)
 			{
 				throw std::runtime_error("Failed to create synchronization objects for a frame!");
 			}
@@ -447,11 +421,13 @@ namespace MauRen
 
 	void VulkanRenderer::DrawFrame()
 	{
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+
 		// At the start of the frame, we want to wait until the previous frame has finished, so that the command buffer and semaphores are available to use.
-		vkWaitForFences(m_DeviceContext->GetLogicalDevice(), 1, &m_InFlightFences[m_CurrentFrame], VK_TRUE, UINT64_MAX);
+		vkWaitForFences(deviceContext->GetLogicalDevice(), 1, &m_InFlightFences[m_CurrentFrame], VK_TRUE, UINT64_MAX);
 
 		uint32_t imageIndex;
-		VkResult const acquireNextImageResult{ vkAcquireNextImageKHR(m_DeviceContext->GetLogicalDevice(), m_SwapChainContext->GetSwapchain(), UINT64_MAX, m_ImageAvailableSemaphores[m_CurrentFrame], VK_NULL_HANDLE, &imageIndex) };
+		VkResult const acquireNextImageResult{ vkAcquireNextImageKHR(deviceContext->GetLogicalDevice(), m_SwapChainContext.GetSwapchain(), UINT64_MAX, m_ImageAvailableSemaphores[m_CurrentFrame], VK_NULL_HANDLE, &imageIndex) };
 
 		if (acquireNextImageResult == VK_ERROR_OUT_OF_DATE_KHR)
 		{
@@ -469,7 +445,7 @@ namespace MauRen
 		}
 
 		// Only reset the fence if we are submitting work
-		vkResetFences(m_DeviceContext->GetLogicalDevice(), 1, &m_InFlightFences[m_CurrentFrame]);
+		vkResetFences(deviceContext->GetLogicalDevice(), 1, &m_InFlightFences[m_CurrentFrame]);
 
 		UpdateUniformBuffer(m_CurrentFrame);
 
@@ -480,7 +456,7 @@ namespace MauRen
 		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
 		VkSemaphore const waitSemaphores[] { m_ImageAvailableSemaphores[m_CurrentFrame] };
-		VkPipelineStageFlags const waitStages[] { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+		VkPipelineStageFlags constexpr waitStages[] { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
 		submitInfo.waitSemaphoreCount = 1;
 		submitInfo.pWaitSemaphores = waitSemaphores;
 		submitInfo.pWaitDstStageMask = waitStages;
@@ -493,7 +469,7 @@ namespace MauRen
 		submitInfo.pSignalSemaphores = signalSemaphores;
 
 		// m_InFlightFences here effectively means, this submit must be finished before our next render may start
-		if (vkQueueSubmit(m_DeviceContext->GetGraphicsQueue(), 1, &submitInfo, m_InFlightFences[m_CurrentFrame]) != VK_SUCCESS)
+		if (vkQueueSubmit(deviceContext->GetGraphicsQueue(), 1, &submitInfo, m_InFlightFences[m_CurrentFrame]) != VK_SUCCESS)
 		{
 			throw std::runtime_error("Failed to submit draw command buffer!");
 		}
@@ -505,7 +481,7 @@ namespace MauRen
 		presentInfo.waitSemaphoreCount = 1;
 		presentInfo.pWaitSemaphores = signalSemaphores;
 
-		VkSwapchainKHR const swapChains[] { m_SwapChainContext->GetSwapchain() };
+		VkSwapchainKHR const swapChains[] { m_SwapChainContext.GetSwapchain() };
 		presentInfo.swapchainCount = 1;
 		presentInfo.pSwapchains = swapChains;
 		presentInfo.pImageIndices = &imageIndex;
@@ -513,7 +489,7 @@ namespace MauRen
 		// Not necessary when using a single swapchain
 		presentInfo.pResults = nullptr; // Optional
 
-		VkResult const queuePresentResult{ vkQueuePresentKHR(m_DeviceContext->GetPresentQueue(), &presentInfo) };
+		VkResult const queuePresentResult{ vkQueuePresentKHR(deviceContext->GetPresentQueue(), &presentInfo) };
 		if (queuePresentResult == VK_ERROR_OUT_OF_DATE_KHR || queuePresentResult == VK_SUBOPTIMAL_KHR || m_FramebufferResized)
 		{
 			m_FramebufferResized = false;
@@ -545,7 +521,7 @@ namespace MauRen
 
 		ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 
-		ubo.proj = glm::perspective(glm::radians(45.0f), static_cast<float>(m_SwapChainContext->GetExtent().width) / static_cast<float>(m_SwapChainContext->GetExtent().width), 0.1f, 10.0f);
+		ubo.proj = glm::perspective(glm::radians(45.0f), static_cast<float>(m_SwapChainContext.GetExtent().width) / static_cast<float>(m_SwapChainContext.GetExtent().width), 0.1f, 10.0f);
 
 		ubo.proj[1][1] *= -1;
 
@@ -554,6 +530,8 @@ namespace MauRen
 
 	void VulkanRenderer::RecreateSwapchain()
 	{
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+
 		// TODO 
 		// It is possible to create a new swap chain while drawing commands on an image from the old swap chain are still in - flight.
 		// You need to pass the previous swap chain to the oldSwapChain field in the VkSwapchainCreateInfoKHR struct and destroy the old swap chain as soon as you've finished using it.
@@ -570,35 +548,21 @@ namespace MauRen
 			glfwWaitEvents();
 		}
 
-		vkDeviceWaitIdle(m_DeviceContext->GetLogicalDevice());
+		vkDeviceWaitIdle(deviceContext->GetLogicalDevice());
 
 		CleanupSwapchain();
 
-		m_SwapChainContext = std::make_unique<VulkanSwapchainContext>(m_pWindow, m_SurfaceContext.get(), m_DeviceContext.get());
+		m_SwapChainContext.Initialize(m_pWindow, &m_SurfaceContext);
 
 		CreateColorResources();
 		CreateDepthResources();
 		CreateFrameBuffers();
 	}
 
-	uint32_t VulkanRenderer::FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties)
-	{
-		VkPhysicalDeviceMemoryProperties memProperties;
-		vkGetPhysicalDeviceMemoryProperties(m_DeviceContext->GetPhysicalDevice(), &memProperties);
-
-		for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) 
-		{
-			if (typeFilter & (1 << i) and (memProperties.memoryTypes[i].propertyFlags & properties) == properties)
-			{
-				return i;
-			}
-		}
-
-		throw std::runtime_error("Failed to find suitable memory type!");
-	}
-
 	void VulkanRenderer::CreateTextureImage()
 	{
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+
 		int texWidth{};
 		int texHeight{};
 		int texChannels{};
@@ -612,23 +576,19 @@ namespace MauRen
 		}
 
 
-		VulkanBuffer stagingBuffer{};
-		CreateBuffer(imageSize, 
-					 VK_BUFFER_USAGE_TRANSFER_SRC_BIT, 
-					 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, 
-					 stagingBuffer.buffer, 
-					 stagingBuffer.bufferMemory);
+		VulkanBuffer stagingBuffer{ imageSize,
+									 VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+									 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT };
 
 		void* data;
-		vkMapMemory(m_DeviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory , 0, imageSize, 0, &data);
+		vkMapMemory(deviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory , 0, imageSize, 0, &data);
 		memcpy(data, pixels, static_cast<size_t>(imageSize));
-		vkUnmapMemory(m_DeviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory);
+		vkUnmapMemory(deviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory);
 
 		stbi_image_free(pixels);
 
 		m_TextureImage = VulkanImage
 		{
-			this,
 			VK_FORMAT_R8G8B8A8_SRGB,
 			VK_IMAGE_TILING_OPTIMAL,
 			VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
@@ -645,13 +605,15 @@ namespace MauRen
 
 		m_TextureImage.GenerateMipmaps(this);
 
-		DestroyBuffer(stagingBuffer);
+		stagingBuffer.Destroy();
 
-		m_TextureImage.CreateImageView(this, VK_IMAGE_ASPECT_COLOR_BIT);
+		m_TextureImage.CreateImageView(VK_IMAGE_ASPECT_COLOR_BIT);
 	}
 
 	void VulkanRenderer::CreateTextureSampler()
 	{
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+
 		VkSamplerCreateInfo samplerInfo{};
 		samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
 		samplerInfo.magFilter = VK_FILTER_LINEAR;
@@ -664,7 +626,7 @@ namespace MauRen
 
 		samplerInfo.anisotropyEnable = VK_TRUE;
 		VkPhysicalDeviceProperties properties{};
-		vkGetPhysicalDeviceProperties(m_DeviceContext->GetPhysicalDevice(), &properties);
+		vkGetPhysicalDeviceProperties(deviceContext->GetPhysicalDevice(), &properties);
 
 		// If we want to go for maximum quality, we can simply use the limit directly
 		samplerInfo.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
@@ -680,14 +642,16 @@ namespace MauRen
 		samplerInfo.maxLod = static_cast<float>(m_TextureImage.mipLevels);
 		samplerInfo.mipLodBias = 0.0f; // Optional
 
-		if (vkCreateSampler(m_DeviceContext->GetLogicalDevice(), &samplerInfo, nullptr, &m_TextureSampler) != VK_SUCCESS) 
+		if (vkCreateSampler(deviceContext->GetLogicalDevice(), &samplerInfo, nullptr, &m_TextureSampler) != VK_SUCCESS)
 		{
-			throw std::runtime_error("failed to create texture sampler!");
+			throw std::runtime_error("Failed to create texture sampler!");
 		}
 	}
 
-	VkCommandBuffer VulkanRenderer::BeginSingleTimeCommands(VulkanDeviceContext* pDeviceContext, VkCommandPool commandPool)
+	VkCommandBuffer VulkanRenderer::BeginSingleTimeCommands(VkCommandPool commandPool)
 	{
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+
 		VkCommandBufferAllocateInfo allocInfo{};
 		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
@@ -695,7 +659,7 @@ namespace MauRen
 		allocInfo.commandBufferCount = 1;
 
 		VkCommandBuffer commandBuffer;
-		vkAllocateCommandBuffers(pDeviceContext->GetLogicalDevice(), &allocInfo, &commandBuffer);
+		vkAllocateCommandBuffers(deviceContext->GetLogicalDevice(), &allocInfo, &commandBuffer);
 
 		VkCommandBufferBeginInfo beginInfo{};
 		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -706,8 +670,10 @@ namespace MauRen
 		return commandBuffer;
 	}
 
-	void VulkanRenderer::EndSingleTimeCommands(VulkanDeviceContext* pDeviceContext, VkCommandPool commandPool, VkCommandBuffer commandBuffer)
+	void VulkanRenderer::EndSingleTimeCommands(VkCommandPool commandPool, VkCommandBuffer commandBuffer)
 	{
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+
 		vkEndCommandBuffer(commandBuffer);
 
 		VkSubmitInfo submitInfo{};
@@ -715,10 +681,10 @@ namespace MauRen
 		submitInfo.commandBufferCount = 1;
 		submitInfo.pCommandBuffers = &commandBuffer;
 
-		vkQueueSubmit(pDeviceContext->GetGraphicsQueue(), 1, &submitInfo, VK_NULL_HANDLE);
-		vkQueueWaitIdle(pDeviceContext->GetGraphicsQueue());
+		vkQueueSubmit(deviceContext->GetGraphicsQueue(), 1, &submitInfo, VK_NULL_HANDLE);
+		vkQueueWaitIdle(deviceContext->GetGraphicsQueue());
 
-		vkFreeCommandBuffers(pDeviceContext->GetLogicalDevice(), commandPool, 1, &commandBuffer);
+		vkFreeCommandBuffers(deviceContext->GetLogicalDevice(), commandPool, 1, &commandBuffer);
 
 		// TODO 
 		// A fence would allow you to schedule multiple transfers simultaneously and wait for all of them complete, instead of executing one at a time.
@@ -727,79 +693,78 @@ namespace MauRen
 
 	void VulkanRenderer::CreateDepthResources()
 	{
-		VkFormat const depthFormat{ m_DeviceContext->FindDepthFormat() };
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+		VkFormat const depthFormat{ deviceContext->FindDepthFormat() };
 
 		m_DepthImage = VulkanImage
 		{
-			this,
 			depthFormat,
 			VK_IMAGE_TILING_OPTIMAL,
 			VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
 			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-			m_DeviceContext->GetSampleCount(),
-			m_SwapChainContext->GetExtent().width,
-			m_SwapChainContext->GetExtent().height
+			deviceContext->GetSampleCount(),
+			m_SwapChainContext.GetExtent().width,
+			m_SwapChainContext.GetExtent().height
 		};
 
-		m_DepthImage.CreateImageView(this, VK_IMAGE_ASPECT_DEPTH_BIT);
+		m_DepthImage.CreateImageView(VK_IMAGE_ASPECT_DEPTH_BIT);
 		// No need to transition since we will do this in the render pass.
 	}
 
 	void VulkanRenderer::CleanupSwapchain()
 	{
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+
 		for (auto const& framebuffer : m_SwapChainFramebuffers)
 		{
-			vkDestroyFramebuffer(m_DeviceContext->GetLogicalDevice(), framebuffer, nullptr);
+			vkDestroyFramebuffer(deviceContext->GetLogicalDevice(), framebuffer, nullptr);
 		}
 
-		m_DepthImage.Destroy(m_DeviceContext.get());
-		m_ColorImage.Destroy(m_DeviceContext.get());
+		m_DepthImage.Destroy();
+		m_ColorImage.Destroy();
 
-		m_SwapChainContext = nullptr;
+		m_SwapChainContext.Destroy();
 	}
 
 	void VulkanRenderer::CreateGlobalBuffers()
 	{
-		CreateBuffer(MAX_VERTEX_BUFFER_SIZE,
-					VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-					VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-					m_GlobalVertexBuffer.buffer,
-					m_GlobalVertexBuffer.bufferMemory);
+		m_GlobalVertexBuffer = { MAX_VERTEX_BUFFER_SIZE,
+									VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+									VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT };
 
-		CreateBuffer(MAX_INDEX_BUFFER_SIZE,
-					VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-					VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-					m_GlobalIndexBuffer.buffer,
-					m_GlobalIndexBuffer.bufferMemory);
+		m_GlobalIndexBuffer = { MAX_INDEX_BUFFER_SIZE,
+									VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+									VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT };
 
-		CreateBuffer(MAX_INSTANCE_BUFFER_SIZE,
-					VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-					VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-					m_InstanceDataBuffer.buffer,
-					m_InstanceDataBuffer.bufferMemory);
+		m_InstanceDataBuffer = { MAX_INSTANCE_BUFFER_SIZE,
+									VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+									VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT };
 	}
 
 	void VulkanRenderer::CreateColorResources()
 	{
-		VkFormat const colorFormat{ m_SwapChainContext->GetImageFormat() };
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+
+		VkFormat const colorFormat{ m_SwapChainContext.GetImageFormat() };
 
 		m_ColorImage = VulkanImage
 		{
-			this,
 			colorFormat,
 			VK_IMAGE_TILING_OPTIMAL,
 			VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
 			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-			m_DeviceContext->GetSampleCount(),
-			m_SwapChainContext->GetExtent().width,
-			m_SwapChainContext->GetExtent().height
+			deviceContext->GetSampleCount(),
+			m_SwapChainContext.GetExtent().width,
+			m_SwapChainContext.GetExtent().height
 		};
 
-		m_ColorImage.CreateImageView(this, VK_IMAGE_ASPECT_COLOR_BIT);
+		m_ColorImage.CreateImageView(VK_IMAGE_ASPECT_COLOR_BIT);
 	}
 
-	VulkanRenderer::VulkanImage::VulkanImage(VulkanRenderer* pRenderer, VkFormat imgFormat, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkSampleCountFlagBits numSamples, uint32_t imgWidth, uint32_t imgHeight, uint32_t imgMipLevels)
+	VulkanRenderer::VulkanImage::VulkanImage(VkFormat imgFormat, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkSampleCountFlagBits numSamples, uint32_t imgWidth, uint32_t imgHeight, uint32_t imgMipLevels)
 	{
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+
 		format = imgFormat;
 
 		width = imgWidth;
@@ -826,41 +791,45 @@ namespace MauRen
 		imageInfo.samples = numSamples;
 		imageInfo.flags = 0; // Optional
 
-		if (vkCreateImage(pRenderer->m_DeviceContext->GetLogicalDevice(), &imageInfo, nullptr, &image) != VK_SUCCESS)
+		if (vkCreateImage(deviceContext->GetLogicalDevice(), &imageInfo, nullptr, &image) != VK_SUCCESS)
 		{
 			throw std::runtime_error("Failed to create image!");
 		}
 
 		VkMemoryRequirements memRequirements;
-		vkGetImageMemoryRequirements(pRenderer->m_DeviceContext->GetLogicalDevice(), image, &memRequirements);
+		vkGetImageMemoryRequirements(deviceContext->GetLogicalDevice(), image, &memRequirements);
 
 		VkMemoryAllocateInfo allocInfo{};
 		allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 		allocInfo.allocationSize = memRequirements.size;
-		allocInfo.memoryTypeIndex = pRenderer->FindMemoryType(memRequirements.memoryTypeBits, properties);
+		allocInfo.memoryTypeIndex = VulkanUtils::FindMemoryType(deviceContext->GetPhysicalDevice() ,memRequirements.memoryTypeBits, properties);
 
-		if (vkAllocateMemory(pRenderer->m_DeviceContext->GetLogicalDevice(), &allocInfo, nullptr, &imageMemory) != VK_SUCCESS)
+		if (vkAllocateMemory(deviceContext->GetLogicalDevice(), &allocInfo, nullptr, &imageMemory) != VK_SUCCESS)
 		{
-			throw std::runtime_error("failed to allocate image memory!");
+			throw std::runtime_error("Failed to allocate image memory!");
 		}
 
-		vkBindImageMemory(pRenderer->m_DeviceContext->GetLogicalDevice(), image, imageMemory, 0);
+		vkBindImageMemory(deviceContext->GetLogicalDevice(), image, imageMemory, 0);
 	}
 
-	void VulkanRenderer::VulkanImage::Destroy(VulkanDeviceContext* pDeviceContext)
+	void VulkanRenderer::VulkanImage::Destroy()
 	{
-		for (auto const& imageView : imageViews)
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+
+		for (auto& imageView : imageViews)
 		{
-			vkDestroyImageView(pDeviceContext->GetLogicalDevice(), imageView, nullptr);
+			VulkanUtils::SafeDestroy(deviceContext->GetLogicalDevice(), imageView, nullptr);
 		}
 
-		vkDestroyImage(pDeviceContext->GetLogicalDevice(), image, nullptr);
-		vkFreeMemory(pDeviceContext->GetLogicalDevice(), imageMemory, nullptr);
+		VulkanUtils::SafeDestroy(deviceContext->GetLogicalDevice(), image, nullptr);
+		VulkanUtils::SafeDestroy(deviceContext->GetLogicalDevice(), imageMemory, nullptr);
 	}
 
 	void VulkanRenderer::VulkanImage::TransitionImageLayout(VulkanRenderer* pRenderer, VkImageLayout oldLayout, VkImageLayout newLayout)
 	{
-		VkCommandBuffer const commandBuffer{ pRenderer->BeginSingleTimeCommands(pRenderer->m_DeviceContext.get(),pRenderer-> m_CommandPool) };
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+
+		VkCommandBuffer const commandBuffer{ VulkanRenderer::BeginSingleTimeCommands(pRenderer->m_CommandPool) };
 
 		VkImageMemoryBarrier barrier{};
 
@@ -919,12 +888,14 @@ namespace MauRen
 			0, nullptr,
 			1, &barrier);
 
-		pRenderer->EndSingleTimeCommands(pRenderer->m_DeviceContext.get(), pRenderer->m_CommandPool, commandBuffer);
+		VulkanRenderer::EndSingleTimeCommands(pRenderer->m_CommandPool, commandBuffer);
 	}
 
 	void VulkanRenderer::VulkanImage::GenerateMipmaps(VulkanRenderer* pRenderer)
 	{
-		VkCommandBuffer const commandBuffer{ pRenderer->BeginSingleTimeCommands(pRenderer->m_DeviceContext.get(),pRenderer->m_CommandPool) };
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+
+		VkCommandBuffer const commandBuffer{ VulkanRenderer::BeginSingleTimeCommands(pRenderer->m_CommandPool) };
 
 		// TODO
 		/*
@@ -940,7 +911,7 @@ namespace MauRen
 
 		 // Check if image format supports linear blitting
 		VkFormatProperties formatProperties;
-		vkGetPhysicalDeviceFormatProperties(pRenderer->m_DeviceContext->GetPhysicalDevice(), format, &formatProperties);
+		vkGetPhysicalDeviceFormatProperties(deviceContext->GetPhysicalDevice(), format, &formatProperties);
 
 		if (!(formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT))
 		{
@@ -1030,11 +1001,13 @@ namespace MauRen
 			1, &barrier);
 
 
-		pRenderer->EndSingleTimeCommands(pRenderer->m_DeviceContext.get(), pRenderer->m_CommandPool, commandBuffer);
+		VulkanRenderer::EndSingleTimeCommands(pRenderer->m_CommandPool, commandBuffer);
 	}
 
-	uint32_t VulkanRenderer::VulkanImage::CreateImageView(VulkanRenderer* pRenderer, VkImageAspectFlags aspectFlags)
+	uint32_t VulkanRenderer::VulkanImage::CreateImageView(VkImageAspectFlags aspectFlags)
 	{
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+
 		VkImageViewCreateInfo viewInfo{};
 		viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 		viewInfo.image = image;
@@ -1047,7 +1020,7 @@ namespace MauRen
 		viewInfo.subresourceRange.layerCount = 1;
 
 		VkImageView imageView;
-		if (vkCreateImageView(pRenderer->m_DeviceContext->GetLogicalDevice(), &viewInfo, nullptr, &imageView) != VK_SUCCESS)
+		if (vkCreateImageView(deviceContext->GetLogicalDevice(), &viewInfo, nullptr, &imageView) != VK_SUCCESS)
 		{
 			throw std::runtime_error("Failed to create texture image view!");
 		}
