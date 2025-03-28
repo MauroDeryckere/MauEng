@@ -22,6 +22,8 @@
 
 // Sources
 // https://github.com/KhronosGroup/Vulkan-Docs/wiki/Synchronization-Examples#swapchain-image-acquire-and-present
+// https://blog.traverseresearch.nl/bindless-rendering-setup-afeb678d77fc
+// DAE course - Graphics Programming 2
 
 namespace MauRen
 {
@@ -52,9 +54,6 @@ namespace MauRen
 		VulkanGraphicsPipeline m_GraphicsPipeline{};
 
 		VulkanCommandPoolManager m_CommandPoolManager{};
-
-		// no unique ptr owned contxt for this currently, can be moved if the logic grows a lot
-		std::vector<VkFramebuffer> m_SwapChainFramebuffers{};
 
 		// Signal that an image has been acquired from the swapchain and is ready for rendering
 		std::vector<VkSemaphore> m_ImageAvailableSemaphores{};
@@ -104,13 +103,10 @@ namespace MauRen
 		void CreateTextureImage();
 
 		VulkanImage m_TextureImage{};
-		VulkanImage m_DepthImage{};
-		VulkanImage m_ColorImage{};
+
 
 		// Should be managedin e.g a texturemanager
 		VkSampler m_TextureSampler{ VK_NULL_HANDLE };
-
-		void CreateFrameBuffers();
 
 		void CreateVertexBuffer();
 		void CreateIndexBuffer();
@@ -127,11 +123,7 @@ namespace MauRen
 
 		void CreateTextureSampler();
 
-		void CreateColorResources();
-		void CreateDepthResources();
-
 		void RecreateSwapchain();
-		void CleanupSwapchain();
 
 		void CreateGlobalBuffers();
 	};

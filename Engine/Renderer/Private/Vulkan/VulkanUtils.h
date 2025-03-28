@@ -144,6 +144,17 @@ namespace MauRen
 			commandPool = VK_NULL_HANDLE;
 			return true;
 		}
+		inline bool SafeDestroy(VkDevice device, VkFramebuffer& frameBuffer, VkAllocationCallbacks const* pAllocator)
+		{
+			if (frameBuffer == VK_NULL_HANDLE)
+			{
+				return false;
+			}
+
+			vkDestroyFramebuffer(device, frameBuffer, pAllocator);
+			frameBuffer = VK_NULL_HANDLE;
+			return true;
+		}
 
 #pragma endregion
 

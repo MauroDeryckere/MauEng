@@ -5,7 +5,7 @@
 
 namespace MauRen
 {
-	// Only supports a single command pool for now, may be expanded to support more if necessary
+	// Only supports a single command pool for now, may be expanded to support more if necessary or simply create multiple "managers" and support initializing it with different parameters
 	class VulkanCommandPoolManager final
 	{
 	public:

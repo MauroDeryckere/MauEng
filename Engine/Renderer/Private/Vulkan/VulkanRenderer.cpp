@@ -32,9 +32,7 @@ namespace MauRen
 
 		m_CommandPoolManager.Initialize();
 
-		CreateColorResources();
-		CreateDepthResources();
-		CreateFrameBuffers();
+		m_SwapChainContext.InitializeResourcesAndCreateFrames(&m_GraphicsPipeline);
 
 		CreateTextureImage();
 		CreateTextureSampler();
@@ -89,7 +87,7 @@ namespace MauRen
 
 		m_CommandPoolManager.Destroy();
 
-		CleanupSwapchain();
+		m_SwapChainContext.Destroy();
 
 		for (size_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; ++i)
 		{
@@ -118,36 +116,6 @@ namespace MauRen
 	{
 		m_FramebufferResized = true;
 	}
-
-	void VulkanRenderer::CreateFrameBuffers()
-	{
-		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
-
-		auto const& imageViews{ m_SwapChainContext.GetImageViews() };
-
-		m_SwapChainFramebuffers.resize(imageViews.size());
-
-		for (size_t i{ 0 }; i < imageViews.size(); ++i)
-		{
-			std::array<VkImageView, 3> const attachments{ m_ColorImage.imageViews[0], m_DepthImage.imageViews[0],  imageViews[i].imageViews[0]};
-			
-			VkFramebufferCreateInfo framebufferInfo{};
-			framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-			framebufferInfo.renderPass = m_GraphicsPipeline.GetRenderPass();
-			framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
-			framebufferInfo.pAttachments = attachments.data();
-			framebufferInfo.width = m_SwapChainContext.GetExtent().width;
-			framebufferInfo.height = m_SwapChainContext.GetExtent().height;
-			framebufferInfo.layers = 1;
-
-			if (vkCreateFramebuffer(deviceContext->GetLogicalDevice(), &framebufferInfo, nullptr, &m_SwapChainFramebuffers[i]) != VK_SUCCESS)
-			{
-				throw std::runtime_error("Failed to create framebuffer!");
-			}
-		}
-	}
-
-
 
 	void VulkanRenderer::CreateVertexBuffer()
 	{
@@ -275,7 +243,7 @@ namespace MauRen
 		VkRenderPassBeginInfo renderPassInfo{};
 		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 		renderPassInfo.renderPass = m_GraphicsPipeline.GetRenderPass();
-		renderPassInfo.framebuffer = m_SwapChainFramebuffers[imageIndex];
+		renderPassInfo.framebuffer = m_SwapChainContext.GetSwapchainFrameBuffer(imageIndex);
 
 		renderPassInfo.renderArea.offset = { 0, 0 };
 		renderPassInfo.renderArea.extent = m_SwapChainContext.GetExtent();
@@ -492,13 +460,7 @@ namespace MauRen
 
 		vkDeviceWaitIdle(deviceContext->GetLogicalDevice());
 
-		CleanupSwapchain();
-
-		m_SwapChainContext.Initialize(m_pWindow, &m_SurfaceContext);
-
-		CreateColorResources();
-		CreateDepthResources();
-		CreateFrameBuffers();
+		m_SwapChainContext.ReCreate(m_pWindow, &m_GraphicsPipeline, &m_SurfaceContext);
 	}
 
 	void VulkanRenderer::CreateTextureImage()
@@ -590,41 +552,6 @@ namespace MauRen
 		}
 	}
 
-	void VulkanRenderer::CreateDepthResources()
-	{
-		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
-		VkFormat const depthFormat{ deviceContext->FindDepthFormat() };
-
-		m_DepthImage = VulkanImage
-		{
-			depthFormat,
-			VK_IMAGE_TILING_OPTIMAL,
-			VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
-			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-			deviceContext->GetSampleCount(),
-			m_SwapChainContext.GetExtent().width,
-			m_SwapChainContext.GetExtent().height
-		};
-
-		m_DepthImage.CreateImageView(VK_IMAGE_ASPECT_DEPTH_BIT);
-		// No need to transition since we will do this in the render pass.
-	}
-
-	void VulkanRenderer::CleanupSwapchain()
-	{
-		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
-
-		for (auto const& framebuffer : m_SwapChainFramebuffers)
-		{
-			vkDestroyFramebuffer(deviceContext->GetLogicalDevice(), framebuffer, nullptr);
-		}
-
-		m_DepthImage.Destroy();
-		m_ColorImage.Destroy();
-
-		m_SwapChainContext.Destroy();
-	}
-
 	void VulkanRenderer::CreateGlobalBuffers()
 	{
 		m_GlobalVertexBuffer = { MAX_VERTEX_BUFFER_SIZE,
@@ -638,26 +565,6 @@ namespace MauRen
 		m_InstanceDataBuffer = { MAX_INSTANCE_BUFFER_SIZE,
 									VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
 									VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT };
-	}
-
-	void VulkanRenderer::CreateColorResources()
-	{
-		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
-
-		VkFormat const colorFormat{ m_SwapChainContext.GetImageFormat() };
-
-		m_ColorImage = VulkanImage
-		{
-			colorFormat,
-			VK_IMAGE_TILING_OPTIMAL,
-			VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
-			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-			deviceContext->GetSampleCount(),
-			m_SwapChainContext.GetExtent().width,
-			m_SwapChainContext.GetExtent().height
-		};
-
-		m_ColorImage.CreateImageView(VK_IMAGE_ASPECT_COLOR_BIT);
 	}
 }
 

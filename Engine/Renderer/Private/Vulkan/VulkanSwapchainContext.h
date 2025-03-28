@@ -15,6 +15,7 @@ namespace MauRen
 	};
 
 	class VulkanSurfaceContext;
+	class VulkanGraphicsPipeline;
 
 	class VulkanSwapchainContext final
 	{
@@ -22,7 +23,14 @@ namespace MauRen
 		VulkanSwapchainContext() = default;
 		~VulkanSwapchainContext() = default;
 
-		void Initialize(GLFWwindow* pWindow, VulkanSurfaceContext* pVulkanSurfaceContext);
+		// Initialize the swapchain
+		void Initialize(GLFWwindow* pWindow, VulkanSurfaceContext const * pVulkanSurfaceContext);
+		// Intialize the depth image, colour image and create frames, this must be done after the graphics pipeline creation
+		void InitializeResourcesAndCreateFrames(VulkanGraphicsPipeline const* pGraphicsPipeline);
+
+		// Reecreate the entire swapchain, this will destroy the previous swapchain first
+		void ReCreate(GLFWwindow* pWindow, VulkanGraphicsPipeline const* pGraphicsPipeline, VulkanSurfaceContext const* pVulkanSurfaceContext);
+
 		void Destroy();
 
 		// Query if swap chain is supported for a given physical device & window surface
@@ -34,28 +42,37 @@ namespace MauRen
 		[[nodiscard]] VkExtent2D GetExtent() const noexcept { return m_SwapChainExtent; }
 		[[nodiscard]] VkFormat GetImageFormat() const noexcept { return m_SwapChainImageFormat; }
 
+		[[nodiscard]] VkFramebuffer GetSwapchainFrameBuffer(uint32_t imageIndex) const noexcept;
+
 		VulkanSwapchainContext(VulkanSwapchainContext const&) = delete;
 		VulkanSwapchainContext(VulkanSwapchainContext&&) = delete;
 		VulkanSwapchainContext& operator=(VulkanSwapchainContext const&) = delete;
 		VulkanSwapchainContext& operator=(VulkanSwapchainContext&&) = delete;
 
 	private:
-		VulkanSurfaceContext* m_pSurfaceContext;
-
 		VkSwapchainKHR m_SwapChain{ VK_NULL_HANDLE };
 
-		VkFormat m_SwapChainImageFormat;
-		VkExtent2D m_SwapChainExtent;
+		VkFormat m_SwapChainImageFormat{};
+		VkExtent2D m_SwapChainExtent{};
 
-		std::vector<VulkanImage> m_SwapChainImages;
+		std::vector<VulkanImage> m_SwapChainImages{};
 
-		void CreateSwapchain(GLFWwindow* pWindow);
+		VulkanImage m_DepthImage{};
+		VulkanImage m_ColorImage{};
+
+		std::vector<VkFramebuffer> m_SwapChainFrameBuffers{};
+
+		void CreateSwapchain(GLFWwindow* pWindow, VulkanSurfaceContext const * pVulkanSurfaceContext);
 		void CreateImageViews();
-
 
 		static VkSurfaceFormatKHR ChooseSwapSurfaceFormat(std::vector<VkSurfaceFormatKHR> const& availableFormats);
 		static VkPresentModeKHR ChooseSwapPresentMode(std::vector<VkPresentModeKHR> const& availablePresentModes);
 		static VkExtent2D ChooseSwapExtent(GLFWwindow* pWindow, VkSurfaceCapabilitiesKHR const& capabilities);
+
+		void CreateColorResources();
+		void CreateDepthResources();
+
+		void CreateFrameBuffers(VulkanGraphicsPipeline const* pGraphicsPipeline);
 	};
 }
 

@@ -1,26 +1,50 @@
 #include "VulkanSwapchainContext.h"
 #include "VulkanSurfaceContext.h"
 #include "VulkanDeviceContext.h"
+#include "VulkanGraphicsPipeline.h"
 
 namespace MauRen
 {
-	void VulkanSwapchainContext::Initialize(GLFWwindow* pWindow, VulkanSurfaceContext* pVulkanSurfaceContext)
+	void VulkanSwapchainContext::Initialize(GLFWwindow* pWindow, VulkanSurfaceContext const * pVulkanSurfaceContext)
 	{
-		m_pSurfaceContext = pVulkanSurfaceContext;
-
-		CreateSwapchain(pWindow);
+		CreateSwapchain(pWindow, pVulkanSurfaceContext);
 		CreateImageViews();
+	}
+
+	void VulkanSwapchainContext::InitializeResourcesAndCreateFrames(VulkanGraphicsPipeline const* pGraphicsPipeline)
+	{
+		CreateColorResources();
+		CreateDepthResources();
+		CreateFrameBuffers(pGraphicsPipeline);
+	}
+
+	void VulkanSwapchainContext::ReCreate(GLFWwindow* pWindow, VulkanGraphicsPipeline const* pGraphicsPipeline, VulkanSurfaceContext const* pVulkanSurfaceContext)
+	{
+		Destroy();
+
+		CreateSwapchain(pWindow, pVulkanSurfaceContext);
+		CreateImageViews();
+		CreateColorResources();
+		CreateDepthResources();
+		CreateFrameBuffers(pGraphicsPipeline);
 	}
 
 	void VulkanSwapchainContext::Destroy()
 	{
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 
+		for (auto& framebuffer : m_SwapChainFrameBuffers)
+		{
+			VulkanUtils::SafeDestroy(deviceContext->GetLogicalDevice(), framebuffer, nullptr);
+		}
+
+		m_DepthImage.Destroy();
+		m_ColorImage.Destroy();
+
 		for (auto& image : m_SwapChainImages)
 		{
 			image.DestroyAllImageViews();
 		}
-
 		m_SwapChainImages.clear();
 
 		VulkanUtils::SafeDestroy(deviceContext->GetLogicalDevice(), m_SwapChain, nullptr);
@@ -56,11 +80,17 @@ namespace MauRen
 		return details;
 	}
 
-	void VulkanSwapchainContext::CreateSwapchain(GLFWwindow* pWindow)
+	VkFramebuffer VulkanSwapchainContext::GetSwapchainFrameBuffer(uint32_t imageIndex) const noexcept
+	{
+		assert(imageIndex < m_SwapChainFrameBuffers.size());
+		return m_SwapChainFrameBuffers[imageIndex];
+	}
+
+	void VulkanSwapchainContext::CreateSwapchain(GLFWwindow* pWindow, VulkanSurfaceContext const * pVulkanSurfaceContext)
 	{
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 
-		SwapChainSupportDetails const swapChainSupport{ QuerySwapchainSupport(deviceContext->GetPhysicalDevice(), m_pSurfaceContext->GetWindowSurface()) };
+		SwapChainSupportDetails const swapChainSupport{ QuerySwapchainSupport(deviceContext->GetPhysicalDevice(), pVulkanSurfaceContext->GetWindowSurface()) };
 
 		VkSurfaceFormatKHR const surfaceFormat{ ChooseSwapSurfaceFormat(swapChainSupport.formats) };
 		VkPresentModeKHR const presentMode{ ChooseSwapPresentMode(swapChainSupport.presentModes) };
@@ -82,7 +112,7 @@ namespace MauRen
 
 		VkSwapchainCreateInfoKHR createInfo{};
 		createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-		createInfo.surface = m_pSurfaceContext->GetWindowSurface();
+		createInfo.surface = pVulkanSurfaceContext->GetWindowSurface();
 
 		createInfo.minImageCount = imageCount;
 		createInfo.imageFormat = surfaceFormat.format;
@@ -206,4 +236,71 @@ namespace MauRen
 		return actualExtent;
 	}
 
+	void VulkanSwapchainContext::CreateColorResources()
+	{
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+
+		VkFormat const colorFormat{ GetImageFormat() };
+
+		m_ColorImage = VulkanImage
+		{
+			colorFormat,
+			VK_IMAGE_TILING_OPTIMAL,
+			VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+			deviceContext->GetSampleCount(),
+			GetExtent().width,
+			GetExtent().height
+		};
+
+		m_ColorImage.CreateImageView(VK_IMAGE_ASPECT_COLOR_BIT);
+	}
+
+	void VulkanSwapchainContext::CreateDepthResources()
+	{
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+		VkFormat const depthFormat{ deviceContext->FindDepthFormat() };
+
+		m_DepthImage = VulkanImage
+		{
+			depthFormat,
+			VK_IMAGE_TILING_OPTIMAL,
+			VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+			deviceContext->GetSampleCount(),
+			GetExtent().width,
+			GetExtent().height
+		};
+
+		m_DepthImage.CreateImageView(VK_IMAGE_ASPECT_DEPTH_BIT);
+		// No need to transition since we will do this in the render pass.
+	}
+
+	void VulkanSwapchainContext::CreateFrameBuffers(VulkanGraphicsPipeline const* pGraphicsPipeline)
+	{
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+
+		auto const& imageViews{ GetImageViews() };
+
+		m_SwapChainFrameBuffers.resize(imageViews.size());
+
+		for (size_t i{ 0 }; i < imageViews.size(); ++i)
+		{
+			std::array<VkImageView, 3> const attachments{ m_ColorImage.imageViews[0], m_DepthImage.imageViews[0],  imageViews[i].imageViews[0] };
+
+			VkFramebufferCreateInfo framebufferInfo{};
+			framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+			framebufferInfo.renderPass = pGraphicsPipeline->GetRenderPass();
+			framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+			framebufferInfo.pAttachments = attachments.data();
+			framebufferInfo.width = GetExtent().width;
+			framebufferInfo.height = GetExtent().height;
+			framebufferInfo.layers = 1;
+
+			if (vkCreateFramebuffer(deviceContext->GetLogicalDevice(), &framebufferInfo, nullptr, &m_SwapChainFrameBuffers[i]) != VK_SUCCESS)
+			{
+				throw std::runtime_error("Failed to create framebuffer!");
+			}
+		}
+	}
 }
