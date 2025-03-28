@@ -133,6 +133,18 @@ namespace MauRen
 			return true;
 		}
 
+		inline bool SafeDestroy(VkDevice device, VkCommandPool& commandPool, VkAllocationCallbacks const* pAllocator)
+		{
+			if (commandPool == VK_NULL_HANDLE)
+			{
+				return false;
+			}
+
+			vkDestroyCommandPool(device, commandPool, pAllocator);
+			commandPool = VK_NULL_HANDLE;
+			return true;
+		}
+
 #pragma endregion
 
 		inline [[nodiscard]] uint32_t FindMemoryType(VkPhysicalDevice physicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags properties)

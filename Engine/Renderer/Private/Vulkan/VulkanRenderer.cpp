@@ -30,7 +30,7 @@ namespace MauRen
 		m_DescriptorContext.CreateDescriptorSetLayout();
 		m_GraphicsPipeline.Initialize( &m_SwapChainContext, m_DescriptorContext.GetDescriptorSetLayout(), 1u);
 
-		CreateCommandPool();
+		m_CommandPoolManager.Initialize();
 
 		CreateColorResources();
 		CreateDepthResources();
@@ -61,7 +61,7 @@ namespace MauRen
 												m_TextureImage.imageViews, 
 												m_TextureSampler);
 
-		CreateCommandBuffers();
+		m_CommandPoolManager.CreateCommandBuffers();
 		CreateSyncObjects();
 	}
 
@@ -87,7 +87,7 @@ namespace MauRen
 
 		m_TextureImage.Destroy();
 
-		vkDestroyCommandPool(deviceContext->GetLogicalDevice(), m_CommandPool, nullptr);
+		m_CommandPoolManager.Destroy();
 
 		CleanupSwapchain();
 
@@ -147,23 +147,7 @@ namespace MauRen
 		}
 	}
 
-	void VulkanRenderer::CreateCommandPool()
-	{
-		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 
-		// Record commands for drawing, which is why we've chosen the graphics queue family
-		QueueFamilyIndices const queueFamilyIndices{ deviceContext->FindQueueFamilies() };
-
-		VkCommandPoolCreateInfo poolInfo{};
-		poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-		poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-		poolInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily.value();
-
-		if (vkCreateCommandPool(deviceContext->GetLogicalDevice(), &poolInfo, nullptr, &m_CommandPool) != VK_SUCCESS)
-		{
-			throw std::runtime_error("Failed to create command pool!");
-		}
-	}
 
 	void VulkanRenderer::CreateVertexBuffer()
 	{
@@ -224,28 +208,6 @@ namespace MauRen
 		stagingBuffer.Destroy();
 	}
 
-	void VulkanRenderer::CreateCommandBuffers()
-	{
-		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
-
-		m_CommandBuffers.resize(MAX_FRAMES_IN_FLIGHT);
-
-		VkCommandBufferAllocateInfo allocInfo{};
-		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-		allocInfo.commandPool = m_CommandPool;
-		
-		// VK_COMMAND_BUFFER_LEVEL_PRIMARY: Can be submitted to a queue for execution, but cannot be called from other command buffers.
-		// VK_COMMAND_BUFFER_LEVEL_SECONDARY: Cannot be submitted directly, but can be called from primary command buffers.
-		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-		allocInfo.commandBufferCount = static_cast<uint32_t>(m_CommandBuffers.size());
-
-
-		if (vkAllocateCommandBuffers(deviceContext->GetLogicalDevice(), &allocInfo, m_CommandBuffers.data()) != VK_SUCCESS)
-		{
-			throw std::runtime_error("Failed to allocate command buffers!");
-		}
-	}
-
 	void VulkanRenderer::CreateUniformBuffers()
 	{
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
@@ -274,7 +236,7 @@ namespace MauRen
 		 * You should use the VK_COMMAND_POOL_CREATE_TRANSIENT_BIT flag during command pool generation in that case.
 		 */
 
-		VkCommandBuffer commandBuffer{ BeginSingleTimeCommands(m_CommandPool) };
+		VkCommandBuffer commandBuffer{ m_CommandPoolManager.BeginSingleTimeCommands() };
 
 		VkBufferCopy copyRegion{};
 		copyRegion.srcOffset = 0; // Optional
@@ -282,12 +244,12 @@ namespace MauRen
 		copyRegion.size = size;
 		vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
 
-		EndSingleTimeCommands(m_CommandPool, commandBuffer);
+		m_CommandPoolManager.EndSingleTimeCommands(commandBuffer);
 	}
 
 	void VulkanRenderer::CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height)
 	{
-		VkCommandBuffer commandBuffer{ BeginSingleTimeCommands(m_CommandPool) };
+		VkCommandBuffer commandBuffer{ m_CommandPoolManager.BeginSingleTimeCommands() };
 
 		VkBufferImageCopy region{};
 		region.bufferOffset = 0;
@@ -309,7 +271,7 @@ namespace MauRen
 								1,
 								&region );
 
-		EndSingleTimeCommands(m_CommandPool, commandBuffer);
+		m_CommandPoolManager.EndSingleTimeCommands(commandBuffer);
 	}
 
 	void VulkanRenderer::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex)
@@ -449,8 +411,8 @@ namespace MauRen
 
 		UpdateUniformBuffer(m_CurrentFrame);
 
-		vkResetCommandBuffer(m_CommandBuffers[m_CurrentFrame], 0);
-		RecordCommandBuffer(m_CommandBuffers[m_CurrentFrame], imageIndex);
+		vkResetCommandBuffer(m_CommandPoolManager.GetCommandBuffer(m_CurrentFrame), 0);
+		RecordCommandBuffer(m_CommandPoolManager.GetCommandBuffer(m_CurrentFrame), imageIndex);
 
 		VkSubmitInfo submitInfo{};
 		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -462,7 +424,7 @@ namespace MauRen
 		submitInfo.pWaitDstStageMask = waitStages;
 
 		submitInfo.commandBufferCount = 1;
-		submitInfo.pCommandBuffers = &m_CommandBuffers[m_CurrentFrame];
+		submitInfo.pCommandBuffers = &m_CommandPoolManager.GetCommandBuffer(m_CurrentFrame);
 
 		VkSemaphore const signalSemaphores[] { m_RenderFinishedSemaphores[m_CurrentFrame] };
 		submitInfo.signalSemaphoreCount = 1;
@@ -648,49 +610,6 @@ namespace MauRen
 		}
 	}
 
-	VkCommandBuffer VulkanRenderer::BeginSingleTimeCommands(VkCommandPool commandPool)
-	{
-		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
-
-		VkCommandBufferAllocateInfo allocInfo{};
-		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-		allocInfo.commandPool = commandPool;
-		allocInfo.commandBufferCount = 1;
-
-		VkCommandBuffer commandBuffer;
-		vkAllocateCommandBuffers(deviceContext->GetLogicalDevice(), &allocInfo, &commandBuffer);
-
-		VkCommandBufferBeginInfo beginInfo{};
-		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-		vkBeginCommandBuffer(commandBuffer, &beginInfo);
-
-		return commandBuffer;
-	}
-
-	void VulkanRenderer::EndSingleTimeCommands(VkCommandPool commandPool, VkCommandBuffer commandBuffer)
-	{
-		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
-
-		vkEndCommandBuffer(commandBuffer);
-
-		VkSubmitInfo submitInfo{};
-		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-		submitInfo.commandBufferCount = 1;
-		submitInfo.pCommandBuffers = &commandBuffer;
-
-		vkQueueSubmit(deviceContext->GetGraphicsQueue(), 1, &submitInfo, VK_NULL_HANDLE);
-		vkQueueWaitIdle(deviceContext->GetGraphicsQueue());
-
-		vkFreeCommandBuffers(deviceContext->GetLogicalDevice(), commandPool, 1, &commandBuffer);
-
-		// TODO 
-		// A fence would allow you to schedule multiple transfers simultaneously and wait for all of them complete, instead of executing one at a time.
-		// That may give the driver more opportunities to optimize.
-	}
-
 	void VulkanRenderer::CreateDepthResources()
 	{
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
@@ -829,7 +748,7 @@ namespace MauRen
 	{
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 
-		VkCommandBuffer const commandBuffer{ VulkanRenderer::BeginSingleTimeCommands(pRenderer->m_CommandPool) };
+		VkCommandBuffer const commandBuffer{ pRenderer->m_CommandPoolManager.BeginSingleTimeCommands() };
 
 		VkImageMemoryBarrier barrier{};
 
@@ -888,14 +807,14 @@ namespace MauRen
 			0, nullptr,
 			1, &barrier);
 
-		VulkanRenderer::EndSingleTimeCommands(pRenderer->m_CommandPool, commandBuffer);
+		pRenderer->m_CommandPoolManager.EndSingleTimeCommands(commandBuffer);
 	}
 
 	void VulkanRenderer::VulkanImage::GenerateMipmaps(VulkanRenderer* pRenderer)
 	{
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 
-		VkCommandBuffer const commandBuffer{ VulkanRenderer::BeginSingleTimeCommands(pRenderer->m_CommandPool) };
+		VkCommandBuffer const commandBuffer{ pRenderer->m_CommandPoolManager.BeginSingleTimeCommands() };
 
 		// TODO
 		/*
@@ -1001,7 +920,7 @@ namespace MauRen
 			1, &barrier);
 
 
-		VulkanRenderer::EndSingleTimeCommands(pRenderer->m_CommandPool, commandBuffer);
+		pRenderer->m_CommandPoolManager.EndSingleTimeCommands(commandBuffer);
 	}
 
 	uint32_t VulkanRenderer::VulkanImage::CreateImageView(VkImageAspectFlags aspectFlags)

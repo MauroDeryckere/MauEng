@@ -12,6 +12,7 @@
 #include "VulkanDescriptorContext.h"
 #include "VulkanSwapchainContext.h"
 #include "VulkanGraphicsPipeline.h"
+#include "VulkanCommandPoolManager.h"
 
 #include "VulkanBuffer.h"
 
@@ -48,13 +49,10 @@ namespace MauRen
 		VulkanSwapchainContext m_SwapChainContext{};
 		VulkanGraphicsPipeline m_GraphicsPipeline{};
 
-		// no unique ptr owned contxt for this currently, can be moved if the logic grows a lot
-		std::vector<VkFramebuffer> m_SwapChainFramebuffers{};
+		VulkanCommandPoolManager m_CommandPoolManager{};
 
 		// no unique ptr owned contxt for this currently, can be moved if the logic grows a lot
-		VkCommandPool m_CommandPool{ VK_NULL_HANDLE };
-		// Automatically freed when their pool is destroyed
-		std::vector<VkCommandBuffer> m_CommandBuffers{};
+		std::vector<VkFramebuffer> m_SwapChainFramebuffers{};
 
 		// Signal that an image has been acquired from the swapchain and is ready for rendering
 		std::vector<VkSemaphore> m_ImageAvailableSemaphores{};
@@ -98,7 +96,7 @@ namespace MauRen
 			alignas(16) glm::mat4 proj;
 		};
 
-		//TODO safe destroys & separate class refactor in future
+		//TODO separate class refactor in future
 		struct VulkanImage final
 		{
 			VkImage image{ VK_NULL_HANDLE };
@@ -114,6 +112,7 @@ namespace MauRen
 
 			VulkanImage() = default;
 			VulkanImage(VkFormat imgFormat, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkSampleCountFlagBits numSamples, uint32_t imgWidth, uint32_t imgHeight, uint32_t imgMipLevels = 1);
+			//~VulkanImage() = default;
 
 			void Destroy();
 			void TransitionImageLayout(VulkanRenderer* pRenderer, VkImageLayout oldLayout, VkImageLayout newLayout);
@@ -132,32 +131,21 @@ namespace MauRen
 
 		void CreateFrameBuffers();
 
-		void CreateCommandPool();
 		void CreateVertexBuffer();
 		void CreateIndexBuffer();
 
-		void CreateCommandBuffers();
-
 		void CreateUniformBuffers();
 
-
 		void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
-
 		void CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
-
-		void RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
 
 		void CreateSyncObjects();
 
 		void DrawFrame();
+		void RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
 		void UpdateUniformBuffer(uint32_t currentImage);
 
 		void CreateTextureSampler();
-
-		//TODO abstract Command away in a struct with a Destroy thats basicallyRAII
-		static VkCommandBuffer BeginSingleTimeCommands(VkCommandPool commandPool);
-		static void EndSingleTimeCommands(VkCommandPool commandPool, VkCommandBuffer commandBuffer);
-
 
 		void CreateColorResources();
 		void CreateDepthResources();
