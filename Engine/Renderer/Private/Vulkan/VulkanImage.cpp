@@ -8,10 +8,7 @@ namespace MauRen
 	{
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 
-		for (auto& imageView : imageViews)
-		{
-			VulkanUtils::SafeDestroy(deviceContext->GetLogicalDevice(), imageView, nullptr);
-		}
+		DestroyAllImageViews();
 
 		VulkanUtils::SafeDestroy(deviceContext->GetLogicalDevice(), image, nullptr);
 		VulkanUtils::SafeDestroy(deviceContext->GetLogicalDevice(), imageMemory, nullptr);
@@ -219,6 +216,16 @@ namespace MauRen
 		imageViews.emplace_back(imageView);
 
 		return static_cast<uint32_t>(imageViews.size() - 1);
+	}
+
+	void VulkanImage::DestroyAllImageViews() noexcept
+	{
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+
+		for (auto& imageView : imageViews)
+		{
+			VulkanUtils::SafeDestroy(deviceContext->GetLogicalDevice(), imageView, nullptr);
+		}
 	}
 
 	VulkanImage::VulkanImage(VkFormat imgFormat, VkImageTiling tiling, VkImageUsageFlags usage,

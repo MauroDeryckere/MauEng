@@ -129,7 +129,7 @@ namespace MauRen
 
 		for (size_t i{ 0 }; i < imageViews.size(); ++i)
 		{
-			std::array<VkImageView, 3> const attachments{ m_ColorImage.imageViews[0], m_DepthImage.imageViews[0],  imageViews[i]};
+			std::array<VkImageView, 3> const attachments{ m_ColorImage.imageViews[0], m_DepthImage.imageViews[0],  imageViews[i].imageViews[0]};
 			
 			VkFramebufferCreateInfo framebufferInfo{};
 			framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;

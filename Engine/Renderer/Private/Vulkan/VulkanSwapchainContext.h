@@ -3,6 +3,8 @@
 
 #include "RendererPCH.h"
 
+#include "VulkanImage.h"
+
 namespace MauRen
 {
 	struct SwapChainSupportDetails final
@@ -27,7 +29,7 @@ namespace MauRen
 		static SwapChainSupportDetails QuerySwapchainSupport(VkPhysicalDevice device, VkSurfaceKHR windowSurface);
 
 		[[nodiscard]] VkSwapchainKHR GetSwapchain() const noexcept { return m_SwapChain; }
-		[[nodiscard]] std::vector<VkImageView> const& GetImageViews() const noexcept { return m_SwapChainImageViews; }
+		[[nodiscard]] std::vector<VulkanImage> const& GetImageViews() const noexcept { return m_SwapChainImages; }
 
 		[[nodiscard]] VkExtent2D GetExtent() const noexcept { return m_SwapChainExtent; }
 		[[nodiscard]] VkFormat GetImageFormat() const noexcept { return m_SwapChainImageFormat; }
@@ -42,11 +44,10 @@ namespace MauRen
 
 		VkSwapchainKHR m_SwapChain{ VK_NULL_HANDLE };
 
-		std::vector<VkImage> m_SwapChainImages;
 		VkFormat m_SwapChainImageFormat;
 		VkExtent2D m_SwapChainExtent;
 
-		std::vector<VkImageView> m_SwapChainImageViews;
+		std::vector<VulkanImage> m_SwapChainImages;
 
 		void CreateSwapchain(GLFWwindow* pWindow);
 		void CreateImageViews();

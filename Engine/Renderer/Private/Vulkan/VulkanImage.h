@@ -26,7 +26,11 @@ namespace MauRen
 		void GenerateMipmaps(VulkanCommandPoolManager const& CmdPoolManager);
 		uint32_t CreateImageView(VkImageAspectFlags aspectFlags);
 
+		void DestroyAllImageViews() noexcept;
+
+		// Manual creation if necessary
 		VulkanImage() = default;
+		// Fully create image via the constructor
 		VulkanImage(VkFormat imgFormat, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkSampleCountFlagBits numSamples, uint32_t imgWidth, uint32_t imgHeight, uint32_t imgMipLevels = 1);
 
 		~VulkanImage() = default;
