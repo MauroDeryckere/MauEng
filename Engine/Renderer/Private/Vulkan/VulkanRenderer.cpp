@@ -42,8 +42,14 @@ namespace MauRen
 		std::vector<uint32_t> indices;
 		Utils::LoadModel("Models/VikingRoom.obj", vertices, indices);
 
-		m_Meshes.resize(1);
+		constexpr size_t NUM_MESHES{ 2 };
+
+		m_Meshes.resize(NUM_MESHES);
 		m_Meshes[0].Initialize(m_CommandPoolManager, vertices, indices);
+		m_Meshes[0].m_ModelMatrix = glm::translate(m_Meshes[0].m_ModelMatrix, {1.f, 0.f, 0.f});
+
+		m_Meshes[1].Initialize(m_CommandPoolManager, vertices, indices);
+		m_Meshes[1].m_ModelMatrix = glm::translate(m_Meshes[1].m_ModelMatrix, { -1.f, 0.f, 0.f });
 
 		CreateUniformBuffers();
 
@@ -225,6 +231,23 @@ namespace MauRen
 			// This is not at all an optimal approach, and will be refactored later. This is simply to test spawning & renderingmultiple meshes while refactoring
 			for (auto& mesh : m_Meshes)
 			{
+				//TODO move to some form of an update later
+				static auto startTime{ std::chrono::high_resolution_clock::now() };
+
+				auto const currentTime{ std::chrono::high_resolution_clock::now() };
+				float const deltaTime{ std::chrono::duration<float>(currentTime - startTime).count() };
+				startTime = currentTime; // Update start time for the next frame
+
+				float rotationSpeed = glm::radians(90.0f); // 90 degrees per second
+
+
+				glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), rotationSpeed * deltaTime, glm::vec3(0.0f, 0.0f, 1.0f));
+				mesh.m_ModelMatrix *= rotation;
+
+				vkCmdPushConstants(commandBuffer, m_GraphicsPipeline.GetPipelineLayout(),
+					VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4),
+					&mesh.m_ModelMatrix);
+
 				auto const idxCount{ mesh.Draw(commandBuffer) };
 
 
@@ -232,6 +255,8 @@ namespace MauRen
 
 				vkCmdDrawIndexed(commandBuffer, idxCount, 1, 0, 0, 0);
 			}
+			std::cout << "\n\n\n";
+
 
 
 		vkCmdEndRenderPass(commandBuffer);
@@ -367,20 +392,14 @@ namespace MauRen
 
 	void VulkanRenderer::UpdateUniformBuffer(uint32_t currentImage)
 	{
-		//TODO push constants
-
-		static auto startTime{ std::chrono::high_resolution_clock::now() };
-
-		auto const currentTime{ std::chrono::high_resolution_clock::now() };
-		float const time{ std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count() };
-
 		UniformBufferObject ubo{};
-		ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 
 		ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 
-		ubo.proj = glm::perspective(glm::radians(45.0f), static_cast<float>(m_SwapChainContext.GetExtent().width) / static_cast<float>(m_SwapChainContext.GetExtent().width), 0.1f, 10.0f);
+		float const aspectRatio{ static_cast<float>(m_SwapChainContext.GetExtent().width) / static_cast<float>(m_SwapChainContext.GetExtent().height) };
+		ubo.proj = glm::perspective(glm::radians(45.0f), aspectRatio, 0.1f, 10.0f);
 
+		// Flip Y-axis for Vulkan coordinate system
 		ubo.proj[1][1] *= -1;
 
 		memcpy(m_MappedUniformBuffers[currentImage].mapped, &ubo, sizeof(ubo));

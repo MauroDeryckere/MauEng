@@ -101,8 +101,7 @@ namespace MauRen
 			uint32_t m_VertexCount{ 0 };
 			uint32_t m_IndexCount{ 0 };
 
-			//TODO
-			//glm::mat4 m_ModelMatrix{ 1.0f }; 
+			glm::mat4 m_ModelMatrix{ 1.0f }; 
 
 		private:
 			void CreateVertexBuffer(VulkanCommandPoolManager const& CmdPoolManager, std::vector<Vertex> const& vertices);
@@ -112,11 +111,8 @@ namespace MauRen
 
 		std::vector<VulkanMesh> m_Meshes;
 
-
-		// TODO model -> push constant
 		struct UniformBufferObject final
 		{
-			alignas(16) glm::mat4 model;
 			alignas(16) glm::mat4 view;
 			alignas(16) glm::mat4 proj;
 		};
