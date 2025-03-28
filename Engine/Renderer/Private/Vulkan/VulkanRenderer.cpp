@@ -38,10 +38,13 @@ namespace MauRen
 		CreateTextureSampler();
 
 
-		Utils::LoadModel("Models/VikingRoom.obj", m_Vertices, m_Indices);
+		std::vector<Vertex> vertices;
+		std::vector<uint32_t> indices;
+		Utils::LoadModel("Models/VikingRoom.obj", vertices, indices);
 
-		CreateVertexBuffer();
-		CreateIndexBuffer();
+		m_Meshes.resize(1);
+		m_Meshes[0].Initialize(m_CommandPoolManager, vertices, indices);
+
 		CreateUniformBuffers();
 
 		//CreateGlobalBuffers();
@@ -77,9 +80,10 @@ namespace MauRen
 			vkDestroyFence(deviceContext->GetLogicalDevice(), m_InFlightFences[i], nullptr);
 		}
 
-		m_IndexBuffer.Destroy();
-		m_VertexBuffer.Destroy();
-
+		for (auto& mesh : m_Meshes)
+		{
+			mesh.Destroy();
+		}
 
 		vkDestroySampler(deviceContext->GetLogicalDevice(), m_TextureSampler, nullptr);
 
@@ -117,64 +121,6 @@ namespace MauRen
 		m_FramebufferResized = true;
 	}
 
-	void VulkanRenderer::CreateVertexBuffer()
-	{
-		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
-
-		VkDeviceSize const bufferSize{ sizeof(m_Vertices[0]) * m_Vertices.size() };
-
-		VulkanBuffer stagingBuffer{ bufferSize,
-									VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-									VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT };
-
-		if (stagingBuffer.buffer == VK_NULL_HANDLE || stagingBuffer.bufferMemory == VK_NULL_HANDLE) 
-		{
-			throw std::runtime_error("Failed to create staging buffer.");
-		}
-
-
-		void* data;
-		if (vkMapMemory(deviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory, 0, bufferSize, 0, &data) != VK_SUCCESS) 
-		{
-			throw std::runtime_error("Failed to map Vulkan buffer memory.");
-		}
-
-		memcpy(data, m_Vertices.data(), static_cast<size_t>(bufferSize));
-		vkUnmapMemory(deviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory);
-		
-		m_VertexBuffer = { bufferSize,
-							VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-							VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT };
-
-		VulkanBuffer::CopyBuffer(m_CommandPoolManager, stagingBuffer.buffer, m_VertexBuffer.buffer, bufferSize);
-
-		stagingBuffer.Destroy();
-	}
-
-	void VulkanRenderer::CreateIndexBuffer()
-	{
-		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
-
-		VkDeviceSize const bufferSize{ sizeof(m_Indices[0]) * m_Indices.size() };
-
-		VulkanBuffer stagingBuffer{ bufferSize,
-									VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-									VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT };
-
-		void* data;
-		vkMapMemory(deviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory, 0, bufferSize, 0, &data);
-		memcpy(data, m_Indices.data(), static_cast<size_t>(bufferSize));
-		vkUnmapMemory(deviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory);
-
-
-		m_IndexBuffer = { bufferSize,
-							 VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-							VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT };
-
-		VulkanBuffer::CopyBuffer(m_CommandPoolManager, stagingBuffer.buffer, m_IndexBuffer.buffer, bufferSize);
-
-		stagingBuffer.Destroy();
-	}
 
 	void VulkanRenderer::CreateUniformBuffers()
 	{
@@ -273,19 +219,21 @@ namespace MauRen
 			scissor.extent = m_SwapChainContext.GetExtent();
 			vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-			VkBuffer vertexBuffers[] { m_VertexBuffer.buffer };
-			VkDeviceSize offsets[] { 0 };
-			vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
-
 			// you can only have a single index buffer. It's unfortunately not possible to use different indices for each vertex attribute,
 			// so we do still have to completely duplicate vertex data even if just one attribute varies.
-			vkCmdBindIndexBuffer(commandBuffer, m_IndexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
-			//static_assert(sizeof(m_Indices[0]) == 2);
-			static_assert(sizeof(m_Indices[0]) == 4);
 
-			vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipeline.GetPipelineLayout(), 0, 1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame], 0, nullptr);
+			// This is not at all an optimal approach, and will be refactored later. This is simply to test spawning & renderingmultiple meshes while refactoring
+			for (auto& mesh : m_Meshes)
+			{
+				auto const idxCount{ mesh.Draw(commandBuffer) };
 
-			vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(m_Indices.size()), 1, 0, 0, 0);
+
+				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipeline.GetPipelineLayout(), 0, 1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame], 0, nullptr);
+
+				vkCmdDrawIndexed(commandBuffer, idxCount, 1, 0, 0, 0);
+			}
+
+
 		vkCmdEndRenderPass(commandBuffer);
 
 		if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) 
@@ -565,6 +513,92 @@ namespace MauRen
 		m_InstanceDataBuffer = { MAX_INSTANCE_BUFFER_SIZE,
 									VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
 									VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT };
+	}
+
+	void VulkanRenderer::VulkanMesh::Initialize(VulkanCommandPoolManager const& CmdPoolManager, std::vector<Vertex> const& vertices, std::vector<uint32_t> const& indices)
+	{
+		m_IndexCount = indices.size();
+		m_VertexCount = vertices.size();
+
+		CreateVertexBuffer(CmdPoolManager, vertices);
+		CreateIndexBuffer(CmdPoolManager, indices);
+	}
+
+	void VulkanRenderer::VulkanMesh::Destroy()
+	{
+		m_IndexBuffer.Destroy();
+		m_VertexBuffer.Destroy();
+	}
+
+	uint32_t VulkanRenderer::VulkanMesh::Draw(VkCommandBuffer commandBuffer) const
+	{
+		VkBuffer vertexBuffers[] = { m_VertexBuffer.buffer };
+		VkDeviceSize offsets[] = { 0 };
+		vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+
+		// Bind the index buffer
+		vkCmdBindIndexBuffer(commandBuffer, m_IndexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
+
+		return m_IndexCount;
+	}
+
+	void VulkanRenderer::VulkanMesh::CreateVertexBuffer(VulkanCommandPoolManager const& CmdPoolManager, std::vector<Vertex> const& vertices)
+	{
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+
+		VkDeviceSize const bufferSize{ sizeof(vertices[0]) * vertices.size() };
+
+		VulkanBuffer stagingBuffer{ bufferSize,
+									VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+									VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT };
+
+		if (stagingBuffer.buffer == VK_NULL_HANDLE || stagingBuffer.bufferMemory == VK_NULL_HANDLE)
+		{
+			throw std::runtime_error("Failed to create staging buffer.");
+		}
+
+
+		void* data;
+		if (vkMapMemory(deviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory, 0, bufferSize, 0, &data) != VK_SUCCESS)
+		{
+			throw std::runtime_error("Failed to map Vulkan buffer memory.");
+		}
+
+		memcpy(data, vertices.data(), static_cast<size_t>(bufferSize));
+		vkUnmapMemory(deviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory);
+
+		m_VertexBuffer = { bufferSize,
+							VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+							VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT };
+
+		VulkanBuffer::CopyBuffer(CmdPoolManager, stagingBuffer.buffer, m_VertexBuffer.buffer, bufferSize);
+
+		stagingBuffer.Destroy();
+	}
+
+	void VulkanRenderer::VulkanMesh::CreateIndexBuffer(VulkanCommandPoolManager const& CmdPoolManager, std::vector<uint32_t> const& indices)
+	{
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+
+		VkDeviceSize const bufferSize{ sizeof(indices[0]) * indices.size() };
+
+		VulkanBuffer stagingBuffer{ bufferSize,
+									VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+									VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT };
+
+		void* data;
+		vkMapMemory(deviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory, 0, bufferSize, 0, &data);
+		memcpy(data, indices.data(), static_cast<size_t>(bufferSize));
+		vkUnmapMemory(deviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory);
+
+
+		m_IndexBuffer = { bufferSize,
+							 VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+							VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT };
+
+		VulkanBuffer::CopyBuffer(CmdPoolManager, stagingBuffer.buffer, m_IndexBuffer.buffer, bufferSize);
+
+		stagingBuffer.Destroy();
 	}
 }
 

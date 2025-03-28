@@ -82,15 +82,36 @@ namespace MauRen
 		VulkanBuffer m_InstanceDataBuffer{};  // Holds per-instance data
 #pragma endregion
 
-		std::vector<VulkanMappedBuffer> m_MappedUniformBuffers{};
+		struct VulkanMesh final
+		{
+			VulkanMesh() = default;
 
-		// TODO make a mesh
-		VulkanBuffer m_VertexBuffer{};
-		VulkanBuffer m_IndexBuffer{};
+			// for now init / destroy like this, may be able to use RAII later
+			void Initialize(VulkanCommandPoolManager const& CmdPoolManager, std::vector<Vertex> const& vertices, std::vector<uint32_t> const& indices);
+			void Destroy();
 
-		// Temporary
-		std::vector<Vertex> m_Vertices{};
-		std::vector<uint32_t> m_Indices{};
+			uint32_t Draw(VkCommandBuffer commandBuffer) const;
+
+			[[nodiscard]] uint32_t GetVertexCount() const noexcept { return m_VertexCount; }
+			[[nodiscard]] uint32_t GetIndexCount() const noexcept { return m_IndexCount; }
+
+			VulkanBuffer m_VertexBuffer{};
+			VulkanBuffer m_IndexBuffer{};
+
+			uint32_t m_VertexCount{ 0 };
+			uint32_t m_IndexCount{ 0 };
+
+			//TODO
+			//glm::mat4 m_ModelMatrix{ 1.0f }; 
+
+		private:
+			void CreateVertexBuffer(VulkanCommandPoolManager const& CmdPoolManager, std::vector<Vertex> const& vertices);
+			void CreateIndexBuffer(VulkanCommandPoolManager const& CmdPoolManager, std::vector<uint32_t> const& indices);
+		};
+
+
+		std::vector<VulkanMesh> m_Meshes;
+
 
 		// TODO model -> push constant
 		struct UniformBufferObject final
@@ -99,17 +120,14 @@ namespace MauRen
 			alignas(16) glm::mat4 view;
 			alignas(16) glm::mat4 proj;
 		};
+		std::vector<VulkanMappedBuffer> m_MappedUniformBuffers{};
 
 		void CreateTextureImage();
 
 		VulkanImage m_TextureImage{};
 
-
 		// Should be managedin e.g a texturemanager
 		VkSampler m_TextureSampler{ VK_NULL_HANDLE };
-
-		void CreateVertexBuffer();
-		void CreateIndexBuffer();
 
 		void CreateUniformBuffers();
 
@@ -125,6 +143,7 @@ namespace MauRen
 
 		void RecreateSwapchain();
 
+		//TODO
 		void CreateGlobalBuffers();
 	};
 }
