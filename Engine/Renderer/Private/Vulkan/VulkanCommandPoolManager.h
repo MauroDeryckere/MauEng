@@ -23,8 +23,8 @@ namespace MauRen
 		[[nodiscard]] VkCommandBuffer GetCommandBuffer(uint32_t index) const noexcept;
 		[[nodiscard]] VkCommandBuffer& GetCommandBuffer(uint32_t index) noexcept;
 
-		[[nodiscard]] VkCommandBuffer BeginSingleTimeCommands();
-		void EndSingleTimeCommands(VkCommandBuffer commandBuffer);
+		[[nodiscard]] VkCommandBuffer BeginSingleTimeCommands() const;
+		void EndSingleTimeCommands(VkCommandBuffer commandBuffer) const;
 
 		VulkanCommandPoolManager(VulkanCommandPoolManager const&) = delete;
 		VulkanCommandPoolManager(VulkanCommandPoolManager&&) = delete;

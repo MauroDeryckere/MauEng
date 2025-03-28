@@ -5,6 +5,8 @@
 #include "VulkanDeviceContext.h"
 namespace MauRen
 {
+	class VulkanCommandPoolManager;
+
 	// Must be manually destroyed by calling Destroy()! 
 	struct VulkanBuffer final
 	{
@@ -13,11 +15,16 @@ namespace MauRen
 		VkDeviceSize size{ 0 };
 
 		void Destroy();
+		static void CopyBuffer(VulkanCommandPoolManager const& CmPoolManager, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 
 		VulkanBuffer(VkDeviceSize deviceSize, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties);
 		VulkanBuffer() = default;
-
 		~VulkanBuffer() = default;
+
+		VulkanBuffer(VulkanBuffer const&) = default;
+		VulkanBuffer(VulkanBuffer&&) = default;
+		VulkanBuffer& operator=(VulkanBuffer const&) = default;
+		VulkanBuffer& operator=(VulkanBuffer&&) = default;
 	};
 
 	struct VulkanMappedBuffer final

@@ -48,7 +48,7 @@ namespace MauRen
 		return m_CommandBuffers[index];
 	}
 
-	VkCommandBuffer VulkanCommandPoolManager::BeginSingleTimeCommands()
+	VkCommandBuffer VulkanCommandPoolManager::BeginSingleTimeCommands() const
 	{
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 
@@ -70,27 +70,25 @@ namespace MauRen
 		return commandBuffer;
 	}
 
-	void VulkanCommandPoolManager::EndSingleTimeCommands(VkCommandBuffer commandBuffer)
+	void VulkanCommandPoolManager::EndSingleTimeCommands(VkCommandBuffer commandBuffer) const
 	{
-		{
-			auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 
-			vkEndCommandBuffer(commandBuffer);
+		vkEndCommandBuffer(commandBuffer);
 
-			VkSubmitInfo submitInfo{};
-			submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-			submitInfo.commandBufferCount = 1;
-			submitInfo.pCommandBuffers = &commandBuffer;
+		VkSubmitInfo submitInfo{};
+		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		submitInfo.commandBufferCount = 1;
+		submitInfo.pCommandBuffers = &commandBuffer;
 
-			vkQueueSubmit(deviceContext->GetGraphicsQueue(), 1, &submitInfo, VK_NULL_HANDLE);
-			vkQueueWaitIdle(deviceContext->GetGraphicsQueue());
+		vkQueueSubmit(deviceContext->GetGraphicsQueue(), 1, &submitInfo, VK_NULL_HANDLE);
+		vkQueueWaitIdle(deviceContext->GetGraphicsQueue());
 
-			vkFreeCommandBuffers(deviceContext->GetLogicalDevice(), m_CommandPool, 1, &commandBuffer);
+		vkFreeCommandBuffers(deviceContext->GetLogicalDevice(), m_CommandPool, 1, &commandBuffer);
 
-			// TODO 
-			// A fence would allow you to schedule multiple transfers simultaneously and wait for all of them complete, instead of executing one at a time.
-			// That may give the driver more opportunities to optimize.
-		}
+		// TODO 
+		// A fence would allow you to schedule multiple transfers simultaneously and wait for all of them complete, instead of executing one at a time.
+		// That may give the driver more opportunities to optimize.
 	}
 
 	void VulkanCommandPoolManager::CreateCommandPool()

@@ -18,6 +18,8 @@
 
 #include "Vertex.h"
 
+#include "VulkanImage.h"
+
 // Sources
 // https://github.com/KhronosGroup/Vulkan-Docs/wiki/Synchronization-Examples#swapchain-image-acquire-and-present
 
@@ -67,6 +69,8 @@ namespace MauRen
 
 		bool m_FramebufferResized{ false };
 
+#pragma region BindlessSetupTODO
+		//TODO
 		// Using a fixed size for now to test the system, until moving on to use the allocator
 		const VkDeviceSize MAX_VERTEX_BUFFER_SIZE{ 64 * 1024 * 1024 }; // 64MB
 		const VkDeviceSize MAX_INDEX_BUFFER_SIZE{ 32 * 1024 * 1024 };  // 32MB
@@ -77,6 +81,7 @@ namespace MauRen
 		VulkanBuffer m_GlobalVertexBuffer{};
 		VulkanBuffer m_GlobalIndexBuffer{};
 		VulkanBuffer m_InstanceDataBuffer{};  // Holds per-instance data
+#pragma endregion
 
 		std::vector<VulkanMappedBuffer> m_MappedUniformBuffers{};
 
@@ -96,30 +101,6 @@ namespace MauRen
 			alignas(16) glm::mat4 proj;
 		};
 
-		//TODO separate class refactor in future
-		struct VulkanImage final
-		{
-			VkImage image{ VK_NULL_HANDLE };
-			VkDeviceMemory imageMemory{ VK_NULL_HANDLE };
-			VkFormat format{ VK_FORMAT_UNDEFINED };
-
-			// Currently only work with one view but may support multiple later
-			std::vector<VkImageView> imageViews{ };
-
-			uint32_t width{ 0 };
-			uint32_t height{ 0 };
-			uint32_t mipLevels{ 1 };
-
-			VulkanImage() = default;
-			VulkanImage(VkFormat imgFormat, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkSampleCountFlagBits numSamples, uint32_t imgWidth, uint32_t imgHeight, uint32_t imgMipLevels = 1);
-			//~VulkanImage() = default;
-
-			void Destroy();
-			void TransitionImageLayout(VulkanRenderer* pRenderer, VkImageLayout oldLayout, VkImageLayout newLayout);
-			void GenerateMipmaps(VulkanRenderer* pRenderer);
-			uint32_t CreateImageView(VkImageAspectFlags aspectFlags);
-		};
-
 		void CreateTextureImage();
 
 		VulkanImage m_TextureImage{};
@@ -136,7 +117,6 @@ namespace MauRen
 
 		void CreateUniformBuffers();
 
-		void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 		void CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
 
 		void CreateSyncObjects();
