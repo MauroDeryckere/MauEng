@@ -474,15 +474,9 @@ namespace MauRen
 		{
 			auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 
-<<<<<<< Updated upstream
-		m_TextureImage.TransitionImageLayout(m_CommandPoolManager, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-		VulkanBuffer::CopyBufferToImage(m_CommandPoolManager, stagingBuffer.buffer, m_TextureImage.image, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
-		// is transitioned to VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL while generating mipmaps
-=======
 			int texWidth{};
 			int texHeight{};
 			int texChannels{};
->>>>>>> Stashed changes
 
 			stbi_uc* const pixels{ stbi_load("Textures/Skull.jpg", &texWidth, &texHeight, &texChannels, STBI_rgb_alpha) };
 			VkDeviceSize const imageSize{ static_cast<uint32_t>(texWidth * texHeight * 4) };
