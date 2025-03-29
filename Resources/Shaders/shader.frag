@@ -20,12 +20,18 @@ layout(location = 0) out vec4 outColor;
 
 void main() 
 {
-    vec4 albedo = texture(bindlessTextures[pc.albedoID], fragTexCoord);
-    vec4 normal = texture(bindlessTextures[pc.normalID], fragTexCoord);
-    vec4 roughness = texture(bindlessTextures[pc.roughnessID], fragTexCoord);
-    vec4 metallic = texture(bindlessTextures[pc.metallicID], fragTexCoord);
+    vec4 albedo = (pc.albedoID == 0xFFFFFFFF) ? vec4(0.0) : texture(bindlessTextures[pc.albedoID], fragTexCoord);
+    vec4 normal = (pc.normalID == 0xFFFFFFFF) ? vec4(0.0) : texture(bindlessTextures[pc.normalID], fragTexCoord);
+    vec4 roughness = (pc.roughnessID == 0xFFFFFFFF) ? vec4(0.0) : texture(bindlessTextures[pc.roughnessID], fragTexCoord);
+    vec4 metallic = (pc.metallicID == 0xFFFFFFFF) ? vec4(0.0) : texture(bindlessTextures[pc.metallicID], fragTexCoord);
 
-    outColor = albedo * vec4(fragColor, 1.0);
+    vec3 n = normalize(normal.xyz * 2.0 - 1.0);
+
+
+    vec3 lightDir = normalize(vec3(1.0, 1.0, 1.0));  // Example light direction
+    float NdotL = max(dot(normal, lightDir), 0.0);  // Diffuse lighting calculation
+
+    outColor = albedo * vec4(vec3(NdotL), 1.0);  // Color is modulated by diffuse lighting
 
     // outColor = texture(texSampler, fragTexCoord);
     // Debug colours
