@@ -209,12 +209,19 @@ namespace MauRen
 		VkPhysicalDeviceFeatures deviceFeatures{};
 		deviceFeatures.samplerAnisotropy = VK_TRUE;
 
+		VkPhysicalDeviceDescriptorIndexingFeatures indexingFeatures{};
+		indexingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
+		indexingFeatures.runtimeDescriptorArray = VK_TRUE;
+		indexingFeatures.descriptorBindingPartiallyBound = VK_TRUE;
+		indexingFeatures.descriptorBindingVariableDescriptorCount = VK_TRUE;
+
 		VkDeviceCreateInfo createInfo{};
 		createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 
 		createInfo.pQueueCreateInfos = queueCreateInfos.data();
 		createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size()); // Since it's a set, only the unique amt of families are added.
 
+		createInfo.pNext = &indexingFeatures;
 		createInfo.pEnabledFeatures = &deviceFeatures;
 
 		createInfo.enabledExtensionCount = static_cast<uint32_t>(DEVICE_EXTENSIONS.size());
@@ -324,6 +331,15 @@ namespace MauRen
 		VkPhysicalDeviceFeatures deviceFeatures;
 		vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
 
+		VkPhysicalDeviceDescriptorIndexingFeatures indexingFeatures{};
+		indexingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
+
+		VkPhysicalDeviceFeatures2 deviceFeatures2{};
+		deviceFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+		deviceFeatures2.pNext = &indexingFeatures;
+
+		vkGetPhysicalDeviceFeatures2(device, &deviceFeatures2);
+
 		bool const extensionsSupported{ CheckPhysicalDeviceExtensionSupport(device) };
 
 		bool swapChainAdequate{ false };
@@ -332,7 +348,10 @@ namespace MauRen
 			SwapChainSupportDetails const swapChainSupport{ VulkanSwapchainContext::QuerySwapchainSupport(device, m_pVulkanSurfaceContext->GetWindowSurface()) };
 			swapChainAdequate = not swapChainSupport.formats.empty()
 							&& not swapChainSupport.presentModes.empty()
-							&& deviceFeatures.samplerAnisotropy; // Could also not enforce and set a bool that's reused here 
+							&& deviceFeatures.samplerAnisotropy	// Could also not enforce and set a bool that's reused here 
+							&& indexingFeatures.runtimeDescriptorArray
+							&& indexingFeatures.descriptorBindingPartiallyBound
+							&& indexingFeatures.descriptorBindingVariableDescriptorCount;
 		}
 
 		return indices.IsComplete() and extensionsSupported and swapChainAdequate;

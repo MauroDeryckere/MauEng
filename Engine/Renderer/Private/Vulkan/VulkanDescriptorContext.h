@@ -32,6 +32,7 @@ namespace MauRen
 	private:
 		VkDescriptorSetLayout m_DescriptorSetLayout{ VK_NULL_HANDLE };
 		VkDescriptorPool m_DescriptorPool{ VK_NULL_HANDLE };
+		uint32_t const MAX_TEXTURES{ 10 };
 
 		// !
 		// common practice to rank from ‘least updated’ descriptor set(index 0) to ‘most frequent updated’

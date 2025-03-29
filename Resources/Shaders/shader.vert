@@ -1,7 +1,12 @@
 #version 450
+#extension GL_EXT_nonuniform_qualifier : enable
 
 layout(push_constant) uniform PushConstants {
-    mat4 model;
+    mat4 modelMatrix;
+    uint albedoID;
+    uint normalID;
+    uint roughnessID;
+    uint metallicID;
 } pc;
 
 
@@ -20,7 +25,7 @@ layout(location = 1) out vec2 fragTexCoord;
 
 void main() 
 {
-    gl_Position = ubo.proj * ubo.view * pc.model * vec4(inPosition, 1.0);
+    gl_Position = ubo.proj * ubo.view * pc.modelMatrix * vec4(inPosition, 1.0);
     fragColor = inColor;
     fragTexCoord = inTexCoord;
 }

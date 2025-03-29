@@ -46,26 +46,45 @@ namespace MauRen
 
 		m_Meshes.resize(NUM_MESHES);
 		m_Meshes[0].Initialize(m_CommandPoolManager, vertices, indices);
-		m_Meshes[0].m_ModelMatrix = glm::translate(m_Meshes[0].m_ModelMatrix, {1.f, 0.f, 0.f});
+		m_Meshes[0].m_PushConstants.m_ModelMatrix = glm::translate(m_Meshes[0].m_PushConstants.m_ModelMatrix, { -2, 0.f, 0.f});
+		m_Meshes[0].m_PushConstants.m_AlbedoTextureID = 0;
 
-		m_Meshes[1].Initialize(m_CommandPoolManager, vertices, indices);
-		m_Meshes[1].m_ModelMatrix = glm::translate(m_Meshes[1].m_ModelMatrix, { -1.f, 0.f, 0.f });
+		std::vector<Vertex> vertices2;
+		std::vector<uint32_t> indices2;
+		Utils::LoadModel("Models/Skull.obj", vertices2, indices2);
 
+		m_Meshes[1].Initialize(m_CommandPoolManager, vertices2, indices2);
+	//	m_Meshes[1].m_PushConstants.m_ModelMatrix = glm::rotate(m_Meshes[1].m_PushConstants.m_ModelMatrix, glm::radians(90.f), {1,0,0});
+		m_Meshes[1].m_PushConstants.m_ModelMatrix = glm::scale(m_Meshes[1].m_PushConstants.m_ModelMatrix, { .2, .2, .2 });
+		m_Meshes[1].m_PushConstants.m_ModelMatrix = glm::translate(m_Meshes[1].m_PushConstants.m_ModelMatrix, {0, 15,-2 });
+		m_Meshes[1].m_PushConstants.m_AlbedoTextureID = 1;
 		CreateUniformBuffers();
 
 		//CreateGlobalBuffers();
 
 		m_DescriptorContext.CreateDescriptorPool();
+
 		std::vector<VulkanBuffer> tempUniformBuffers;
 		for (auto const& b : m_MappedUniformBuffers)
 		{
 			tempUniformBuffers.emplace_back(b.buffer);
 		}
+		std::vector<VkImageView> views;
+		for (auto v : m_TextureImage.imageViews)
+		{
+			views.emplace_back(v);
+		}
+		for (auto v : m_TextureImage2.imageViews)
+		{
+			views.emplace_back(v);
+		}
+
+		
 		m_DescriptorContext.CreateDescriptorSets(tempUniformBuffers,
 												0, 
 												sizeof(UniformBufferObject), 
 												VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, 
-												m_TextureImage.imageViews, 
+												views, 
 												m_TextureSampler);
 
 		m_CommandPoolManager.CreateCommandBuffers();
@@ -94,6 +113,7 @@ namespace MauRen
 		vkDestroySampler(deviceContext->GetLogicalDevice(), m_TextureSampler, nullptr);
 
 		m_TextureImage.Destroy();
+		m_TextureImage2.Destroy();
 
 		m_CommandPoolManager.Destroy();
 
@@ -242,11 +262,11 @@ namespace MauRen
 
 
 				glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), rotationSpeed * deltaTime, glm::vec3(0.0f, 0.0f, 1.0f));
-				mesh.m_ModelMatrix *= rotation;
+				mesh.m_PushConstants.m_ModelMatrix *= rotation;
 
 				vkCmdPushConstants(commandBuffer, m_GraphicsPipeline.GetPipelineLayout(),
-					VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4),
-					&mesh.m_ModelMatrix);
+					VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(mesh.m_PushConstants),
+					&mesh.m_PushConstants);
 
 				auto const idxCount{ mesh.Draw(commandBuffer) };
 
@@ -394,7 +414,7 @@ namespace MauRen
 	{
 		UniformBufferObject ubo{};
 
-		ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+		ubo.view = glm::lookAt(glm::vec3(0, -8, 3), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 
 		float const aspectRatio{ static_cast<float>(m_SwapChainContext.GetExtent().width) / static_cast<float>(m_SwapChainContext.GetExtent().height) };
 		ubo.proj = glm::perspective(glm::radians(45.0f), aspectRatio, 0.1f, 10.0f);
@@ -432,53 +452,111 @@ namespace MauRen
 
 	void VulkanRenderer::CreateTextureImage()
 	{
-		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
-
-		int texWidth{};
-		int texHeight{};
-		int texChannels{};
-
-		stbi_uc* const pixels{ stbi_load("Textures/VikingRoom.png", &texWidth, &texHeight, &texChannels, STBI_rgb_alpha) };
-		VkDeviceSize const imageSize{ static_cast<uint32_t>(texWidth * texHeight * 4) };
-
-		if (!pixels) 
 		{
-			throw std::runtime_error("Failed to load texture image!");
+			auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+
+			int texWidth{};
+			int texHeight{};
+			int texChannels{};
+
+			stbi_uc* const pixels{ stbi_load("Textures/VikingRoom.png", &texWidth, &texHeight, &texChannels, STBI_rgb_alpha) };
+			VkDeviceSize const imageSize{ static_cast<uint32_t>(texWidth * texHeight * 4) };
+
+			if (!pixels)
+			{
+				throw std::runtime_error("Failed to load texture image!");
+			}
+
+
+			VulkanBuffer stagingBuffer{ imageSize,
+										 VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+										 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT };
+
+			void* data;
+			vkMapMemory(deviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory, 0, imageSize, 0, &data);
+			memcpy(data, pixels, static_cast<size_t>(imageSize));
+			vkUnmapMemory(deviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory);
+
+			stbi_image_free(pixels);
+
+			m_TextureImage = VulkanImage
+			{
+				VK_FORMAT_R8G8B8A8_SRGB,
+				VK_IMAGE_TILING_OPTIMAL,
+				VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+				VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+				VK_SAMPLE_COUNT_1_BIT,
+				static_cast<uint32_t>(texWidth),
+				static_cast<uint32_t>(texHeight),
+				static_cast<uint32_t>(std::floor(std::log2(std::max(texWidth, texHeight)))) + 1
+			};
+
+			m_TextureImage.TransitionImageLayout(m_CommandPoolManager, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+			VulkanBuffer::CopyBufferToImage(m_CommandPoolManager, stagingBuffer.buffer, m_TextureImage.image, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
+			// is transitioned to VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL while generating mipmaps
+
+			m_TextureImage.GenerateMipmaps(m_CommandPoolManager);
+
+			stagingBuffer.Destroy();
+
+			m_TextureImage.CreateImageView(VK_IMAGE_ASPECT_COLOR_BIT);
 		}
 
-
-		VulkanBuffer stagingBuffer{ imageSize,
-									 VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-									 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT };
-
-		void* data;
-		vkMapMemory(deviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory , 0, imageSize, 0, &data);
-		memcpy(data, pixels, static_cast<size_t>(imageSize));
-		vkUnmapMemory(deviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory);
-
-		stbi_image_free(pixels);
-
-		m_TextureImage = VulkanImage
 		{
-			VK_FORMAT_R8G8B8A8_SRGB,
-			VK_IMAGE_TILING_OPTIMAL,
-			VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-			VK_SAMPLE_COUNT_1_BIT,
-			static_cast<uint32_t>(texWidth),
-			static_cast<uint32_t>(texHeight),
-			static_cast<uint32_t>(std::floor(std::log2(std::max(texWidth, texHeight)))) + 1
-		};
+			auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 
+<<<<<<< Updated upstream
 		m_TextureImage.TransitionImageLayout(m_CommandPoolManager, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 		CopyBufferToImage(stagingBuffer.buffer, m_TextureImage.image, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
 		// is transitioned to VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL while generating mipmaps
+=======
+			int texWidth{};
+			int texHeight{};
+			int texChannels{};
+>>>>>>> Stashed changes
 
-		m_TextureImage.GenerateMipmaps(m_CommandPoolManager);
+			stbi_uc* const pixels{ stbi_load("Textures/Skull.jpg", &texWidth, &texHeight, &texChannels, STBI_rgb_alpha) };
+			VkDeviceSize const imageSize{ static_cast<uint32_t>(texWidth * texHeight * 4) };
 
-		stagingBuffer.Destroy();
+			if (!pixels)
+			{
+				throw std::runtime_error("Failed to load texture image!");
+			}
 
-		m_TextureImage.CreateImageView(VK_IMAGE_ASPECT_COLOR_BIT);
+
+			VulkanBuffer stagingBuffer{ imageSize,
+										 VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+										 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT };
+
+			void* data;
+			vkMapMemory(deviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory, 0, imageSize, 0, &data);
+			memcpy(data, pixels, static_cast<size_t>(imageSize));
+			vkUnmapMemory(deviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory);
+
+			stbi_image_free(pixels);
+
+			m_TextureImage2 = VulkanImage
+			{
+				VK_FORMAT_R8G8B8A8_SRGB,
+				VK_IMAGE_TILING_OPTIMAL,
+				VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+				VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+				VK_SAMPLE_COUNT_1_BIT,
+				static_cast<uint32_t>(texWidth),
+				static_cast<uint32_t>(texHeight),
+				static_cast<uint32_t>(std::floor(std::log2(std::max(texWidth, texHeight)))) + 1
+			};
+
+			m_TextureImage2.TransitionImageLayout(m_CommandPoolManager, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+			VulkanBuffer::CopyBufferToImage(m_CommandPoolManager, stagingBuffer.buffer, m_TextureImage2.image, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
+			// is transitioned to VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL while generating mipmaps
+
+			m_TextureImage2.GenerateMipmaps(m_CommandPoolManager);
+
+			stagingBuffer.Destroy();
+
+			m_TextureImage2.CreateImageView(VK_IMAGE_ASPECT_COLOR_BIT);
+		}
 	}
 
 	void VulkanRenderer::CreateTextureSampler()
