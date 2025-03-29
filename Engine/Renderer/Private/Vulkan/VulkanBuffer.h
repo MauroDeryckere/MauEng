@@ -17,6 +17,9 @@ namespace MauRen
 		void Destroy();
 		static void CopyBuffer(VulkanCommandPoolManager const& CmPoolManager, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 
+		static void CopyBufferToImage(VulkanCommandPoolManager const& CmPoolManager, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
+
+
 		VulkanBuffer(VkDeviceSize deviceSize, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties);
 		VulkanBuffer() = default;
 		~VulkanBuffer() = default;

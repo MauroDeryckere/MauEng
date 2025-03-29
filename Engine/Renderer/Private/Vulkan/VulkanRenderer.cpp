@@ -167,33 +167,6 @@ namespace MauRen
 		}
 	}
 
-	void VulkanRenderer::CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height)
-	{
-		VkCommandBuffer commandBuffer{ m_CommandPoolManager.BeginSingleTimeCommands() };
-
-		VkBufferImageCopy region{};
-		region.bufferOffset = 0;
-		region.bufferRowLength = 0;
-		region.bufferImageHeight = 0;
-
-		region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-		region.imageSubresource.mipLevel = 0;
-		region.imageSubresource.baseArrayLayer = 0;
-		region.imageSubresource.layerCount = 1;
-
-		region.imageOffset = { 0, 0, 0 };
-		region.imageExtent = { width, height, 1 };
-
-		vkCmdCopyBufferToImage( commandBuffer,
-								buffer,
-								image,
-								VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-								1,
-								&region );
-
-		m_CommandPoolManager.EndSingleTimeCommands(commandBuffer);
-	}
-
 	void VulkanRenderer::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex)
 	{
 		VkCommandBufferBeginInfo beginInfo{};
@@ -275,10 +248,6 @@ namespace MauRen
 
 				vkCmdDrawIndexed(commandBuffer, idxCount, 1, 0, 0, 0);
 			}
-			std::cout << "\n\n\n";
-
-
-
 		vkCmdEndRenderPass(commandBuffer);
 
 		if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) 
@@ -507,7 +476,7 @@ namespace MauRen
 
 <<<<<<< Updated upstream
 		m_TextureImage.TransitionImageLayout(m_CommandPoolManager, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-		CopyBufferToImage(stagingBuffer.buffer, m_TextureImage.image, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
+		VulkanBuffer::CopyBufferToImage(m_CommandPoolManager, stagingBuffer.buffer, m_TextureImage.image, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
 		// is transitioned to VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL while generating mipmaps
 =======
 			int texWidth{};
