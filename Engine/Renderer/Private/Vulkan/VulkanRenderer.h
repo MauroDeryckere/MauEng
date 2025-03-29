@@ -101,6 +101,8 @@ namespace MauRen
 			uint32_t m_VertexCount{ 0 };
 			uint32_t m_IndexCount{ 0 };
 
+			//TODO texture IDs
+
 			glm::mat4 m_ModelMatrix{ 1.0f }; 
 
 		private:
@@ -118,16 +120,14 @@ namespace MauRen
 		};
 		std::vector<VulkanMappedBuffer> m_MappedUniformBuffers{};
 
-		void CreateTextureImage();
-
 		VulkanImage m_TextureImage{};
 
 		// Should be managedin e.g a texturemanager
 		VkSampler m_TextureSampler{ VK_NULL_HANDLE };
 
-		void CreateUniformBuffers();
+		void CreateTextureImage();
 
-		void CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
+		void CreateUniformBuffers();
 
 		void CreateSyncObjects();
 
@@ -137,6 +137,7 @@ namespace MauRen
 
 		void CreateTextureSampler();
 
+		// Recreate the swapchain on e.g a window resize
 		void RecreateSwapchain();
 
 		//TODO
