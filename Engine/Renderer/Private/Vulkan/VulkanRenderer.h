@@ -101,9 +101,7 @@ namespace MauRen
 			uint32_t m_VertexCount{ 0 };
 			uint32_t m_IndexCount{ 0 };
 
-<<<<<<< Updated upstream
 			glm::mat4 m_ModelMatrix{ 1.0f }; 
-=======
 			struct MeshPushConstants final
 			{
 				glm::mat4 m_ModelMatrix{ 1.0f };
@@ -115,7 +113,6 @@ namespace MauRen
 				uint32_t m_MetallicTextureID{ UINT32_MAX };
 			};
 			MeshPushConstants m_PushConstants{ };
->>>>>>> Stashed changes
 
 		private:
 			void CreateVertexBuffer(VulkanCommandPoolManager const& CmdPoolManager, std::vector<Vertex> const& vertices);
