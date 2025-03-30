@@ -1,6 +1,8 @@
 #include "Engine.h"
 
 #include <algorithm>
+#include <thread>
+
 #include "Renderer.h"
 #include "RendererFactory.h"
 
@@ -41,11 +43,11 @@ namespace MauEng
 		MeshInstance mi3{ m1 };
 		MeshInstance mi4{ m1 };
 		MeshInstance mi5{ m1 };
-
-		mi2.Translate({ 1, 0,0 });
-		mi3.Translate({2, 0,0 });
-		mi4.Translate({ 3, 0,0 });
-		mi5.Translate({ 4, 0,0 });
+		mi1.Translate({ 0,0,2 });
+		mi2.Translate({ -3, 0,0 });
+		mi3.Translate({0, 0,0 });
+		mi4.Translate({ 2, 0,0 });
+		mi5.Translate({ 5, 0,0 });
 
 		// TODO
 		// The Game loop
@@ -74,6 +76,19 @@ namespace MauEng
 
 			//sceneManager.Update();
 
+			static auto startTime{ std::chrono::high_resolution_clock::now() };
+
+			auto const currentTime{ std::chrono::high_resolution_clock::now() };
+			float const deltaTime{ std::chrono::duration<float>(currentTime - startTime).count() };
+			startTime = currentTime; // Update start time for the next frame
+
+			float rotationSpeed = glm::radians(90.0f); // 90 degrees per second
+			mi1.Rotate(rotationSpeed * deltaTime, glm::vec3(0.0f, 0.0f, 1.0f));
+			mi2.Rotate(rotationSpeed * deltaTime, glm::vec3(0.0f, 0.0f, 1.0f));
+			mi3.Rotate(rotationSpeed * deltaTime, glm::vec3(0.0f, 0.0f, 1.0f));
+			mi4.Rotate(rotationSpeed * deltaTime, glm::vec3(0.0f, 0.0f, 1.0f));
+			mi5.Rotate(rotationSpeed * deltaTime, glm::vec3(0.0f, 0.0f, 1.0f));
+
 			mi1.Draw();
 			mi2.Draw();
 			mi3.Draw();
@@ -82,7 +97,7 @@ namespace MauEng
 
 			m_Renderer->Render();
 
-			//std::this_thread::sleep_for(time.SleepTime());
+		//	std::this_thread::sleep_for();
 		}
 	}
 }

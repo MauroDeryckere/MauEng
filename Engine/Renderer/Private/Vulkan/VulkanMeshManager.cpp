@@ -63,16 +63,6 @@ namespace MauRen
 			std::vector<glm::mat4> modelMatrices;
 			for (auto const& instance : instances)
 			{
-				//static auto startTime{ std::chrono::high_resolution_clock::now() };
-
-				//auto const currentTime{ std::chrono::high_resolution_clock::now() };
-				//float const deltaTime{ std::chrono::duration<float>(currentTime - startTime).count() };
-				//startTime = currentTime; // Update start time for the next frame
-
-				//float rotationSpeed = glm::radians(90.0f); // 90 degrees per second
-
-				//glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), rotationSpeed * deltaTime, glm::vec3(0.0f, 0.0f, 1.0f));
-
 				VulkanMesh::MeshPushConstant mPush{ mesh.GetPushConstant() };
 				mPush.m_ModelMatrix = instance.GetModelMatrix();
 				mPush.m_AlbedoTextureID = 0;
@@ -86,5 +76,7 @@ namespace MauRen
 				vkCmdDrawIndexed(commandBuffer, mesh.GetIndexCount(), 1, 0, 0, 0);
 			}
 		}
+
+		m_MeshBatches.clear();
 	}
 }

@@ -21,6 +21,14 @@ namespace MauRen
 
 		void Translate(glm::vec3 const& translation) noexcept;
 
+		void ResetTransformation() noexcept;
+
+
+		// Rotate the model by an angle (in radians) around a given axis
+		void Rotate(float angleRad, glm::vec3 const& axis) noexcept;
+
+		void Scale(glm::vec3 const& scale) noexcept;
+
 		MeshInstance(MeshInstance const&) = default;
 		MeshInstance(MeshInstance&&) = default;
 		MeshInstance& operator=(MeshInstance const&) = default;

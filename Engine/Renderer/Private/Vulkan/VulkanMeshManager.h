@@ -17,7 +17,7 @@ namespace MauRen
 
 		void LoadMesh(Mesh& mesh);
 
-		VulkanMesh const& GetVulkanMesh(uint32_t meshID) const;
+		[[nodiscard]] VulkanMesh const& GetVulkanMesh(uint32_t meshID) const;
 
 		void QueueDraw(MeshInstance const& instance);
 
