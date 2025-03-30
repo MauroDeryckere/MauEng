@@ -25,11 +25,11 @@ void main()
     vec4 roughness = (pc.roughnessID == 0xFFFFFFFF) ? vec4(0.0) : texture(bindlessTextures[pc.roughnessID], fragTexCoord);
     vec4 metallic = (pc.metallicID == 0xFFFFFFFF) ? vec4(0.0) : texture(bindlessTextures[pc.metallicID], fragTexCoord);
 
-    vec3 n = normalize(normal.xyz * 2.0 - 1.0);
+    vec3 n = normalize(normal.xyz);
 
 
     vec3 lightDir = normalize(vec3(1.0, 1.0, 1.0));  // Example light direction
-    float NdotL = max(dot(normal, lightDir), 0.0);  // Diffuse lighting calculation
+    float NdotL = max(dot(n, lightDir), 0.0);  // Diffuse lighting calculation
 
     outColor = albedo * vec4(vec3(NdotL), 1.0);  // Color is modulated by diffuse lighting
 
