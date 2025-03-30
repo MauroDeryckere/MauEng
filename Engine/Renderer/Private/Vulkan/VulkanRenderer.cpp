@@ -89,6 +89,58 @@ namespace MauRen
 
 		m_CommandPoolManager.CreateCommandBuffers();
 		CreateSyncObjects();
+
+		{
+			auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+
+			int texWidth{};
+			int texHeight{};
+			int texChannels{};
+
+			stbi_uc* const pixels{ stbi_load("Textures/Skull.jpg", &texWidth, &texHeight, &texChannels, STBI_rgb_alpha) };
+			VkDeviceSize const imageSize{ static_cast<uint32_t>(texWidth * texHeight * 4) };
+
+			if (!pixels)
+			{
+				throw std::runtime_error("Failed to load texture image!");
+			}
+
+
+			VulkanBuffer stagingBuffer{ imageSize,
+										 VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+										 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT };
+
+			void* data;
+			vkMapMemory(deviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory, 0, imageSize, 0, &data);
+			memcpy(data, pixels, static_cast<size_t>(imageSize));
+			vkUnmapMemory(deviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory);
+
+			stbi_image_free(pixels);
+
+			m_TextureImage2 = VulkanImage
+			{
+				VK_FORMAT_R8G8B8A8_SRGB,
+				VK_IMAGE_TILING_OPTIMAL,
+				VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+				VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+				VK_SAMPLE_COUNT_1_BIT,
+				static_cast<uint32_t>(texWidth),
+				static_cast<uint32_t>(texHeight),
+				static_cast<uint32_t>(std::floor(std::log2(std::max(texWidth, texHeight)))) + 1
+			};
+
+			m_TextureImage2.TransitionImageLayout(m_CommandPoolManager, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+			VulkanBuffer::CopyBufferToImage(m_CommandPoolManager, stagingBuffer.buffer, m_TextureImage2.image, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
+			// is transitioned to VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL while generating mipmaps
+
+			m_TextureImage2.GenerateMipmaps(m_CommandPoolManager);
+
+			stagingBuffer.Destroy();
+
+			m_TextureImage2.CreateImageView(VK_IMAGE_ASPECT_COLOR_BIT);
+		}
+
+		m_DescriptorContext.AddTexture(m_TextureImage2.imageViews[0], m_TextureSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 	}
 
 	VulkanRenderer::~VulkanRenderer()
@@ -469,56 +521,6 @@ namespace MauRen
 			stagingBuffer.Destroy();
 
 			m_TextureImage.CreateImageView(VK_IMAGE_ASPECT_COLOR_BIT);
-		}
-
-		{
-			auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
-
-			int texWidth{};
-			int texHeight{};
-			int texChannels{};
-
-			stbi_uc* const pixels{ stbi_load("Textures/Skull.jpg", &texWidth, &texHeight, &texChannels, STBI_rgb_alpha) };
-			VkDeviceSize const imageSize{ static_cast<uint32_t>(texWidth * texHeight * 4) };
-
-			if (!pixels)
-			{
-				throw std::runtime_error("Failed to load texture image!");
-			}
-
-
-			VulkanBuffer stagingBuffer{ imageSize,
-										 VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-										 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT };
-
-			void* data;
-			vkMapMemory(deviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory, 0, imageSize, 0, &data);
-			memcpy(data, pixels, static_cast<size_t>(imageSize));
-			vkUnmapMemory(deviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory);
-
-			stbi_image_free(pixels);
-
-			m_TextureImage2 = VulkanImage
-			{
-				VK_FORMAT_R8G8B8A8_SRGB,
-				VK_IMAGE_TILING_OPTIMAL,
-				VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-				VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-				VK_SAMPLE_COUNT_1_BIT,
-				static_cast<uint32_t>(texWidth),
-				static_cast<uint32_t>(texHeight),
-				static_cast<uint32_t>(std::floor(std::log2(std::max(texWidth, texHeight)))) + 1
-			};
-
-			m_TextureImage2.TransitionImageLayout(m_CommandPoolManager, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-			VulkanBuffer::CopyBufferToImage(m_CommandPoolManager, stagingBuffer.buffer, m_TextureImage2.image, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
-			// is transitioned to VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL while generating mipmaps
-
-			m_TextureImage2.GenerateMipmaps(m_CommandPoolManager);
-
-			stagingBuffer.Destroy();
-
-			m_TextureImage2.CreateImageView(VK_IMAGE_ASPECT_COLOR_BIT);
 		}
 	}
 

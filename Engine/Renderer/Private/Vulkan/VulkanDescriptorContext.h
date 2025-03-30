@@ -20,6 +20,8 @@ namespace MauRen
 		[[nodiscard]] std::vector<VkDescriptorSet> const& GetDescriptorSets() const noexcept { return m_DescriptorSets; }
 		[[nodiscard]] VkDescriptorPool GetDescriptorPool() const noexcept { return m_DescriptorPool; }
 
+		void AddTexture(VkImageView imageView, VkSampler sampler, VkImageLayout imageLayout);
+
 		void CreateDescriptorSetLayout();
 		void CreateDescriptorPool();
 		void CreateDescriptorSets(std::vector<VulkanBuffer> const& bufferInfoBuffers, VkDeviceSize offset, VkDeviceSize range, VkImageLayout imageLayout, std::vector<VkImageView> const& imageViews, VkSampler sampler);
@@ -38,6 +40,9 @@ namespace MauRen
 		// common practice to rank from ‘least updated’ descriptor set(index 0) to ‘most frequent updated’
 		// descriptor set(index N)!This way, we can avoid rebinding as much as possible!
 		std::vector<VkDescriptorSet> m_DescriptorSets{};
+
+		//TODO move to texturemanager
+		size_t m_CurrTextureIdx{ SIZE_MAX };
 	};
 }
 
