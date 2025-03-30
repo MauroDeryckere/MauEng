@@ -38,26 +38,20 @@ namespace MauRen
 		CreateTextureSampler();
 
 
-		std::vector<Vertex> vertices;
-		std::vector<uint32_t> indices;
-		Utils::LoadModel("Models/VikingRoom.obj", vertices, indices);
-
+		Mesh const m1{ "Models/VikingRoom.obj" };
 		constexpr size_t NUM_MESHES{ 2 };
 
-		m_Meshes.resize(NUM_MESHES);
-		m_Meshes[0].Initialize(m_CommandPoolManager, vertices, indices);
-		m_Meshes[0].m_PushConstants.m_ModelMatrix = glm::translate(m_Meshes[0].m_PushConstants.m_ModelMatrix, { -2, 0.f, 0.f});
-		m_Meshes[0].m_PushConstants.m_AlbedoTextureID = 0;
+		m_Meshes.push_back({ m_CommandPoolManager, m1 });
+		m_Meshes[0].GetPushConstant().m_ModelMatrix = glm::translate(m_Meshes[0].GetPushConstant().m_ModelMatrix, { -2, 0.f, 0.f});
+		m_Meshes[0].GetPushConstant().m_AlbedoTextureID = 0;
 
-		std::vector<Vertex> vertices2;
-		std::vector<uint32_t> indices2;
-		Utils::LoadModel("Models/Skull.obj", vertices2, indices2);
+		Mesh const m2{ "Models/Skull.obj" };
 
-		m_Meshes[1].Initialize(m_CommandPoolManager, vertices2, indices2);
+		m_Meshes.push_back({ m_CommandPoolManager, m2 });
 	//	m_Meshes[1].m_PushConstants.m_ModelMatrix = glm::rotate(m_Meshes[1].m_PushConstants.m_ModelMatrix, glm::radians(90.f), {1,0,0});
-		m_Meshes[1].m_PushConstants.m_ModelMatrix = glm::scale(m_Meshes[1].m_PushConstants.m_ModelMatrix, { .2, .2, .2 });
-		m_Meshes[1].m_PushConstants.m_ModelMatrix = glm::translate(m_Meshes[1].m_PushConstants.m_ModelMatrix, {0, 15,-2 });
-		m_Meshes[1].m_PushConstants.m_AlbedoTextureID = 1;
+		m_Meshes[1].GetPushConstant().m_ModelMatrix = glm::scale(m_Meshes[1].GetPushConstant().m_ModelMatrix, { .2, .2, .2 });
+		m_Meshes[1].GetPushConstant().m_ModelMatrix = glm::translate(m_Meshes[1].GetPushConstant().m_ModelMatrix, {0, 15,-2 });
+		m_Meshes[1].GetPushConstant().m_AlbedoTextureID = 1;
 		CreateUniformBuffers();
 
 		//CreateGlobalBuffers();
@@ -287,18 +281,18 @@ namespace MauRen
 
 
 				glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), rotationSpeed * deltaTime, glm::vec3(0.0f, 0.0f, 1.0f));
-				mesh.m_PushConstants.m_ModelMatrix *= rotation;
+				mesh.GetPushConstant().m_ModelMatrix *= rotation;
 
 				vkCmdPushConstants(commandBuffer, m_GraphicsPipeline.GetPipelineLayout(),
-					VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(mesh.m_PushConstants),
-					&mesh.m_PushConstants);
+					VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(mesh.GetPushConstant()),
+					&mesh.GetPushConstant());
 
-				auto const idxCount{ mesh.Draw(commandBuffer) };
+				 mesh.Draw(commandBuffer);
 
 
 				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipeline.GetPipelineLayout(), 0, 1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame], 0, nullptr);
 
-				vkCmdDrawIndexed(commandBuffer, idxCount, 1, 0, 0, 0);
+				vkCmdDrawIndexed(commandBuffer, mesh.GetIndexCount(), 1, 0, 0, 0);
 			}
 		vkCmdEndRenderPass(commandBuffer);
 
@@ -575,92 +569,6 @@ namespace MauRen
 		m_InstanceDataBuffer = { MAX_INSTANCE_BUFFER_SIZE,
 									VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
 									VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT };
-	}
-
-	void VulkanRenderer::VulkanMesh::Initialize(VulkanCommandPoolManager const& CmdPoolManager, std::vector<Vertex> const& vertices, std::vector<uint32_t> const& indices)
-	{
-		m_IndexCount = indices.size();
-		m_VertexCount = vertices.size();
-
-		CreateVertexBuffer(CmdPoolManager, vertices);
-		CreateIndexBuffer(CmdPoolManager, indices);
-	}
-
-	void VulkanRenderer::VulkanMesh::Destroy()
-	{
-		m_IndexBuffer.Destroy();
-		m_VertexBuffer.Destroy();
-	}
-
-	uint32_t VulkanRenderer::VulkanMesh::Draw(VkCommandBuffer commandBuffer) const
-	{
-		VkBuffer vertexBuffers[] = { m_VertexBuffer.buffer };
-		VkDeviceSize offsets[] = { 0 };
-		vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
-
-		// Bind the index buffer
-		vkCmdBindIndexBuffer(commandBuffer, m_IndexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
-
-		return m_IndexCount;
-	}
-
-	void VulkanRenderer::VulkanMesh::CreateVertexBuffer(VulkanCommandPoolManager const& CmdPoolManager, std::vector<Vertex> const& vertices)
-	{
-		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
-
-		VkDeviceSize const bufferSize{ sizeof(vertices[0]) * vertices.size() };
-
-		VulkanBuffer stagingBuffer{ bufferSize,
-									VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-									VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT };
-
-		if (stagingBuffer.buffer == VK_NULL_HANDLE || stagingBuffer.bufferMemory == VK_NULL_HANDLE)
-		{
-			throw std::runtime_error("Failed to create staging buffer.");
-		}
-
-
-		void* data;
-		if (vkMapMemory(deviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory, 0, bufferSize, 0, &data) != VK_SUCCESS)
-		{
-			throw std::runtime_error("Failed to map Vulkan buffer memory.");
-		}
-
-		memcpy(data, vertices.data(), static_cast<size_t>(bufferSize));
-		vkUnmapMemory(deviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory);
-
-		m_VertexBuffer = { bufferSize,
-							VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-							VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT };
-
-		VulkanBuffer::CopyBuffer(CmdPoolManager, stagingBuffer.buffer, m_VertexBuffer.buffer, bufferSize);
-
-		stagingBuffer.Destroy();
-	}
-
-	void VulkanRenderer::VulkanMesh::CreateIndexBuffer(VulkanCommandPoolManager const& CmdPoolManager, std::vector<uint32_t> const& indices)
-	{
-		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
-
-		VkDeviceSize const bufferSize{ sizeof(indices[0]) * indices.size() };
-
-		VulkanBuffer stagingBuffer{ bufferSize,
-									VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-									VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT };
-
-		void* data;
-		vkMapMemory(deviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory, 0, bufferSize, 0, &data);
-		memcpy(data, indices.data(), static_cast<size_t>(bufferSize));
-		vkUnmapMemory(deviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory);
-
-
-		m_IndexBuffer = { bufferSize,
-							 VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-							VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT };
-
-		VulkanBuffer::CopyBuffer(CmdPoolManager, stagingBuffer.buffer, m_IndexBuffer.buffer, bufferSize);
-
-		stagingBuffer.Destroy();
 	}
 }
 
