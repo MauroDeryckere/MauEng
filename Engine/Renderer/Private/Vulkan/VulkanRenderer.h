@@ -35,6 +35,9 @@ namespace MauRen
 		virtual void Render() override;
 		virtual void ResizeWindow() override;
 
+		virtual void UpLoadModel(Mesh& mesh) override;
+
+
 		VulkanRenderer(VulkanRenderer const&) = delete;
 		VulkanRenderer(VulkanRenderer&&) = delete;
 		VulkanRenderer& operator=(VulkanRenderer const&) = delete;

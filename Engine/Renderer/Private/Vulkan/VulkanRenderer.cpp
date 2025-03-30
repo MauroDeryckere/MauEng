@@ -12,6 +12,8 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
+#include "VulkanMeshManager.h"
+
 namespace MauRen
 {
 	VulkanRenderer::VulkanRenderer(GLFWwindow* pWindow) :
@@ -38,20 +40,19 @@ namespace MauRen
 		CreateTextureSampler();
 
 
-		Mesh const m1{ "Models/VikingRoom.obj" };
-		constexpr size_t NUM_MESHES{ 2 };
+	//	Mesh const m1{ "Models/VikingRoom.obj" };
 
-		m_Meshes.push_back({ m_CommandPoolManager, m1 });
-		m_Meshes[0].GetPushConstant().m_ModelMatrix = glm::translate(m_Meshes[0].GetPushConstant().m_ModelMatrix, { -2, 0.f, 0.f});
-		m_Meshes[0].GetPushConstant().m_AlbedoTextureID = 0;
+	//	m_Meshes.emplace_back(m_CommandPoolManager, m1);
+	//	m_Meshes[0].GetPushConstant().m_ModelMatrix = glm::translate(m_Meshes[0].GetPushConstant().m_ModelMatrix, { -2, 0.f, 0.f});
+	//	m_Meshes[0].GetPushConstant().m_AlbedoTextureID = 0;
 
-		Mesh const m2{ "Models/Skull.obj" };
+	//	Mesh const m2{ "Models/Skull.obj" };
 
-		m_Meshes.push_back({ m_CommandPoolManager, m2 });
-	//	m_Meshes[1].m_PushConstants.m_ModelMatrix = glm::rotate(m_Meshes[1].m_PushConstants.m_ModelMatrix, glm::radians(90.f), {1,0,0});
-		m_Meshes[1].GetPushConstant().m_ModelMatrix = glm::scale(m_Meshes[1].GetPushConstant().m_ModelMatrix, { .2, .2, .2 });
-		m_Meshes[1].GetPushConstant().m_ModelMatrix = glm::translate(m_Meshes[1].GetPushConstant().m_ModelMatrix, {0, 15,-2 });
-		m_Meshes[1].GetPushConstant().m_AlbedoTextureID = 1;
+	//	m_Meshes.emplace_back(m_CommandPoolManager, m2);
+	////	m_Meshes[1].m_PushConstants.m_ModelMatrix = glm::rotate(m_Meshes[1].m_PushConstants.m_ModelMatrix, glm::radians(90.f), {1,0,0});
+	//	m_Meshes[1].GetPushConstant().m_ModelMatrix = glm::scale(m_Meshes[1].GetPushConstant().m_ModelMatrix, { .2, .2, .2 });
+	//	m_Meshes[1].GetPushConstant().m_ModelMatrix = glm::translate(m_Meshes[1].GetPushConstant().m_ModelMatrix, {0, 15,-2 });
+	//	m_Meshes[1].GetPushConstant().m_AlbedoTextureID = 1;
 		CreateUniformBuffers();
 
 		//CreateGlobalBuffers();
@@ -135,6 +136,10 @@ namespace MauRen
 		}
 
 		m_DescriptorContext.AddTexture(m_TextureImage2.imageViews[0], m_TextureSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+
+
+		VulkanMeshManager::GetInstance().Initialize(&m_CommandPoolManager);
 	}
 
 	VulkanRenderer::~VulkanRenderer()
@@ -155,6 +160,7 @@ namespace MauRen
 		{
 			mesh.Destroy();
 		}
+		VulkanMeshManager::GetInstance().Destroy();
 
 		vkDestroySampler(deviceContext->GetLogicalDevice(), m_TextureSampler, nullptr);
 
@@ -193,6 +199,10 @@ namespace MauRen
 		m_FramebufferResized = true;
 	}
 
+	void VulkanRenderer::UpLoadModel(Mesh& mesh)
+	{
+		VulkanMeshManager::GetInstance().LoadMesh(mesh);
+	}
 
 	void VulkanRenderer::CreateUniformBuffers()
 	{
@@ -264,36 +274,7 @@ namespace MauRen
 			scissor.extent = m_SwapChainContext.GetExtent();
 			vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-			// you can only have a single index buffer. It's unfortunately not possible to use different indices for each vertex attribute,
-			// so we do still have to completely duplicate vertex data even if just one attribute varies.
-
-			// This is not at all an optimal approach, and will be refactored later. This is simply to test spawning & renderingmultiple meshes while refactoring
-			for (auto& mesh : m_Meshes)
-			{
-				//TODO move to some form of an update later
-				static auto startTime{ std::chrono::high_resolution_clock::now() };
-
-				auto const currentTime{ std::chrono::high_resolution_clock::now() };
-				float const deltaTime{ std::chrono::duration<float>(currentTime - startTime).count() };
-				startTime = currentTime; // Update start time for the next frame
-
-				float rotationSpeed = glm::radians(90.0f); // 90 degrees per second
-
-
-				glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), rotationSpeed * deltaTime, glm::vec3(0.0f, 0.0f, 1.0f));
-				mesh.GetPushConstant().m_ModelMatrix *= rotation;
-
-				vkCmdPushConstants(commandBuffer, m_GraphicsPipeline.GetPipelineLayout(),
-					VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(mesh.GetPushConstant()),
-					&mesh.GetPushConstant());
-
-				 mesh.Draw(commandBuffer);
-
-
-				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipeline.GetPipelineLayout(), 0, 1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame], 0, nullptr);
-
-				vkCmdDrawIndexed(commandBuffer, mesh.GetIndexCount(), 1, 0, 0, 0);
-			}
+			VulkanMeshManager::GetInstance().Draw(commandBuffer, m_GraphicsPipeline.GetPipelineLayout(), 1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame]);
 		vkCmdEndRenderPass(commandBuffer);
 
 		if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) 

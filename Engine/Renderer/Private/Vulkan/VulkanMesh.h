@@ -30,6 +30,9 @@ namespace MauRen
 
 		[[nodiscard]] MeshPushConstant const& GetPushConstant() const noexcept { return m_PushConstant; }
 		[[nodiscard]] MeshPushConstant& GetPushConstant() noexcept { return m_PushConstant; }
+		[[nodiscard]] VulkanBuffer GetVertexBuffer() const noexcept { return m_VertexBuffer; }
+		[[nodiscard]] VulkanBuffer GetIndexBuffer() const noexcept { return m_IndexBuffer; }
+
 
 		[[nodiscard]] uint32_t GetVertexCount() const noexcept { return m_VertexCount; }
 		[[nodiscard]] uint32_t GetIndexCount() const noexcept { return m_IndexCount; }

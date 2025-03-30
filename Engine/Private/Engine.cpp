@@ -30,6 +30,23 @@ namespace MauEng
 
 		// Get all the systems we wish to use during the game loop
 
+		Mesh m1{ "Models/VikingRoom.obj" };
+		//Mesh m2{ "models/skull.obj" };
+
+		m_Renderer->UpLoadModel(m1);
+	//	m_Renderer->UpLoadModel(m2);
+
+		MeshInstance mi1{ m1 };
+		MeshInstance mi2{ m1 };
+		MeshInstance mi3{ m1 };
+		MeshInstance mi4{ m1 };
+		MeshInstance mi5{ m1 };
+
+		mi2.Translate({ 1, 0,0 });
+		mi3.Translate({2, 0,0 });
+		mi4.Translate({ 3, 0,0 });
+		mi5.Translate({ 4, 0,0 });
+
 		// TODO
 		// The Game loop
 
@@ -56,6 +73,12 @@ namespace MauEng
 			//}
 
 			//sceneManager.Update();
+
+			mi1.Draw();
+			mi2.Draw();
+			mi3.Draw();
+			mi4.Draw();
+			mi5.Draw();
 
 			m_Renderer->Render();
 
