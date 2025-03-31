@@ -16,16 +16,18 @@
 namespace MauEng
 {
 	Engine::Engine():
-		m_Window{ std::make_unique<GLFWWindow>() },
-		m_Renderer{ MauRen::CreateVulkanRenderer(m_Window->window) }
+		m_Window{ std::make_unique<GLFWWindow>() }
 	{
+		ServiceLocator::RegisterRenderer(MauRen::CreateVulkanRenderer(m_Window->window));
+		ServiceLocator::GetRenderer().Init();
 		// Initialize all core dependences & singletons
-		m_Window->Initialize(m_Renderer.get());
+		m_Window->Initialize();
 	}
 
 	Engine::~Engine()
 	{
 		// Cleanup all core dependences & singletons
+		ServiceLocator::GetRenderer().Destroy();
 	}
 
 	void Engine::Run(std::function<void()> const& load)
@@ -45,25 +47,6 @@ namespace MauEng
 		// TODO move to scene setup
 		Camera m_Camera{ glm::vec3{0.f, -8.f, 3.f }, 60.f, static_cast<float>(m_Window->width / m_Window->height) };
 		m_Camera.Focus({ 0,0,0 });
-
-		Mesh m1{ "Models/Gun.obj" };
-		Mesh m2{ "Models/Skull.obj" };
-
-		m_Renderer->UpLoadModel(m1);
-		m_Renderer->UpLoadModel(m2);
-
-		MeshInstance mi1{ m2 };
-		mi1.Translate({ 5, 20,  -3 });
-		mi1.Scale({ .3f, .3f, .3f });
-
-		MeshInstance mi2{ m2 };
-		mi2.Translate({ -5, 20,  -8 });
-		mi2.Scale({ .3f, .3f, .3f });
-
-		MeshInstance mi3{ m1 };
-		mi3.Translate({ 0, 0,  0 });
-		mi3.Rotate(glm::radians(90.f), {1, 0,  0});
-		mi3.Scale({ 5.f, 5.f, 5.f });
 
 		// Get all the systems we wish to use during the game loop
 		auto& time{ Time::GetInstance() };
@@ -147,16 +130,7 @@ namespace MauEng
 			m_Camera.Update();
 			sceneManager.Tick();
 
-			float const rotationSpeed{ glm::radians(90.0f) }; // 90 degrees per second
-			mi1.Rotate(rotationSpeed * time.ElapsedSec(), glm::vec3(0.0f, 0.0f, 1.0f));
-			mi2.Rotate(rotationSpeed * time.ElapsedSec(), glm::vec3(0.0f, 0.0f, 1.0f));
-			mi3.Rotate(rotationSpeed * time.ElapsedSec(), glm::vec3(0.0f, 1.0f, 0.0f));
-
-			mi1.Draw();
-			mi2.Draw();
-			mi3.Draw();
-
-			m_Renderer->Render(m_Camera.GetViewMatrix(), m_Camera.GetProjectionMatrix());
+			sceneManager.Render(m_Camera.GetViewMatrix(), m_Camera.GetProjectionMatrix());
 
 			if constexpr (LIMIT_FPS)
 			{

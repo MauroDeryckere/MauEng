@@ -3,13 +3,9 @@
 
 #include <functional>
 #include <memory>
+#include "ServiceLocator.h"
 
 #include "GameTime.h"
-
-namespace MauRen
-{
-	class Renderer;
-}
 
 namespace MauEng
 {
@@ -30,8 +26,6 @@ namespace MauEng
 
 	private:
 		std::unique_ptr<GLFWWindow> m_Window{ nullptr };
-		std::unique_ptr<MauRen::Renderer> m_Renderer{ nullptr };
-
 	};
 }
 

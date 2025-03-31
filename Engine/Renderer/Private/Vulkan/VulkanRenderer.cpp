@@ -18,17 +18,21 @@ namespace MauRen
 		Renderer{ pWindow },
 		m_pWindow{ pWindow }
 	{
+	}
+
+	void VulkanRenderer::Init()
+	{
 		m_InstanceContext.Initialize();
-		m_SurfaceContext.Initialize(&m_InstanceContext, pWindow);
+		m_SurfaceContext.Initialize(&m_InstanceContext, m_pWindow);
 		m_DebugContext.Initialize(&m_InstanceContext);
 
 		VulkanDeviceContextManager::GetInstance().Initialize(&m_SurfaceContext, &m_InstanceContext);
 
 		m_DescriptorContext.Initialize();
-		m_SwapChainContext.Initialize(pWindow, &m_SurfaceContext);
+		m_SwapChainContext.Initialize(m_pWindow, &m_SurfaceContext);
 
 		m_DescriptorContext.CreateDescriptorSetLayout();
-		m_GraphicsPipeline.Initialize( &m_SwapChainContext, m_DescriptorContext.GetDescriptorSetLayout(), 1u);
+		m_GraphicsPipeline.Initialize(&m_SwapChainContext, m_DescriptorContext.GetDescriptorSetLayout(), 1u);
 
 		m_CommandPoolManager.Initialize();
 
@@ -49,9 +53,9 @@ namespace MauRen
 		}
 
 		m_DescriptorContext.CreateDescriptorSets(tempUniformBuffers,
-												0, 
-												sizeof(UniformBufferObject), 
-												VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			0,
+			sizeof(UniformBufferObject),
+			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 		m_CommandPoolManager.CreateCommandBuffers();
 		CreateSyncObjects();
@@ -59,7 +63,7 @@ namespace MauRen
 		VulkanMeshManager::GetInstance().Initialize(&m_CommandPoolManager);
 	}
 
-	VulkanRenderer::~VulkanRenderer()
+	void VulkanRenderer::Destroy()
 	{
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 

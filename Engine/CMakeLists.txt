@@ -21,6 +21,8 @@ add_library(Engine STATIC
     ${ENGINE_PRIVATE_SOURCES}
 )
 
+add_subdirectory(Renderer)
+
 target_include_directories(Engine
     PUBLIC
         ${ENGINE_PUBLIC_DIR}        # Public headers for Engine
@@ -28,16 +30,13 @@ target_include_directories(Engine
         ${ENGINE_PRIVATE_DIR}       # Private headers for Engine
 )
 
-
-add_subdirectory(Renderer)
-
 # Link the Renderer to the Engine
 target_link_libraries(Engine
     PUBLIC
         MauEngCore
+        Renderer
     PRIVATE
         Libs
-        Renderer
 )
 
 # Enable precompiled header support for Engine

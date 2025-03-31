@@ -31,7 +31,10 @@ namespace MauRen
 	{
 	public:
 		explicit VulkanRenderer(GLFWwindow* pWindow);
-		virtual ~VulkanRenderer() override;
+		virtual ~VulkanRenderer() override = default;
+
+		virtual void Init() override;
+		virtual void Destroy() override;
 
 		virtual void Render(glm::mat4 const& view, glm::mat4 const& proj) override;
 		virtual void ResizeWindow() override;

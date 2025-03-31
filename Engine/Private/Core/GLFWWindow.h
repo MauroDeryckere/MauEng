@@ -9,11 +9,6 @@
 #define GLFW_INCLUDE_VULKAN
 #include "GLFW/glfw3.h"
 
-namespace MauRen
-{
-	class Renderer;
-}
-
 namespace MauEng
 {
 
@@ -30,7 +25,8 @@ namespace MauEng
 		GLFWWindow();
 		~GLFWWindow();
 
-		void Initialize(MauRen::Renderer* pRenderer);
+		// Renderer must be registered 1st! 
+		void Initialize();
 
 
 		GLFWWindow(GLFWWindow const&) = delete;

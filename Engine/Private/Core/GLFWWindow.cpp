@@ -1,19 +1,21 @@
 #include <stdexcept>
 
 #include "GlfwWindow.h"
-#include "Renderer.h"
 
+#include "ServiceLocator.h"
 #include "GLFW/glfw3.h"
 
 namespace MauEng
 {
 	void GLFWWindow::FramebufferResizeCallback(GLFWwindow* window, int width, int height)
 	{
-		//TODO when renderer is in service locator, no need to cast here (?)
-		auto pRenderer { reinterpret_cast<MauRen::Renderer*>(glfwGetWindowUserPointer(window)) };
-		pRenderer->ResizeWindow();
+		auto const ptr{ glfwGetWindowUserPointer(window) };
+		GLFWWindow* winClassPtr{ static_cast<GLFWWindow*>(ptr) };
 
-		//TODO change the width and height variable
+		winClassPtr->width = width;
+		winClassPtr->height = height;
+
+		ServiceLocator::GetRenderer().ResizeWindow();
 	}
 
 	GLFWWindow::GLFWWindow()
@@ -41,9 +43,9 @@ namespace MauEng
 		glfwTerminate();
 	}
 
-	void GLFWWindow::Initialize(MauRen::Renderer* pRenderer)
+	void GLFWWindow::Initialize()
 	{
-		glfwSetWindowUserPointer(window, pRenderer);
+		glfwSetWindowUserPointer(window, this);
 		glfwSetFramebufferSizeCallback(window, FramebufferResizeCallback);
 	}
 }
