@@ -8,6 +8,8 @@
 
 #include "Core/GLFWWindow.h"
 
+#include "glm/glm.hpp"
+
 namespace MauEng
 {
 	Engine::Engine():
@@ -39,15 +41,16 @@ namespace MauEng
 		m_Renderer->UpLoadModel(m2);
 
 		MeshInstance mi1{ m2 };
-		mi1.Translate({ 0, 3,  -3 });
+		mi1.Translate({ 5, 20,  -3 });
 		mi1.Scale({ .3f, .3f, .3f });
 
 		MeshInstance mi2{ m2 };
-		mi2.Translate({ 0, 3,  -8 });
+		mi2.Translate({ -5, 20,  -8 });
 		mi2.Scale({ .3f, .3f, .3f });
 
 		MeshInstance mi3{ m1 };
-		mi3.Translate({ 0, -1,  -3 });
+		mi3.Translate({ 0, 1,  -3 });
+		mi3.Rotate(glm::radians(90.f), {1, 0,  0});
 		mi3.Scale({ 5.f, 5.f, 5.f });
 
 		// TODO
@@ -86,7 +89,7 @@ namespace MauEng
 			float rotationSpeed = glm::radians(90.0f); // 90 degrees per second
 			mi1.Rotate(rotationSpeed * deltaTime, glm::vec3(0.0f, 0.0f, 1.0f));
 			mi2.Rotate(rotationSpeed * deltaTime, glm::vec3(0.0f, 0.0f, 1.0f));
-			mi3.Rotate(rotationSpeed * deltaTime, glm::vec3(0.0f, 0.0f, 1.0f));
+			mi3.Rotate(rotationSpeed * deltaTime, glm::vec3(0.0f, 1.0f, 0.0f));
 
 			mi1.Draw();
 			mi2.Draw();

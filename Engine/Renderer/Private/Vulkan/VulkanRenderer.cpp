@@ -323,7 +323,7 @@ namespace MauRen
 		ubo.view = glm::lookAt(glm::vec3(0, -8, 3), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 
 		float const aspectRatio{ static_cast<float>(m_SwapChainContext.GetExtent().width) / static_cast<float>(m_SwapChainContext.GetExtent().height) };
-		ubo.proj = glm::perspective(glm::radians(45.0f), aspectRatio, 0.1f, 10.0f);
+		ubo.proj = glm::perspective(glm::radians(45.0f), aspectRatio, 0.1f, 1000.0f);
 
 		// Flip Y-axis for Vulkan coordinate system
 		ubo.proj[1][1] *= -1;
