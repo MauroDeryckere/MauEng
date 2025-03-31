@@ -98,9 +98,9 @@ namespace MauRen
 		m_InstanceContext.Destroy();
 	}
 
-	void VulkanRenderer::Render()
+	void VulkanRenderer::Render(glm::mat4 const& view, glm::mat4 const& proj)
 	{
-		DrawFrame();
+		DrawFrame(view, proj);
 	}
 
 	void VulkanRenderer::ResizeWindow()
@@ -228,7 +228,7 @@ namespace MauRen
 		}
 	}
 
-	void VulkanRenderer::DrawFrame()
+	void VulkanRenderer::DrawFrame(glm::mat4 const& view, glm::mat4 const& proj)
 	{
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 
@@ -256,7 +256,7 @@ namespace MauRen
 		// Only reset the fence if we are submitting work
 		vkResetFences(deviceContext->GetLogicalDevice(), 1, &m_InFlightFences[m_CurrentFrame]);
 
-		UpdateUniformBuffer(m_CurrentFrame);
+		UpdateUniformBuffer(m_CurrentFrame, view, proj);
 
 		vkResetCommandBuffer(m_CommandPoolManager.GetCommandBuffer(m_CurrentFrame), 0);
 		RecordCommandBuffer(m_CommandPoolManager.GetCommandBuffer(m_CurrentFrame), imageIndex);
@@ -316,18 +316,9 @@ namespace MauRen
 		m_CurrentFrame = (m_CurrentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 	}
 
-	void VulkanRenderer::UpdateUniformBuffer(uint32_t currentImage)
+	void VulkanRenderer::UpdateUniformBuffer(uint32_t currentImage, glm::mat4 const& view, glm::mat4 const& proj)
 	{
-		UniformBufferObject ubo{};
-
-		ubo.view = glm::lookAt(glm::vec3(0, -8, 3), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-
-		float const aspectRatio{ static_cast<float>(m_SwapChainContext.GetExtent().width) / static_cast<float>(m_SwapChainContext.GetExtent().height) };
-		ubo.proj = glm::perspective(glm::radians(45.0f), aspectRatio, 0.1f, 1000.0f);
-
-		// Flip Y-axis for Vulkan coordinate system
-		ubo.proj[1][1] *= -1;
-
+		UniformBufferObject const ubo{view, proj};
 		memcpy(m_MappedUniformBuffers[currentImage].mapped, &ubo, sizeof(ubo));
 	}
 

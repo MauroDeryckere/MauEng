@@ -33,7 +33,7 @@ namespace MauRen
 		explicit VulkanRenderer(GLFWwindow* pWindow);
 		virtual ~VulkanRenderer() override;
 
-		virtual void Render() override;
+		virtual void Render(glm::mat4 const& view, glm::mat4 const& proj) override;
 		virtual void ResizeWindow() override;
 
 		virtual void UpLoadModel(Mesh& mesh) override;
@@ -95,9 +95,9 @@ namespace MauRen
 
 		void CreateSyncObjects();
 
-		void DrawFrame();
+		void DrawFrame(glm::mat4 const& view, glm::mat4 const& proj);
 		void RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
-		void UpdateUniformBuffer(uint32_t currentImage);
+		void UpdateUniformBuffer(uint32_t currentImage, glm::mat4 const& view, glm::mat4 const& proj);
 
 
 		// Recreate the swapchain on e.g a window resize

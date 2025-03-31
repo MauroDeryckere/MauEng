@@ -12,6 +12,8 @@ namespace MauEng
 		//TODO when renderer is in service locator, no need to cast here (?)
 		auto pRenderer { reinterpret_cast<MauRen::Renderer*>(glfwGetWindowUserPointer(window)) };
 		pRenderer->ResizeWindow();
+
+		//TODO change the width and height variable
 	}
 
 	GLFWWindow::GLFWWindow()

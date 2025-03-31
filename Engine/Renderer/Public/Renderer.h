@@ -14,7 +14,7 @@ namespace MauRen
 		explicit Renderer(GLFWwindow* pWindow) { }
 		virtual ~Renderer() = default;
 
-		virtual void Render() = 0;
+		virtual void Render(glm::mat4 const& view, glm::mat4 const& proj) = 0;
 
 		virtual void ResizeWindow() = 0;
 
@@ -37,7 +37,7 @@ namespace MauRen
 
 		virtual ~NullRenderer() override = default;
 
-		virtual void Render() override {}
+		virtual void Render(glm::mat4 const&, glm::mat4 const&) override {}
 		virtual void ResizeWindow() override {}
 
 		virtual void UpLoadModel(Mesh&) override {}
