@@ -155,6 +155,17 @@ namespace MauRen
 			frameBuffer = VK_NULL_HANDLE;
 			return true;
 		}
+		inline bool SafeDestroy(VkDevice device, VkSampler& sampler, VkAllocationCallbacks const* pAllocator)
+		{
+			if (sampler == VK_NULL_HANDLE)
+			{
+				return false;
+			}
+
+			vkDestroySampler(device, sampler, pAllocator);
+			sampler = VK_NULL_HANDLE;
+			return true;
+		}
 
 #pragma endregion
 

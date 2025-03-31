@@ -2,6 +2,7 @@
 #define MAUREN_MESH_H
 
 #include <filesystem>
+#include "Material.h"
 #include "Vertex.h"
 
 namespace MauRen
@@ -22,9 +23,19 @@ namespace MauRen
 				m_MeshID = ID;
 			}	
 		}
+		[[nodiscard]] uint32_t GetMaterialID() const noexcept { return m_MaterialID; }
+		void SetMaterialID(uint32_t ID) noexcept
+		{
+			if (m_MaterialID == UINT32_MAX)
+			{
+				m_MaterialID = ID;
+			}
+		}
 
 		[[nodiscard]] std::vector<Vertex> const& GetVertices() const noexcept { return m_Vertices; }
 		[[nodiscard]] std::vector<uint32_t> const& GetIndices() const noexcept { return m_Indices; }
+
+		[[nodiscard]] Material const& GetMaterial() const noexcept { return m_Material; }
 
 		Mesh(Mesh const&) = default;
 		Mesh(Mesh&&) = default;
@@ -33,11 +44,12 @@ namespace MauRen
 
 	private:
 		uint32_t m_MeshID{ UINT32_MAX };
+		uint32_t m_MaterialID{ UINT32_MAX };
+
+		Material m_Material{};
 
 		std::vector<Vertex> m_Vertices{};
 		std::vector<uint32_t> m_Indices{};
-
-		//TODO material info
 	};
 }
 

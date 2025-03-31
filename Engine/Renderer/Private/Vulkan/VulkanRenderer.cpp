@@ -9,10 +9,8 @@
 
 #include <chrono>
 
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
-
 #include "VulkanMeshManager.h"
+#include "VulkanMaterialManager.h"
 
 namespace MauRen
 {
@@ -36,23 +34,8 @@ namespace MauRen
 
 		m_SwapChainContext.InitializeResourcesAndCreateFrames(&m_GraphicsPipeline);
 
-		CreateTextureImage();
-		CreateTextureSampler();
+		VulkanMaterialManager::GetInstance().Initialize();
 
-
-	//	Mesh const m1{ "Models/VikingRoom.obj" };
-
-	//	m_Meshes.emplace_back(m_CommandPoolManager, m1);
-	//	m_Meshes[0].GetPushConstant().m_ModelMatrix = glm::translate(m_Meshes[0].GetPushConstant().m_ModelMatrix, { -2, 0.f, 0.f});
-	//	m_Meshes[0].GetPushConstant().m_AlbedoTextureID = 0;
-
-	//	Mesh const m2{ "Models/Skull.obj" };
-
-	//	m_Meshes.emplace_back(m_CommandPoolManager, m2);
-	////	m_Meshes[1].m_PushConstants.m_ModelMatrix = glm::rotate(m_Meshes[1].m_PushConstants.m_ModelMatrix, glm::radians(90.f), {1,0,0});
-	//	m_Meshes[1].GetPushConstant().m_ModelMatrix = glm::scale(m_Meshes[1].GetPushConstant().m_ModelMatrix, { .2, .2, .2 });
-	//	m_Meshes[1].GetPushConstant().m_ModelMatrix = glm::translate(m_Meshes[1].GetPushConstant().m_ModelMatrix, {0, 15,-2 });
-	//	m_Meshes[1].GetPushConstant().m_AlbedoTextureID = 1;
 		CreateUniformBuffers();
 
 		//CreateGlobalBuffers();
@@ -64,80 +47,14 @@ namespace MauRen
 		{
 			tempUniformBuffers.emplace_back(b.buffer);
 		}
-		std::vector<VkImageView> views;
-		for (auto v : m_TextureImage.imageViews)
-		{
-			views.emplace_back(v);
-		}
-		for (auto v : m_TextureImage2.imageViews)
-		{
-			views.emplace_back(v);
-		}
 
-		
 		m_DescriptorContext.CreateDescriptorSets(tempUniformBuffers,
 												0, 
 												sizeof(UniformBufferObject), 
-												VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, 
-												views, 
-												m_TextureSampler);
+												VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 		m_CommandPoolManager.CreateCommandBuffers();
 		CreateSyncObjects();
-
-		{
-			auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
-
-			int texWidth{};
-			int texHeight{};
-			int texChannels{};
-
-			stbi_uc* const pixels{ stbi_load("Textures/Skull.jpg", &texWidth, &texHeight, &texChannels, STBI_rgb_alpha) };
-			VkDeviceSize const imageSize{ static_cast<uint32_t>(texWidth * texHeight * 4) };
-
-			if (!pixels)
-			{
-				throw std::runtime_error("Failed to load texture image!");
-			}
-
-
-			VulkanBuffer stagingBuffer{ imageSize,
-										 VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-										 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT };
-
-			void* data;
-			vkMapMemory(deviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory, 0, imageSize, 0, &data);
-			memcpy(data, pixels, static_cast<size_t>(imageSize));
-			vkUnmapMemory(deviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory);
-
-			stbi_image_free(pixels);
-
-			m_TextureImage2 = VulkanImage
-			{
-				VK_FORMAT_R8G8B8A8_SRGB,
-				VK_IMAGE_TILING_OPTIMAL,
-				VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-				VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-				VK_SAMPLE_COUNT_1_BIT,
-				static_cast<uint32_t>(texWidth),
-				static_cast<uint32_t>(texHeight),
-				static_cast<uint32_t>(std::floor(std::log2(std::max(texWidth, texHeight)))) + 1
-			};
-
-			m_TextureImage2.TransitionImageLayout(m_CommandPoolManager, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-			VulkanBuffer::CopyBufferToImage(m_CommandPoolManager, stagingBuffer.buffer, m_TextureImage2.image, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
-			// is transitioned to VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL while generating mipmaps
-
-			m_TextureImage2.GenerateMipmaps(m_CommandPoolManager);
-
-			stagingBuffer.Destroy();
-
-			m_TextureImage2.CreateImageView(VK_IMAGE_ASPECT_COLOR_BIT);
-		}
-
-		m_DescriptorContext.AddTexture(m_TextureImage2.imageViews[0], m_TextureSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-
-
 
 		VulkanMeshManager::GetInstance().Initialize(&m_CommandPoolManager);
 	}
@@ -156,16 +73,8 @@ namespace MauRen
 			vkDestroyFence(deviceContext->GetLogicalDevice(), m_InFlightFences[i], nullptr);
 		}
 
-		for (auto& mesh : m_Meshes)
-		{
-			mesh.Destroy();
-		}
+		VulkanMaterialManager::GetInstance().Destroy();
 		VulkanMeshManager::GetInstance().Destroy();
-
-		vkDestroySampler(deviceContext->GetLogicalDevice(), m_TextureSampler, nullptr);
-
-		m_TextureImage.Destroy();
-		m_TextureImage2.Destroy();
 
 		m_CommandPoolManager.Destroy();
 
@@ -202,6 +111,7 @@ namespace MauRen
 	void VulkanRenderer::UpLoadModel(Mesh& mesh)
 	{
 		VulkanMeshManager::GetInstance().LoadMesh(mesh);
+		mesh.SetMaterialID(VulkanMaterialManager::GetInstance().LoadMaterial(m_CommandPoolManager, m_DescriptorContext, mesh.GetMaterial()));
 	}
 
 	void VulkanRenderer::CreateUniformBuffers()
@@ -444,97 +354,6 @@ namespace MauRen
 		vkDeviceWaitIdle(deviceContext->GetLogicalDevice());
 
 		m_SwapChainContext.ReCreate(m_pWindow, &m_GraphicsPipeline, &m_SurfaceContext);
-	}
-
-	void VulkanRenderer::CreateTextureImage()
-	{
-		{
-			auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
-
-			int texWidth{};
-			int texHeight{};
-			int texChannels{};
-
-			stbi_uc* const pixels{ stbi_load("Textures/VikingRoom.png", &texWidth, &texHeight, &texChannels, STBI_rgb_alpha) };
-			VkDeviceSize const imageSize{ static_cast<uint32_t>(texWidth * texHeight * 4) };
-
-			if (!pixels)
-			{
-				throw std::runtime_error("Failed to load texture image!");
-			}
-
-
-			VulkanBuffer stagingBuffer{ imageSize,
-										 VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-										 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT };
-
-			void* data;
-			vkMapMemory(deviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory, 0, imageSize, 0, &data);
-			memcpy(data, pixels, static_cast<size_t>(imageSize));
-			vkUnmapMemory(deviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory);
-
-			stbi_image_free(pixels);
-
-			m_TextureImage = VulkanImage
-			{
-				VK_FORMAT_R8G8B8A8_SRGB,
-				VK_IMAGE_TILING_OPTIMAL,
-				VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-				VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-				VK_SAMPLE_COUNT_1_BIT,
-				static_cast<uint32_t>(texWidth),
-				static_cast<uint32_t>(texHeight),
-				static_cast<uint32_t>(std::floor(std::log2(std::max(texWidth, texHeight)))) + 1
-			};
-
-			m_TextureImage.TransitionImageLayout(m_CommandPoolManager, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-			VulkanBuffer::CopyBufferToImage(m_CommandPoolManager, stagingBuffer.buffer, m_TextureImage.image, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
-			// is transitioned to VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL while generating mipmaps
-
-			m_TextureImage.GenerateMipmaps(m_CommandPoolManager);
-
-			stagingBuffer.Destroy();
-
-			m_TextureImage.CreateImageView(VK_IMAGE_ASPECT_COLOR_BIT);
-		}
-	}
-
-	void VulkanRenderer::CreateTextureSampler()
-	{
-		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
-
-		VkSamplerCreateInfo samplerInfo{};
-		samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-		samplerInfo.magFilter = VK_FILTER_LINEAR;
-		samplerInfo.minFilter = VK_FILTER_LINEAR;
-
-		// If addressed outside of bounds, repeat (tileable texture)
-		samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-		samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-		samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-
-		samplerInfo.anisotropyEnable = VK_TRUE;
-		VkPhysicalDeviceProperties properties{};
-		vkGetPhysicalDeviceProperties(deviceContext->GetPhysicalDevice(), &properties);
-
-		// If we want to go for maximum quality, we can simply use the limit directly
-		samplerInfo.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
-		samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
-		samplerInfo.unnormalizedCoordinates = VK_FALSE;
-
-		samplerInfo.compareEnable = VK_FALSE;
-		samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
-
-		samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-		samplerInfo.minLod = 0.f;
-		//samplerInfo.minLod = static_cast<float>(m_TextureImage.mipLevels / 2);
-		samplerInfo.maxLod = static_cast<float>(m_TextureImage.mipLevels);
-		samplerInfo.mipLodBias = 0.0f; // Optional
-
-		if (vkCreateSampler(deviceContext->GetLogicalDevice(), &samplerInfo, nullptr, &m_TextureSampler) != VK_SUCCESS)
-		{
-			throw std::runtime_error("Failed to create texture sampler!");
-		}
 	}
 
 	void VulkanRenderer::CreateGlobalBuffers()

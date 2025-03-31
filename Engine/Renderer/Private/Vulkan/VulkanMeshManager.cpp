@@ -2,6 +2,8 @@
 
 #include "MeshInstance.h"
 #include "VulkanDeviceContextManager.h"
+#include "VulkanMaterialManager.h"
+
 namespace MauRen
 {
 	bool VulkanMeshManager::Initialize(VulkanCommandPoolManager const* CmdPoolManager)
@@ -46,9 +48,9 @@ namespace MauRen
 		throw std::runtime_error("");
 	}
 
-	void VulkanMeshManager::QueueDraw(MeshInstance const& instance)
+	void VulkanMeshManager::QueueDraw(MeshInstance const* instance)
 	{
-		m_MeshBatches[instance.GetMeshID()].emplace_back(instance);
+		m_MeshBatches[instance->GetMeshID()].emplace_back(*instance);
 	}
 
 	void VulkanMeshManager::Draw(VkCommandBuffer commandBuffer, VkPipelineLayout layout, uint32_t setCount, VkDescriptorSet const* pDescriptorSets)
@@ -63,11 +65,16 @@ namespace MauRen
 			std::vector<glm::mat4> modelMatrices;
 			for (auto const& instance : instances)
 			{
-				VulkanMesh::MeshPushConstant mPush{ mesh.GetPushConstant() };
+				MeshPushConstant mPush{ };
 				mPush.m_ModelMatrix = instance.GetModelMatrix();
-				mPush.m_AlbedoTextureID = 0;
+
+				auto const& mat{ VulkanMaterialManager::GetInstance().GetMaterial(instance.GetMaterialID()) };
+				assert(VulkanMaterialManager::GetInstance().Exists(instance.GetMaterialID()));
+
+				mPush.m_AlbedoTextureID = mat.albedoTexture;
+
 				vkCmdPushConstants(commandBuffer, layout,
-									VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(mesh.GetPushConstant()),
+									VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(mPush),
 									&mPush);
 
 				mesh.Draw(commandBuffer);

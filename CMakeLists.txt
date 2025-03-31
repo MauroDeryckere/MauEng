@@ -133,7 +133,7 @@ add_custom_target(
 
 add_dependencies(${EXECUTABLE_NAME} copy_textures)
 
-# Define texture source and destination directories
+# Define model source and destination directories
 set(MODELS_DIR "${CMAKE_SOURCE_DIR}/Resources/Models")
 set(MODELS_OUTPUT_DIR "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Models")
 
@@ -151,6 +151,25 @@ add_custom_target(
 )
 
 add_dependencies(${EXECUTABLE_NAME} copy_models)
+
+# Define materials source and destination directories
+set(MATERIALS_DIR "${CMAKE_SOURCE_DIR}/Resources/Materials")
+set(MATERIALS_OUTPUT_DIR "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Materials")
+
+add_custom_command(
+    OUTPUT ${MATERIALS_OUTPUT_DIR}
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "${MATERIALS_DIR}" "${MATERIALS_OUTPUT_DIR}"
+    COMMENT "Copying all materials to output directory"
+    VERBATIM
+)
+
+# Add a custom target for copying materials
+add_custom_target(
+    copy_materials ALL
+    DEPENDS ${MATERIALS_OUTPUT_DIR}
+)
+
+add_dependencies(${EXECUTABLE_NAME} copy_materials)
 
 # @ENDREGION PLATFORMS AND RESOURCES
 

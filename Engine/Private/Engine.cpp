@@ -32,22 +32,23 @@ namespace MauEng
 
 		// Get all the systems we wish to use during the game loop
 
-		Mesh m1{ "Models/VikingRoom.obj" };
-		//Mesh m2{ "models/skull.obj" };
+		Mesh m1{ "Models/Gun.obj" };
+		Mesh m2{ "Models/Skull.obj" };
 
 		m_Renderer->UpLoadModel(m1);
-	//	m_Renderer->UpLoadModel(m2);
+		m_Renderer->UpLoadModel(m2);
 
-		MeshInstance mi1{ m1 };
-		MeshInstance mi2{ m1 };
+		MeshInstance mi1{ m2 };
+		mi1.Translate({ 0, 3,  -3 });
+		mi1.Scale({ .3f, .3f, .3f });
+
+		MeshInstance mi2{ m2 };
+		mi2.Translate({ 0, 3,  -8 });
+		mi2.Scale({ .3f, .3f, .3f });
+
 		MeshInstance mi3{ m1 };
-		MeshInstance mi4{ m1 };
-		MeshInstance mi5{ m1 };
-		mi1.Translate({ 0,0,2 });
-		mi2.Translate({ -3, 0,0 });
-		mi3.Translate({0, 0,0 });
-		mi4.Translate({ 2, 0,0 });
-		mi5.Translate({ 5, 0,0 });
+		mi3.Translate({ 0, -1,  -3 });
+		mi3.Scale({ 5.f, 5.f, 5.f });
 
 		// TODO
 		// The Game loop
@@ -86,14 +87,10 @@ namespace MauEng
 			mi1.Rotate(rotationSpeed * deltaTime, glm::vec3(0.0f, 0.0f, 1.0f));
 			mi2.Rotate(rotationSpeed * deltaTime, glm::vec3(0.0f, 0.0f, 1.0f));
 			mi3.Rotate(rotationSpeed * deltaTime, glm::vec3(0.0f, 0.0f, 1.0f));
-			mi4.Rotate(rotationSpeed * deltaTime, glm::vec3(0.0f, 0.0f, 1.0f));
-			mi5.Rotate(rotationSpeed * deltaTime, glm::vec3(0.0f, 0.0f, 1.0f));
 
 			mi1.Draw();
 			mi2.Draw();
 			mi3.Draw();
-			mi4.Draw();
-			mi5.Draw();
 
 			m_Renderer->Render();
 

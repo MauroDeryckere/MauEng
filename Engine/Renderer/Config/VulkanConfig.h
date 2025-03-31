@@ -29,6 +29,9 @@ namespace MauRen
 
 	uint32_t constexpr MAX_FRAMES_IN_FLIGHT{ 2 };
 	static_assert(MAX_FRAMES_IN_FLIGHT > 0);
+
+	uint32_t constexpr MAX_TEXTURES{ 10 };
+	bool constexpr DEBUG_OUT_MAT{ true };
 }
 
 #endif // MAUREN_VULKANCONFIG_H

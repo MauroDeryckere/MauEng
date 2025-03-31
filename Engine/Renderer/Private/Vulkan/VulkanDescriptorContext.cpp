@@ -3,7 +3,7 @@
 namespace MauRen
 {
 	// ! THIS IS NOT SAFE TO CALL DURING A FRAME, HAS TO BE HANDLED IF WE WANT THAT
-	void VulkanDescriptorContext::AddTexture(VkImageView imageView, VkSampler sampler, VkImageLayout imageLayout)
+	void VulkanDescriptorContext::AddTexture(uint32_t destLocation, VkImageView imageView, VkSampler sampler, VkImageLayout imageLayout)
 	{
 		VkDescriptorImageInfo imageInfo{};
 		imageInfo.imageLayout = imageLayout;
@@ -16,7 +16,7 @@ namespace MauRen
 			descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 			descriptorWrite.dstSet = m_DescriptorSets[i];
 			descriptorWrite.dstBinding = 1;
-			descriptorWrite.dstArrayElement = static_cast<uint32_t>(m_CurrTextureIdx);
+			descriptorWrite.dstArrayElement = destLocation;
 			descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 			descriptorWrite.descriptorCount = 1;
 			descriptorWrite.pImageInfo = &imageInfo;
@@ -24,9 +24,7 @@ namespace MauRen
 			auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 			vkUpdateDescriptorSets(deviceContext->GetLogicalDevice(), 1, &descriptorWrite, 0, nullptr);
 
-		}
-		m_CurrTextureIdx = (m_CurrTextureIdx + 1) % MAX_TEXTURES;
-	}
+		}}
 
 	void VulkanDescriptorContext::CreateDescriptorSetLayout()
 	{
@@ -141,7 +139,7 @@ namespace MauRen
 				};
 
 			uint32_t const textureCount{ std::min(static_cast<uint32_t>(imageViews.size()), MAX_TEXTURES) }; // Avoid exceeding MAX_TEXTURES
-			m_CurrTextureIdx = textureCount;
+//			m_CurrTextureIdx = textureCount;
 			std::vector<VkDescriptorImageInfo> bindlessImageInfos(textureCount);
 			for (size_t textureID = 0; textureID < textureCount; ++textureID)
 			{
@@ -159,9 +157,12 @@ namespace MauRen
 			descriptorWriteTextures.descriptorCount = textureCount;  // Number of textures in the array
 			descriptorWriteTextures.pImageInfo = bindlessImageInfos.data();  // Array of image info
 
-			descriptorWrites[1] = descriptorWriteTextures;
+			if (textureCount > 0)
+			{
+				descriptorWrites[1] = descriptorWriteTextures;
+			}
 
-			vkUpdateDescriptorSets(deviceContext->GetLogicalDevice(), static_cast<uint32_t>(2), descriptorWrites, 0, nullptr);
+			vkUpdateDescriptorSets(deviceContext->GetLogicalDevice(), textureCount > 0 ? static_cast<uint32_t>(2) : 1, descriptorWrites, 0, nullptr);
 		}
 	}
 

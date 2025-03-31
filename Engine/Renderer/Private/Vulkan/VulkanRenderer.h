@@ -19,6 +19,7 @@
 
 #include "VulkanImage.h"
 
+
 // Sources
 // https://github.com/KhronosGroup/Vulkan-Docs/wiki/Synchronization-Examples#swapchain-image-acquire-and-present
 // https://blog.traverseresearch.nl/bindless-rendering-setup-afeb678d77fc
@@ -42,7 +43,6 @@ namespace MauRen
 		VulkanRenderer(VulkanRenderer&&) = delete;
 		VulkanRenderer& operator=(VulkanRenderer const&) = delete;
 		VulkanRenderer& operator=(VulkanRenderer&&) = delete;
-
 	private:
 		// "reference" to the window
 		GLFWwindow* m_pWindow{ nullptr };
@@ -84,22 +84,12 @@ namespace MauRen
 		VulkanBuffer m_InstanceDataBuffer{};  // Holds per-instance data
 #pragma endregion
 
-		std::vector<VulkanMesh> m_Meshes;
-
 		struct UniformBufferObject final
 		{
 			alignas(16) glm::mat4 view;
 			alignas(16) glm::mat4 proj;
 		};
 		std::vector<VulkanMappedBuffer> m_MappedUniformBuffers{};
-
-		VulkanImage m_TextureImage{};
-		VulkanImage m_TextureImage2{};
-
-		// Should be managedin e.g a texturemanager
-		VkSampler m_TextureSampler{ VK_NULL_HANDLE };
-
-		void CreateTextureImage();
 
 		void CreateUniformBuffers();
 
@@ -109,7 +99,6 @@ namespace MauRen
 		void RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
 		void UpdateUniformBuffer(uint32_t currentImage);
 
-		void CreateTextureSampler();
 
 		// Recreate the swapchain on e.g a window resize
 		void RecreateSwapchain();

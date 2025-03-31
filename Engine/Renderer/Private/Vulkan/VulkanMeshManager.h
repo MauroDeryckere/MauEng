@@ -19,7 +19,7 @@ namespace MauRen
 
 		[[nodiscard]] VulkanMesh const& GetVulkanMesh(uint32_t meshID) const;
 
-		void QueueDraw(MeshInstance const& instance);
+		void QueueDraw(MeshInstance const* instance);
 
 		void Draw(VkCommandBuffer commandBuffer, VkPipelineLayout layout, uint32_t setCount, VkDescriptorSet const* pDescriptorSets);
 

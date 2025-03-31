@@ -5,14 +5,16 @@
 namespace MauRen
 {
 	MeshInstance::MeshInstance(Mesh const& mesh) :
-	m_MeshID { mesh.GetMeshID() }
+	m_MeshID { mesh.GetMeshID() },
+	m_MaterialID { mesh.GetMaterialID() }
 	{
 		assert(m_MeshID != UINT32_MAX);
+		assert(m_MaterialID != UINT32_MAX);
 	}
 
 	void MeshInstance::Draw() const
 	{
-		VulkanMeshManager::GetInstance().QueueDraw(*this);
+		VulkanMeshManager::GetInstance().QueueDraw(this);
 	}
 
 	void MeshInstance::Translate(glm::vec3 const& translation) noexcept

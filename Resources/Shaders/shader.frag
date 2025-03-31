@@ -33,6 +33,9 @@ void main()
 
     outColor = albedo * vec4(vec3(NdotL), 1.0);  // Color is modulated by diffuse lighting
 
+
+    outColor = albedo;  // Color is modulated by diffuse lighting
+
     // outColor = texture(texSampler, fragTexCoord);
     // Debug colours
     // outColor = vec4(fragTexCoord, 0.0, 1.0);
