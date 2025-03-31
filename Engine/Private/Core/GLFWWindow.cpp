@@ -22,6 +22,7 @@ namespace MauEng
 		{
 			throw std::runtime_error("Failed to initialize GLFW!");
 		}
+		glfwSwapInterval(0);
 
 		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 		glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);

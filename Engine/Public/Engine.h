@@ -4,6 +4,8 @@
 #include <functional>
 #include <memory>
 
+#include "GameTime.h"
+
 namespace MauRen
 {
 	class Renderer;
