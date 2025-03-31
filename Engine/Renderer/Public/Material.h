@@ -1,7 +1,7 @@
 #ifndef MAUREN_MATERIAL_H
 #define MAUREN_MATERIAL_H
 
-#include "glm/vec3.hpp"
+#include <glm/glm.hpp>
 #include <string>
 
 namespace MauRen

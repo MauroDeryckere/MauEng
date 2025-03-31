@@ -1,8 +1,9 @@
 #ifndef MAUREN_MESHINSTANCE_H
 #define MAUREN_MESHINSTANCE_H
 
-#include <glm/mat4x4.hpp>
 #include "Mesh.h"
+#include <glm/mat4x4.hpp>
+#include <glm/glm.hpp>
 
 namespace MauRen
 {

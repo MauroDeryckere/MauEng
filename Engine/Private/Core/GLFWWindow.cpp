@@ -17,7 +17,7 @@ namespace MauEng
 
 		ServiceLocator::GetRenderer().ResizeWindow();
 
-		// TODO reflact width / heigh change in the camera 
+		// TODO reflact width / heigh change in the camera
 	}
 
 	GLFWWindow::GLFWWindow()
