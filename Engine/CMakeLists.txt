@@ -7,12 +7,12 @@ set(ENGINE_PRIVATE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/private")
 # Gather all source files
 file(GLOB ENGINE_PUBLIC_SOURCES
     "${ENGINE_PUBLIC_DIR}/*.cpp"
-    "${RENDERER_PUBLIC_DIR}/Core/*.cpp"
+    "${ENGINE_PUBLIC_DIR}/**/*.cpp"
 )
 
 file(GLOB ENGINE_PRIVATE_SOURCES
+    "${ENGINE_PRIVATE_DIR}/**/*.cpp"
     "${ENGINE_PRIVATE_DIR}/*.cpp"
-    "${ENGINE_PRIVATE_DIR}/Core/*.cpp"
 )
 
 # Create the Engine target (as a library)

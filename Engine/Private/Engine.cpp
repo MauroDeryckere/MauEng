@@ -4,8 +4,9 @@
 #include <thread>
 
 #include "Camera.h"
-#include "Renderer.h"
 #include "RendererFactory.h"
+#include "Scene/SceneManager.h"
+#include "Renderer.h"
 
 #include "Core/GLFWWindow.h"
 
@@ -66,7 +67,7 @@ namespace MauEng
 
 		// Get all the systems we wish to use during the game loop
 		auto& time{ Time::GetInstance() };
-
+		auto& sceneManager{ SceneManager::GetInstance() };
 
 
 		bool doContinue{ true };
@@ -139,12 +140,12 @@ namespace MauEng
 
 			while (time.IsLag())
 			{
-				//sceneManager.FixedUpdate();
+				sceneManager.FixedUpdate();
 				time.ProcessLag();
 			}
 
 			m_Camera.Update();
-			//sceneManager.Update();
+			sceneManager.Tick();
 
 			float const rotationSpeed{ glm::radians(90.0f) }; // 90 degrees per second
 			mi1.Rotate(rotationSpeed * time.ElapsedSec(), glm::vec3(0.0f, 0.0f, 1.0f));

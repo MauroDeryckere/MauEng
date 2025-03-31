@@ -1,20 +1,23 @@
 #include <iostream>
 
 #include "Engine.h"
+#include "GameScene.h"
+#include "Scene/SceneManager.h"
 
-void LoadDemoScene();
+void InitDemoScene();
 
 int main()
 {
 	using namespace MauEng;
 	Engine engine{};
 
-	engine.Run(LoadDemoScene);
+	engine.Run(InitDemoScene);
 
 	return 0;
 }
 
-void LoadDemoScene()
+void InitDemoScene()
 {
-	std::cout << "Demo Scene Loaded! \n";
+	using namespace MauGam;
+	MauEng::SceneManager::GetInstance().LoadScene(std::make_unique<GameScene>());
 }
