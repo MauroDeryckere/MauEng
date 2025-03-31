@@ -10,6 +10,7 @@ namespace MauEng
 	{
 	public:
 		explicit Camera(glm::vec3 const& pos, float fov = 60.f, float aspect = 19.f / 6.f, float near = .1f, float far = 100.f);
+		Camera() = default;
 		~Camera() = default;
 
 		void Update() noexcept;

@@ -2,8 +2,6 @@
 
 #include "ServiceLocator.h"
 
-#include "glm/glm.hpp"
-
 namespace MauEng
 {
 	void SceneManager::LoadScene(std::unique_ptr<Scene> pScene)
@@ -17,11 +15,11 @@ namespace MauEng
 		//TODO
 	}
 
-	void SceneManager::Render(glm::mat4 const& view, glm::mat4 const& proj)
+	void SceneManager::Render()
 	{
 		m_Scene->OnRender();
 
-		ServiceLocator::GetRenderer().Render(view, proj);
+		Renderer().Render(m_Scene->GetCamera().GetViewMatrix(), m_Scene->GetCamera().GetProjectionMatrix());
 	}
 
 	void SceneManager::Tick()

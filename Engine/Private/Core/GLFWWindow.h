@@ -15,8 +15,8 @@ namespace MauEng
 	struct GLFWWindow final
 	{
 		GLFWwindow* window{ nullptr };
-		uint16_t width{ 800 };
-		uint16_t height{ 600 };
+		uint16_t width{ 1280 };
+		uint16_t height{ 720 };
 
 		std::string windowTitle{ "VulkanProject" };
 

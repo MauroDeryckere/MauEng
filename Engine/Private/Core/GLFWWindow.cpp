@@ -16,6 +16,8 @@ namespace MauEng
 		winClassPtr->height = height;
 
 		ServiceLocator::GetRenderer().ResizeWindow();
+
+		// TODO reflact width / heigh change in the camera 
 	}
 
 	GLFWWindow::GLFWWindow()

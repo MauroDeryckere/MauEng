@@ -9,6 +9,8 @@ namespace MauGam
 	class GameScene final : public MauEng::Scene
 	{
 	public:
+		GameScene();
+		virtual ~GameScene() override = default;
 		virtual void OnLoad() override;
 		virtual void Tick() override;
 		virtual void OnRender() override;

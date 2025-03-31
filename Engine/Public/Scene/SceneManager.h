@@ -6,8 +6,6 @@
 
 #include <memory>
 
-#include "glm/fwd.hpp"
-
 namespace MauEng
 {
 	class SceneManager final : public MauCor::Singleton<SceneManager>
@@ -16,7 +14,7 @@ namespace MauEng
 		void LoadScene(std::unique_ptr<Scene> pScene);
 
 		void FixedUpdate();
-		void Render(glm::mat4 const& view, glm::mat4 const& proj);
+		void Render();
 		void Tick();
 
 		SceneManager(SceneManager const&) = delete;
