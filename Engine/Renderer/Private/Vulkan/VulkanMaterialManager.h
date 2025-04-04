@@ -23,6 +23,10 @@ namespace MauRen
 
 		[[nodiscard]] VulkanMaterial const& GetMaterial(uint32_t ID) const noexcept;
 
+		[[nodiscard]] VkSampler GetTextureSampler() const noexcept { return m_TextureManager->GetTextureSampler(); }
+		[[nodiscard]] VulkanTextureManager* GetTextureManager() const noexcept { return m_TextureManager.get(); }
+		[[nodiscard]] std::vector<VulkanMaterial> const& GetMaterials() const noexcept { return m_Materials; }
+
 		VulkanMaterialManager(VulkanMaterialManager const&) = delete;
 		VulkanMaterialManager(VulkanMaterialManager&&) = delete;
 		VulkanMaterialManager& operator=(VulkanMaterialManager const&) = delete;

@@ -39,6 +39,10 @@ namespace MauRen
 		// common practice to rank from ‘least updated’ descriptor set(index 0) to ‘most frequent updated’
 		// descriptor set(index N)!This way, we can avoid rebinding as much as possible!
 		std::vector<VkDescriptorSet> m_DescriptorSets{};
+
+		const uint32_t UBO_BINDING_SLOT{ 0 };
+		const uint32_t SAMPLER_BINDING_SLOT{ 1 };
+		const uint32_t TEXTURE_BINDING_SLOT{ 2 };
 	};
 }
 

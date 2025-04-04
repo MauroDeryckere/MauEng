@@ -55,7 +55,7 @@ namespace MauRen
 		m_DescriptorContext.CreateDescriptorSets(tempUniformBuffers,
 			0,
 			sizeof(UniformBufferObject),
-			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, {}, VulkanMaterialManager::GetInstance().GetTextureSampler());
 
 		m_CommandPoolManager.CreateCommandBuffers();
 		CreateSyncObjects();

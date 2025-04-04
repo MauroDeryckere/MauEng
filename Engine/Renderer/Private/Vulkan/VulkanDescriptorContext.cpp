@@ -8,28 +8,28 @@ namespace MauRen
 		VkDescriptorImageInfo imageInfo{};
 		imageInfo.imageLayout = imageLayout;
 		imageInfo.imageView = imageView;
-		imageInfo.sampler = sampler;
 
 		for (size_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; ++i)
 		{
 			VkWriteDescriptorSet descriptorWrite{};
 			descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 			descriptorWrite.dstSet = m_DescriptorSets[i];
-			descriptorWrite.dstBinding = 1;
+			descriptorWrite.dstBinding = TEXTURE_BINDING_SLOT;
 			descriptorWrite.dstArrayElement = destLocation;
-			descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+			descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
 			descriptorWrite.descriptorCount = 1;
 			descriptorWrite.pImageInfo = &imageInfo;
 
 			auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 			vkUpdateDescriptorSets(deviceContext->GetLogicalDevice(), 1, &descriptorWrite, 0, nullptr);
 
-		}}
+		}
+	}
 
 	void VulkanDescriptorContext::CreateDescriptorSetLayout()
 	{
 		VkDescriptorSetLayoutBinding uboLayoutBinding{};
-		uboLayoutBinding.binding = 0;
+		uboLayoutBinding.binding = UBO_BINDING_SLOT;
 		uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 
 		// This could be used to specify a transformation for each of the bones in a skeleton for skeletal animation, for example.
@@ -39,22 +39,32 @@ namespace MauRen
 		uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 		uboLayoutBinding.pImmutableSamplers = nullptr; // Optional
 
+		// Binding for global sampler
+		VkDescriptorSetLayoutBinding samplerBinding{};
+		samplerBinding.binding = SAMPLER_BINDING_SLOT;
+		samplerBinding.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
+		samplerBinding.descriptorCount = 1;
+		samplerBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+		samplerBinding.pImmutableSamplers = nullptr;
+
 		VkDescriptorSetLayoutBinding bindlessTextureBinding{};
-		bindlessTextureBinding.binding = 1;
-		bindlessTextureBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		bindlessTextureBinding.descriptorCount = 2;
+		bindlessTextureBinding.binding = TEXTURE_BINDING_SLOT;
+		bindlessTextureBinding.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+		bindlessTextureBinding.descriptorCount = MAX_TEXTURES;
 		bindlessTextureBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-		bindlessTextureBinding.pImmutableSamplers = nullptr;
+
+		std::array<VkDescriptorSetLayoutBinding, 3> const bindings{ uboLayoutBinding, samplerBinding, bindlessTextureBinding };
+
 
 		// Flags for the binding - only use valid flags for image samplers
-		VkDescriptorBindingFlagsEXT bindingFlags[2] = {
+		VkDescriptorBindingFlagsEXT bindingFlags[bindings.size()] = {
+			0,
 			0 ,
 			VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT_EXT // Flags for bindless textures
 
 		};
-
-		std::array<VkDescriptorSetLayoutBinding, 2> const bindings{ uboLayoutBinding, bindlessTextureBinding };
 		VkDescriptorSetLayoutBindingFlagsCreateInfo bindingFlagsInfo{};
+
 		bindingFlagsInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO;
 		bindingFlagsInfo.bindingCount = static_cast<uint32_t>(bindings.size());
 		bindingFlagsInfo.pBindingFlags = bindingFlags;
@@ -74,13 +84,17 @@ namespace MauRen
 
 	void VulkanDescriptorContext::CreateDescriptorPool()
 	{
-		std::array<VkDescriptorPoolSize, 2> poolSizes{};
+		std::array<VkDescriptorPoolSize, 3> poolSizes{};
 		poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 		poolSizes[0].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
 
-		poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		poolSizes[1].type = VK_DESCRIPTOR_TYPE_SAMPLER;
 		// Assuming one set per frame and multiple textures
-		poolSizes[1].descriptorCount = static_cast<uint32_t>(MAX_TEXTURES * MAX_FRAMES_IN_FLIGHT);
+		poolSizes[1].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+
+		poolSizes[2].type = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+		// Assuming one set per frame and multiple textures
+		poolSizes[2].descriptorCount = static_cast<uint32_t>(MAX_TEXTURES * MAX_FRAMES_IN_FLIGHT);
 
 		VkDescriptorPoolCreateInfo poolInfo{};
 		poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -117,7 +131,7 @@ namespace MauRen
 
 		for (size_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; ++i)
 		{
-			VkWriteDescriptorSet descriptorWrites[2] = {};
+			VkWriteDescriptorSet descriptorWrites[3] = {};
 
 			VkDescriptorBufferInfo bufferInfo{};
 			bufferInfo.buffer = bufferInfoBuffers[i].buffer;
@@ -125,11 +139,11 @@ namespace MauRen
 			bufferInfo.range = range;
 
 			// Descriptor write for uniform buffer (binding 0)
-			descriptorWrites[0] = {
+			descriptorWrites[UBO_BINDING_SLOT] = {
 				VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
 				nullptr,
 				m_DescriptorSets[i],
-				0,  // Binding for the uniform buffer
+				UBO_BINDING_SLOT,  // Binding for the uniform buffer
 				0,
 				1,
 				VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
@@ -138,31 +152,47 @@ namespace MauRen
 				nullptr
 				};
 
+			VkDescriptorImageInfo samplerInfo{};
+			samplerInfo.sampler = sampler;
+			samplerInfo.imageView = VK_NULL_HANDLE;
+			samplerInfo.imageLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+
+			descriptorWrites[SAMPLER_BINDING_SLOT] = {
+				VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+				nullptr,
+				m_DescriptorSets[i],
+				SAMPLER_BINDING_SLOT,
+				0,
+				SAMPLER_BINDING_SLOT,
+				VK_DESCRIPTOR_TYPE_SAMPLER,
+				&samplerInfo,
+				nullptr,
+				nullptr
+			};
+
 			uint32_t const textureCount{ std::min(static_cast<uint32_t>(imageViews.size()), MAX_TEXTURES) }; // Avoid exceeding MAX_TEXTURES
-//			m_CurrTextureIdx = textureCount;
 			std::vector<VkDescriptorImageInfo> bindlessImageInfos(textureCount);
 			for (size_t textureID = 0; textureID < textureCount; ++textureID)
 			{
 				bindlessImageInfos[textureID].imageLayout = imageLayout;
 				bindlessImageInfos[textureID].imageView = imageViews[textureID];
-				bindlessImageInfos[textureID].sampler = sampler;
 			}
 
 			VkWriteDescriptorSet descriptorWriteTextures{};
 			descriptorWriteTextures.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 			descriptorWriteTextures.dstSet = m_DescriptorSets[i];
-			descriptorWriteTextures.dstBinding = 1;  // Single binding for all textures
+			descriptorWriteTextures.dstBinding = TEXTURE_BINDING_SLOT;  // Single binding for all textures
 			descriptorWriteTextures.dstArrayElement = 0;
-			descriptorWriteTextures.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+			descriptorWriteTextures.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
 			descriptorWriteTextures.descriptorCount = textureCount;  // Number of textures in the array
 			descriptorWriteTextures.pImageInfo = bindlessImageInfos.data();  // Array of image info
 
 			if (textureCount > 0)
 			{
-				descriptorWrites[1] = descriptorWriteTextures;
+				descriptorWrites[TEXTURE_BINDING_SLOT] = descriptorWriteTextures;
 			}
 
-			vkUpdateDescriptorSets(deviceContext->GetLogicalDevice(), textureCount > 0 ? static_cast<uint32_t>(2) : 1, descriptorWrites, 0, nullptr);
+			vkUpdateDescriptorSets(deviceContext->GetLogicalDevice(), textureCount > 0 ? static_cast<uint32_t>(3) : 2, descriptorWrites, 0, nullptr);
 		}
 	}
 

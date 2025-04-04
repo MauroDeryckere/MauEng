@@ -9,7 +9,8 @@ layout(push_constant) uniform PushConstants {
     uint metallicID;
 } pc;
 
-layout(set = 0, binding = 1) uniform sampler2D bindlessTextures[];
+layout(set = 0, binding = 1) uniform sampler globalSampler;
+layout(set = 0, binding = 2) uniform texture2D bindlessTextures[];
 
 //layout(set = 0, binding = 1) uniform sampler2D texSampler;  // This line is defining a combined image sampler
 
@@ -20,10 +21,23 @@ layout(location = 0) out vec4 outColor;
 
 void main() 
 {
-    vec4 albedo = (pc.albedoID == 0xFFFFFFFF) ? vec4(0.0) : texture(bindlessTextures[pc.albedoID], fragTexCoord);
-    vec4 normal = (pc.normalID == 0xFFFFFFFF) ? vec4(0.0) : texture(bindlessTextures[pc.normalID], fragTexCoord);
-    vec4 roughness = (pc.roughnessID == 0xFFFFFFFF) ? vec4(0.0) : texture(bindlessTextures[pc.roughnessID], fragTexCoord);
-    vec4 metallic = (pc.metallicID == 0xFFFFFFFF) ? vec4(0.0) : texture(bindlessTextures[pc.metallicID], fragTexCoord);
+    // When the push constant ID is 0xFFFFFFFF, we treat it as missing and return a zero vector.
+    vec4 albedo = (pc.albedoID == 0xFFFFFFFF)
+        ? vec4(0.0)
+        : texture(sampler2D(bindlessTextures[pc.albedoID], globalSampler), fragTexCoord);
+        
+    vec4 normal = (pc.normalID == 0xFFFFFFFF)
+        ? vec4(0.0)
+        : texture(sampler2D(bindlessTextures[pc.normalID], globalSampler), fragTexCoord);
+        
+    vec4 roughness = (pc.roughnessID == 0xFFFFFFFF)
+        ? vec4(0.0)
+        : texture(sampler2D(bindlessTextures[pc.roughnessID], globalSampler), fragTexCoord);
+        
+    vec4 metallic = (pc.metallicID == 0xFFFFFFFF)
+        ? vec4(0.0)
+        : texture(sampler2D(bindlessTextures[pc.metallicID], globalSampler), fragTexCoord);
+
 
     vec3 n = normalize(normal.xyz);
 

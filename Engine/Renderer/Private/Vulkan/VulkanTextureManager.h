@@ -23,6 +23,8 @@ namespace MauRen
 
 		[[nodiscard]] uint32_t LoadOrGetTexture(VulkanCommandPoolManager& cmdPoolManager, VulkanDescriptorContext& descriptorContext, std::string const& textureName) noexcept;
 
+		[[nodiscard]] VkSampler GetTextureSampler() const noexcept { return m_TextureSampler; }
+
 		VulkanTextureManager(VulkanTextureManager const&) = delete;
 		VulkanTextureManager(VulkanTextureManager&&) = delete;
 		VulkanTextureManager& operator=(VulkanTextureManager const&) = delete;
