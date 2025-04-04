@@ -335,30 +335,19 @@ namespace MauRen
 		// You need to pass the previous swap chain to the oldSwapChain field in the VkSwapchainCreateInfoKHR struct and destroy the old swap chain as soon as you've finished using it.
 
 		// This essentially pauses until the window is in the foreground again
-		int width{};
-		int height{};
-		SDL_GetWindowSize(m_pWindow, &width, &height);
 
-		while (width == 0 || height == 0)
+		if (SDL_GetWindowFlags(m_pWindow) & (SDL_WINDOW_MINIMIZED | SDL_WINDOW_HIDDEN))
 		{
-			SDL_Event event;
-			while (SDL_PollEvent(&event))
+			while (SDL_GetWindowFlags(m_pWindow) & (SDL_WINDOW_MINIMIZED | SDL_WINDOW_HIDDEN))
 			{
-				SDL_GetWindowSize(m_pWindow, &width, &height);
+				SDL_Event event;
+				while (SDL_PollEvent(&event))
+				{
+
+				}
 				SDL_Delay(10); // Add a small delay to avoid busy-waiting
 			}
 		}
-
-
-		//int width{};
-		//int height{};
-		//glfwGetFramebufferSize(m_pWindow, &width, &height);
-
-		//while (width == 0 || height == 0) 
-		//{
-		//	glfwGetFramebufferSize(m_pWindow, &width, &height);
-		//	glfwWaitEvents();
-		//}
 
 		vkDeviceWaitIdle(deviceContext->GetLogicalDevice());
 		m_SwapChainContext.ReCreate(m_pWindow, &m_GraphicsPipeline, &m_SurfaceContext);
