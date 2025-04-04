@@ -118,10 +118,11 @@ namespace MauRen
 	{
 		// Need an extension to interface with the window system
 		// GLFW returns the extensions it needs to do that -> pass to struct
-		uint32_t glfwExtensionCount{ 0 };
-		char const** glfwExtensions{ glfwGetRequiredInstanceExtensions(&glfwExtensionCount) };
+		uint32_t extCount{ 0 };
+		auto sdlExtensions { SDL_Vulkan_GetInstanceExtensions(&extCount) };
+//		 glfwExtensions{ glfwGetRequiredInstanceExtensions(&glfwExtensionCount) };extCount
 
-		std::vector<char const*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
+		std::vector<char const*> extensions(sdlExtensions, sdlExtensions + extCount);
 
 		if constexpr (ENABLE_VULKAN_VALIDATION_LAYERS)
 		{

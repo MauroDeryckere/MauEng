@@ -4,14 +4,14 @@
 #include "Mesh.h"
 #include "MeshInstance.h"
 
-struct GLFWwindow;
+struct SDL_Window;
 
 namespace MauRen
 {
 	class Renderer
 	{
 	public:
-		explicit Renderer(GLFWwindow* pWindow) { }
+		explicit Renderer(SDL_Window* pWindow) { }
 		virtual ~Renderer() = default;
 
 		virtual void Init() = 0;
@@ -34,7 +34,7 @@ namespace MauRen
 	class NullRenderer final : public Renderer
 	{
 	public:
-		explicit NullRenderer(GLFWwindow* pWindow) :
+		explicit NullRenderer(SDL_Window* pWindow) :
 		Renderer{ pWindow }
 		{}
 

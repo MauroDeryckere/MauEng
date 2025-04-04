@@ -1,9 +1,6 @@
 [submodule "Libs/glfw"]
 	path = Libs/glfw
 	url = https://github.com/glfw/glfw
-[submodule "Libs/glm"]
-	path = Libs/glm
-	url = https://github.com/g-truc/glm
 [submodule "Libs/stb"]
 	path = Libs/stb
 	url = https://github.com/nothings/stb

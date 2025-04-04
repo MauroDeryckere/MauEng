@@ -8,8 +8,10 @@
 #include "CorePCH.h"
 
 #ifdef USING_VULKAN_RENDERER
-	#define GLFW_INCLUDE_VULKAN
-	#include "GLFW/glfw3.h"
+	#include <SDL3/SDL.h>
+	#include <SDL3/SDL_vulkan.h>
+
+	#include <vulkan/vulkan_core.h>
 
 	#include "../Config/VulkanConfig.h"
 

@@ -8,15 +8,17 @@
 #include "Scene/SceneManager.h"
 #include "Renderer.h"
 
-#include "Core/GLFWWindow.h"
+#include "Core/SDLWindow.h"
 
 #include "glm/glm.hpp"
 
 
+#include <SDL3/SDL.h>
+
 namespace MauEng
 {
 	Engine::Engine():
-		m_Window{ std::make_unique<GLFWWindow>() }
+		m_Window{ std::make_unique<SDLWindow>() }
 	{
 		// Initialize all core dependences & singletons
 
@@ -69,10 +71,14 @@ namespace MauEng
 				}
 			}
 
-			glfwPollEvents();
-			if (glfwWindowShouldClose(m_Window->window))
+			// SDL Event Polling
+			SDL_Event event;
+			while (SDL_PollEvent(&event))
 			{
-				doContinue = false;
+				if (event.type == SDL_EVENT_QUIT)
+				{
+					doContinue = false;
+				}
 			}
 
 			// TODO setup input class

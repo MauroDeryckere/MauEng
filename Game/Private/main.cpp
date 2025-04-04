@@ -6,7 +6,10 @@
 
 void InitDemoScene();
 
-int main()
+// SDL needs to be able to overwrite main depending on the platform here
+#include "SDL3/SDL.h"
+#include "SDL3/SDL_main.h"
+int main(int, char* [])
 {
 	using namespace MauEng;
 	Engine engine{};

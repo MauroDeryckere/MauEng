@@ -14,7 +14,7 @@
 
 namespace MauRen
 {
-	VulkanRenderer::VulkanRenderer(GLFWwindow* pWindow) :
+	VulkanRenderer::VulkanRenderer(SDL_Window* pWindow) :
 		Renderer{ pWindow },
 		m_pWindow{ pWindow }
 	{
@@ -334,20 +334,33 @@ namespace MauRen
 		// It is possible to create a new swap chain while drawing commands on an image from the old swap chain are still in - flight.
 		// You need to pass the previous swap chain to the oldSwapChain field in the VkSwapchainCreateInfoKHR struct and destroy the old swap chain as soon as you've finished using it.
 
-
 		// This essentially pauses until the window is in the foreground again
 		int width{};
 		int height{};
-		glfwGetFramebufferSize(m_pWindow, &width, &height);
+		SDL_GetWindowSize(m_pWindow, &width, &height);
 
-		while (width == 0 || height == 0) 
+		while (width == 0 || height == 0)
 		{
-			glfwGetFramebufferSize(m_pWindow, &width, &height);
-			glfwWaitEvents();
+			SDL_Event event;
+			while (SDL_PollEvent(&event))
+			{
+				SDL_GetWindowSize(m_pWindow, &width, &height);
+				SDL_Delay(10); // Add a small delay to avoid busy-waiting
+			}
 		}
 
-		vkDeviceWaitIdle(deviceContext->GetLogicalDevice());
 
+		//int width{};
+		//int height{};
+		//glfwGetFramebufferSize(m_pWindow, &width, &height);
+
+		//while (width == 0 || height == 0) 
+		//{
+		//	glfwGetFramebufferSize(m_pWindow, &width, &height);
+		//	glfwWaitEvents();
+		//}
+
+		vkDeviceWaitIdle(deviceContext->GetLogicalDevice());
 		m_SwapChainContext.ReCreate(m_pWindow, &m_GraphicsPipeline, &m_SurfaceContext);
 	}
 

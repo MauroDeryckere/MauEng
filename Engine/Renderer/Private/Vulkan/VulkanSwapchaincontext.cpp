@@ -1,11 +1,14 @@
+#include "RendererPCH.h"
+
 #include "VulkanSwapchainContext.h"
 #include "VulkanSurfaceContext.h"
 #include "VulkanDeviceContext.h"
 #include "VulkanGraphicsPipeline.h"
 
+
 namespace MauRen
 {
-	void VulkanSwapchainContext::Initialize(GLFWwindow* pWindow, VulkanSurfaceContext const * pVulkanSurfaceContext)
+	void VulkanSwapchainContext::Initialize(SDL_Window* pWindow, VulkanSurfaceContext const * pVulkanSurfaceContext)
 	{
 		CreateSwapchain(pWindow, pVulkanSurfaceContext);
 		CreateImageViews();
@@ -18,7 +21,7 @@ namespace MauRen
 		CreateFrameBuffers(pGraphicsPipeline);
 	}
 
-	void VulkanSwapchainContext::ReCreate(GLFWwindow* pWindow, VulkanGraphicsPipeline const* pGraphicsPipeline, VulkanSurfaceContext const* pVulkanSurfaceContext)
+	void VulkanSwapchainContext::ReCreate(SDL_Window* pWindow, VulkanGraphicsPipeline const* pGraphicsPipeline, VulkanSurfaceContext const* pVulkanSurfaceContext)
 	{
 		Destroy();
 
@@ -86,7 +89,7 @@ namespace MauRen
 		return m_SwapChainFrameBuffers[imageIndex];
 	}
 
-	void VulkanSwapchainContext::CreateSwapchain(GLFWwindow* pWindow, VulkanSurfaceContext const * pVulkanSurfaceContext)
+	void VulkanSwapchainContext::CreateSwapchain(SDL_Window* pWindow, VulkanSurfaceContext const * pVulkanSurfaceContext)
 	{
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 
@@ -214,7 +217,7 @@ namespace MauRen
 		return VK_PRESENT_MODE_FIFO_KHR;
 	}
 
-	VkExtent2D VulkanSwapchainContext::ChooseSwapExtent(GLFWwindow* pWindow, VkSurfaceCapabilitiesKHR const& capabilities)
+	VkExtent2D VulkanSwapchainContext::ChooseSwapExtent(SDL_Window* pWindow, VkSurfaceCapabilitiesKHR const& capabilities)
 	{
 		if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max())
 		{
@@ -222,8 +225,8 @@ namespace MauRen
 		}
 
 		int width, height;
-		glfwGetFramebufferSize(pWindow, &width, &height);
-
+	//	glfwGetFramebufferSize(pWindow, &width, &height);
+		SDL_GetWindowSize(pWindow, &width, &height);
 		VkExtent2D actualExtent
 		{
 			static_cast<uint32_t>(width),

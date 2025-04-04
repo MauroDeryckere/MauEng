@@ -10,6 +10,7 @@
 namespace MauEng
 {
 	struct GLFWWindow;
+	struct SDLWindow;
 
 	class Engine final
 	{
@@ -25,7 +26,8 @@ namespace MauEng
 		Engine& operator=(Engine&&) = delete;
 
 	private:
-		std::unique_ptr<GLFWWindow> m_Window{ nullptr };
+		//	std::unique_ptr<GLFWWindow> m_Window{ nullptr };
+		std::unique_ptr<SDLWindow> m_Window{ nullptr };
 	};
 }
 

@@ -30,7 +30,7 @@ namespace MauRen
 	class VulkanRenderer final : public Renderer
 	{
 	public:
-		explicit VulkanRenderer(GLFWwindow* pWindow);
+		explicit VulkanRenderer(SDL_Window* pWindow);
 		virtual ~VulkanRenderer() override = default;
 
 		virtual void Init() override;
@@ -48,7 +48,9 @@ namespace MauRen
 		VulkanRenderer& operator=(VulkanRenderer&&) = delete;
 	private:
 		// "reference" to the window
-		GLFWwindow* m_pWindow{ nullptr };
+		SDL_Window* m_pWindow{ nullptr };
+
+
 
 		VulkanInstanceContext m_InstanceContext{};
 		VulkanSurfaceContext m_SurfaceContext{};

@@ -24,12 +24,12 @@ namespace MauRen
 		~VulkanSwapchainContext() = default;
 
 		// Initialize the swapchain
-		void Initialize(GLFWwindow* pWindow, VulkanSurfaceContext const * pVulkanSurfaceContext);
+		void Initialize(SDL_Window* pWindow, VulkanSurfaceContext const * pVulkanSurfaceContext);
 		// Intialize the depth image, colour image and create frames, this must be done after the graphics pipeline creation
 		void InitializeResourcesAndCreateFrames(VulkanGraphicsPipeline const* pGraphicsPipeline);
 
 		// Reecreate the entire swapchain, this will destroy the previous swapchain first
-		void ReCreate(GLFWwindow* pWindow, VulkanGraphicsPipeline const* pGraphicsPipeline, VulkanSurfaceContext const* pVulkanSurfaceContext);
+		void ReCreate(SDL_Window* pWindow, VulkanGraphicsPipeline const* pGraphicsPipeline, VulkanSurfaceContext const* pVulkanSurfaceContext);
 
 		void Destroy();
 
@@ -62,12 +62,12 @@ namespace MauRen
 
 		std::vector<VkFramebuffer> m_SwapChainFrameBuffers{};
 
-		void CreateSwapchain(GLFWwindow* pWindow, VulkanSurfaceContext const * pVulkanSurfaceContext);
+		void CreateSwapchain(SDL_Window* pWindow, VulkanSurfaceContext const * pVulkanSurfaceContext);
 		void CreateImageViews();
 
 		static VkSurfaceFormatKHR ChooseSwapSurfaceFormat(std::vector<VkSurfaceFormatKHR> const& availableFormats);
 		static VkPresentModeKHR ChooseSwapPresentMode(std::vector<VkPresentModeKHR> const& availablePresentModes);
-		static VkExtent2D ChooseSwapExtent(GLFWwindow* pWindow, VkSurfaceCapabilitiesKHR const& capabilities);
+		static VkExtent2D ChooseSwapExtent(SDL_Window* pWindow, VkSurfaceCapabilitiesKHR const& capabilities);
 
 		void CreateColorResources();
 		void CreateDepthResources();
