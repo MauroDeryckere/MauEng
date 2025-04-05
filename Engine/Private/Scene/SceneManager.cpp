@@ -15,16 +15,21 @@ namespace MauEng
 		//TODO
 	}
 
-	void SceneManager::Render()
+	void SceneManager::Render() const
 	{
 		m_Scene->OnRender();
 
-		Renderer().Render(m_Scene->GetCamera().GetViewMatrix(), m_Scene->GetCamera().GetProjectionMatrix());
+		Renderer().Render(m_Scene->GetCameraManager().GetActiveCamera().GetViewMatrix(), m_Scene->GetCameraManager().GetActiveCamera().GetProjectionMatrix());
 	}
 
 	void SceneManager::Tick()
 	{
 		m_Scene->Tick();
+	}
+
+	void SceneManager::UpdateCamerasAspectRatio(float aspectRatio) noexcept
+	{
+		m_Scene->GetCameraManager().GetActiveCamera().SetAspectRatio(aspectRatio);
 	}
 
 	SceneManager::~SceneManager()

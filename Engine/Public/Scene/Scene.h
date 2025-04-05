@@ -1,7 +1,7 @@
 #ifndef MAUENG_SCENE_H
 #define MAUENG_SCENE_H
 
-#include "Camera.h"
+#include "CameraManager.h"
 
 namespace MauEng
 {
@@ -18,16 +18,17 @@ namespace MauEng
 		// Called each frame
 		virtual void Tick()
 		{
-			m_Camera.Update();
+			m_CameraManager.Tick();
 		}
 
 		// Called to render the scene
-		virtual void OnRender(){}
+		virtual void OnRender() const {}
 
 		// Called when the scene is unloaded
 		virtual void OnUnload(){}
 
-		[[nodiscard]] Camera const& GetCamera() const noexcept { return m_Camera; }
+		[[nodiscard]] CameraManager const& GetCameraManager() const noexcept { return m_CameraManager; }
+		[[nodiscard]] CameraManager& GetCameraManager() noexcept { return m_CameraManager; }
 
 		Scene(Scene const&) = delete;
 		Scene(Scene&&) = delete;
@@ -35,7 +36,7 @@ namespace MauEng
 		Scene& operator=(Scene&&) = delete;
 
 	protected:
-		Camera m_Camera{ };
+		CameraManager m_CameraManager{ };
 
 	private:
 

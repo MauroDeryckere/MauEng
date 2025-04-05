@@ -3,6 +3,7 @@
 
 #include "Renderer.h"
 #include "GameTime.h"
+#include "Scene/SceneManager.h"
 
 #include <memory>
 
@@ -18,12 +19,14 @@ namespace MauEng
 		}
 
 		[[nodiscard]] static MauEng::Time& GetTime() { return MauEng::Time::GetInstance(); }
+		[[nodiscard]] static MauEng::SceneManager& GetSceneManager() { return MauEng::SceneManager::GetInstance(); }
 
 
 	private:
 		static std::unique_ptr<MauRen::Renderer> m_pRenderer;
 	};
 
+#pragma region EasyAccessHelper
 	// Helper function for easy access to the renderer
 	inline MauRen::Renderer& Renderer()
 	{
@@ -35,6 +38,13 @@ namespace MauEng
 	{
 		return ServiceLocator::GetTime();
 	}
+
+	// Helper function for easy access to the scene manager
+	inline MauEng::SceneManager& SceneManager()
+	{
+		return ServiceLocator::GetSceneManager();
+	}
+#pragma endregion
 }
 
 #endif

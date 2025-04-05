@@ -2,5 +2,8 @@
 
 namespace MauEng
 {
-	
+	void CameraManager::Tick() noexcept
+	{
+		m_Camera.Update();
+	}
 }

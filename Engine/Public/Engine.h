@@ -3,6 +3,7 @@
 
 #include <functional>
 #include <memory>
+
 #include "ServiceLocator.h"
 
 #include "GameTime.h"
@@ -26,7 +27,6 @@ namespace MauEng
 		Engine& operator=(Engine&&) = delete;
 
 	private:
-		//	std::unique_ptr<GLFWWindow> m_Window{ nullptr };
 		std::unique_ptr<SDLWindow> m_Window{ nullptr };
 	};
 }

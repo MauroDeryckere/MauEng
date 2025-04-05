@@ -8,14 +8,18 @@
 
 namespace MauEng
 {
+	class CameraManager;
+
 	class SceneManager final : public MauCor::Singleton<SceneManager>
 	{
 	public:
 		void LoadScene(std::unique_ptr<Scene> pScene);
 
 		void FixedUpdate();
-		void Render();
+		void Render() const;
 		void Tick();
+
+		void UpdateCamerasAspectRatio(float aspectRatio) noexcept;
 
 		SceneManager(SceneManager const&) = delete;
 		SceneManager(SceneManager&&) = delete;
@@ -25,9 +29,9 @@ namespace MauEng
 	private:
 		friend class Singleton<SceneManager>;
 		SceneManager() = default;
-		virtual ~SceneManager();
+		virtual ~SceneManager() override;
 
-		// One scene for now
+		// Only support one scene for now
 		std::unique_ptr<Scene> m_Scene;
 	};
 }

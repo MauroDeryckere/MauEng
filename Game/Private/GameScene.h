@@ -13,7 +13,7 @@ namespace MauGam
 		virtual ~GameScene() override = default;
 		virtual void OnLoad() override;
 		virtual void Tick() override;
-		virtual void OnRender() override;
+		virtual void OnRender() const override;
 	private:
 		std::vector<MauRen::MeshInstance> m_Mehses{};
 	};

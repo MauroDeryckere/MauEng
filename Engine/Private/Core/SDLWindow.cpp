@@ -54,8 +54,7 @@ namespace MauEng
 
 			ServiceLocator::GetRenderer().ResizeWindow();
 
-			// TODO reflect width / heigh change in the camera
-			// -> ServiceLocator::GetSceneManager::UpdateActiveCameraAspectRatio(width, height);
+			SceneManager().UpdateCamerasAspectRatio(static_cast<float>(winClassPtr->width) / static_cast<float>(winClassPtr->height));
 		}
 
 		return true;

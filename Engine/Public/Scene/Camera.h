@@ -18,7 +18,7 @@ namespace MauEng
 		void Focus(glm::vec3 const& position) noexcept;
 
 		void Translate(glm::vec3 const& delta) noexcept;
-		void Rotate(float amountDegrees, glm::vec3 const& deltaRotation) noexcept;
+		void Rotate(float amountDegrees, glm::vec3 const& axis) noexcept;
 
 		[[nodiscard]] glm::mat4 const& GetViewMatrix() const noexcept { return m_ViewMatrix; }
 		[[nodiscard]] glm::mat4 const& GetProjectionMatrix() const noexcept { return m_ProjectionMatrix; }
@@ -46,9 +46,6 @@ namespace MauEng
 
 		glm::mat4 m_ViewMatrix{};
 		glm::mat4 m_ProjectionMatrix{};
-
-		float m_TotPitch{};
-		float m_TotYaw{};
 
 		// Should the camera be updated next time the update is called
 		bool m_IsDirty{ false };

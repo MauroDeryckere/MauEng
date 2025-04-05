@@ -11,10 +11,10 @@ namespace MauGam
 {
 	GameScene::GameScene()
 	{
-		m_Camera.SetPosition(glm::vec3{ 0.f, -8.f, 3.f });
-		m_Camera.SetFOV(60.f);
+		m_CameraManager.GetActiveCamera().SetPosition(glm::vec3{ 0.f, -8.f, 3.f });
+		m_CameraManager.GetActiveCamera().SetFOV(60.f);
 
-		m_Camera.Focus({ 0,0,0 });
+		m_CameraManager.GetActiveCamera().Focus({ 0,0,0 });
 	}
 
 	void GameScene::OnLoad()
@@ -99,7 +99,7 @@ namespace MauGam
 		m_Mehses[2].Rotate(rotationSpeed * MauEng::Time().ElapsedSec(), glm::vec3(0.0f, 1.0f, 0.0f));
 	}
 
-	void GameScene::OnRender()
+	void GameScene::OnRender() const
 	{
 		Scene::OnRender();
 
