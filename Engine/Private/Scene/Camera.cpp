@@ -64,7 +64,22 @@ namespace MauEng
 
 	void Camera::Rotate(float amountDegrees, glm::vec3 const& axis) noexcept
 	{
-		m_Forward = glm::normalize(glm::rotate(m_Forward, glm::radians(amountDegrees), axis));
+		auto p = glm::degrees(asin(m_Forward.y));
+		auto y = glm::degrees(atan2(m_Forward.z, m_Forward.x));
+		
+		std::cout << "Pitch: " << p << " Yaw: " << y << std::endl;
+
+		auto axisCopy{ axis };
+		float const yaw{ glm::degrees(atan2(m_Forward.z, m_Forward.x)) };
+
+		if (p < 0)
+		{
+			axisCopy.x *= -1;
+		}
+
+		m_Forward = glm::normalize(glm::rotate(m_Forward, glm::radians(amountDegrees), axisCopy));
+
+
 
 		m_IsDirty = true;
 	}

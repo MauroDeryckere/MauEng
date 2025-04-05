@@ -1,8 +1,11 @@
 #ifndef MAUENG_CAMERA_H
 #define MAUENG_CAMERA_H
 
+#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/quaternion.hpp>
+#include <glm/gtx/quaternion.hpp>
 
 namespace MauEng
 {
@@ -31,9 +34,9 @@ namespace MauEng
 		Camera(Camera&&) = default;
 		Camera& operator=(Camera const&) = default;
 		Camera& operator=(Camera&&) = default;
-
 	private:
 		glm::vec3 m_Position{ 0, 0, 0 };
+		glm::quat m_Rotation{ 1, 0, 0, 0 };
 
 		glm::vec3 m_Forward{ 0, 0, -1 };
 		glm::vec3 m_Right{ 1, 0, 0 };
@@ -49,6 +52,8 @@ namespace MauEng
 
 		// Should the camera be updated next time the update is called
 		bool m_IsDirty{ false };
+
+		glm::vec3 m_OriginalRot{ 0, 0, 0 };
 
 		void UpdateViewMatrix() noexcept;
 		void UpdateProjectionMatrix() noexcept;

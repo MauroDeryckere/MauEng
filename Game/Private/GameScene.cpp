@@ -116,8 +116,9 @@ namespace MauGam
 			std::cout << "Mouse movement: " << mouseMovement.first << ", " << mouseMovement.second << "\n";
 
 			float const rot{ mouseRotSpeed * MauEng::Time().ElapsedSec() };
-			m_CameraManager.GetActiveCamera().Rotate(-mouseMovement.second * rot, { 1,0,0 });
+
 			m_CameraManager.GetActiveCamera().Rotate(-mouseMovement.first * rot, { 0, 0, 1 });
+			m_CameraManager.GetActiveCamera().Rotate(-mouseMovement.second * rot, { 1,0,0 });
 		}
 
 
