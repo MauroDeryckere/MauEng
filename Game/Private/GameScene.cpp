@@ -43,10 +43,18 @@ namespace MauGam
 
 		auto& input{ MauEng::InputManager() };
 
-		input.BindAction("MoveUp", {SDLK_UP, MauEng::KeyInfo::ActionType::Held });
-		input.BindAction("MoveLeft", { SDLK_LEFT, MauEng::KeyInfo::ActionType::Held });
-		input.BindAction("MoveRight", { SDLK_RIGHT, MauEng::KeyInfo::ActionType::Held });
-		input.BindAction("MoveDown", { SDLK_DOWN, MauEng::KeyInfo::ActionType::Held });
+		input.BindAction("MoveUp", MauEng::KeyInfo{SDLK_UP, MauEng::KeyInfo::ActionType::Held });
+		input.BindAction("MoveLeft", MauEng::KeyInfo{ SDLK_LEFT, MauEng::KeyInfo::ActionType::Held });
+		input.BindAction("MoveRight", MauEng::KeyInfo{ SDLK_RIGHT, MauEng::KeyInfo::ActionType::Held });
+		input.BindAction("MoveDown", MauEng::KeyInfo{ SDLK_DOWN, MauEng::KeyInfo::ActionType::Held });
+
+		input.BindAction("RotUp", MauEng::KeyInfo{ SDLK_I, MauEng::KeyInfo::ActionType::Held });
+		input.BindAction("RotLeft", MauEng::KeyInfo{ SDLK_J, MauEng::KeyInfo::ActionType::Held });
+		input.BindAction("RotRight", MauEng::KeyInfo{ SDLK_L, MauEng::KeyInfo::ActionType::Held });
+		input.BindAction("RotDown", MauEng::KeyInfo{ SDLK_K, MauEng::KeyInfo::ActionType::Held });
+
+
+		input.BindAction("Rotate", MauEng::MouseInfo{ {},   MauEng::MouseInfo::ActionType::Moved });
 	}
 
 	void GameScene::OnLoad()
@@ -59,10 +67,9 @@ namespace MauGam
 	void GameScene::Tick()
 	{
 		Scene::Tick();
-
-		auto const movementSpeed{ 20.f };
-
 		auto const& input{ MauEng::InputManager() };
+
+		auto constexpr movementSpeed{ 20.f };
 		if (input.IsActionExecuted("MoveUp"))
 		{
 			m_CameraManager.GetActiveCamera().Translate({ 0.f, 0.f, movementSpeed * MauEng::Time().ElapsedSec() });
@@ -80,28 +87,39 @@ namespace MauGam
 			m_CameraManager.GetActiveCamera().Translate({ movementSpeed * MauEng::Time().ElapsedSec(), 0.f, 0.f });
 		}
 
-		//TODO mouse input
-		//constexpr float rotSpeed{ 4 };
-		//if (glfwGetKey(m_Window->window, GLFW_KEY_I) == GLFW_PRESS)
-		//{
-		//	float rot = rotSpeed * time.ElapsedSec();
-		//	m_Camera.Rotate(rot, { 1,0,0 });
-		//}
-		//if (glfwGetKey(m_Window->window, GLFW_KEY_K) == GLFW_PRESS)
-		//{
-		//	float rot = rotSpeed * time.ElapsedSec();
-		//	m_Camera.Rotate(rot, { -1,0,0 });
-		//}
-		//if (glfwGetKey(m_Window->window, GLFW_KEY_J) == GLFW_PRESS)
-		//{
-		//	float rot = rotSpeed * time.ElapsedSec() * 3;
-		//	m_Camera.Rotate(rot, { 0,0,1 });
-		//}
-		//if (glfwGetKey(m_Window->window, GLFW_KEY_L) == GLFW_PRESS)
-		//{
-		//	float rot = rotSpeed * time.ElapsedSec() * 3;
-		//	m_Camera.Rotate(rot, { 0,0,-1 });
-		//}
+		float constexpr keyboardRotSpeed{ 10 };
+		if (input.IsActionExecuted("RotUp"))
+		{
+			float const rot{ keyboardRotSpeed * MauEng::Time().ElapsedSec() };
+			m_CameraManager.GetActiveCamera().Rotate(rot, { 1,0,0 });
+		}
+		if (input.IsActionExecuted("RotDown"))
+		{
+			float const rot{ keyboardRotSpeed * MauEng::Time().ElapsedSec() };
+			m_CameraManager.GetActiveCamera().Rotate(rot, { -1,0,0 });
+		}
+		if (input.IsActionExecuted("RotLeft"))
+		{
+			float const rot{ keyboardRotSpeed * MauEng::Time().ElapsedSec() * 3 };
+			m_CameraManager.GetActiveCamera().Rotate(rot, { 0,0,1 });
+		}
+		if (input.IsActionExecuted("RotRight"))
+		{
+			float const rot{ keyboardRotSpeed * MauEng::Time().ElapsedSec() * 3 };
+			m_CameraManager.GetActiveCamera().Rotate(rot, { 0,0,-1 });
+		}
+
+		float constexpr mouseRotSpeed{ 60 };
+		if (input.IsActionExecuted("Rotate"))
+		{
+			auto mouseMovement{ input.GetDeltaMouseMovement() };
+			std::cout << "Mouse movement: " << mouseMovement.first << ", " << mouseMovement.second << "\n";
+
+			float const rot{ mouseRotSpeed * MauEng::Time().ElapsedSec() };
+			m_CameraManager.GetActiveCamera().Rotate(-mouseMovement.second * rot, { 1,0,0 });
+			m_CameraManager.GetActiveCamera().Rotate(-mouseMovement.first * rot, { 0, 0, 1 });
+		}
+
 
 		float const rotationSpeed{ glm::radians(90.0f) }; // 90 degrees per second
 		m_Mehses[0].Rotate(rotationSpeed * MauEng::Time().ElapsedSec(), glm::vec3(0.0f, 0.0f, 1.0f));

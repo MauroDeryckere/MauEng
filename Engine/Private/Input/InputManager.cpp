@@ -7,50 +7,42 @@ namespace MauEng
 {
 	InputManager::InputManager()
 	{
-		m_MappedActions.resize(static_cast<size_t>(KeyInfo::ActionType::COUNT));
+		m_MappedKeyboardActions.resize(static_cast<size_t>(KeyInfo::ActionType::COUNT));
+		m_MappedMouseActions.resize(static_cast<size_t>(MouseInfo::ActionType::COUNT));
 	}
 
-	bool InputManager::ProcessInput() noexcept
+	void InputManager::HandleMouseHeldAndMovement()
 	{
-		m_ExecutedActions.clear();
+		float x{ m_MouseX };
+		float y{ m_MouseY };
+		SDL_MouseButtonFlags mouseButtonState{ SDL_GetMouseState(&x, &y) };
 
-		SDL_Event event;
-		while (SDL_PollEvent(&event))
-		{
-			if (event.type == SDL_EVENT_QUIT || event.type == SDL_EVENT_WINDOW_CLOSE_REQUESTED)
+		auto const& actions{ m_MappedMouseActions[static_cast<size_t>(KeyInfo::ActionType::Held)] };
+		auto handleMouseBtnHeld = [&](int const mask, uint8_t const button)
 			{
-				return false;
-			}
-			
-			if (event.type == SDL_EVENT_KEY_DOWN)
-			{
-				auto const& actions{ m_MappedActions[static_cast<size_t>(KeyInfo::ActionType::Down)] };
-				auto it{ actions.find(static_cast<uint32_t>(event.key.key)) };
-				if (it != end(actions))
+				if (mouseButtonState & mask)
 				{
-					for (auto const& action : it->second)
+					auto it{ actions.find(button) };
+					if (it != end(actions))
 					{
-						m_ExecutedActions.emplace(action);
+						for (auto const& action : it->second)
+						{
+							m_ExecutedActions.emplace(action);
+						}
 					}
 				}
-			}
+			};
 
-			if (event.type == SDL_EVENT_KEY_UP)
-			{
-				auto const& actions{ m_MappedActions[static_cast<size_t>(KeyInfo::ActionType::Up)]};
-				auto it{ actions.find(static_cast<uint32_t>(event.key.key)) };
-				if (it != end(actions))
-				{
-					for (auto const& action : it->second)
-					{
-						m_ExecutedActions.emplace(action);
-					}
-				}
-			}
-		}
+		handleMouseBtnHeld(SDL_BUTTON_LMASK, SDL_BUTTON_LEFT);
+		handleMouseBtnHeld(SDL_BUTTON_RMASK, SDL_BUTTON_RIGHT);
+		handleMouseBtnHeld(SDL_BUTTON_X1MASK, SDL_BUTTON_X1);
+		handleMouseBtnHeld(SDL_BUTTON_X2MASK, SDL_BUTTON_X2);
+		handleMouseBtnHeld(SDL_BUTTON_MMASK, SDL_BUTTON_MIDDLE);
+	}
 
-		auto const& actions{ m_MappedActions[static_cast<size_t>(KeyInfo::ActionType::Held)] };
-
+	void InputManager::HandleKeyboardHeld()
+	{
+		auto const& actions{ m_MappedKeyboardActions[static_cast<size_t>(KeyInfo::ActionType::Held)] };
 		int numKeys{ };
 		bool const* keyState{ SDL_GetKeyboardState(&numKeys) };
 		if (numKeys > 0 && keyState)
@@ -67,24 +59,115 @@ namespace MauEng
 				}
 			}
 		}
+	}
 
+	bool InputManager::ProcessInput() noexcept
+	{
+		// Reset all state that should be reset
+		m_ExecutedActions.clear();
+
+		m_MouseDeltaX = 0.f;
+		m_MouseDeltaY = 0.f;
+		m_MouseScrollX = 0.f;
+		m_MouseScrollY = 0.f;
+
+
+		auto const mouseActionfunc = [&](SDL_Event const& event, Uint32 const evType, MouseInfo::ActionType const actType)
+		{
+			if (event.type == evType)
+			{
+				if (evType == SDL_EVENT_MOUSE_MOTION)
+				{
+					m_MouseDeltaX = event.motion.xrel;
+					m_MouseDeltaY = event.motion.yrel;
+				}
+				else if (evType == SDL_EVENT_MOUSE_WHEEL)
+				{
+					float scrollX{ event.wheel.x };
+					float scrollY{ event.wheel.y };
+
+					m_MouseScrollX = scrollX;
+					m_MouseScrollY = scrollY;
+				}
+
+				auto const& actions{ m_MappedMouseActions[static_cast<size_t>(actType)] };
+				
+				auto it{ actions.find(
+						evType == SDL_EVENT_MOUSE_WHEEL || evType == SDL_EVENT_MOUSE_MOTION || evType == SDL_EVENT_WINDOW_MOUSE_ENTER || evType == SDL_EVENT_WINDOW_MOUSE_LEAVE 
+						? 0
+						: event.button.button)};
+
+				if (it != end(actions))
+				{
+					for (auto const& action : it->second)
+					{
+						m_ExecutedActions.emplace(action);
+					}
+				}
+			}
+		};
+
+		SDL_Event event;
+		while (SDL_PollEvent(&event))
+		{
+			if (event.type == SDL_EVENT_QUIT || event.type == SDL_EVENT_WINDOW_CLOSE_REQUESTED)
+			{
+				return false;
+			}
+
+		// Mouse
+			mouseActionfunc(event, SDL_EVENT_MOUSE_BUTTON_DOWN, MouseInfo::ActionType::Down);
+			mouseActionfunc(event, SDL_EVENT_MOUSE_BUTTON_UP, MouseInfo::ActionType::Up);
+			mouseActionfunc(event, SDL_EVENT_MOUSE_WHEEL, MouseInfo::ActionType::Scrolled);
+			mouseActionfunc(event, SDL_EVENT_MOUSE_MOTION, MouseInfo::ActionType::Moved);
+			mouseActionfunc(event, SDL_EVENT_WINDOW_MOUSE_ENTER, MouseInfo::ActionType::EnteredWindow);
+			mouseActionfunc(event, SDL_EVENT_WINDOW_MOUSE_LEAVE, MouseInfo::ActionType::LeftWindow);
+
+		// Keyboard
+			if (event.type == SDL_EVENT_KEY_DOWN)
+			{
+				auto const& actions{ m_MappedKeyboardActions[static_cast<size_t>(KeyInfo::ActionType::Down)] };
+				auto it{ actions.find(static_cast<uint32_t>(event.key.key)) };
+				if (it != end(actions))
+				{
+					for (auto const& action : it->second)
+					{
+						m_ExecutedActions.emplace(action);
+					}
+				}
+			}
+			else if (event.type == SDL_EVENT_KEY_UP)
+			{
+				auto const& actions{ m_MappedKeyboardActions[static_cast<size_t>(KeyInfo::ActionType::Up)] };
+				auto it{ actions.find(static_cast<uint32_t>(event.key.key)) };
+				if (it != end(actions))
+				{
+					for (auto const& action : it->second)
+					{
+						m_ExecutedActions.emplace(action);
+					}
+				}
+			}
+		}
+
+		HandleMouseHeldAndMovement();
+		HandleKeyboardHeld();
 		return true;
 	}
 
 	bool InputManager::BindAction(std::string const& actionName, KeyInfo const& keyInfo) noexcept
 	{
-		auto& actionTypeVec{ m_MappedActions[static_cast<size_t>(keyInfo.type)] };
-		auto it{ actionTypeVec.find(static_cast<uint32_t>(keyInfo.key)) };
-
-		if (it != end(actionTypeVec))
-		{
-			// Action already bound
-			return false;
-		}
-
+		auto& actionTypeVec{ m_MappedKeyboardActions[static_cast<size_t>(keyInfo.type)] };
 		actionTypeVec[static_cast<uint32_t>(keyInfo.key)].emplace_back(actionName);
 		return true;
-	}	
+	}
+
+	bool InputManager::BindAction(std::string const& actionName, MouseInfo const& mouseInfo) noexcept
+	{
+		auto& actionTypeVec{ m_MappedMouseActions[static_cast<size_t>(mouseInfo.type)] };
+		actionTypeVec[mouseInfo.button].emplace_back(actionName);
+		return true;
+	}
 
 	bool InputManager::IsActionExecuted(std::string const& actionName) const noexcept
 	{

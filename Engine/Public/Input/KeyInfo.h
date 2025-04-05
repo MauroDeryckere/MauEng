@@ -7,7 +7,7 @@
 
 namespace MauEng
 {
-
+	// Struct to make binding input to actions easier, is not stored anywhere
 	struct KeyInfo final
 	{
 		enum class ActionType : uint8_t
@@ -19,9 +19,9 @@ namespace MauEng
 			COUNT
 		};
 
-		//KeyBoardKey key{};
 		SDL_Keycode key{};
 		ActionType type{};
+
 	};
 }
 
