@@ -15,15 +15,8 @@ namespace MauGam
 		m_CameraManager.GetActiveCamera().SetFOV(60.f);
 
 		m_CameraManager.GetActiveCamera().Focus({ 0,0,0 });
-	}
 
-	void GameScene::OnLoad()
-	{
-		Scene::OnLoad();
-
-		std::cout << "Demo Scene loaded! \n";
 		using namespace MauRen;
-
 		// init meshes
 		Mesh m1{ "Models/Gun.obj" };
 		Mesh m2{ "Models/Skull.obj" };
@@ -41,36 +34,53 @@ namespace MauGam
 
 		MeshInstance mi3{ m1 };
 		mi3.Translate({ 0, 0,  0 });
-		mi3.Rotate(glm::radians(90.f), {1, 0,  0});
+		mi3.Rotate(glm::radians(90.f), { 1, 0,  0 });
 		mi3.Scale({ 5.f, 5.f, 5.f });
 
 		m_Mehses.emplace_back(mi1);
 		m_Mehses.emplace_back(mi2);
 		m_Mehses.emplace_back(mi3);
+
+		auto& input{ MauEng::InputManager() };
+
+		input.BindAction("MoveUp", {SDLK_UP, MauEng::KeyInfo::ActionType::Held });
+		input.BindAction("MoveLeft", { SDLK_LEFT, MauEng::KeyInfo::ActionType::Held });
+		input.BindAction("MoveRight", { SDLK_RIGHT, MauEng::KeyInfo::ActionType::Held });
+		input.BindAction("MoveDown", { SDLK_DOWN, MauEng::KeyInfo::ActionType::Held });
+	}
+
+	void GameScene::OnLoad()
+	{
+		Scene::OnLoad();
+
+		std::cout << "Demo Scene loaded! \n";
 	}
 
 	void GameScene::Tick()
 	{
 		Scene::Tick();
 
-		//TODO input
-		//if (glfwGetKey(m_Window->window, GLFW_KEY_UP) == GLFW_PRESS)
-		//{
-		//	m_Camera.Translate({ 0.f, 0.f, 4 * time.ElapsedSec() });
-		//}
-		//if (glfwGetKey(m_Window->window, GLFW_KEY_DOWN) == GLFW_PRESS)
-		//{
-		//	m_Camera.Translate({ 0.f, 0.f, -4.f * time.ElapsedSec() });
-		//}
-		//if (glfwGetKey(m_Window->window, GLFW_KEY_LEFT) == GLFW_PRESS)
-		//{
-		//	m_Camera.Translate({ -4.f * time.ElapsedSec(), 0.f, 0.f });
-		//}
-		//if (glfwGetKey(m_Window->window, GLFW_KEY_RIGHT) == GLFW_PRESS)
-		//{
-		//	m_Camera.Translate({ 4.f * time.ElapsedSec(), 0.f, 0.f });
-		//}
+		auto const movementSpeed{ 20.f };
 
+		auto const& input{ MauEng::InputManager() };
+		if (input.IsActionExecuted("MoveUp"))
+		{
+			m_CameraManager.GetActiveCamera().Translate({ 0.f, 0.f, movementSpeed * MauEng::Time().ElapsedSec() });
+		}
+		if (input.IsActionExecuted("MoveDown"))
+		{
+			m_CameraManager.GetActiveCamera().Translate({ 0.f, 0.f, -movementSpeed * MauEng::Time().ElapsedSec() });
+		}
+		if (input.IsActionExecuted("MoveLeft"))
+		{
+			m_CameraManager.GetActiveCamera().Translate({ -movementSpeed * MauEng::Time().ElapsedSec(), 0.f, 0.f });
+		}
+		if (input.IsActionExecuted("MoveRight"))
+		{
+			m_CameraManager.GetActiveCamera().Translate({ movementSpeed * MauEng::Time().ElapsedSec(), 0.f, 0.f });
+		}
+
+		//TODO mouse input
 		//constexpr float rotSpeed{ 4 };
 		//if (glfwGetKey(m_Window->window, GLFW_KEY_I) == GLFW_PRESS)
 		//{

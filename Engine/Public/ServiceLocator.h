@@ -4,6 +4,7 @@
 #include "Renderer.h"
 #include "GameTime.h"
 #include "Scene/SceneManager.h"
+#include "Input/InputManager.h"
 
 #include <memory>
 
@@ -18,9 +19,10 @@ namespace MauEng
 			m_pRenderer = ((!pRenderer) ? std::make_unique<MauRen::NullRenderer>(nullptr) : std::move(pRenderer));
 		}
 
+
 		[[nodiscard]] static MauEng::Time& GetTime() { return MauEng::Time::GetInstance(); }
 		[[nodiscard]] static MauEng::SceneManager& GetSceneManager() { return MauEng::SceneManager::GetInstance(); }
-
+		[[nodiscard]] static MauEng::InputManager& GetInputManager() { return MauEng::InputManager::GetInstance(); }
 
 	private:
 		static std::unique_ptr<MauRen::Renderer> m_pRenderer;
@@ -43,6 +45,12 @@ namespace MauEng
 	inline MauEng::SceneManager& SceneManager()
 	{
 		return ServiceLocator::GetSceneManager();
+	}
+
+	// Helper function for easy access to the input manager
+	inline MauEng::InputManager& InputManager()
+	{
+		return ServiceLocator::GetInputManager();
 	}
 #pragma endregion
 }

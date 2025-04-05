@@ -51,6 +51,7 @@ namespace MauEng
 		// Get all the systems we wish to use during the game loop
 		auto& time{ Time::GetInstance() };
 		auto& sceneManager{ SceneManager::GetInstance() };
+		auto& inputManager{ InputManager::GetInstance() };
 
 		bool doContinue{ true };
 		while (doContinue)
@@ -72,18 +73,7 @@ namespace MauEng
 				}
 			}
 
-			// SDL Event Polling
-			SDL_Event event;
-			while (SDL_PollEvent(&event))
-			{
-				if (event.type == SDL_EVENT_QUIT)
-				{
-					doContinue = false;
-				}
-			}
-
-			// TODO setup input class
-			//doContinue = input.ProcessInput();
+			doContinue = inputManager.ProcessInput();
 
 			while (time.IsLag())
 			{
