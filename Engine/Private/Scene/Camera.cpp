@@ -62,25 +62,15 @@ namespace MauEng
 		m_IsDirty = true;
 	}
 
-	void Camera::Rotate(float amountDegrees, glm::vec3 const& axis) noexcept
+	void Camera::RotateY(float amountDegrees) noexcept
 	{
-		auto p = glm::degrees(asin(m_Forward.y));
-		auto y = glm::degrees(atan2(m_Forward.z, m_Forward.x));
-		
-		std::cout << "Pitch: " << p << " Yaw: " << y << std::endl;
+		m_Forward = glm::normalize(glm::rotate(m_Forward, glm::radians(amountDegrees), {1, 0, 0}));
+		m_IsDirty = true;
+	}
 
-		auto axisCopy{ axis };
-		float const yaw{ glm::degrees(atan2(m_Forward.z, m_Forward.x)) };
-
-		if (p < 0)
-		{
-			axisCopy.x *= -1;
-		}
-
-		m_Forward = glm::normalize(glm::rotate(m_Forward, glm::radians(amountDegrees), axisCopy));
-
-
-
+	void Camera::RotateX(float amountDegrees) noexcept
+	{
+		m_Forward = glm::normalize(glm::rotate(m_Forward, glm::radians(amountDegrees), {0, 0, 1}));
 		m_IsDirty = true;
 	}
 

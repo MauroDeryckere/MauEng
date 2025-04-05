@@ -21,7 +21,8 @@ namespace MauEng
 		void Focus(glm::vec3 const& position) noexcept;
 
 		void Translate(glm::vec3 const& delta) noexcept;
-		void Rotate(float amountDegrees, glm::vec3 const& axis) noexcept;
+		void RotateX(float amountDegrees) noexcept;
+		void RotateY(float amountDegrees) noexcept;
 
 		[[nodiscard]] glm::mat4 const& GetViewMatrix() const noexcept { return m_ViewMatrix; }
 		[[nodiscard]] glm::mat4 const& GetProjectionMatrix() const noexcept { return m_ProjectionMatrix; }

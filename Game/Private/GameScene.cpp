@@ -88,25 +88,25 @@ namespace MauGam
 		}
 
 		float constexpr keyboardRotSpeed{ 10 };
+		if (input.IsActionExecuted("RotLeft"))
+		{
+			float const rot{ keyboardRotSpeed * MauEng::Time().ElapsedSec() * 3 };
+			m_CameraManager.GetActiveCamera().RotateX(rot);
+		}
+		if (input.IsActionExecuted("RotRight"))
+		{
+			float const rot{ -keyboardRotSpeed * MauEng::Time().ElapsedSec() * 3 };
+			m_CameraManager.GetActiveCamera().RotateX(rot);
+		}
 		if (input.IsActionExecuted("RotUp"))
 		{
 			float const rot{ keyboardRotSpeed * MauEng::Time().ElapsedSec() };
-			m_CameraManager.GetActiveCamera().Rotate(rot, { 1,0,0 });
+			m_CameraManager.GetActiveCamera().RotateY(rot);
 		}
 		if (input.IsActionExecuted("RotDown"))
 		{
 			float const rot{ keyboardRotSpeed * MauEng::Time().ElapsedSec() };
-			m_CameraManager.GetActiveCamera().Rotate(rot, { -1,0,0 });
-		}
-		if (input.IsActionExecuted("RotLeft"))
-		{
-			float const rot{ keyboardRotSpeed * MauEng::Time().ElapsedSec() * 3 };
-			m_CameraManager.GetActiveCamera().Rotate(rot, { 0,0,1 });
-		}
-		if (input.IsActionExecuted("RotRight"))
-		{
-			float const rot{ keyboardRotSpeed * MauEng::Time().ElapsedSec() * 3 };
-			m_CameraManager.GetActiveCamera().Rotate(rot, { 0,0,-1 });
+			m_CameraManager.GetActiveCamera().RotateY(rot);
 		}
 
 		float constexpr mouseRotSpeed{ 60 };
@@ -117,8 +117,8 @@ namespace MauGam
 
 			float const rot{ mouseRotSpeed * MauEng::Time().ElapsedSec() };
 
-			m_CameraManager.GetActiveCamera().Rotate(-mouseMovement.first * rot, { 0, 0, 1 });
-			m_CameraManager.GetActiveCamera().Rotate(-mouseMovement.second * rot, { 1,0,0 });
+			m_CameraManager.GetActiveCamera().RotateX(-mouseMovement.first * rot);
+			m_CameraManager.GetActiveCamera().RotateY(-mouseMovement.second * rot);
 		}
 
 
