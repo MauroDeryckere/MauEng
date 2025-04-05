@@ -1,4 +1,4 @@
-#include "Camera.h"
+#include "Scene/Camera.h"
 
 #include <algorithm>
 #define GLM_ENABLE_EXPERIMENTAL

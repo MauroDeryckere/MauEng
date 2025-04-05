@@ -3,9 +3,10 @@
 #include <algorithm>
 #include <thread>
 
-#include "Camera.h"
 #include "RendererFactory.h"
 #include "Scene/SceneManager.h"
+#include "Scene/Camera.h"
+
 #include "Renderer.h"
 
 #include "Core/SDLWindow.h"
