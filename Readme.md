@@ -18,19 +18,19 @@ In this project, we use a right-handed 3D coordinate system with the following c
 Easy to use API for debug rendering.
 
 ```cpp
-	void GameScene::Tick()
-	{
-		Scene::Tick();
+void GameScene::Tick()
+{
+	Scene::Tick();
 
-		// start, end, colour
-		DEBUG_RENDERER.DrawLine({0, 0,0 },  {0, 100, 100} );
-		DEBUG_RENDERER.DrawLine({-10 , 10, -10}, {10, 10, 10}, { 0, 1, 0});
+	// start, end, colour
+	DEBUG_RENDERER.DrawLine({0, 0,0 },  {0, 100, 100} );
+	DEBUG_RENDERER.DrawLine({-10 , 10, -10}, {10, 10, 10}, { 0, 1, 0});
 
-		// center, radius, colour, segmenets (per circle), layers
-		DEBUG_RENDERER.DrawSphereComplex({20,20,20}, 20.f, { 1, 1, 1 }, 24, 10);*/
-	}
+	// center, radius, colour, segmenets (per circle), layers
+	DEBUG_RENDERER.DrawSphereComplex({20,20,20}, 20.f, { 1, 1, 1 }, 24, 10);
+}
 ```
 
 Result of that last example is this: 
-![Screenshot](SphereDebugDrawingExample.png)
+![Screenshot](docs/SphereDebugDrawingExample.png)
 
