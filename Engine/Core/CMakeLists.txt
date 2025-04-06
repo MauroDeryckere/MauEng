@@ -37,11 +37,11 @@ set(SDL_STATIC ON)
 
 # We use EXCLUDE_FROM_ALL so that its install targets and configs don't
 # pollute upwards into our configuration.
-add_subdirectory(Libs/SDL EXCLUDE_FROM_ALL)	
-set(SDL3_INCLUDE_DIRS "${CMAKE_SOURCE_DIR}/SDL/include/SDL3")
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/Libs/SDL" EXCLUDE_FROM_ALL)	
+set(SDL3_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/SDL/include/SDL3")
 
 # Add sub directories for any third party libraries
-add_subdirectory(Libs/glm)
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/Libs/glm")
 
 target_link_libraries(MauEngCore
     PUBLIC
