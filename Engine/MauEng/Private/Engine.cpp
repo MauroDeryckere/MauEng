@@ -9,7 +9,7 @@
 
 #include "Renderer.h"
 
-#include "Core/SDLWindow.h"
+#include "Window/SDLWindow.h"
 
 #include "glm/glm.hpp"
 

@@ -1,7 +1,7 @@
 # Engine CMake file
 
-set(ENGINE_PUBLIC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/public")
-set(ENGINE_PRIVATE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/private")
+set(ENGINE_PUBLIC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/MauEng/public")
+set(ENGINE_PRIVATE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/MauEng/private")
 
 # Define directories for public and private headers
 # Gather all source files
@@ -21,6 +21,7 @@ add_library(Engine STATIC
     ${ENGINE_PRIVATE_SOURCES}
 )
 
+add_subdirectory(Core)
 add_subdirectory(Renderer)
 
 target_include_directories(Engine
