@@ -37,7 +37,6 @@ target_link_libraries(Engine
         MauEngCore
         Renderer
     PRIVATE
-        Libs
 )
 
 # Enable precompiled header support for Engine

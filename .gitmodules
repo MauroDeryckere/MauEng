@@ -1,12 +1,12 @@
-[submodule "Libs/glm"]
-	path = Libs/glm
-	url = https://github.com/g-truc/glm
-[submodule "Libs/stb"]
-	path = Libs/stb
-	url = https://github.com/nothings/stb
 [submodule "Engine/Renderer/Libs/Tinyobjloader"]
 	path = Engine/Renderer/Libs/Tinyobjloader
 	url = https://github.com/tinyobjloader/tinyobjloader.git
-[submodule "Libs/SDL"]
-	path = Libs/SDL
+[submodule "Engine/Renderer/Libs/stb"]
+	path = Engine/Renderer/Libs/stb
+	url = https://github.com/nothings/stb
+[submodule "Engine/Core/Libs/glm"]
+	path = Engine/Core/Libs/glm
+	url = https://github.com/g-truc/glm
+[submodule "Engine/Core/Libs/SDL"]
+	path = Engine/Core/Libs/SDL
 	url = https://github.com/libsdl-org/SDL

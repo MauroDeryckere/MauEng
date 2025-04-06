@@ -6,10 +6,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(RENDERER_PUBLIC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/public")
 set(RENDERER_PRIVATE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/private")
 
-# for loading models, only used in the renderer.
-# should be moved to engine later on when we have a resource manager or similar
-add_subdirectory("Libs/Tinyobjloader")
-
 # Gather all source files
 file(GLOB RENDERER_PUBLIC_SOURCES
     "${RENDERER_PUBLIC_DIR}/*.cpp"
@@ -30,11 +26,20 @@ add_library(Renderer STATIC
 find_package(Vulkan REQUIRED)
 
 
+# Add the Libs/ directory to the include paths
+
+# for loading models, only used in the renderer.
+add_library(tinyobjloader INTERFACE)
+target_include_directories(tinyobjloader INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/Libs/tinyobjloader)
+
+add_library(stb INTERFACE)
+target_include_directories(stb INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/Libs/stb)
+
 target_link_libraries(Renderer
     PRIVATE
         tinyobjloader # for loading models, only used in the renderer.
-        Libs
-        PUBLIC # Link Vulkan publicly because we need it fr the window in the engine, later on this can be cleaned up
+        stb
+    PUBLIC # Link Vulkan publicly because we need it for the window in the engine, later on this can be cleaned up
         MauEngCore
         Vulkan::Vulkan # Link Vulkan SDK
 )

@@ -21,5 +21,4 @@ target_include_directories(${EXECUTABLE_NAME}
 target_link_libraries(${EXECUTABLE_NAME}
     PRIVATE
         Engine
-        Libs
 )
