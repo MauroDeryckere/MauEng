@@ -11,10 +11,10 @@ namespace MauGam
 {
 	GameScene::GameScene()
 	{
-		m_CameraManager.GetActiveCamera().SetPosition(glm::vec3{ 0.f, -8.f, 3.f });
+		m_CameraManager.GetActiveCamera().SetPosition(glm::vec3{ 0.f, 2, 4 });
 		m_CameraManager.GetActiveCamera().SetFOV(60.f);
 
-		m_CameraManager.GetActiveCamera().Focus({ 0,0,0 });
+		m_CameraManager.GetActiveCamera().Focus({ 0,0,1 });
 
 		using namespace MauRen;
 		// init meshes
@@ -24,6 +24,8 @@ namespace MauGam
 		MauEng::Renderer().UpLoadModel(m1);
 		MauEng::Renderer().UpLoadModel(m2);
 
+		// Skulls
+		//TODO rotate skulls to correct dir
 		MeshInstance mi1{ m2 };
 		mi1.Translate({ 5, 20,  -3 });
 		mi1.Scale({ .3f, .3f, .3f });
@@ -32,17 +34,17 @@ namespace MauGam
 		mi2.Translate({ -5, 20,  -8 });
 		mi2.Scale({ .3f, .3f, .3f });
 
+		// Gun
 		MeshInstance mi3{ m1 };
-		mi3.Translate({ 0, 0,  0 });
-		mi3.Rotate(glm::radians(90.f), { 1, 0,  0 });
+		mi3.Translate({ 0, 2,  0 });
 		mi3.Scale({ 5.f, 5.f, 5.f });
 
 		m_Mehses.emplace_back(mi1);
 		m_Mehses.emplace_back(mi2);
 		m_Mehses.emplace_back(mi3);
 
+		// Setup input
 		auto& input{ MauEng::InputManager() };
-
 		input.BindAction("MoveUp", MauEng::KeyInfo{SDLK_UP, MauEng::KeyInfo::ActionType::Held });
 		input.BindAction("MoveLeft", MauEng::KeyInfo{ SDLK_LEFT, MauEng::KeyInfo::ActionType::Held });
 		input.BindAction("MoveRight", MauEng::KeyInfo{ SDLK_RIGHT, MauEng::KeyInfo::ActionType::Held });
@@ -88,43 +90,42 @@ namespace MauGam
 		}
 
 		float constexpr keyboardRotSpeed{ 10 };
-		if (input.IsActionExecuted("RotUp"))
-		{
-			float const rot{ keyboardRotSpeed * MauEng::Time().ElapsedSec() };
-			m_CameraManager.GetActiveCamera().Rotate(rot, { 1,0,0 });
-		}
-		if (input.IsActionExecuted("RotDown"))
-		{
-			float const rot{ keyboardRotSpeed * MauEng::Time().ElapsedSec() };
-			m_CameraManager.GetActiveCamera().Rotate(rot, { -1,0,0 });
-		}
 		if (input.IsActionExecuted("RotLeft"))
 		{
-			float const rot{ keyboardRotSpeed * MauEng::Time().ElapsedSec() * 3 };
-			m_CameraManager.GetActiveCamera().Rotate(rot, { 0,0,1 });
+			float const rot{ -keyboardRotSpeed * MauEng::Time().ElapsedSec() * 3 };
+			m_CameraManager.GetActiveCamera().RotateX(rot);
 		}
 		if (input.IsActionExecuted("RotRight"))
 		{
 			float const rot{ keyboardRotSpeed * MauEng::Time().ElapsedSec() * 3 };
-			m_CameraManager.GetActiveCamera().Rotate(rot, { 0,0,-1 });
+			m_CameraManager.GetActiveCamera().RotateX(rot);
+		}
+		if (input.IsActionExecuted("RotUp"))
+		{
+			float const rot{ keyboardRotSpeed * MauEng::Time().ElapsedSec() };
+			m_CameraManager.GetActiveCamera().RotateY(rot);
+		}
+		if (input.IsActionExecuted("RotDown"))
+		{
+			float const rot{ -keyboardRotSpeed * MauEng::Time().ElapsedSec() };
+			m_CameraManager.GetActiveCamera().RotateY(rot);
 		}
 
 		float constexpr mouseRotSpeed{ 60 };
 		if (input.IsActionExecuted("Rotate"))
 		{
-			auto mouseMovement{ input.GetDeltaMouseMovement() };
-			std::cout << "Mouse movement: " << mouseMovement.first << ", " << mouseMovement.second << "\n";
-
+			auto const mouseMovement{ input.GetDeltaMouseMovement() };
 			float const rot{ mouseRotSpeed * MauEng::Time().ElapsedSec() };
-			m_CameraManager.GetActiveCamera().Rotate(-mouseMovement.second * rot, { 1,0,0 });
-			m_CameraManager.GetActiveCamera().Rotate(-mouseMovement.first * rot, { 0, 0, 1 });
+
+			m_CameraManager.GetActiveCamera().RotateX(mouseMovement.first * rot);
+			m_CameraManager.GetActiveCamera().RotateY(-mouseMovement.second * rot);
 		}
 
-
-		float const rotationSpeed{ glm::radians(90.0f) }; // 90 degrees per second
-		m_Mehses[0].Rotate(rotationSpeed * MauEng::Time().ElapsedSec(), glm::vec3(0.0f, 0.0f, 1.0f));
-		m_Mehses[1].Rotate(rotationSpeed * MauEng::Time().ElapsedSec(), glm::vec3(0.0f, 0.0f, 1.0f));
-		m_Mehses[2].Rotate(rotationSpeed * MauEng::Time().ElapsedSec(), glm::vec3(0.0f, 1.0f, 0.0f));
+		// 90 degrees per second
+	//	float constexpr rotationSpeed{ glm::radians(90.0f) };
+	//	m_Mehses[0].Rotate(rotationSpeed * MauEng::Time().ElapsedSec(), glm::vec3(0.0f, 0.0f, 1.0f));
+	//	m_Mehses[1].Rotate(rotationSpeed * MauEng::Time().ElapsedSec(), glm::vec3(0.0f, 0.0f, 1.0f));
+	//	m_Mehses[2].Rotate(rotationSpeed * MauEng::Time().ElapsedSec(), glm::vec3(0.0f, 1.0f, 0.0f));
 	}
 
 	void GameScene::OnRender() const

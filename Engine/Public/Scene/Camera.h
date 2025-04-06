@@ -1,8 +1,11 @@
 #ifndef MAUENG_CAMERA_H
 #define MAUENG_CAMERA_H
 
+#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/quaternion.hpp>
+#include <glm/gtx/quaternion.hpp>
 
 namespace MauEng
 {
@@ -18,7 +21,8 @@ namespace MauEng
 		void Focus(glm::vec3 const& position) noexcept;
 
 		void Translate(glm::vec3 const& delta) noexcept;
-		void Rotate(float amountDegrees, glm::vec3 const& axis) noexcept;
+		void RotateX(float amountDegrees) noexcept;
+		void RotateY(float amountDegrees) noexcept;
 
 		[[nodiscard]] glm::mat4 const& GetViewMatrix() const noexcept { return m_ViewMatrix; }
 		[[nodiscard]] glm::mat4 const& GetProjectionMatrix() const noexcept { return m_ProjectionMatrix; }
@@ -34,6 +38,7 @@ namespace MauEng
 
 	private:
 		glm::vec3 m_Position{ 0, 0, 0 };
+		glm::quat m_Rotation{ 1, 0, 0, 0 };
 
 		glm::vec3 m_Forward{ 0, 0, -1 };
 		glm::vec3 m_Right{ 1, 0, 0 };
@@ -47,11 +52,19 @@ namespace MauEng
 		glm::mat4 m_ViewMatrix{};
 		glm::mat4 m_ProjectionMatrix{};
 
+		float m_Pitch{ 0.0f };
+		float m_Yaw{ -90.0f };
+
+		float m_MinPitch{ -89.f };
+		float m_MaxPitch{ 89.f };
+
 		// Should the camera be updated next time the update is called
 		bool m_IsDirty{ false };
 
 		void UpdateViewMatrix() noexcept;
 		void UpdateProjectionMatrix() noexcept;
+
+		void UpdateDirectionFromEuler() noexcept;
 	};
 }
 
