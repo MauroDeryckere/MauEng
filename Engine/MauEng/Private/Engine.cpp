@@ -25,6 +25,8 @@ namespace MauEng
 
 		ServiceLocator::RegisterRenderer(MauRen::CreateVulkanRenderer(m_Window->window));
 		ServiceLocator::GetRenderer().Init();
+		ServiceLocator::RegisterDebugRenderer(MauRen::CreateVulkanDebugRenderer(Renderer()));
+
 		m_Window->Initialize();
 	}
 

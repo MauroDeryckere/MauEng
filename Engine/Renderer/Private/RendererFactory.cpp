@@ -2,6 +2,7 @@
 
 #include "RendererFactory.h"
 #include "Vulkan/VulkanRenderer.h"
+#include "Vulkan/DebugRenderer/VulkanDebugRenderer.h"
 
 namespace MauRen
 {
@@ -9,5 +10,10 @@ namespace MauRen
 	std::unique_ptr<Renderer> CreateVulkanRenderer(SDL_Window* pWindow)
 	{
 		return std::make_unique<VulkanRenderer>(pWindow);
+	}
+
+	std::unique_ptr<DebugRenderer> CreateVulkanDebugRenderer(Renderer& pRenderer)
+	{
+		return std::make_unique<VulkanDebugRenderer>(pRenderer);
 	}
 }
