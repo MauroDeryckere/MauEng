@@ -65,7 +65,7 @@ namespace MauRen
 
 		VulkanMeshManager::GetInstance().Initialize(&m_CommandPoolManager);
 
-		size_t bufferSize = sizeof(m_DebugRenderer.m_ActiveLines[0]) * m_DebugRenderer.MAX_LINES;
+		size_t bufferSize = sizeof(m_DebugRenderer.m_ActivePoints[0]) * m_DebugRenderer.MAX_LINES;
 
 		m_DebugVertexBuffer = { bufferSize,
 								  VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
@@ -121,7 +121,7 @@ namespace MauRen
 	{
 		DrawFrame(view, proj);
 
-		m_DebugRenderer.m_ActiveLines.clear();
+		m_DebugRenderer.m_ActivePoints.clear();
 		m_DebugRenderer.m_IndexBuffer.clear();
 	}
 
@@ -400,7 +400,7 @@ namespace MauRen
 
 		// Map the vertex buffer memory
 		{
-			size_t bufferSize = sizeof(m_DebugRenderer.m_ActiveLines[0]) * m_DebugRenderer.m_ActiveLines.size();
+			size_t bufferSize = sizeof(m_DebugRenderer.m_ActivePoints[0]) * m_DebugRenderer.m_ActivePoints.size();
 
 			VulkanBuffer stagingBuffer{
 				bufferSize,
@@ -412,7 +412,7 @@ namespace MauRen
 			vkMapMemory(deviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory, 0, bufferSize, 0, &mappedMemory);
 
 			// Copy the data to the buffer
-			memcpy(mappedMemory, m_DebugRenderer.m_ActiveLines.data(), bufferSize);
+			memcpy(mappedMemory, m_DebugRenderer.m_ActivePoints.data(), bufferSize);
 
 			// Unmap the memory
 			vkUnmapMemory(deviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory);
