@@ -21,16 +21,30 @@ namespace MauEng
 
 	void Camera::UpdateViewMatrix() noexcept
 	{
-		m_Right = glm::normalize(glm::cross(m_Forward, {0, 0, 1}));
-		m_Up = glm::normalize(glm::cross(m_Right, m_Forward));
+		UpdateDirectionFromEuler();
 
-		m_ViewMatrix = glm::lookAt(m_Position, m_Position + m_Forward, m_Up);
+		m_ViewMatrix = glm::lookAt(m_Position, m_Position + m_Forward, glm::vec3{ 0.0f, 1.0f, 0.0f });
 	}
 
 	void Camera::UpdateProjectionMatrix() noexcept
 	{
 		m_ProjectionMatrix = glm::perspective(glm::radians(m_Fov), m_AspectRatio, m_NearPlane, m_FarPlane);
 		m_ProjectionMatrix[1][1] *= -1;
+	}
+
+	void Camera::UpdateDirectionFromEuler() noexcept
+	{
+		float pitchRad = glm::radians(m_Pitch);
+		float yawRad = glm::radians(m_Yaw);
+
+		m_Forward = glm::normalize(glm::vec3{
+			cos(pitchRad) * cos(yawRad),
+			sin(pitchRad),
+			cos(pitchRad) * sin(yawRad)
+			});
+
+		m_Right = glm::normalize(glm::cross(m_Forward, glm::vec3{ 0.0f, 1.0f, 0.0f }));
+		m_Up = glm::normalize(glm::cross(m_Right, m_Forward));
 	}
 
 	void Camera::Update() noexcept
@@ -50,27 +64,32 @@ namespace MauEng
 	{
 		m_Forward = glm::normalize(position - m_Position);
 
+		m_Pitch = glm::degrees(asin(m_Forward.y));
+		m_Yaw = glm::degrees(atan2(m_Forward.z, m_Forward.x));
+
 		UpdateViewMatrix();
 	}
 
 	void Camera::Translate(glm::vec3 const& delta) noexcept
 	{
-		m_Position += m_Forward * delta.z;
-		m_Position += m_Right * delta.x;
-		m_Position += m_Up * delta.y;
+		glm::vec3 const forwardMove{ m_Forward * delta.z };
+		glm::vec3 const rightMove{ m_Right * delta.x };
+		glm::vec3 const upMove{ m_Up * delta.y };
+
+		m_Position += forwardMove + rightMove + upMove;
 
 		m_IsDirty = true;
 	}
 
 	void Camera::RotateY(float amountDegrees) noexcept
 	{
-		m_Forward = glm::normalize(glm::rotate(m_Forward, glm::radians(amountDegrees), {1, 0, 0}));
+		m_Pitch = std::clamp(m_Pitch + amountDegrees, m_MinPitch, m_MaxPitch);
 		m_IsDirty = true;
 	}
 
 	void Camera::RotateX(float amountDegrees) noexcept
 	{
-		m_Forward = glm::normalize(glm::rotate(m_Forward, glm::radians(amountDegrees), {0, 0, 1}));
+		m_Yaw += amountDegrees;
 		m_IsDirty = true;
 	}
 

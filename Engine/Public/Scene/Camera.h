@@ -35,6 +35,7 @@ namespace MauEng
 		Camera(Camera&&) = default;
 		Camera& operator=(Camera const&) = default;
 		Camera& operator=(Camera&&) = default;
+
 	private:
 		glm::vec3 m_Position{ 0, 0, 0 };
 		glm::quat m_Rotation{ 1, 0, 0, 0 };
@@ -51,13 +52,19 @@ namespace MauEng
 		glm::mat4 m_ViewMatrix{};
 		glm::mat4 m_ProjectionMatrix{};
 
+		float m_Pitch{ 0.0f };
+		float m_Yaw{ -90.0f };
+
+		float m_MinPitch{ -89.f };
+		float m_MaxPitch{ 89.f };
+
 		// Should the camera be updated next time the update is called
 		bool m_IsDirty{ false };
 
-		glm::vec3 m_OriginalRot{ 0, 0, 0 };
-
 		void UpdateViewMatrix() noexcept;
 		void UpdateProjectionMatrix() noexcept;
+
+		void UpdateDirectionFromEuler() noexcept;
 	};
 }
 
