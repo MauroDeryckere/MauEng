@@ -6,7 +6,9 @@ namespace MauRen
 	{
 		if (std::size(m_ActiveLines) < MAX_LINES)
 		{
+			m_IndexBuffer.emplace_back(m_ActiveLines.size());
 			m_ActiveLines.emplace_back(start);
+			m_IndexBuffer.emplace_back(m_ActiveLines.size());
 			m_ActiveLines.emplace_back(end);
 		}
 	}

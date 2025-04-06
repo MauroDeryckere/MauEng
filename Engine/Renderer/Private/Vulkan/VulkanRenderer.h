@@ -113,6 +113,7 @@ namespace MauRen
 		void CreateGlobalBuffers();
 
 		VulkanBuffer m_DebugVertexBuffer{};
+		VulkanBuffer m_DebugIndexBuffer{};
 		// Update the buffer for debug drawing
 		void UpdateDebugVertexBuffer();
 	};

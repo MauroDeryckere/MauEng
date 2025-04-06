@@ -70,7 +70,11 @@ namespace MauRen
 		m_DebugVertexBuffer = { bufferSize,
 								  VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
 								  VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT };
-	}
+
+		m_DebugIndexBuffer = { bufferSize,
+								  VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+								  VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT };
+			}
 
 	void VulkanRenderer::Destroy()
 	{
@@ -89,6 +93,7 @@ namespace MauRen
 		VulkanMaterialManager::GetInstance().Destroy();
 		VulkanMeshManager::GetInstance().Destroy();
 		m_DebugVertexBuffer.Destroy();
+		m_DebugIndexBuffer.Destroy();
 
 		m_CommandPoolManager.Destroy();
 
@@ -206,7 +211,8 @@ namespace MauRen
 
 			VkDeviceSize constexpr offset{ 0 };
 			vkCmdBindVertexBuffers(commandBuffer, 0, 1, &m_DebugVertexBuffer.buffer, &offset);
-			vkCmdDraw(commandBuffer, m_DebugRenderer.m_ActiveLines.size(), 1, 0, 0);
+			vkCmdBindIndexBuffer(commandBuffer, m_DebugIndexBuffer.buffer, offset, VK_INDEX_TYPE_UINT32);
+			vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(m_DebugRenderer.m_IndexBuffer.size()), 1, 0, 0, 0);
 
 		vkCmdEndRenderPass(commandBuffer);
 
@@ -391,32 +397,50 @@ namespace MauRen
 	{
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 
-		if (m_DebugRenderer.m_ActiveLines.empty())
+		// Map the vertex buffer memory
 		{
-			return;
+			size_t bufferSize = sizeof(m_DebugRenderer.m_ActiveLines[0]) * m_DebugRenderer.m_ActiveLines.size();
+
+			VulkanBuffer stagingBuffer{
+				bufferSize,
+				VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT // Make it accessible to CPU
+			};
+
+			void* mappedMemory;
+			vkMapMemory(deviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory, 0, bufferSize, 0, &mappedMemory);
+
+			// Copy the data to the buffer
+			memcpy(mappedMemory, m_DebugRenderer.m_ActiveLines.data(), bufferSize);
+
+			// Unmap the memory
+			vkUnmapMemory(deviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory);
+
+			VulkanBuffer::CopyBuffer(m_CommandPoolManager, stagingBuffer.buffer, m_DebugVertexBuffer.buffer, bufferSize);
+			stagingBuffer.Destroy();
 		}
 
-		// Map the vertex buffer memory
+		{
+			size_t bufferSize = sizeof(m_DebugRenderer.m_IndexBuffer[0]) * m_DebugRenderer.m_IndexBuffer.size();
 
-		size_t bufferSize = sizeof(m_DebugRenderer.m_ActiveLines[0]) * m_DebugRenderer.m_ActiveLines.size();
+			VulkanBuffer stagingBuffer{
+				bufferSize,
+				VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT // Make it accessible to CPU
+			};
 
-		VulkanBuffer stagingBuffer{
-			bufferSize,
-			VK_BUFFER_USAGE_TRANSFER_SRC_BIT, // Staging buffer will be used as source
-			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT // Make it accessible to CPU
-		};
+			void* mappedMemory;
+			vkMapMemory(deviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory, 0, bufferSize, 0, &mappedMemory);
 
-		void* mappedMemory;
-		vkMapMemory(deviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory, 0, bufferSize, 0, &mappedMemory);
+			// Copy the data to the buffer
+			memcpy(mappedMemory, m_DebugRenderer.m_IndexBuffer.data(), bufferSize);
 
-		// Copy the data to the buffer
-		memcpy(mappedMemory, m_DebugRenderer.m_ActiveLines.data(), bufferSize);
+			// Unmap the memory
+			vkUnmapMemory(deviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory);
 
-		// Unmap the memory
-		vkUnmapMemory(deviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory);
-
-		VulkanBuffer::CopyBuffer(m_CommandPoolManager, stagingBuffer.buffer, m_DebugVertexBuffer.buffer, bufferSize);
-		stagingBuffer.Destroy();
+			VulkanBuffer::CopyBuffer(m_CommandPoolManager, stagingBuffer.buffer, m_DebugIndexBuffer.buffer, bufferSize);
+			stagingBuffer.Destroy();
+		}
 
 	}
 }
