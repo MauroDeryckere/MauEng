@@ -93,6 +93,8 @@ find_program(GLSLC glslc REQUIRED)
 
 # List your shaders here
 set(SHADERS
+    ${SHADER_DIR}/debug_shader.vert
+    ${SHADER_DIR}/debug_shader.frag
     ${SHADER_DIR}/shader.vert
     ${SHADER_DIR}/shader.frag
 )

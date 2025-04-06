@@ -61,6 +61,37 @@ namespace MauRen
 		CreateSyncObjects();
 
 		VulkanMeshManager::GetInstance().Initialize(&m_CommandPoolManager);
+
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+
+		VkDeviceSize const bufferSize{ sizeof(lineVertices[0]) * std::size(lineVertices) };
+
+		VulkanBuffer stagingBuffer{ bufferSize,
+									VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+									VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT };
+
+		if (stagingBuffer.buffer == VK_NULL_HANDLE || stagingBuffer.bufferMemory == VK_NULL_HANDLE)
+		{
+			throw std::runtime_error("Failed to create staging buffer.");
+		}
+
+
+		void* data;
+		if (vkMapMemory(deviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory, 0, bufferSize, 0, &data) != VK_SUCCESS)
+		{
+			throw std::runtime_error("Failed to map Vulkan buffer memory.");
+		}
+
+		memcpy(data, lineVertices.data(), static_cast<size_t>(bufferSize));
+		vkUnmapMemory(deviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory);
+
+		debugBuffer = { bufferSize,
+							VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+							VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT };
+
+		VulkanBuffer::CopyBuffer(m_CommandPoolManager, stagingBuffer.buffer, debugBuffer.buffer, bufferSize);
+
+		stagingBuffer.Destroy();
 	}
 
 	void VulkanRenderer::Destroy()
@@ -79,6 +110,7 @@ namespace MauRen
 
 		VulkanMaterialManager::GetInstance().Destroy();
 		VulkanMeshManager::GetInstance().Destroy();
+		debugBuffer.Destroy();
 
 		m_CommandPoolManager.Destroy();
 
@@ -189,6 +221,16 @@ namespace MauRen
 			vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
 			VulkanMeshManager::GetInstance().Draw(commandBuffer, m_GraphicsPipeline.GetPipelineLayout(), 1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame]);
+
+			vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipeline.GetDebugPipeline());
+			VkDeviceSize offset = 0;
+			vkCmdBindVertexBuffers(commandBuffer, 0, 1, &debugBuffer.buffer, &offset);
+			vkCmdDraw(commandBuffer, 2, 1, 0, 0);
+
+
+			//TODO
+			// Draw debug shapes (use your debug shape data and issue draw calls here)
+
 		vkCmdEndRenderPass(commandBuffer);
 
 		if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) 

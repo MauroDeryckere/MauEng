@@ -208,6 +208,7 @@ namespace MauRen
 		// Enable all required device features
 		VkPhysicalDeviceFeatures deviceFeatures{};
 		deviceFeatures.samplerAnisotropy = VK_TRUE;
+		deviceFeatures.fillModeNonSolid = VK_TRUE;
 
 		VkPhysicalDeviceDescriptorIndexingFeatures indexingFeatures{};
 		indexingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
@@ -349,6 +350,7 @@ namespace MauRen
 			swapChainAdequate = not swapChainSupport.formats.empty()
 							&& not swapChainSupport.presentModes.empty()
 							&& deviceFeatures.samplerAnisotropy	// Could also not enforce and set a bool that's reused here 
+							&& deviceFeatures.fillModeNonSolid
 							&& indexingFeatures.runtimeDescriptorArray
 							&& indexingFeatures.descriptorBindingPartiallyBound
 							&& indexingFeatures.descriptorBindingVariableDescriptorCount;
