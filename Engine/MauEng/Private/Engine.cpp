@@ -23,9 +23,10 @@ namespace MauEng
 	{
 		// Initialize all core dependences & singletons
 
-		ServiceLocator::RegisterRenderer(MauRen::CreateVulkanRenderer(m_Window->window));
+		ServiceLocator::RegisterDebugRenderer(std::make_unique<MauRen::DebugRenderer>());
+
+		ServiceLocator::RegisterRenderer(MauRen::CreateVulkanRenderer(m_Window->window, DEBUG_RENDERER));
 		ServiceLocator::GetRenderer().Init();
-		ServiceLocator::RegisterDebugRenderer(MauRen::CreateVulkanDebugRenderer());
 
 		m_Window->Initialize();
 	}

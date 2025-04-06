@@ -19,7 +19,7 @@ namespace MauEng
 	{
 		m_Scene->OnRender();
 
-		Renderer().Render(m_Scene->GetCameraManager().GetActiveCamera().GetViewMatrix(), m_Scene->GetCameraManager().GetActiveCamera().GetProjectionMatrix());
+		RENDERER.Render(m_Scene->GetCameraManager().GetActiveCamera().GetViewMatrix(), m_Scene->GetCameraManager().GetActiveCamera().GetProjectionMatrix());
 	}
 
 	void SceneManager::Tick()

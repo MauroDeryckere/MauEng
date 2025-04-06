@@ -11,7 +11,7 @@ namespace MauRen
 	class Renderer
 	{
 	public:
-		explicit Renderer(SDL_Window* pWindow) { }
+		explicit Renderer(SDL_Window* pWindow, class DebugRenderer&) { }
 		virtual ~Renderer() = default;
 
 		virtual void Init() = 0;
@@ -34,8 +34,8 @@ namespace MauRen
 	class NullRenderer final : public Renderer
 	{
 	public:
-		explicit NullRenderer(SDL_Window* pWindow) :
-		Renderer{ pWindow }
+		explicit NullRenderer(SDL_Window* pWindow, class DebugRenderer& debugRenderer) :
+		Renderer{ pWindow, debugRenderer }
 		{}
 
 		virtual ~NullRenderer() override = default;

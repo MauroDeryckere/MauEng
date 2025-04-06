@@ -31,7 +31,7 @@ namespace MauRen
 	class VulkanRenderer final : public Renderer
 	{
 	public:
-		explicit VulkanRenderer(SDL_Window* pWindow);
+		explicit VulkanRenderer(SDL_Window* pWindow, class DebugRenderer& debugRenderer);
 		virtual ~VulkanRenderer() override = default;
 
 		virtual void Init() override;
@@ -51,7 +51,7 @@ namespace MauRen
 		// "reference" to the window
 		SDL_Window* m_pWindow{ nullptr };
 
-
+		class DebugRenderer& m_DebugRenderer;
 
 		VulkanInstanceContext m_InstanceContext{};
 		VulkanSurfaceContext m_SurfaceContext{};

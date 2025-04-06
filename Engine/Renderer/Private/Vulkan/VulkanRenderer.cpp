@@ -11,12 +11,16 @@
 
 #include "VulkanMeshManager.h"
 #include "VulkanMaterialManager.h"
+#include "DebugRenderer.h"
+
+
 
 namespace MauRen
 {
-	VulkanRenderer::VulkanRenderer(SDL_Window* pWindow) :
-		Renderer{ pWindow },
-		m_pWindow{ pWindow }
+	VulkanRenderer::VulkanRenderer(SDL_Window* pWindow, DebugRenderer& debugRenderer) :
+		Renderer{ pWindow, debugRenderer },
+		m_pWindow{ pWindow },
+		m_DebugRenderer{ debugRenderer }
 	{
 	}
 
@@ -226,11 +230,6 @@ namespace MauRen
 			VkDeviceSize offset = 0;
 			vkCmdBindVertexBuffers(commandBuffer, 0, 1, &debugBuffer.buffer, &offset);
 			vkCmdDraw(commandBuffer, 2, 1, 0, 0);
-
-
-			//TODO
-			// Draw debug shapes (use your debug shape data and issue draw calls here)
-
 		vkCmdEndRenderPass(commandBuffer);
 
 		if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) 

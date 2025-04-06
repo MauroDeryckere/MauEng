@@ -7,8 +7,7 @@
 
 namespace MauRen
 {
-	std::unique_ptr<Renderer> CreateVulkanRenderer(SDL_Window* pWindow);
-	std::unique_ptr<DebugRenderer> CreateVulkanDebugRenderer();
+	std::unique_ptr<Renderer> CreateVulkanRenderer(SDL_Window* pWindow, DebugRenderer& debugRenderer);
 }
 
 #endif // RENDERRENDERERFACTORY_H
