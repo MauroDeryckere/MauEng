@@ -12,8 +12,8 @@ namespace MauRen
 		return std::make_unique<VulkanRenderer>(pWindow);
 	}
 
-	std::unique_ptr<DebugRenderer> CreateVulkanDebugRenderer(Renderer& pRenderer)
+	std::unique_ptr<DebugRenderer> CreateVulkanDebugRenderer()
 	{
-		return std::make_unique<VulkanDebugRenderer>(pRenderer);
+		return std::make_unique<VulkanDebugRenderer>();
 	}
 }

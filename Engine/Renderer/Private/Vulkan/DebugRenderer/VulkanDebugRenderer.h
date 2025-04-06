@@ -8,8 +8,12 @@ namespace MauRen
 	class VulkanDebugRenderer final : public DebugRenderer
 	{
 	public:
-		explicit VulkanDebugRenderer(Renderer& pRenderer);
+		explicit VulkanDebugRenderer();
+
 	private:
+		
+		std::vector<glm::vec3> m_ActiveLines;
+		uint32_t const MAX_LINES { 1'000 };
 	};
 }
 

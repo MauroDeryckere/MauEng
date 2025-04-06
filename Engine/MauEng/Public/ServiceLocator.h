@@ -23,7 +23,7 @@ namespace MauEng
 		[[nodiscard]] static MauRen::DebugRenderer& GetDebugRenderer() { return (*m_pDebugRenderer); }
 		static void RegisterDebugRenderer(std::unique_ptr<MauRen::DebugRenderer>&& pRenderer)
 		{
-			m_pDebugRenderer = ((!pRenderer) ? std::make_unique<MauRen::NullDebugRenderer>(*std::make_unique<MauRen::NullRenderer>(nullptr)) : std::move(pRenderer));
+			m_pDebugRenderer = ((!pRenderer) ? std::make_unique<MauRen::NullDebugRenderer>() : std::move(pRenderer));
 		}
 
 

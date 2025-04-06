@@ -8,23 +8,20 @@ namespace MauRen
 	class DebugRenderer
 	{
 	public:
-		explicit DebugRenderer(Renderer& pRenderer) {}
+		explicit DebugRenderer() {}
 		virtual ~DebugRenderer() = default;
 
 		DebugRenderer(DebugRenderer const&) = delete;
 		DebugRenderer(DebugRenderer&&) = delete;
 		DebugRenderer& operator=(DebugRenderer const&) = delete;
 		DebugRenderer& operator=(DebugRenderer&&) = delete;
-
-	private:
-		friend class Renderer;
 	};
 
 	class NullDebugRenderer final : public DebugRenderer
 	{
 	public:
-		explicit NullDebugRenderer(Renderer& pRenderer):
-			DebugRenderer{ pRenderer }
+		explicit NullDebugRenderer() :
+			DebugRenderer{ }
 		{ }
 
 		virtual ~NullDebugRenderer() override = default;

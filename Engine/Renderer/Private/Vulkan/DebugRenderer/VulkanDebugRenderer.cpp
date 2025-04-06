@@ -2,8 +2,8 @@
 
 namespace MauRen
 {
-	VulkanDebugRenderer::VulkanDebugRenderer(Renderer& pRenderer):
-	DebugRenderer(pRenderer)
+	VulkanDebugRenderer::VulkanDebugRenderer():
+	DebugRenderer()
 	{
 
 	}
