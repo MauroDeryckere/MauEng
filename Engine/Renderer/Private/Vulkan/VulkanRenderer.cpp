@@ -122,6 +122,7 @@ namespace MauRen
 		DrawFrame(view, proj);
 
 		m_DebugRenderer.m_ActiveLines.clear();
+		m_DebugRenderer.m_IndexBuffer.clear();
 	}
 
 	void VulkanRenderer::ResizeWindow()

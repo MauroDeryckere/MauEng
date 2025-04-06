@@ -69,9 +69,10 @@ namespace MauGam
 	void GameScene::Tick()
 	{
 		Scene::Tick();
-		//DEBUG_RENDERER.DrawLine({{ 0, 0, 0}, {1, 0, 0}}, {{0, 100, 100}, { 1, 0, 0}});
 		DEBUG_RENDERER.DrawLine({ {0, 0,0 }, {1, 0, 0},  }, { {0, 100, 100}, { 1, 0, 0} });
 		DEBUG_RENDERER.DrawLine({{-10 , 10, -10}, {0, 1, 0}}, {{10, 10, 10}, { 0, 1, 0}});
+
+		DEBUG_RENDERER.DrawRect({ -10, 0, 0 }, { 10, 0, 0 }, { 10, 20, 5 }, { -10, 20, 5 }, {0, 0, 1});
 
 		auto const& input{ MauEng::InputManager() };
 

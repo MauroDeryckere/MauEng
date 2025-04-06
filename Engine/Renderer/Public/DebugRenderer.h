@@ -13,7 +13,10 @@ namespace MauRen
 		explicit DebugRenderer() = default;
 		~DebugRenderer() = default;
 
-		void DrawLine(DebugVertex const& start, DebugVertex const& end);
+		void DrawLine(glm::vec3 const& start, glm::vec3 const& end, glm::vec3 const& colour) noexcept;
+		void DrawLine(DebugVertex const& start, DebugVertex const& end) noexcept;
+
+		void DrawRect(glm::vec3 const& p0, glm::vec3 const& p1, glm::vec3 const& p2, glm::vec3 const& p3, glm::vec3 const& colour = { 1, 0, 0 }) noexcept;
 
 		DebugRenderer(DebugRenderer const&) = delete;
 		DebugRenderer(DebugRenderer&&) = delete;
