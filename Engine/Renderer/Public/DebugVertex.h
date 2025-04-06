@@ -7,8 +7,8 @@ namespace MauRen
 {
 	struct DebugVertex
 	{
-		glm::vec3 position;
-		glm::vec3 color;
+		alignas(16) glm::vec3 position;
+		alignas(16) glm::vec3 color;
 	};
 }
 
