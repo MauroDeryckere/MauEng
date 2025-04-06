@@ -106,8 +106,8 @@ namespace MauRen
 	{
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 
-		auto const vertShaderCode{ ReadFile("shaders/shader.vert.spv") };
-		auto const fragShaderCode{ ReadFile("shaders/shader.frag.spv") };
+		auto const vertShaderCode{ ReadFile("Resources/Shaders/shader.vert.spv") };
+		auto const fragShaderCode{ ReadFile("Resources/Shaders/shader.frag.spv") };
 
 		// Shader modules are linked internally, the VkShaderModule is just a wrapper so we do not need to store it.
 		VkShaderModule vertShaderModule{ CreateShaderModule(vertShaderCode) };
