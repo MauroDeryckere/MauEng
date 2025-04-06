@@ -14,6 +14,11 @@ namespace MauRen
 
 	VulkanBuffer::VulkanBuffer(VkDeviceSize deviceSize, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties)
 	{
+		if (deviceSize == 0)
+		{
+			return;
+		}
+
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 		size = deviceSize;
 

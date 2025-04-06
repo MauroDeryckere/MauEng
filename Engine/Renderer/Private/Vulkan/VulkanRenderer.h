@@ -112,14 +112,9 @@ namespace MauRen
 		//TODO
 		void CreateGlobalBuffers();
 
-		// Define debug line vertices (for a simple line)
-
-		 std::vector<DebugVertex> lineVertices {
-			{ glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f) }, // Start point
-			{ glm::vec3(100.0f, 100.0f, 100.0f), glm::vec3(1.0f, 0.0f, 0.0f) }  // End point
-		};
-
-		VulkanBuffer debugBuffer{};
+		VulkanBuffer m_DebugVertexBuffer{};
+		// Update the buffer for debug drawing
+		void UpdateDebugVertexBuffer();
 	};
 }
 

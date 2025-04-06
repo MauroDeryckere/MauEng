@@ -10,10 +10,8 @@ namespace MauRen
 	class DebugRenderer final
 	{
 	public:
-		explicit DebugRenderer() {}
-		virtual ~DebugRenderer() = default;
-
-		void Render();
+		explicit DebugRenderer() = default;
+		~DebugRenderer() = default;
 
 		void DrawLine(DebugVertex const& start, DebugVertex const& end);
 
@@ -23,17 +21,12 @@ namespace MauRen
 		DebugRenderer& operator=(DebugRenderer&&) = delete;
 
 	private:
-		std::vector<std::pair<DebugVertex, DebugVertex>> m_ActiveLines;
+		// Needs access to the variables during the render
+		friend class VulkanRenderer;
+
+		std::vector<DebugVertex> m_ActiveLines{};
 		uint32_t const MAX_LINES{ 1'000 };
 	};
-
-	inline void DebugRenderer::DrawLine(DebugVertex const& start, DebugVertex const& end)
-	{
-		if (std::size(m_ActiveLines) < MAX_LINES)
-		{
-			m_ActiveLines.emplace_back(start, end);
-		}
-	}
 }
 
 #endif // MAUREN_DEBUGRENDERER_H

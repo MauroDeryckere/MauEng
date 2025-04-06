@@ -21,8 +21,8 @@ namespace MauGam
 		Mesh m1{ "Resources/Models/Gun.obj" };
 		Mesh m2{ "Resources/Models/Skull.obj" };
 
-		MauEng::RENDERER.UpLoadModel(m1);
-		MauEng::RENDERER.UpLoadModel(m2);
+		RENDERER.UpLoadModel(m1);
+		RENDERER.UpLoadModel(m2);
 
 		// Skulls
 		//TODO rotate skulls to correct dir
@@ -69,7 +69,9 @@ namespace MauGam
 	void GameScene::Tick()
 	{
 		Scene::Tick();
-		MauEng::DEBUG_RENDERER.DrawLine({{}, {1, 0, 0}}, {{0, 100, 100}, { 1, 0, 0}});
+		//DEBUG_RENDERER.DrawLine({{ 0, 0, 0}, {1, 0, 0}}, {{0, 100, 100}, { 1, 0, 0}});
+		DEBUG_RENDERER.DrawLine({ {0, 0,0 }, {1, 0, 0},  }, { {0, 100, 100}, { 1, 0, 0} });
+		DEBUG_RENDERER.DrawLine({{-10 , 10, -10}, {0, 1, 0}}, {{10, 10, 10}, { 0, 1, 0}});
 
 		auto const& input{ MauEng::InputManager() };
 

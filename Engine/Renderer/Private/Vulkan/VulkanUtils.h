@@ -238,9 +238,9 @@ namespace MauRen
 			return attributeDescriptions;
 		}
 
-		static std::array<VkVertexInputAttributeDescription, 3> GetDebugVertexAttributeDescriptions() noexcept
+		static std::array<VkVertexInputAttributeDescription, 2> GetDebugVertexAttributeDescriptions() noexcept
 		{
-			std::array<VkVertexInputAttributeDescription, 3> attributeDescriptions{};
+			std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions{};
 
 			attributeDescriptions[0].binding = 0;
 			attributeDescriptions[0].location = 0;

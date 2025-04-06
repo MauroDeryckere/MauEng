@@ -38,8 +38,8 @@ namespace MauEng
 
 #pragma region EasyAccessHelper
 
-#define RENDERER ServiceLocator::GetRenderer()
-#define DEBUG_RENDERER ServiceLocator::GetDebugRenderer()
+#define RENDERER MauEng::ServiceLocator::GetRenderer()
+#define DEBUG_RENDERER MauEng::ServiceLocator::GetDebugRenderer()
 
 	// Helper function for easy access to the time
 	inline MauEng::Time& Time()
