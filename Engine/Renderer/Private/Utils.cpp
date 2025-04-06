@@ -12,7 +12,7 @@ namespace MauRen
 {
     std::string Utils::GetAbsoluteMaterialPath() noexcept
     {
-        auto path{ (std::filesystem::absolute("Materials")).string() };
+        auto path{ (std::filesystem::absolute("Resources/Materials")).string() };
         return path;
     }
 

@@ -64,12 +64,31 @@ add_custom_target(
 
 add_dependencies(${EXECUTABLE_NAME} copy_layer_settings)
 
+# Define source and destination for the entire Resources folder
+set(RESOURCE_SRC_DIR "${CMAKE_SOURCE_DIR}/Resources")
+set(RESOURCE_DST_DIR "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Resources")
 
-# Define where the shader files are located
+# Copy the entire Resources folder, including subfolders and files
+add_custom_command(
+    OUTPUT ${RESOURCE_DST_DIR}
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "${RESOURCE_SRC_DIR}" "${RESOURCE_DST_DIR}"
+    COMMENT "Copying all Resources to output directory"
+    VERBATIM
+)
+
+# Add a custom target for copying the entire Resources folder
+add_custom_target(
+    copy_resources ALL
+    DEPENDS ${RESOURCE_DST_DIR}
+)
+
+# Ensure main project depends on the resources copy step
+add_dependencies(${EXECUTABLE_NAME} copy_resources)
+
+
+# Compile shaders (unique step)
 set(SHADER_DIR "${CMAKE_SOURCE_DIR}/Resources/Shaders")
-set(SHADER_OUTPUT_DIR "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Shaders")
-
-# Find the GLSL compiler (glslc)
+set(SHADER_OUTPUT_DIR "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Resources/Shaders")
 find_program(GLSLC glslc REQUIRED)
 
 # List your shaders here
@@ -83,21 +102,20 @@ set(COMPILED_SHADERS)
 
 # Compile each shader
 foreach(shader ${SHADERS})
-    # Determine the output file path for the compiled shader (SPIR-V format)
     get_filename_component(shader_name ${shader} NAME) # Get the base filename without extension
     set(output_shader "${SHADER_OUTPUT_DIR}/${shader_name}.spv")
 
     # Add the output shader file to the list
     list(APPEND COMPILED_SHADERS ${output_shader})
 
-        # Only add a custom command if this shader file hasn't been processed yet
-        add_custom_command(
-            OUTPUT ${output_shader}
-            COMMAND ${GLSLC} ${shader} -o ${output_shader} || echo "Shader compilation failed: ${shader}"
-            DEPENDS ${shader}
-            COMMENT "Compiling shader ${shader}"
-            VERBATIM
-        )
+    # Only add a custom command if this shader file hasn't been processed yet
+    add_custom_command(
+        OUTPUT ${output_shader}
+        COMMAND ${GLSLC} ${shader} -o ${output_shader} || echo "Shader compilation failed: ${shader}"
+        DEPENDS ${shader}
+        COMMENT "Compiling shader ${shader}"
+        VERBATIM
+    )
 endforeach()
 
 add_custom_target(
@@ -105,65 +123,7 @@ add_custom_target(
     DEPENDS ${COMPILED_SHADERS}
 )
 
-# Ensure main project depends on the shader compilation
 add_dependencies(${EXECUTABLE_NAME} shaders)
-
-# Define texture source and destination directories
-set(TEXTURE_DIR "${CMAKE_SOURCE_DIR}/Resources/Textures")
-set(TEXTURE_OUTPUT_DIR "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Textures")
-
-add_custom_command(
-    OUTPUT ${TEXTURE_OUTPUT_DIR}
-    COMMAND ${CMAKE_COMMAND} -E copy_directory "${TEXTURE_DIR}" "${TEXTURE_OUTPUT_DIR}"
-    COMMENT "Copying all textures to output directory"
-    VERBATIM
-)
-
-# Add a custom target for copying textures
-add_custom_target(
-    copy_textures ALL
-    DEPENDS ${TEXTURE_OUTPUT_DIR}
-)
-
-add_dependencies(${EXECUTABLE_NAME} copy_textures)
-
-# Define model source and destination directories
-set(MODELS_DIR "${CMAKE_SOURCE_DIR}/Resources/Models")
-set(MODELS_OUTPUT_DIR "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Models")
-
-add_custom_command(
-    OUTPUT ${MODELS_OUTPUT_DIR}
-    COMMAND ${CMAKE_COMMAND} -E copy_directory "${MODELS_DIR}" "${MODELS_OUTPUT_DIR}"
-    COMMENT "Copying all models to output directory"
-    VERBATIM
-)
-
-# Add a custom target for copying models
-add_custom_target(
-    copy_models ALL
-    DEPENDS ${MODELS_OUTPUT_DIR}
-)
-
-add_dependencies(${EXECUTABLE_NAME} copy_models)
-
-# Define materials source and destination directories
-set(MATERIALS_DIR "${CMAKE_SOURCE_DIR}/Resources/Materials")
-set(MATERIALS_OUTPUT_DIR "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Materials")
-
-add_custom_command(
-    OUTPUT ${MATERIALS_OUTPUT_DIR}
-    COMMAND ${CMAKE_COMMAND} -E copy_directory "${MATERIALS_DIR}" "${MATERIALS_OUTPUT_DIR}"
-    COMMENT "Copying all materials to output directory"
-    VERBATIM
-)
-
-# Add a custom target for copying materials
-add_custom_target(
-    copy_materials ALL
-    DEPENDS ${MATERIALS_OUTPUT_DIR}
-)
-
-add_dependencies(${EXECUTABLE_NAME} copy_materials)
 
 # @ENDREGION PLATFORMS AND RESOURCES
 

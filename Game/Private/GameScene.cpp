@@ -18,8 +18,8 @@ namespace MauGam
 
 		using namespace MauRen;
 		// init meshes
-		Mesh m1{ "Models/Gun.obj" };
-		Mesh m2{ "Models/Skull.obj" };
+		Mesh m1{ "Resources/Models/Gun.obj" };
+		Mesh m2{ "Resources/Models/Skull.obj" };
 
 		MauEng::Renderer().UpLoadModel(m1);
 		MauEng::Renderer().UpLoadModel(m2);

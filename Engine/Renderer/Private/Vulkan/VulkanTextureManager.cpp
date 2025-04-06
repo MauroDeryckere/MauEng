@@ -52,8 +52,8 @@ namespace MauRen
 			return INVALID_TEXTURE_ID;
 		}
 
-		VulkanImage textureImage{ CreateTextureImage(cmdPoolManager, "Materials/" + textureName)};
-		std::cout << "Materials/" + textureName << "\n";
+		VulkanImage textureImage{ CreateTextureImage(cmdPoolManager, "Resources/Materials/" + textureName)};
+		std::cout << "Resources/Materials/" + textureName << "\n";
 		// Create texture img function
 
 		descriptorContext.AddTexture(m_Textures.size(), textureImage.imageViews[0], m_TextureSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
