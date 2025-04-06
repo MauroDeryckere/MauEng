@@ -79,6 +79,12 @@ namespace MauGam
 		DEBUG_RENDERER.DrawSphereComplex({20,20,20}, 20.f, { 1, 1, 1 }, 24, 10);
 		DEBUG_RENDERER.DrawCube({}, 20);
 		DEBUG_RENDERER.DrawCube({}, 20, 50, 30);
+
+		DEBUG_RENDERER.DrawEllipse({}, 20, 50, { 1, 0, 0});
+
+		DEBUG_RENDERER.DrawEllipsoid({}, 10, 20, 30.f, { 0, 1, 0 });
+		DEBUG_RENDERER.DrawEllipsoidComplex({}, 10, 20, 30.f, {0, 0, 1}, 24, 10);
+
 		auto const& input{ MauEng::InputManager() };
 
 		auto constexpr movementSpeed{ 20.f };
