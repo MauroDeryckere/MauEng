@@ -24,6 +24,75 @@ namespace MauRen
 		}
 	}
 
+	void DebugRenderer::DrawCube(glm::vec3 const& center, float size, glm::vec3 const& colour) noexcept
+	{
+		float const halfSize{ size * .5f };
+
+		glm::vec3 const p0{ center + glm::vec3{-halfSize, -halfSize, -halfSize} };
+		glm::vec3 const p1{ center + glm::vec3{halfSize, -halfSize, -halfSize} };
+		glm::vec3 const p2{ center + glm::vec3{halfSize, -halfSize, halfSize } };
+		glm::vec3 const p3{ center + glm::vec3{-halfSize, -halfSize, halfSize} };
+
+		glm::vec3 const p4{ center + glm::vec3{-halfSize, halfSize, -halfSize} };
+		glm::vec3 const p5{ center + glm::vec3{halfSize, halfSize, -halfSize} };
+		glm::vec3 const p6{ center + glm::vec3{halfSize, halfSize, halfSize} };
+		glm::vec3 const p7{ center + glm::vec3{-halfSize, halfSize, halfSize} };
+
+		// Bottom face
+		DrawLine(p0, p1, colour);
+		DrawLine(p1, p2, colour);
+		DrawLine(p2, p3, colour);
+		DrawLine(p3, p0, colour);
+
+		// Top face
+		DrawLine(p4, p5, colour);
+		DrawLine(p5, p6, colour);
+		DrawLine(p6, p7, colour);
+		DrawLine(p7, p4, colour);
+
+		// Vertical edges
+		DrawLine(p0, p4, colour);
+		DrawLine(p1, p5, colour);
+		DrawLine(p2, p6, colour);
+		DrawLine(p3, p7, colour);
+	}
+
+	void DebugRenderer::DrawCube(glm::vec3 const& center, float width, float height, float depth, glm::vec3 const& colour) noexcept
+	{
+		float const horHalfSize{ width * .5f };
+		float const verHalfSize{ height * .5f };
+		float const depthHalfSize{ depth * .5f };
+
+
+		glm::vec3 const p0{ center + glm::vec3{-horHalfSize, -verHalfSize, -depthHalfSize} };
+		glm::vec3 const p1{ center + glm::vec3{horHalfSize, -verHalfSize, -depthHalfSize} };
+		glm::vec3 const p2{ center + glm::vec3{horHalfSize, -verHalfSize, depthHalfSize } };
+		glm::vec3 const p3{ center + glm::vec3{-horHalfSize, -verHalfSize, depthHalfSize} };
+
+		glm::vec3 const p4{ center + glm::vec3{-horHalfSize, verHalfSize, -depthHalfSize} };
+		glm::vec3 const p5{ center + glm::vec3{horHalfSize, verHalfSize, -depthHalfSize} };
+		glm::vec3 const p6{ center + glm::vec3{horHalfSize, verHalfSize, depthHalfSize} };
+		glm::vec3 const p7{ center + glm::vec3{-horHalfSize, verHalfSize, depthHalfSize} };
+
+		// Bottom face
+		DrawLine(p0, p1, colour);
+		DrawLine(p1, p2, colour);
+		DrawLine(p2, p3, colour);
+		DrawLine(p3, p0, colour);
+
+		// Top face
+		DrawLine(p4, p5, colour);
+		DrawLine(p5, p6, colour);
+		DrawLine(p6, p7, colour);
+		DrawLine(p7, p4, colour);
+
+		// Vertical edges
+		DrawLine(p0, p4, colour);
+		DrawLine(p1, p5, colour);
+		DrawLine(p2, p6, colour);
+		DrawLine(p3, p7, colour);
+	}
+
 	void DebugRenderer::DrawCircle(glm::vec3 const& center, float radius, glm::vec3 const& axis, glm::vec3 const& colour, uint32_t segments) noexcept
 	{
 		float const delta{ glm::two_pi<float>() / static_cast<float>(segments) };
