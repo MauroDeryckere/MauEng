@@ -34,7 +34,7 @@ namespace MauRen
 		std::vector<DebugVertex> m_ActiveLines{};
 		std::vector<uint32_t> m_IndexBuffer;
 
-		uint32_t const MAX_LINES{ 1'000 };
+		uint32_t const MAX_LINES{ 10'000 };
 	};
 }
 

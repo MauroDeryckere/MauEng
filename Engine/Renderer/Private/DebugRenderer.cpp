@@ -71,7 +71,7 @@ namespace MauRen
 				glm::vec3 const ringCenter{ center + glm::vec3{0.0f, height * radius, 0.0f} };
 
 				// XY rings along Y
-				DrawCircle(ringCenter, radius * radius, glm::vec3{ 0, 1, 0 }, colour, segments);
+				DrawCircle(ringCenter, rad * radius, glm::vec3{ 0, 1, 0 }, colour, segments);
 			}
 
 			// Vertical rings (longitude)
