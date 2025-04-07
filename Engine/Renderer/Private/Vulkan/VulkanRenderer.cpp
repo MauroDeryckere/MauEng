@@ -398,6 +398,11 @@ namespace MauRen
 	{
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 
+		if (m_DebugRenderer.m_ActivePoints.empty())
+		{
+			return;
+		}
+
 		// Map the vertex buffer memory
 		{
 			size_t bufferSize = sizeof(m_DebugRenderer.m_ActivePoints[0]) * m_DebugRenderer.m_ActivePoints.size();

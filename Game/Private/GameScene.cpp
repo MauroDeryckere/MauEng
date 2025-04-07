@@ -39,8 +39,8 @@ namespace MauGam
 		mi3.Translate({ 0, 2,  0 });
 		mi3.Scale({ 5.f, 5.f, 5.f });
 
-//		m_Mehses.emplace_back(mi1);
-//		m_Mehses.emplace_back(mi2);
+		m_Mehses.emplace_back(mi1);
+		m_Mehses.emplace_back(mi2);
 		m_Mehses.emplace_back(mi3);
 
 		// Setup input
@@ -70,23 +70,25 @@ namespace MauGam
 	{
 		Scene::Tick();
 
+		// Demo debug drawing
 		//DEBUG_RENDERER.DrawLine({0, 0,0 },  {0, 100, 100} );
 		//DEBUG_RENDERER.DrawLine({-10 , 10, -10}, {10, 10, 10}, { 0, 1, 0});
 
 		//DEBUG_RENDERER.DrawRect({ -10, 0, 0 }, { 10, 0, 0 }, { 10, 20, 5 }, { -10, 20, 5 }, {0, 0, 1});
 
 		//DEBUG_RENDERER.DrawSphere({}, 20.f, { 1, 1, 0 });
-		DEBUG_RENDERER.DrawSphereComplex({ 20,20,20 }, 20.f, { 1, 1, 1 }, 24, 10);
-		DEBUG_RENDERER.DrawCube({}, 20);
-		DEBUG_RENDERER.DrawCube({}, 20, 50, 30);
+		//DEBUG_RENDERER.DrawSphereComplex({ 20,20,20 }, 20.f, { 1, 1, 1 }, 24, 10);
+		//DEBUG_RENDERER.DrawCube({}, 20);
+		//DEBUG_RENDERER.DrawCube({}, 20, 50, 30);
 
-		DEBUG_RENDERER.DrawEllipse({}, 20, 50, { 1, 0, 0 });
+		///DEBUG_RENDERER.DrawEllipse({}, 20, 50, { 1, 0, 0 });
 
-		DEBUG_RENDERER.DrawEllipsoid({}, 10, 20, 30.f, { 0, 1, 0 });
-		DEBUG_RENDERER.DrawEllipsoidComplex({}, 10, 20, 30.f, { 0, 0, 1 }, 24, 10);
+		//DEBUG_RENDERER.DrawEllipsoid({}, 10, 20, 30.f, { 0, 1, 0 });
+		//DEBUG_RENDERER.DrawEllipsoidComplex({}, 10, 20, 30.f, { 0, 0, 1 }, 24,6);
 
-		DEBUG_RENDERER.DrawArrow({}, { 2, 3, 3});
-		DEBUG_RENDERER.DrawCylinder({ -10, 0, -10 }, 10, 100);
+		//DEBUG_RENDERER.DrawArrow({}, { 2, 3, 3});
+		//DEBUG_RENDERER.DrawCylinder({ -10, 0, -10 }, 10, 100);
+
 		auto const& input{ MauEng::InputManager() };
 
 		auto constexpr movementSpeed{ 20.f };
