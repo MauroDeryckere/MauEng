@@ -105,9 +105,8 @@ namespace MauRen
 		void RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
 		void UpdateUniformBuffer(uint32_t currentImage, glm::mat4 const& view, glm::mat4 const& proj);
 
-
 		// Recreate the swapchain on e.g a window resize
-		void RecreateSwapchain();
+		bool RecreateSwapchain();
 
 		//TODO
 		void CreateGlobalBuffers();
@@ -118,6 +117,7 @@ namespace MauRen
 		void UpdateDebugVertexBuffer();
 
 		void RenderDebug(VkCommandBuffer commandBuffer);
+
 	};
 }
 

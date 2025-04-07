@@ -281,7 +281,6 @@ namespace MauRen
 
 		if (acquireNextImageResult == VK_ERROR_OUT_OF_DATE_KHR)
 		{
-			m_FramebufferResized = false;
 			RecreateSwapchain();
 			return;
 		}
@@ -342,7 +341,6 @@ namespace MauRen
 		VkResult const queuePresentResult{ vkQueuePresentKHR(deviceContext->GetPresentQueue(), &presentInfo) };
 		if (queuePresentResult == VK_ERROR_OUT_OF_DATE_KHR || queuePresentResult == VK_SUBOPTIMAL_KHR || m_FramebufferResized)
 		{
-			m_FramebufferResized = false;
 			RecreateSwapchain();
 		}
 		
@@ -363,7 +361,7 @@ namespace MauRen
 		memcpy(m_MappedUniformBuffers[currentImage].mapped, &ubo, sizeof(ubo));
 	}
 
-	void VulkanRenderer::RecreateSwapchain()
+	bool VulkanRenderer::RecreateSwapchain()
 	{
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 
@@ -371,23 +369,29 @@ namespace MauRen
 		// It is possible to create a new swap chain while drawing commands on an image from the old swap chain are still in - flight.
 		// You need to pass the previous swap chain to the oldSwapChain field in the VkSwapchainCreateInfoKHR struct and destroy the old swap chain as soon as you've finished using it.
 
-		// This essentially pauses until the window is in the foreground again
-
 		if (SDL_GetWindowFlags(m_pWindow) & (SDL_WINDOW_MINIMIZED | SDL_WINDOW_HIDDEN))
 		{
-			while (SDL_GetWindowFlags(m_pWindow) & (SDL_WINDOW_MINIMIZED | SDL_WINDOW_HIDDEN))
+			SDL_Event event;
+			while (SDL_PollEvent(&event))
 			{
-				SDL_Event event;
-				while (SDL_PollEvent(&event))
+				if (event.type == SDL_EVENT_QUIT || event.type == SDL_EVENT_WINDOW_CLOSE_REQUESTED)
 				{
-
+					return false;
 				}
-				SDL_Delay(10); // Add a small delay to avoid busy-waiting
 			}
 		}
 
+		if (SDL_GetWindowFlags(m_pWindow) & (SDL_WINDOW_MINIMIZED | SDL_WINDOW_HIDDEN))
+		{
+			return false;
+		}
+
+		m_FramebufferResized = false;
+
 		vkDeviceWaitIdle(deviceContext->GetLogicalDevice());
 		m_SwapChainContext.ReCreate(m_pWindow, &m_GraphicsPipeline, &m_SurfaceContext);
+
+		return true;
 	}
 
 	void VulkanRenderer::CreateGlobalBuffers()
