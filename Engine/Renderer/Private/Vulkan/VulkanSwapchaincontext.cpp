@@ -272,7 +272,8 @@ namespace MauRen
 			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
 			deviceContext->GetSampleCount(),
 			GetExtent().width,
-			GetExtent().height
+			GetExtent().height,
+			1
 		};
 
 		m_DepthImage.CreateImageView(VK_IMAGE_ASPECT_DEPTH_BIT);

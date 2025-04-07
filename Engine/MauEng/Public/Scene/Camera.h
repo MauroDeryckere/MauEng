@@ -47,7 +47,7 @@ namespace MauEng
 		float m_Fov{ 60.f };
 		float m_AspectRatio{ 16.f / 9.f };
 		float m_NearPlane{ .1f };
-		float m_FarPlane{ 100.f };
+		float m_FarPlane{ 100 };
 
 		glm::mat4 m_ViewMatrix{};
 		glm::mat4 m_ProjectionMatrix{};

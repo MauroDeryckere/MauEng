@@ -197,7 +197,7 @@ namespace MauRen
 		renderPassInfo.renderArea.offset = { 0, 0 };
 		renderPassInfo.renderArea.extent = m_SwapChainContext.GetExtent();
 
-		VkClearColorValue constexpr clearColor{ 0.0f, 0.0f, 0.0f, 0.0f };
+		VkClearColorValue constexpr clearColor{ 0.0f, 0.0f, 0.0f, 1.f };
 		std::array<VkClearValue, 2> clearValues{};
 		clearValues[0].color = clearColor;
 		clearValues[1].depthStencil = { 1.0f, 0 };
