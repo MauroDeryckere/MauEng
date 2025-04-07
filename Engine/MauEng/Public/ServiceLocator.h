@@ -17,15 +17,14 @@ namespace MauEng
 		[[nodiscard]] static MauRen::Renderer& GetRenderer() { return (*m_pRenderer); }
 		static void RegisterRenderer(std::unique_ptr<MauRen::Renderer>&& pRenderer)
 		{
-			m_pRenderer = ((!pRenderer) ? std::make_unique<MauRen::NullRenderer>(nullptr, *std::make_unique<MauRen::DebugRenderer>()) : std::move(pRenderer));
+			m_pRenderer = ((!pRenderer) ? std::make_unique<MauRen::NullRenderer>(nullptr, *std::make_unique<MauRen::NullDebugRenderer>()) : std::move(pRenderer));
 		}
 
 		[[nodiscard]] static MauRen::DebugRenderer& GetDebugRenderer() { return (*m_pDebugRenderer); }
 		static void RegisterDebugRenderer(std::unique_ptr<MauRen::DebugRenderer>&& pRenderer)
 		{
-			m_pDebugRenderer = ((!pRenderer) ? std::make_unique<MauRen::DebugRenderer>() : std::move(pRenderer));
+			m_pDebugRenderer = ((!pRenderer) ? std::make_unique<MauRen::NullDebugRenderer>() : std::move(pRenderer));
 		}
-
 
 		[[nodiscard]] static MauEng::Time& GetTime() { return MauEng::Time::GetInstance(); }
 		[[nodiscard]] static MauEng::SceneManager& GetSceneManager() { return MauEng::SceneManager::GetInstance(); }

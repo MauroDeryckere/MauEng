@@ -16,19 +16,25 @@
 
 #include <SDL3/SDL.h>
 
+#include "InternalDebugRenderer.h"
+
 namespace MauEng
 {
 	Engine::Engine():
 		m_Window{ std::make_unique<SDLWindow>() }
 	{
 		// Initialize all core dependences & singletons
-
-		ServiceLocator::RegisterDebugRenderer(std::make_unique<MauRen::DebugRenderer>());
+		if constexpr (ENABLE_DEBUG_RENDERING)
+		{
+			ServiceLocator::RegisterDebugRenderer(std::make_unique<MauRen::InternalDebugRenderer>());
+		}
 
 		ServiceLocator::RegisterRenderer(MauRen::CreateVulkanRenderer(m_Window->window, DEBUG_RENDERER));
 		ServiceLocator::GetRenderer().Init();
 
 		m_Window->Initialize();
+
+		SDL_GL_SetSwapInterval(0);
 	}
 
 	Engine::~Engine()

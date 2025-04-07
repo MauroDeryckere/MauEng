@@ -1,14 +1,14 @@
-#include "DebugRenderer.h"
+#include "InternalDebugRenderer.h"
 
 namespace MauRen
 {
-	DebugRenderer::DebugRenderer()
+	InternalDebugRenderer::InternalDebugRenderer()
 	{
 		m_ActivePoints.reserve(MAX_LINES / 2);
 		m_IndexBuffer.reserve(MAX_LINES / 2);
 	}
 
-	void DebugRenderer::DrawLine(glm::vec3 const& start, glm::vec3 const& end, glm::vec3 const& colour) noexcept
+	void InternalDebugRenderer::DrawLine(glm::vec3 const& start, glm::vec3 const& end, glm::vec3 const& colour) noexcept
 	{
 		if (std::size(m_ActivePoints) + 2 * 2 < MAX_LINES)
 		{
@@ -19,7 +19,7 @@ namespace MauRen
 		}
 	}
 
-	void DebugRenderer::DrawRect(glm::vec3 const& p0, glm::vec3 const& p1, glm::vec3 const& p2, glm::vec3 const& p3, glm::vec3 const& colour) noexcept
+	void InternalDebugRenderer::DrawRect(glm::vec3 const& p0, glm::vec3 const& p1, glm::vec3 const& p2, glm::vec3 const& p3, glm::vec3 const& colour) noexcept
 	{
 		if (std::size(m_ActivePoints) + 4 * 2 < MAX_LINES)
 		{
@@ -30,12 +30,12 @@ namespace MauRen
 		}
 	}
 
-	void DebugRenderer::DrawCube(glm::vec3 const& center, float size, glm::vec3 const& colour) noexcept
+	void InternalDebugRenderer::DrawCube(glm::vec3 const& center, float size, glm::vec3 const& colour) noexcept
 	{
 		DrawCube(center, size, size, size, colour);
 	}
 
-	void DebugRenderer::DrawCube(glm::vec3 const& center, float width, float height, float depth, glm::vec3 const& colour) noexcept
+	void InternalDebugRenderer::DrawCube(glm::vec3 const& center, float width, float height, float depth, glm::vec3 const& colour) noexcept
 	{
 		if (std::size(m_ActivePoints) + 12 * 2 < MAX_LINES)
 		{
@@ -75,7 +75,7 @@ namespace MauRen
 		DrawLine(p3, p7, colour);
 	}
 
-	void DebugRenderer::DrawTriangle(glm::vec3 const& p0, glm::vec3 const& p1, glm::vec3 const& p2, glm::vec3 const& colour) noexcept
+	void InternalDebugRenderer::DrawTriangle(glm::vec3 const& p0, glm::vec3 const& p1, glm::vec3 const& p2, glm::vec3 const& colour) noexcept
 	{
 		if (std::size(m_ActivePoints) + 3 * 2 < MAX_LINES)
 		{
@@ -85,7 +85,7 @@ namespace MauRen
 		}
 	}
 
-	void DebugRenderer::DrawArrow(glm::vec3 const& start, glm::vec3 const& end, glm::vec3 const& colour, float arrowHeadLength) noexcept
+	void InternalDebugRenderer::DrawArrow(glm::vec3 const& start, glm::vec3 const& end, glm::vec3 const& colour, float arrowHeadLength) noexcept
 	{
 		if (std::size(m_ActivePoints) + 3 * 2 < MAX_LINES)
 		{
@@ -109,7 +109,7 @@ namespace MauRen
 		}
 	}
 
-	void DebugRenderer::DrawPolygon(std::vector<glm::vec3> const& points, glm::vec3 const& colour) noexcept
+	void InternalDebugRenderer::DrawPolygon(std::vector<glm::vec3> const& points, glm::vec3 const& colour) noexcept
 	{
 		assert(points.size() > 3);
 		if (points.size() < 3)
@@ -126,7 +126,7 @@ namespace MauRen
 		}
 	}
 
-	void DebugRenderer::DrawCircle(glm::vec3 const& center, float radius, glm::vec3 const& axis, glm::vec3 const& colour, uint32_t segments) noexcept
+	void InternalDebugRenderer::DrawCircle(glm::vec3 const& center, float radius, glm::vec3 const& axis, glm::vec3 const& colour, uint32_t segments) noexcept
 	{
 		if (std::size(m_ActivePoints) + (segments) * 2 < MAX_LINES)
 		{
@@ -151,7 +151,7 @@ namespace MauRen
 
 	}
 
-	void DebugRenderer::DrawEllipse(glm::vec3 const& center, float radiusX, float radiusY, glm::vec3 const& axis, glm::vec3 const& colour, uint32_t segments) noexcept
+	void InternalDebugRenderer::DrawEllipse(glm::vec3 const& center, float radiusX, float radiusY, glm::vec3 const& axis, glm::vec3 const& colour, uint32_t segments) noexcept
 	{
 		if (std::size(m_ActivePoints) + (segments) * 2 < MAX_LINES)
 		{
@@ -175,7 +175,7 @@ namespace MauRen
 		}
 	}
 
-	void DebugRenderer::DrawCylinder(glm::vec3 const& center, float radius, float height, glm::vec3 const& colour, uint32_t segments) noexcept
+	void InternalDebugRenderer::DrawCylinder(glm::vec3 const& center, float radius, float height, glm::vec3 const& colour, uint32_t segments) noexcept
 	{
 		if (std::size(m_ActivePoints) + 2 * ( 2 * segments + segments * 2) < MAX_LINES)
 		{
@@ -202,7 +202,7 @@ namespace MauRen
 		}
 	}
 
-	void DebugRenderer::DrawSphere(glm::vec3 const& center, float radius, glm::vec3 const& colour, uint32_t segments) noexcept
+	void InternalDebugRenderer::DrawSphere(glm::vec3 const& center, float radius, glm::vec3 const& colour, uint32_t segments) noexcept
 	{
 		if (std::size(m_ActivePoints) + (segments * 3) * 2 < MAX_LINES)
 		{
@@ -212,7 +212,7 @@ namespace MauRen
 		}
 	}
 
-	void DebugRenderer::DrawSphereComplex(glm::vec3 const& center, float radius, glm::vec3 const& colour, uint32_t segments, uint32_t layers) noexcept
+	void InternalDebugRenderer::DrawSphereComplex(glm::vec3 const& center, float radius, glm::vec3 const& colour, uint32_t segments, uint32_t layers) noexcept
 	{
 		if (std::size(m_ActivePoints) + ((segments * 3) * (layers * 2 - 1)) * 2 < MAX_LINES)
 		{
@@ -243,7 +243,7 @@ namespace MauRen
 		}
 	}
 
-	void DebugRenderer::DrawEllipsoid(glm::vec3 const& center, float radiusX, float radiusY, float radiusZ, glm::vec3 const& colour, uint32_t segments) noexcept
+	void InternalDebugRenderer::DrawEllipsoid(glm::vec3 const& center, float radiusX, float radiusY, float radiusZ, glm::vec3 const& colour, uint32_t segments) noexcept
 	{
 		if (std::size(m_ActivePoints) + (segments * 3) * 2 < MAX_LINES)
 		{
@@ -253,7 +253,7 @@ namespace MauRen
 		}
 	}
 
-	void DebugRenderer::DrawEllipsoidComplex(glm::vec3 const& center, float radiusX, float radiusY, float radiusZ, glm::vec3 const& colour, uint32_t segments, uint32_t layers) noexcept
+	void InternalDebugRenderer::DrawEllipsoidComplex(glm::vec3 const& center, float radiusX, float radiusY, float radiusZ, glm::vec3 const& colour, uint32_t segments, uint32_t layers) noexcept
 	{
 		if (std::size(m_ActivePoints) + ((segments * 3) * (layers * 2 - 1)) * 2 < MAX_LINES)
 		{

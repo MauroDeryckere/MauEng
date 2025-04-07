@@ -51,7 +51,7 @@ namespace MauRen
 		// "reference" to the window
 		SDL_Window* m_pWindow{ nullptr };
 
-		class DebugRenderer& m_DebugRenderer;
+		class InternalDebugRenderer* m_DebugRenderer = nullptr;
 
 		VulkanInstanceContext m_InstanceContext{};
 		VulkanSurfaceContext m_SurfaceContext{};
@@ -116,6 +116,8 @@ namespace MauRen
 		VulkanBuffer m_DebugIndexBuffer{};
 		// Update the buffer for debug drawing
 		void UpdateDebugVertexBuffer();
+
+		void RenderDebug(VkCommandBuffer commandBuffer);
 	};
 }
 

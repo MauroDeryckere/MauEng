@@ -13,7 +13,6 @@ file(GLOB RENDERER_PUBLIC_SOURCES
 
 file(GLOB RENDERER_PRIVATE_SOURCES
     "${RENDERER_PRIVATE_DIR}/Vulkan/*.cpp"
-    "${RENDERER_PRIVATE_DIR}/Vulkan/DebugRenderer/*.cpp"
     "${RENDERER_PRIVATE_DIR}/*.cpp"
 )
 

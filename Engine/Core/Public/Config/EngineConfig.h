@@ -17,6 +17,13 @@ namespace MauEng
 	auto constexpr LOG_COLOR_GENERAL{ "\033[1;90m" };
 	// Blue
 	auto constexpr LOG_COLOR_CATEGORY{ "\033[1;34m" };
+
+
+#if _DEBUG
+	bool constexpr ENABLE_DEBUG_RENDERING{ true };
+#else
+	bool constexpr ENABLE_DEBUG_RENDERING{ false };
+#endif
 }
 
 #endif
