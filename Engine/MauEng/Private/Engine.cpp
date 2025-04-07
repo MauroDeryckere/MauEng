@@ -52,6 +52,8 @@ namespace MauEng
 		int frameCount{ 0 };
 		float elapsedTime{ 0.f };
 
+		bool IsMinimised = false;
+
 		// First load everything the user wants us to load using their "load function"
 		load();
 		
@@ -65,10 +67,18 @@ namespace MauEng
 		bool doContinue{ true };
 		while (doContinue)
 		{
+			SDL_GetWindowFlags(m_Window->window)& (SDL_WINDOW_MINIMIZED | SDL_WINDOW_HIDDEN) ? IsMinimised = true : IsMinimised = false;
+
 			time.Update();
 
 			if constexpr(LOG_FPS)
 			{
+				if (IsMinimised)
+				{
+					elapsedTime = 0.f;
+					frameCount = 0;
+				}
+
 				elapsedTime += time.ElapsedSec();
 				++frameCount;
 
@@ -86,13 +96,19 @@ namespace MauEng
 
 			while (time.IsLag())
 			{
-				sceneManager.FixedUpdate();
+				if (not IsMinimised)
+				{
+					sceneManager.FixedUpdate();
+				}
+
 				time.ProcessLag();
 			}
 
-			sceneManager.Tick();
-
-			sceneManager.Render();
+			if (not IsMinimised)
+			{
+				sceneManager.Tick();
+				sceneManager.Render();
+			}
 
 			if constexpr (LIMIT_FPS)
 			{
