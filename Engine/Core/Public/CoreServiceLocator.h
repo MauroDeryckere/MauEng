@@ -10,10 +10,7 @@ namespace MauCor
 	{
 	public:
 		[[nodiscard]] static Logger& GetLogger() { return (*m_pLogger); }
-		static void RegisterLogger(std::unique_ptr<Logger>&& pLogger)
-		{
-			m_pLogger = ((!pLogger) ? std::make_unique<NullLogger>() : std::move(pLogger));
-		}
+		static void RegisterLogger(std::unique_ptr<Logger>&& pLogger);
 
 	private:
 		static std::unique_ptr<Logger> m_pLogger;

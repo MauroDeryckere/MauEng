@@ -115,24 +115,6 @@ namespace MauCor
 			return std::vformat(fmt, std::make_format_args(std::forward<Args>(args)...));
 		}
 	};
-
-
-	class NullLogger final : public Logger
-	{
-	public:
-		NullLogger() = default;
-		virtual ~NullLogger() override = default;
-
-		NullLogger(NullLogger const&) = delete;
-		NullLogger(NullLogger&&) = delete;
-		NullLogger& operator=(NullLogger const&) = delete;
-		NullLogger& operator=(NullLogger&&) = delete;
-
-	protected:
-
-	private:
-		virtual void LogInternal(LogPriority priority, LogCategory category, std::string const& message) override {}
-	};
 }
 
 #endif
