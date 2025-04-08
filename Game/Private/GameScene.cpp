@@ -71,6 +71,7 @@ namespace MauGam
 		Scene::Tick();
 
 		//LOGGER.Log(MauCor::LogPriority::Error, MauCor::LogCategory::Game,"test {}", 1000);
+		//ME_LOG_TRACE(MauCor::LogCategory::Game, "TEST");
 
 		// Demo debug drawing
 		DEBUG_RENDERER.DrawLine({0, 0,0 },  {0, 100, 100} );
