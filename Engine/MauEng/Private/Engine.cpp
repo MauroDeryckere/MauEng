@@ -18,6 +18,8 @@
 
 #include "InternalDebugRenderer.h"
 
+#include "ConsoleLogger.h"
+
 namespace MauEng
 {
 	Engine::Engine():
@@ -31,6 +33,8 @@ namespace MauEng
 
 		ServiceLocator::RegisterRenderer(MauRen::CreateVulkanRenderer(m_Window->window, DEBUG_RENDERER));
 		ServiceLocator::GetRenderer().Init();
+
+		ServiceLocator::RegisterLogger(std::make_unique<MauCor::ConsoleLogger>());
 
 		m_Window->Initialize();
 

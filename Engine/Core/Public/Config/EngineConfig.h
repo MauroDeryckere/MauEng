@@ -4,7 +4,6 @@
 namespace MauEng
 {
 	// Debug output colours
-
 	// White (default)
 	auto constexpr LOG_COLOR_RESET{ "\033[0m" };
 	// Red

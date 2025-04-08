@@ -70,6 +70,8 @@ namespace MauGam
 	{
 		Scene::Tick();
 
+		LOGGER.Log(MauCor::LogPriority::Error, "test");
+
 		// Demo debug drawing
 		DEBUG_RENDERER.DrawLine({0, 0,0 },  {0, 100, 100} );
 		DEBUG_RENDERER.DrawLine({-10 , 10, -10}, {10, 10, 10}, { 0, 1, 0});

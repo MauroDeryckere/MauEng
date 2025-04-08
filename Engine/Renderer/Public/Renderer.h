@@ -11,7 +11,6 @@ namespace MauRen
 	class Renderer
 	{
 	public:
-		explicit Renderer(SDL_Window* pWindow, class DebugRenderer&) { }
 		virtual ~Renderer() = default;
 
 		virtual void Init() = 0;
@@ -24,24 +23,26 @@ namespace MauRen
 		// Upload model to the GPU
 		virtual void UpLoadModel(Mesh& mesh) = 0;
 
-
 		Renderer(Renderer const&) = delete;
 		Renderer(Renderer&&) = delete;
 		Renderer& operator=(Renderer const&) = delete;
 		Renderer& operator=(Renderer&&) = delete;
+
+	protected:
+		explicit Renderer(SDL_Window* pWindow, class DebugRenderer&) {}
 	};
 
 	class NullRenderer final : public Renderer
 	{
 	public:
 		explicit NullRenderer(SDL_Window* pWindow, class DebugRenderer& debugRenderer) :
-		Renderer{ pWindow, debugRenderer }
-		{}
-
+			Renderer{ pWindow, debugRenderer }
+		{
+		}
 		virtual ~NullRenderer() override = default;
 
-		virtual void Init() override{}
-		virtual void Destroy() override{}
+		virtual void Init() override {}
+		virtual void Destroy() override {}
 
 		virtual void Render(glm::mat4 const&, glm::mat4 const&) override {}
 		virtual void ResizeWindow() override {}
