@@ -19,5 +19,6 @@
 #include <optional>
 
 #include "Singleton.h"
+#include "CoreServiceLocator.h"
 
 #endif

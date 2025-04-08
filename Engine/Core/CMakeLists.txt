@@ -6,10 +6,12 @@ set(CORE_PRIVATE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Private")
 # Gather all source files
 file(GLOB CORE_PUBLIC_SOURCES
     "${CORE_PUBLIC_DIR}/*.cpp"
+    "${CORE_PUBLIC_DIR}/Logger/*.cpp"
 )
 
 file(GLOB CORE_PRIVATE_SOURCES
     "${CORE_PRIVATE_DIR}/*.cpp"
+    "${CORE_PRIVATE_DIR}/Logger/*.cpp"
 )
 
 add_library(MauEngCore STATIC
@@ -35,18 +37,23 @@ set(SDL_EXAMPLES OFF)
 set(SDL_SHARED OFF)
 set(SDL_STATIC ON)
 
+# Add sub directories for any third party libraries
+
 # We use EXCLUDE_FROM_ALL so that its install targets and configs don't
 # pollute upwards into our configuration.
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/Libs/SDL" EXCLUDE_FROM_ALL)	
 set(SDL3_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/SDL/include/SDL3")
 
-# Add sub directories for any third party libraries
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/Libs/glm")
+
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/Libs/fmt")
 
 target_link_libraries(MauEngCore
     PUBLIC
         SDL3::SDL3
         glm
+        fmt::fmt # While it is not necessary to link against this publicly, users could prefer using this so might as well keep it public 
+    PRIVATE
 )
 
 target_include_directories(MauEngCore

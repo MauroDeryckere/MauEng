@@ -10,3 +10,6 @@
 [submodule "Engine/Core/Libs/SDL"]
 	path = Engine/Core/Libs/SDL
 	url = https://github.com/libsdl-org/SDL
+[submodule "Engine/Core/Libs/fmt"]
+	path = Engine/Core/Libs/fmt
+	url = https://github.com/fmtlib/fmt.git

@@ -5,4 +5,6 @@
 
 #include "ServiceLocator.h"
 
+#include "CorePCH.h"
+
 #endif

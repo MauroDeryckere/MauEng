@@ -4,26 +4,28 @@
 namespace MauEng
 {
 	// Debug output colours
-
 	// White (default)
 	auto constexpr LOG_COLOR_RESET{ "\033[0m" };
-	// Red
-	auto constexpr LOG_COLOR_ERROR{ "\033[1;31m" };
-	// Yellow
-	auto constexpr LOG_COLOR_WARNING{ "\033[1;33m" };
-	// Cyan
-	auto constexpr LOG_COLOR_INFO{ "\033[1;36m" };
-	// Gray
-	auto constexpr LOG_COLOR_GENERAL{ "\033[1;90m" };
 	// Blue
 	auto constexpr LOG_COLOR_CATEGORY{ "\033[1;34m" };
+
+	auto constexpr LOG_COLOR_TRACE{ "\033[1;37m" };
+	auto constexpr LOG_COLOR_INFO{ "\033[1;32m" };
+	auto constexpr LOG_COLOR_DEBUG{ "\033[1;36m" };
+	auto constexpr LOG_COLOR_WARNING{ "\033[1;33m" };
+	auto constexpr LOG_COLOR_ERROR{ "\033[1;31m" };
+	auto constexpr LOG_COLOR_FATAL{ "\033[1;31m" };
 
 
 #if _DEBUG
 	bool constexpr ENABLE_DEBUG_RENDERING{ true };
+	bool constexpr LOG_TO_FILE{ false };
 #else
 	bool constexpr ENABLE_DEBUG_RENDERING{ false };
+	bool constexpr LOG_TO_FILE{ true };
 #endif
+
+	uint32_t constexpr MAX_FILE_SIZE_BEFORE_ROTATE{ 5'000 };
 }
 
 #endif

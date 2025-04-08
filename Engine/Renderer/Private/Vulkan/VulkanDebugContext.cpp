@@ -1,5 +1,7 @@
 #include "VulkanDebugContext.h"
 
+#include "../../MauEng/Public/ServiceLocator.h"
+
 namespace MauRen
 {
 	void VulkanDebugContext::Initialize(VulkanInstanceContext* pVulkanInstanceContext)
@@ -28,42 +30,39 @@ namespace MauRen
 
 	VKAPI_ATTR VkBool32 VKAPI_CALL VulkanDebugContext::DebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
 	{
-		using namespace MauEng;
-		const char* currColor{ LOG_COLOR_GENERAL };
-
-		std::string typeStr{ };
 		if (messageType & VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT)
 		{
-			typeStr += "General";
+
 		}
 		if (messageType & VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT)
 		{
-			typeStr += (typeStr.empty() ? "" : ", ") + std::string("Validation");
+
 		}
 		if (messageType & VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT)
 		{
-			typeStr += (typeStr.empty() ? "" : ", ") + std::string("Performance");
+
 		}
 		if (messageType & VK_DEBUG_UTILS_MESSAGE_TYPE_DEVICE_ADDRESS_BINDING_BIT_EXT)
 		{
-			typeStr += (typeStr.empty() ? "" : ", ") + std::string("DeviceAddress");
+
 		}
 
 		if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
 		{
-			currColor = LOG_COLOR_ERROR;
+			LOGGER.Log(MauCor::LogPriority::Error, MauCor::LogCategory::Renderer, "{}", pCallbackData->pMessage);
 		}
 		else if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
 		{
-			currColor = LOG_COLOR_WARNING;
+			LOGGER.Log(MauCor::LogPriority::Warn, MauCor::LogCategory::Renderer, "{}", pCallbackData->pMessage);
 		}
 		else if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT)
 		{
-			currColor = LOG_COLOR_INFO;
+			LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Renderer,"{}", pCallbackData->pMessage);
 		}
-
-		std::cerr << LOG_COLOR_CATEGORY <<  "[VulkanRenderer - " << typeStr << "] " << currColor << pCallbackData->pMessage << LOG_COLOR_RESET << std::endl;
-
+		else if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT)
+		{
+			LOGGER.Log(MauCor::LogPriority::Trace, MauCor::LogCategory::Renderer,"{}", pCallbackData->pMessage);
+		}
 		return VK_FALSE;
 	}
 

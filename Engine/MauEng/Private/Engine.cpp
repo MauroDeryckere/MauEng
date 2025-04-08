@@ -12,9 +12,9 @@
 #include "Window/SDLWindow.h"
 
 #include "glm/glm.hpp"
-
-
 #include <SDL3/SDL.h>
+
+#include "Logger/logger.h"
 
 #include "InternalDebugRenderer.h"
 
@@ -24,6 +24,17 @@ namespace MauEng
 		m_Window{ std::make_unique<SDLWindow>() }
 	{
 		// Initialize all core dependences & singletons
+
+		if constexpr(LOG_TO_FILE)
+		{
+			MauCor::CoreServiceLocator::RegisterLogger(MauCor::CreateFileLogger("Log.txt"));
+			MauCor::CoreServiceLocator::GetLogger().SetPriorityLevel(MauCor::LogPriority::Warn);
+		}
+		else
+		{
+			MauCor::CoreServiceLocator::RegisterLogger(MauCor::CreateConsoleLogger());
+		}
+
 		if constexpr (ENABLE_DEBUG_RENDERING)
 		{
 			ServiceLocator::RegisterDebugRenderer(std::make_unique<MauRen::InternalDebugRenderer>());
@@ -31,6 +42,7 @@ namespace MauEng
 
 		ServiceLocator::RegisterRenderer(MauRen::CreateVulkanRenderer(m_Window->window, DEBUG_RENDERER));
 		ServiceLocator::GetRenderer().Init();
+
 
 		m_Window->Initialize();
 
@@ -86,7 +98,7 @@ namespace MauEng
 				if (elapsedTime >= 1.0f)
 				{
 					float const fps{ static_cast<float>(frameCount) / elapsedTime };
-					std::cout << "FPS: " << fps << "\n";
+					LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Engine, "FPS: {}", fps);
 					elapsedTime -= 1.0f;
 					frameCount = 0;
 				}

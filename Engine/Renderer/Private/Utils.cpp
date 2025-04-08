@@ -5,7 +5,6 @@
 
 #include <unordered_map>
 #include "Vertex.h"
-
 #include "Material.h"
 
 namespace MauRen
@@ -31,67 +30,60 @@ namespace MauRen
         std::string const matPath { GetAbsoluteMaterialPath() };
 		if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, path.string().c_str(), matPath.c_str()))
         {
-
             throw std::runtime_error(warn + err);
         }
         else
         {
-            std::cout << warn << err << "\n";
+	        if (!warn.empty())
+	        {
+				LOGGER.Log(MauCor::LogPriority::Warn, MauCor::LogCategory::Renderer, "Obj loader: {}", warn);
+	        }
+	        if (!err.empty())
+	        {
+                LOGGER.Log(MauCor::LogPriority::Error, MauCor::LogCategory::Renderer, "Obj loader: {}", err);
+	        }
         }
 
         for (const auto& fileMat : materials)
         {
             if constexpr (DEBUG_OUT_MAT)
             {
-                std::cout << "Material Info:\n";
-                std::cout << "--------------------------------\n";
-                std::cout << "Material Name: " << fileMat.name << "\n";
+                LOGGER.Log(MauCor::LogPriority::Trace, MauCor::LogCategory::Renderer, "Material Info:");
+                LOGGER.Log(MauCor::LogPriority::Trace, MauCor::LogCategory::Renderer, "--------------------------------");
+                LOGGER.Log(MauCor::LogPriority::Trace, MauCor::LogCategory::Renderer, "Material Name: {}", fileMat.name);
 
                 // Diffuse color
-                std::cout << "Diffuse Color (Kd): ("
-                    << fileMat.diffuse[0] << ", "
-                    << fileMat.diffuse[1] << ", "
-                    << fileMat.diffuse[2] << ")\n";
+                LOGGER.Log(MauCor::LogPriority::Trace, MauCor::LogCategory::Renderer, "Diffuse Color (kd): ({}, {}, {})", fileMat.diffuse[0], fileMat.diffuse[1], fileMat.diffuse[2]);
 
                 // Specular color
-                std::cout << "Specular Color (Ks): ("
-                    << fileMat.specular[0] << ", "
-                    << fileMat.specular[1] << ", "
-                    << fileMat.specular[2] << ")\n";
+                LOGGER.Log(MauCor::LogPriority::Trace, MauCor::LogCategory::Renderer, "Specular Color (Ks): ({}, {}, {})", fileMat.specular[0], fileMat.specular[1], fileMat.specular[2]);
 
                 // Ambient color
-                std::cout << "Ambient Color (Ka): ("
-                    << fileMat.ambient[0] << ", "
-                    << fileMat.ambient[1] << ", "
-                    << fileMat.ambient[2] << ")\n";
+                LOGGER.Log(MauCor::LogPriority::Trace, MauCor::LogCategory::Renderer, "Ambient Color (Ka): ({}, {}, {})", fileMat.ambient[0], fileMat.ambient[1], fileMat.ambient[2]);
 
                 // Emissive color (Ke)
-                std::cout << "Emissive Color (Ke): ("
-                    << fileMat.emission[0] << ", "
-                    << fileMat.emission[1] << ", "
-                    << fileMat.emission[2] << ")\n";
+                LOGGER.Log(MauCor::LogPriority::Trace, MauCor::LogCategory::Renderer, "Emissive Color (Ke): ({}, {}, {})", fileMat.emission[0], fileMat.emission[1], fileMat.emission[2]);
 
                 // Transparency (d or Tr)
-                std::cout << "Transparency (d or Tr): "
-                    << fileMat.dissolve << "\n";
-
+                LOGGER.Log(MauCor::LogPriority::Trace, MauCor::LogCategory::Renderer, "Transparency (d or Tr): {}", fileMat.dissolve);
+ 
                 // Shininess (Ns)
-                std::cout << "Shininess (Ns): " << mat.shininess << "\n";
+                LOGGER.Log(MauCor::LogPriority::Trace, MauCor::LogCategory::Renderer, "Shininess (Ns): {}", fileMat.shininess);
 
                 // Refraction index (Ni)
-                std::cout << "Refraction Index (Ni): " << fileMat.ior << "\n";
+                LOGGER.Log(MauCor::LogPriority::Trace, MauCor::LogCategory::Renderer, "Refraction Index (Ni):{} ", fileMat.ior);
 
                 // Illumination model (illum)
-                std::cout << "Illumination Model (illum): " << fileMat.illum << "\n";
+                LOGGER.Log(MauCor::LogPriority::Trace, MauCor::LogCategory::Renderer, "Illumination Model (illum): {}", fileMat.illum);
 
                 // Texture names
-                std::cout << "Diffuse Texture: " << (fileMat.diffuse_texname.empty() ? "None" : fileMat.diffuse_texname) << "\n";
-                std::cout << "Specular Texture: " << (fileMat.specular_texname.empty() ? "None" : fileMat.specular_texname) << "\n";
-                std::cout << "Normal Map: " << (fileMat.normal_texname.empty() ? "None" : fileMat.normal_texname) << "\n";
-                std::cout << "Ambient Texture: " << (fileMat.ambient_texname.empty() ? "None" : fileMat.ambient_texname) << "\n";
-                std::cout << "Bump Map: " << (fileMat.bump_texname.empty() ? "None" : fileMat.bump_texname) << "\n";
-                std::cout << "Displacement Map: " << (fileMat.displacement_texname.empty() ? "None" : fileMat.displacement_texname) << "\n";
-                std::cout << "--------------------------------\n";
+                LOGGER.Log(MauCor::LogPriority::Trace, MauCor::LogCategory::Renderer, "Diffuse Texture: {}", (fileMat.diffuse_texname.empty() ? "None" : fileMat.diffuse_texname));
+                LOGGER.Log(MauCor::LogPriority::Trace, MauCor::LogCategory::Renderer, "Specular Texture: {}", (fileMat.specular_texname.empty() ? "None" : fileMat.specular_texname));
+                LOGGER.Log(MauCor::LogPriority::Trace, MauCor::LogCategory::Renderer, "Normal Map: {}", (fileMat.normal_texname.empty() ? "None" : fileMat.normal_texname));
+                LOGGER.Log(MauCor::LogPriority::Trace, MauCor::LogCategory::Renderer, "Ambient Texture: {}", (fileMat.ambient_texname.empty() ? "None" : fileMat.ambient_texname));
+                LOGGER.Log(MauCor::LogPriority::Trace, MauCor::LogCategory::Renderer, "Bump Map: {}", (fileMat.bump_texname.empty() ? "None" : fileMat.bump_texname));
+                LOGGER.Log(MauCor::LogPriority::Trace, MauCor::LogCategory::Renderer, "Displacement Map: {}", (fileMat.displacement_texname.empty() ? "None" : fileMat.displacement_texname));
+                LOGGER.Log(MauCor::LogPriority::Trace, MauCor::LogCategory::Renderer, "--------------------------------");
             }
 
             mat.name = fileMat.name;

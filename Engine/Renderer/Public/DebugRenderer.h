@@ -6,7 +6,6 @@ namespace MauRen
 	class DebugRenderer
 	{
 	public:
-		explicit DebugRenderer() = default;
 		virtual ~DebugRenderer() = default;
 
 		virtual void DrawLine(glm::vec3 const& start, glm::vec3 const& end, glm::vec3 const& colour = { 1, 0, 0 }) noexcept = 0;
@@ -30,6 +29,9 @@ namespace MauRen
 		virtual void DrawSphereComplex(glm::vec3 const& center, float radius, glm::vec3 const& colour = { 1, 0, 0 }, uint32_t segments = 24, uint32_t layers = 4) noexcept = 0;
 		virtual	void DrawEllipsoid(glm::vec3 const& center, float radiusX, float radiusY, float radiusZ, glm::vec3 const& colour = { 1, 0, 0 }, uint32_t segments = 24) noexcept = 0;
 		virtual	void DrawEllipsoidComplex(glm::vec3 const& center, float radiusX, float radiusY, float radiusZ, glm::vec3 const& colour = { 1, 0, 0 }, uint32_t segments = 24, uint32_t layers = 6) noexcept = 0;
+
+	protected:
+		explicit DebugRenderer() = default;
 
 	private:
 	};
@@ -61,7 +63,6 @@ namespace MauRen
 		virtual void DrawSphereComplex(glm::vec3 const& center, float radius, glm::vec3 const& colour = { 1, 0, 0 }, uint32_t segments = 24, uint32_t layers = 4) noexcept override {}
 		virtual	void DrawEllipsoid(glm::vec3 const& center, float radiusX, float radiusY, float radiusZ, glm::vec3 const& colour = { 1, 0, 0 }, uint32_t segments = 24) noexcept override {}
 		virtual	void DrawEllipsoidComplex(glm::vec3 const& center, float radiusX, float radiusY, float radiusZ, glm::vec3 const& colour = { 1, 0, 0 }, uint32_t segments = 24, uint32_t layers = 6) noexcept override {}
-
 	private:
 	};
 }

@@ -80,7 +80,7 @@ namespace MauRen
 
 		[[nodiscard]] QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device) const noexcept;
 
-		[[nodiscard]] VkFormat FindSupportedFormat(std::vector<VkFormat> const& candidates, VkImageTiling tiling, VkFormatFeatureFlags features) const noexcept;
+		[[nodiscard]] VkFormat FindSupportedFormat(std::vector<VkFormat> const& candidates, VkImageTiling tiling, VkFormatFeatureFlags features) const;
 
 		[[nodiscard]] VkSampleCountFlagBits GetMaxUsableSampleCount() const noexcept;
 	};

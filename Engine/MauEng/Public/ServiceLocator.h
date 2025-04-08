@@ -3,14 +3,18 @@
 
 #include "Renderer.h"
 #include "DebugRenderer.h"
+
 #include "GameTime.h"
 #include "Scene/SceneManager.h"
 #include "Input/InputManager.h"
+
+#include "CoreServiceLocator.h"
 
 #include <memory>
 
 namespace MauEng
 {
+	// Class used to access all engine services
 	class ServiceLocator final
 	{
 	public:
@@ -36,27 +40,14 @@ namespace MauEng
 	};
 
 #pragma region EasyAccessHelper
+	// Macros
+	#define RENDERER MauEng::ServiceLocator::GetRenderer()
+	#define DEBUG_RENDERER MauEng::ServiceLocator::GetDebugRenderer()
 
-#define RENDERER MauEng::ServiceLocator::GetRenderer()
-#define DEBUG_RENDERER MauEng::ServiceLocator::GetDebugRenderer()
+	#define TIME MauEng::ServiceLocator::GetTime()
+	#define SCENE_MANAGER MauEng::ServiceLocator::GetSceneManager()
+	#define INPUT_MANAGER MauEng::ServiceLocator::GetInputManager()
 
-	// Helper function for easy access to the time
-	inline MauEng::Time& Time()
-	{
-		return ServiceLocator::GetTime();
-	}
-
-	// Helper function for easy access to the scene manager
-	inline MauEng::SceneManager& SceneManager()
-	{
-		return ServiceLocator::GetSceneManager();
-	}
-
-	// Helper function for easy access to the input manager
-	inline MauEng::InputManager& InputManager()
-	{
-		return ServiceLocator::GetInputManager();
-	}
 #pragma endregion
 }
 

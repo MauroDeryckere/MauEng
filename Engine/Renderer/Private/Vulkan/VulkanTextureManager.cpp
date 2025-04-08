@@ -53,7 +53,7 @@ namespace MauRen
 		}
 
 		VulkanImage textureImage{ CreateTextureImage(cmdPoolManager, "Resources/Materials/" + textureName)};
-		std::cout << "Resources/Materials/" + textureName << "\n";
+	//	std::cout << "Resources/Materials/" + textureName << "\n";
 		// Create texture img function
 
 		descriptorContext.AddTexture(m_Textures.size(), textureImage.imageViews[0], m_TextureSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
