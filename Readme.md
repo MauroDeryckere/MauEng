@@ -1,9 +1,11 @@
+# 3D Game Engine Project
+
 ## Core
 
 ### Logging
-Easy to use logger, can log in the console and a file using different log priority levels and categories. Priority of logging can be adjusted to skip logging all levels below set level. Colors of the console logs are configurable.
+The logger can log in the console and a file using different log priority levels and categories. Priority of logging can be adjusted to skip logging all levels below set level. Colors of the console logs are configurable.
 
-The file logging has a configurable file size, before it rotates to the next file. Currently it simply keeps a single backup. If a full backup is stored and the new rotation happens, the backup is overwritten with the new file.
+The file logging has a configurable file size, before it rotates to the next file. Currently it simply keeps a single backup. If a full backup is stored and the new rotation happens, the backup is overwritten with the new file. The file also contains the log level more clearly and is timestamped.
 
 ```cpp
 // logging can be done using the LOG macro or using the specifc _Priority level macro.
@@ -11,7 +13,15 @@ ME_LOG(MauCor::LogPriority::Error, MauCor::LogCategory::Game,"test {}", 1000);
 ME_LOG_ERROR(MauCor::LogCategory::Game, "TEST");
 ```
 
+Example of console logging (Renderer category, info & trace log level)
+![Screenshot](docs/LoggerExample.png)
+
+Example of file logging (contains time stamp, category & log level)
+![Screenshot](docs/LoggerFileExample.png)
+
 I do plan on supporting adding custom categories in the future (similar to Unreal Engines system).
+
+## Engine
 
 ## Renderer
 
