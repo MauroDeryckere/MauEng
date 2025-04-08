@@ -30,12 +30,12 @@ namespace MauEng
 
 		if constexpr(LOG_TO_FILE)
 		{
-			ServiceLocator::RegisterLogger(std::make_unique<MauCor::FileLogger>("Log.txt"));
-			ServiceLocator::GetLogger().SetPriorityLevel(MauCor::LogPriority::Warn);
+			MauCor::CoreServiceLocator::RegisterLogger(std::make_unique<MauCor::FileLogger>("Log.txt"));
+			MauCor::CoreServiceLocator::GetLogger().SetPriorityLevel(MauCor::LogPriority::Warn);
 		}
 		else
 		{
-			ServiceLocator::RegisterLogger(std::make_unique<MauCor::ConsoleLogger>());
+			MauCor::CoreServiceLocator::RegisterLogger(std::make_unique<MauCor::ConsoleLogger>());
 		}
 
 		if constexpr (ENABLE_DEBUG_RENDERING)

@@ -5,8 +5,6 @@
 #include "VulkanDeviceContext.h"
 #include "VulkanGraphicsPipeline.h"
 
-#include "../../MauEng/Public/ServiceLocator.h"
-
 namespace MauRen
 {
 	void VulkanSwapchainContext::Initialize(SDL_Window* pWindow, VulkanSurfaceContext const * pVulkanSurfaceContext)

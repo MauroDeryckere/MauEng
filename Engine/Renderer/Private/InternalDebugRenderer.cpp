@@ -12,9 +12,9 @@ namespace MauRen
 	{
 		if (std::size(m_ActivePoints) + 2 * 2 < MAX_LINES)
 		{
-			m_IndexBuffer.emplace_back(m_ActivePoints.size());
+			m_IndexBuffer.emplace_back(static_cast<uint32_t>(m_ActivePoints.size()));
 			m_ActivePoints.emplace_back(start, colour);
-			m_IndexBuffer.emplace_back(m_ActivePoints.size());
+			m_IndexBuffer.emplace_back(static_cast<uint32_t>(m_ActivePoints.size()));
 			m_ActivePoints.emplace_back(end, colour);
 		}
 	}

@@ -1,7 +1,6 @@
 #include "VulkanDeviceContext.h"
 
 #include "VulkanSwapchainContext.h"
-#include "../../MauEng/Public/ServiceLocator.h"
 
 namespace MauRen
 {
@@ -38,7 +37,7 @@ namespace MauRen
 		return format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT;
 	}
 
-	VkFormat VulkanDeviceContext::FindSupportedFormat(std::vector<VkFormat> const& candidates, VkImageTiling tiling, VkFormatFeatureFlags features) const noexcept
+	VkFormat VulkanDeviceContext::FindSupportedFormat(std::vector<VkFormat> const& candidates, VkImageTiling tiling, VkFormatFeatureFlags features) const
 	{
 		for (VkFormat const& format : candidates) 
 		{

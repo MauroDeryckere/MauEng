@@ -5,9 +5,9 @@
 #include <fstream>
 #include <iostream>
 #include <filesystem>
+
 namespace MauCor
 {
-	// No functuionality yet, TODO
 	class FileLogger final : public Logger
 	{
 	public:

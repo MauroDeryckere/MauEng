@@ -44,7 +44,7 @@ namespace MauGam
 		m_Mehses.emplace_back(mi3);
 
 		// Setup input
-		auto& input{ MauEng::InputManager() };
+		auto& input{ INPUT_MANAGER };
 		input.BindAction("MoveUp", MauEng::KeyInfo{SDLK_UP, MauEng::KeyInfo::ActionType::Held });
 		input.BindAction("MoveLeft", MauEng::KeyInfo{ SDLK_LEFT, MauEng::KeyInfo::ActionType::Held });
 		input.BindAction("MoveRight", MauEng::KeyInfo{ SDLK_RIGHT, MauEng::KeyInfo::ActionType::Held });
@@ -72,7 +72,7 @@ namespace MauGam
 
 		// Demo logging tests
 		//LOGGER.Log(MauCor::LogPriority::Error, MauCor::LogCategory::Game,"test {}", 1000);
-		ME_LOG_ERROR(MauCor::LogCategory::Game, "TEST");
+		//ME_LOG_ERROR(MauCor::LogCategory::Game, "TEST");
 
 		// Demo debug drawing tests
 		//DEBUG_RENDERER.DrawLine({0, 0,0 },  {0, 100, 100} );
@@ -95,45 +95,45 @@ namespace MauGam
 
 		//DEBUG_RENDERER.DrawPolygon({ {0, 0, 0}, { 0, 19, 20 }, {32, 10, -10}, {10, 20, 5}, {-2, -2, -2 } });
 
-		auto const& input{ MauEng::InputManager() };
+		auto const& input{ INPUT_MANAGER };
 
 		auto constexpr movementSpeed{ 20.f };
 		if (input.IsActionExecuted("MoveUp"))
 		{
-			m_CameraManager.GetActiveCamera().Translate({ 0.f, 0.f, movementSpeed * MauEng::Time().ElapsedSec() });
+			m_CameraManager.GetActiveCamera().Translate({ 0.f, 0.f, movementSpeed * TIME.ElapsedSec() });
 		}
 		if (input.IsActionExecuted("MoveDown"))
 		{
-			m_CameraManager.GetActiveCamera().Translate({ 0.f, 0.f, -movementSpeed * MauEng::Time().ElapsedSec() });
+			m_CameraManager.GetActiveCamera().Translate({ 0.f, 0.f, -movementSpeed * TIME.ElapsedSec() });
 		}
 		if (input.IsActionExecuted("MoveLeft"))
 		{
-			m_CameraManager.GetActiveCamera().Translate({ -movementSpeed * MauEng::Time().ElapsedSec(), 0.f, 0.f });
+			m_CameraManager.GetActiveCamera().Translate({ -movementSpeed * TIME.ElapsedSec(), 0.f, 0.f });
 		}
 		if (input.IsActionExecuted("MoveRight"))
 		{
-			m_CameraManager.GetActiveCamera().Translate({ movementSpeed * MauEng::Time().ElapsedSec(), 0.f, 0.f });
+			m_CameraManager.GetActiveCamera().Translate({ movementSpeed * TIME.ElapsedSec(), 0.f, 0.f });
 		}
 
 		float constexpr keyboardRotSpeed{ 10 };
 		if (input.IsActionExecuted("RotLeft"))
 		{
-			float const rot{ -keyboardRotSpeed * MauEng::Time().ElapsedSec() * 3 };
+			float const rot{ -keyboardRotSpeed * TIME.ElapsedSec() * 3 };
 			m_CameraManager.GetActiveCamera().RotateX(rot);
 		}
 		if (input.IsActionExecuted("RotRight"))
 		{
-			float const rot{ keyboardRotSpeed * MauEng::Time().ElapsedSec() * 3 };
+			float const rot{ keyboardRotSpeed * TIME.ElapsedSec() * 3 };
 			m_CameraManager.GetActiveCamera().RotateX(rot);
 		}
 		if (input.IsActionExecuted("RotUp"))
 		{
-			float const rot{ keyboardRotSpeed * MauEng::Time().ElapsedSec() };
+			float const rot{ keyboardRotSpeed * TIME.ElapsedSec() };
 			m_CameraManager.GetActiveCamera().RotateY(rot);
 		}
 		if (input.IsActionExecuted("RotDown"))
 		{
-			float const rot{ -keyboardRotSpeed * MauEng::Time().ElapsedSec() };
+			float const rot{ -keyboardRotSpeed * TIME.ElapsedSec() };
 			m_CameraManager.GetActiveCamera().RotateY(rot);
 		}
 
@@ -141,7 +141,7 @@ namespace MauGam
 		if (input.IsActionExecuted("Rotate"))
 		{
 			auto const mouseMovement{ input.GetDeltaMouseMovement() };
-			float const rot{ mouseRotSpeed * MauEng::Time().ElapsedSec() };
+			float const rot{ mouseRotSpeed * TIME.ElapsedSec() };
 
 			m_CameraManager.GetActiveCamera().RotateX(mouseMovement.first * rot);
 			m_CameraManager.GetActiveCamera().RotateY(-mouseMovement.second * rot);
@@ -149,9 +149,9 @@ namespace MauGam
 
 		// 90 degrees per second
 	//	float constexpr rotationSpeed{ glm::radians(90.0f) };
-	//	m_Mehses[0].Rotate(rotationSpeed * MauEng::Time().ElapsedSec(), glm::vec3(0.0f, 0.0f, 1.0f));
-	//	m_Mehses[1].Rotate(rotationSpeed * MauEng::Time().ElapsedSec(), glm::vec3(0.0f, 0.0f, 1.0f));
-	//	m_Mehses[2].Rotate(rotationSpeed * MauEng::Time().ElapsedSec(), glm::vec3(0.0f, 1.0f, 0.0f));
+	//	m_Mehses[0].Rotate(rotationSpeed * TIME.ElapsedSec(), glm::vec3(0.0f, 0.0f, 1.0f));
+	//	m_Mehses[1].Rotate(rotationSpeed * TIME.ElapsedSec(), glm::vec3(0.0f, 0.0f, 1.0f));
+	//	m_Mehses[2].Rotate(rotationSpeed * TIME.ElapsedSec(), glm::vec3(0.0f, 1.0f, 0.0f));
 	}
 
 	void GameScene::OnRender() const

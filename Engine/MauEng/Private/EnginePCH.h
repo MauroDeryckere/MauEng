@@ -17,4 +17,6 @@
 
 #include "Config/EngineConfig.h"
 
+#include "CorePCH.h"
+
 #endif // MAUENG_ENGINE_PCH_H

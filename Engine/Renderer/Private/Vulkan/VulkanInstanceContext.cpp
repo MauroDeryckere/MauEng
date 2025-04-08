@@ -2,8 +2,6 @@
 
 #include "VulkanDebugContext.h"
 
-#include "..\..\MauEng/Public/ServiceLocator.h"
-
 namespace MauRen
 {
 	void VulkanInstanceContext::Initialize()

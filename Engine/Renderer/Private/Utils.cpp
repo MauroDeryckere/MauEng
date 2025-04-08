@@ -5,10 +5,7 @@
 
 #include <unordered_map>
 #include "Vertex.h"
-
 #include "Material.h"
-
-#include "../../MauEng/Public/ServiceLocator.h"
 
 namespace MauRen
 {

@@ -13,7 +13,7 @@ namespace MauRen
 		explicit VulkanDescriptorContext() = default;
 		~VulkanDescriptorContext() = default;
 
-		void Initialize(){}
+		void Initialize() {}
 		void Destroy();
 
 		[[nodiscard]] VkDescriptorSetLayout GetDescriptorSetLayout() const noexcept { return m_DescriptorSetLayout; }
@@ -36,7 +36,7 @@ namespace MauRen
 		VkDescriptorPool m_DescriptorPool{ VK_NULL_HANDLE };
 
 		// !
-		// common practice to rank from ‘least updated’ descriptor set(index 0) to ‘most frequent updated’
+		// common practice to rank from "least updated" descriptor set(index 0) to "most frequent updated"
 		// descriptor set(index N)!This way, we can avoid rebinding as much as possible!
 		std::vector<VkDescriptorSet> m_DescriptorSets{};
 

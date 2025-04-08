@@ -56,7 +56,7 @@ namespace MauEng
 
 			ServiceLocator::GetRenderer().ResizeWindow();
 
-			SceneManager().UpdateCamerasAspectRatio(static_cast<float>(winClassPtr->width) / static_cast<float>(winClassPtr->height));
+			SCENE_MANAGER.UpdateCamerasAspectRatio(static_cast<float>(winClassPtr->width) / static_cast<float>(winClassPtr->height));
 		}
 
 		return true;

@@ -61,12 +61,12 @@ namespace MauRen
 		}
 
 		// TODO
-		//• In the tutorial, the transition is done using a transient command
+		//  In the tutorial, the transition is done using a transient command
 		//	buffer.These are used for one time usage(e.g.generating
 		//		data).So, this is obviously not necessary if the transition is part
 		//	of the command buffer you are already recording for every
 		//	frame(which is not the case when loading textures).
-		//	• You can, and should, also track the current layout of an image
+		//	You can, and should, also track the current layout of an image
 		//	yourself!
 
 		// https://docs.vulkan.org/spec/latest/chapters/synchronization.html#synchronization-access-types-supported
