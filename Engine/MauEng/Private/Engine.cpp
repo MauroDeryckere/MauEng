@@ -25,6 +25,8 @@ namespace MauEng
 	Engine::Engine():
 		m_Window{ std::make_unique<SDLWindow>() }
 	{
+		ServiceLocator::RegisterLogger(std::make_unique<MauCor::ConsoleLogger>());
+
 		// Initialize all core dependences & singletons
 		if constexpr (ENABLE_DEBUG_RENDERING)
 		{
@@ -34,7 +36,6 @@ namespace MauEng
 		ServiceLocator::RegisterRenderer(MauRen::CreateVulkanRenderer(m_Window->window, DEBUG_RENDERER));
 		ServiceLocator::GetRenderer().Init();
 
-		ServiceLocator::RegisterLogger(std::make_unique<MauCor::ConsoleLogger>());
 
 		m_Window->Initialize();
 
@@ -90,7 +91,7 @@ namespace MauEng
 				if (elapsedTime >= 1.0f)
 				{
 					float const fps{ static_cast<float>(frameCount) / elapsedTime };
-					std::cout << "FPS: " << fps << "\n";
+					LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Engine, "FPS: {}", fps);
 					elapsedTime -= 1.0f;
 					frameCount = 0;
 				}

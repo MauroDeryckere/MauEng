@@ -1,9 +1,13 @@
+#include "CorePCH.h"
+
 #include "ConsoleLogger.h"
+
+#include "Config/EngineConfig.h"
 
 namespace MauCor
 {
-	void ConsoleLogger::LogInternal(LogPriority priority, std::string const& message)
+	void ConsoleLogger::LogInternal(LogPriority priority, LogCategory category, std::string const& message)
 	{
-		std::cout << fmt::format("Log Priority: {}, Message: {}\n", static_cast<int>(priority), message);
+		std::cout << fmt::format("{}[{}] {}{}{} \n", MauEng::LOG_COLOR_CATEGORY, CategoryToString(category), PriorityToColour(priority), message, MauEng::LOG_COLOR_RESET);
 	}
 }

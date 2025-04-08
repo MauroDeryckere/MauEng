@@ -1,6 +1,7 @@
 #include "VulkanDeviceContext.h"
 
 #include "VulkanSwapchainContext.h"
+#include "../../MauEng/Public/ServiceLocator.h"
 
 namespace MauRen
 {
@@ -105,13 +106,13 @@ namespace MauRen
 		std::vector<VkPhysicalDevice> devices(deviceCount);
 		vkEnumeratePhysicalDevices(m_InstanceContext->GetInstance(), &deviceCount, devices.data());
 
-		std::cout << "\nSelecting physical device.\n";
+		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Renderer, "Selecting physical device.");
 
 		// Automatically select best option
 		uint32_t bestScore{ 0 };
 		if constexpr (AUTO_SELECT_PHYSICAL_DEVICE)
 		{
-			std::cout << "Available Vulkan physical devices:\n";
+			std::string deviceList{};
 
 			for (auto const& device : devices)
 			{
@@ -120,7 +121,7 @@ namespace MauRen
 					VkPhysicalDeviceProperties props;
 					vkGetPhysicalDeviceProperties(device, &props);
 
-					std::cout << "\t" << props.deviceName << "\n";
+					deviceList += fmt::format("\t{}\n", props.deviceName);
 
 
 					auto const score{ RateDeviceSuitability( device) };
@@ -133,6 +134,9 @@ namespace MauRen
 				}
 			}
 
+			LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Renderer, "Available Vulkan physical devices: \n {}", deviceList);
+
+
 			if (m_PhysicalDevice == VK_NULL_HANDLE)
 			{
 				throw std::runtime_error("failed to find a suitable GPU!");
@@ -140,7 +144,8 @@ namespace MauRen
 
 			VkPhysicalDeviceProperties selectedProps;
 			vkGetPhysicalDeviceProperties(m_PhysicalDevice, &selectedProps);
-			std::cout << "\nSelected GPU: " << selectedProps.deviceName << " (score: " << bestScore << ")\n";
+
+			LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Renderer, "Selected GPU: {}  (score: {} )" , selectedProps.deviceName, bestScore);
 		}
 
 		// Allow user to manually select 
@@ -148,7 +153,8 @@ namespace MauRen
 		{
 			// Pair<Device, score>
 			std::vector<std::pair<VkPhysicalDevice, uint32_t>> selectableDevices{};
-			std::cout << "Available Vulkan physical devices:\n";
+
+			std::string deviceList{};
 
 			for (auto const& device : devices)
 			{
@@ -160,9 +166,12 @@ namespace MauRen
 					VkPhysicalDeviceProperties props;
 					vkGetPhysicalDeviceProperties(device, &props);
 
-					std::cout << selectableDevices.size() - 1 << "\t" << props.deviceName << " score: " << score << ")\n";
+					deviceList += fmt::format("\t{}\t{} score: {} \n", selectableDevices.size() - 1, props.deviceName, score);
 				}
 			}
+
+			LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Renderer, "Available Vulkan physical devices: \n {}", deviceList);
+
 
 			if (selectableDevices.empty())
 			{
@@ -170,7 +179,8 @@ namespace MauRen
 			}
 
 			int selectedIndex = -1;
-			std::cout << "\nEnter the index of the GPU to use: ";
+
+			LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Renderer, "Enter the index of the GPU to use :");
 			std::cin >> selectedIndex;
 
 			selectedIndex = std::clamp(selectedIndex, 0, static_cast<int>(selectableDevices.size()));
@@ -178,7 +188,7 @@ namespace MauRen
 			m_PhysicalDevice = selectableDevices[selectedIndex].first;
 			VkPhysicalDeviceProperties selectedProps;
 			vkGetPhysicalDeviceProperties(m_PhysicalDevice, &selectedProps);
-			std::cout << "Selected GPU: " << selectedProps.deviceName << "\n";
+			LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Renderer, "Selected GPU: {}", selectedProps.deviceName);
 		}
 	}
 
@@ -248,14 +258,14 @@ namespace MauRen
 			// If the families are the same (unified), we can just use one queue for both
 			if (indices.IsGraphicsPresentUnified())
 			{
-				std::cout << "\nLog: Using unified graphics & present queue \n";
+				LOGGER.Log(MauCor::LogPriority::Trace, MauCor::LogCategory::Renderer, "Using unified graphics & present queue");
 				m_IsUsingUnifiedGraphicsPresentQueue = true;
 
 				vkGetDeviceQueue(m_LogicalDevice, indices.graphicsFamily.value(), 0, &m_UnifiedGraphicsPresentQueue);
 			}
 			else
 			{
-				std::cout << "\nLog: Using separate graphics & present queue \n";
+				LOGGER.Log(MauCor::LogPriority::Trace, MauCor::LogCategory::Renderer, "Using separate graphics & present queue");
 				m_IsUsingUnifiedGraphicsPresentQueue = false;
 
 				vkGetDeviceQueue(m_LogicalDevice, indices.graphicsFamily.value(), 0, &m_GraphicsQueue);
@@ -264,7 +274,7 @@ namespace MauRen
 		}
 		else
 		{
-			std::cout << "\nLog: Using separate graphics & present queue \n";
+			LOGGER.Log(MauCor::LogPriority::Trace, MauCor::LogCategory::Renderer, "Using separate graphics & present queue");
 			m_IsUsingUnifiedGraphicsPresentQueue = false;
 
 			vkGetDeviceQueue(m_LogicalDevice, indices.graphicsFamily.value(), 0, &m_GraphicsQueue);
@@ -274,8 +284,6 @@ namespace MauRen
 
 	bool VulkanDeviceContext::CheckPhysicalDeviceExtensionSupport(VkPhysicalDevice device)
 	{
-		std::cout << "\n";
-
 		uint32_t extensionCount;
 		vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
 
@@ -286,11 +294,10 @@ namespace MauRen
 			{
 				if (std::ranges::any_of(availableExtensions, [ext](const VkExtensionProperties& availableExt) { return ext == availableExt.extensionName; }))
 				{
-					std::cout << "Required extension \"" << ext << "\" is supported.\n";
+					LOGGER.Log(MauCor::LogPriority::Trace, MauCor::LogCategory::Renderer, "Required extension \" {} \" is supported", ext);
 					return true;
 				}
-
-				std::cerr << "Required extension \"" << ext << "\" is not supported.\n";
+				LOGGER.Log(MauCor::LogPriority::Fatal, MauCor::LogCategory::Renderer, "Required extension \" {} \" is NOT supported", ext);
 				return false;
 			});
 	}

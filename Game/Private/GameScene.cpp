@@ -62,15 +62,15 @@ namespace MauGam
 	void GameScene::OnLoad()
 	{
 		Scene::OnLoad();
-
-		std::cout << "Demo Scene loaded! \n";
+		
+		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "Demo Scene Loaded! ");
 	}
 
 	void GameScene::Tick()
 	{
 		Scene::Tick();
 
-		LOGGER.Log(MauCor::LogPriority::Error, "test");
+		//LOGGER.Log(MauCor::LogPriority::Error, MauCor::LogCategory::Game,"test {}", 1000);
 
 		// Demo debug drawing
 		DEBUG_RENDERER.DrawLine({0, 0,0 },  {0, 100, 100} );

@@ -5,6 +5,7 @@
 #include "VulkanDeviceContext.h"
 #include "VulkanGraphicsPipeline.h"
 
+#include "../../MauEng/Public/ServiceLocator.h"
 
 namespace MauRen
 {
@@ -170,11 +171,7 @@ namespace MauRen
 			m_SwapChainImages[i].height = m_SwapChainExtent.height;
 		}
 
-
-		//TODO move to logger when added
-		std::cout << "Swapchain: " << imageCount << " images, Format: " << surfaceFormat.format
-			<< ", Extent: " << extent.width << "x" << extent.height
-			<< ", Present Mode: " << presentMode << std::endl;
+		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Renderer, "Swapchain: {} images, Format: {}, Extent: {} x {} y, Present Mode: {}", imageCount, static_cast<int>(surfaceFormat.format), extent.width, extent.height, static_cast<int>(presentMode));
 	}
 
 	void VulkanSwapchainContext::CreateImageViews()
