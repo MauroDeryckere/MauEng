@@ -1,7 +1,7 @@
 #ifndef MAUCOR_FILELOGGER_H
 #define MAUCOR_FILELOGGER_H
 
-#include "Logger.h"
+#include "Logger/Logger.h"
 #include <fstream>
 #include <iostream>
 #include <filesystem>

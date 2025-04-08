@@ -1,7 +1,7 @@
 #ifndef MAUCOR_CONSOLELOGGER_H
 #define MAUCOR_CONSOLELOGGER_H
 
-#include "Logger.h"
+#include "Logger/Logger.h"
 
 namespace MauCor
 {

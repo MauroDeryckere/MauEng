@@ -12,14 +12,11 @@
 #include "Window/SDLWindow.h"
 
 #include "glm/glm.hpp"
-
-
 #include <SDL3/SDL.h>
 
-#include "InternalDebugRenderer.h"
+#include "Logger/logger.h"
 
-#include "FileLogger.h"
-#include "ConsoleLogger.h"
+#include "InternalDebugRenderer.h"
 
 namespace MauEng
 {
@@ -30,12 +27,12 @@ namespace MauEng
 
 		if constexpr(LOG_TO_FILE)
 		{
-			MauCor::CoreServiceLocator::RegisterLogger(std::make_unique<MauCor::FileLogger>("Log.txt"));
+			MauCor::CoreServiceLocator::RegisterLogger(MauCor::CreateFileLogger("Log.txt"));
 			MauCor::CoreServiceLocator::GetLogger().SetPriorityLevel(MauCor::LogPriority::Warn);
 		}
 		else
 		{
-			MauCor::CoreServiceLocator::RegisterLogger(std::make_unique<MauCor::ConsoleLogger>());
+			MauCor::CoreServiceLocator::RegisterLogger(MauCor::CreateConsoleLogger());
 		}
 
 		if constexpr (ENABLE_DEBUG_RENDERING)

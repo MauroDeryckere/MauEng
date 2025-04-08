@@ -12,6 +12,8 @@
 
 #include "Config/EngineConfig.h"
 
+#include "LoggerFactory.h"
+
 namespace MauCor
 {
 	enum class LogPriority : uint8_t

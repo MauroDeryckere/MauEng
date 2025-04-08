@@ -1,6 +1,6 @@
 #include "CorePCH.h"
 
-#include "Logger.h"
+#include "Logger/Logger.h"
 
 namespace MauCor
 {

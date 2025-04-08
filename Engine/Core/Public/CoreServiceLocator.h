@@ -2,7 +2,7 @@
 #define MAUCOR_CORESERVICELOCATOR_H
 
 #include <memory>
-#include "Logger.h"
+#include "Logger/Logger.h"
 
 namespace MauCor
 {

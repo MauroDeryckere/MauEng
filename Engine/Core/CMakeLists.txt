@@ -6,10 +6,12 @@ set(CORE_PRIVATE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Private")
 # Gather all source files
 file(GLOB CORE_PUBLIC_SOURCES
     "${CORE_PUBLIC_DIR}/*.cpp"
+    "${CORE_PUBLIC_DIR}/Logger/*.cpp"
 )
 
 file(GLOB CORE_PRIVATE_SOURCES
     "${CORE_PRIVATE_DIR}/*.cpp"
+    "${CORE_PRIVATE_DIR}/Logger/*.cpp"
 )
 
 add_library(MauEngCore STATIC
