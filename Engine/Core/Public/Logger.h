@@ -103,7 +103,7 @@ namespace MauCor
 			}
 		}
 	private:
-		LogPriority m_LogPriority{ LogPriority::Fatal };
+		LogPriority m_LogPriority{ LogPriority::Trace };
 		mutable std::mutex m_Mutex{};
 
 		// The std way of doing the logging, we're using fmt now but keeping this fnction in case we want to go back

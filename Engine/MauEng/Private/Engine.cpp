@@ -26,6 +26,8 @@ namespace MauEng
 	Engine::Engine():
 		m_Window{ std::make_unique<SDLWindow>() }
 	{
+		// Initialize all core dependences & singletons
+
 		if constexpr(LOG_TO_FILE)
 		{
 			ServiceLocator::RegisterLogger(std::make_unique<MauCor::FileLogger>("Log.txt"));
@@ -36,7 +38,6 @@ namespace MauEng
 			ServiceLocator::RegisterLogger(std::make_unique<MauCor::ConsoleLogger>());
 		}
 
-		// Initialize all core dependences & singletons
 		if constexpr (ENABLE_DEBUG_RENDERING)
 		{
 			ServiceLocator::RegisterDebugRenderer(std::make_unique<MauRen::InternalDebugRenderer>());

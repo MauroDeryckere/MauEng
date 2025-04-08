@@ -25,7 +25,8 @@ namespace MauCor
 
 		void LogInternal(LogPriority priority, LogCategory category, std::string const& message) override;
 
-
+		void OpenLogFile();
+		void RotateFile();
 	};
 }
 
