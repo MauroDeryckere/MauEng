@@ -45,7 +45,7 @@ namespace MauCor
 		template<typename... Args>
 		void Log(LogPriority priority, LogCategory category, fmt::format_string<Args...> fmtStr, Args... args)
 		{
-			if (priority > m_LogPriority)
+			if (priority < m_LogPriority)
 			{
 				return;
 			}
@@ -54,7 +54,7 @@ namespace MauCor
 			LogInternal(priority, category, fmt::format(fmtStr, std::forward<Args>(args)...));
 		}
 
-		inline void SetPriorityLevel(LogPriority priority) noexcept;
+		void SetPriorityLevel(LogPriority priority) noexcept;
 
 	protected:
 		Logger() = default;

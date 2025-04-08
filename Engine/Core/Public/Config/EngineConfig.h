@@ -19,8 +19,10 @@ namespace MauEng
 
 #if _DEBUG
 	bool constexpr ENABLE_DEBUG_RENDERING{ true };
+	bool constexpr LOG_TO_FILE{ false };
 #else
 	bool constexpr ENABLE_DEBUG_RENDERING{ false };
+	bool constexpr LOG_TO_FILE{ true };
 #endif
 
 

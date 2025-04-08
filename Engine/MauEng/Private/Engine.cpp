@@ -18,6 +18,7 @@
 
 #include "InternalDebugRenderer.h"
 
+#include "FileLogger.h"
 #include "ConsoleLogger.h"
 
 namespace MauEng
@@ -25,7 +26,15 @@ namespace MauEng
 	Engine::Engine():
 		m_Window{ std::make_unique<SDLWindow>() }
 	{
-		ServiceLocator::RegisterLogger(std::make_unique<MauCor::ConsoleLogger>());
+		if constexpr(LOG_TO_FILE)
+		{
+			ServiceLocator::RegisterLogger(std::make_unique<MauCor::FileLogger>("Log.txt"));
+			ServiceLocator::GetLogger().SetPriorityLevel(MauCor::LogPriority::Warn);
+		}
+		else
+		{
+			ServiceLocator::RegisterLogger(std::make_unique<MauCor::ConsoleLogger>());
+		}
 
 		// Initialize all core dependences & singletons
 		if constexpr (ENABLE_DEBUG_RENDERING)
