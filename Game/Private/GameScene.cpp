@@ -22,6 +22,8 @@ namespace MauGam
 		Mesh m1{ "Resources/Models/Gun.obj" };
 		Mesh m2{ "Resources/Models/Skull.obj" };
 
+		ME_CHECK(nullptr == nullptr);
+
 		RENDERER.UpLoadModel(m1);
 		RENDERER.UpLoadModel(m2);
 

@@ -7,6 +7,8 @@
 
 #include "CorePCH.h"
 
+#include "../../Core/Private/Asserts/AsseertsInternal.h"
+
 #ifdef USING_VULKAN_RENDERER
 	#include <SDL3/SDL.h>
 	#include <SDL3/SDL_vulkan.h>
