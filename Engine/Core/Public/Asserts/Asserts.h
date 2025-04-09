@@ -24,7 +24,7 @@ namespace MauCor
 		#define DEBUG_BREAK() std::abort()
 	#endif
 
-	#ifdef _DEBUG
+	#ifdef ENABLE_ASSERTS
 		#define VERIFY_BREAK() DEBUG_BREAK()
 	#else
 		#define VERIFY_BREAK()

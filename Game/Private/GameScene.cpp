@@ -10,8 +10,6 @@ namespace MauGam
 {
 	GameScene::GameScene()
 	{
-		//ME_ASSERT(1 < 0);
-		
 		m_CameraManager.GetActiveCamera().SetPosition(glm::vec3{ 0.f, 2, 4 });
 		m_CameraManager.GetActiveCamera().SetFOV(60.f);
 
@@ -21,8 +19,6 @@ namespace MauGam
 		// init meshes
 		Mesh m1{ "Resources/Models/Gun.obj" };
 		Mesh m2{ "Resources/Models/Skull.obj" };
-
-		ME_CHECK(nullptr == nullptr);
 
 		RENDERER.UpLoadModel(m1);
 		RENDERER.UpLoadModel(m2);
