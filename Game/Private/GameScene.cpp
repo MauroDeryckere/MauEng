@@ -147,10 +147,10 @@ namespace MauGam
 		}
 
 		// 90 degrees per second
-		float constexpr rotationSpeed{ glm::radians(90.0f) };
-		m_Mehses[0].Rotate(rotationSpeed * TIME.ElapsedSec(), glm::vec3(0.0f, 0.0f, 1.0f));
-		m_Mehses[1].Rotate(rotationSpeed * TIME.ElapsedSec(), glm::vec3(0.0f, 0.0f, 1.0f));
-		m_Mehses[2].Rotate(rotationSpeed * TIME.ElapsedSec(), glm::vec3(0.0f, 1.0f, 0.0f));
+	//	float constexpr rotationSpeed{ glm::radians(90.0f) };
+	//	m_Mehses[0].Rotate(rotationSpeed * TIME.ElapsedSec(), glm::vec3(0.0f, 0.0f, 1.0f));
+	//	m_Mehses[1].Rotate(rotationSpeed * TIME.ElapsedSec(), glm::vec3(0.0f, 0.0f, 1.0f));
+	//	m_Mehses[2].Rotate(rotationSpeed * TIME.ElapsedSec(), glm::vec3(0.0f, 1.0f, 0.0f));
 	}
 
 	void GameScene::OnRender() const

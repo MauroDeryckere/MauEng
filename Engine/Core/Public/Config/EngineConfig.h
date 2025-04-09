@@ -25,12 +25,11 @@ namespace MauEng
 	bool constexpr LOG_TO_FILE{ true };
 #endif
 
-	uint32_t constexpr MAX_FILE_SIZE_BEFORE_ROTATE{ 5'000 };
+  uint32_t constexpr MAX_FILE_SIZE_BEFORE_ROTATE{ 5'000 };
 
 #if _DEBUG
-	#define ENABLE_ASSERTS
+  #define ENABLE_ASSERTS
 #endif
-
 }
 
 #endif
