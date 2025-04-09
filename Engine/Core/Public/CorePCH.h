@@ -13,12 +13,11 @@
 #include <memory>
 
 #include <stdexcept>
-#include <cassert>
-
 #include <algorithm>
 #include <optional>
 
 #include "Singleton.h"
 #include "CoreServiceLocator.h"
+#include "Asserts/Asserts.h"
 
 #endif

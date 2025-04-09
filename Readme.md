@@ -21,6 +21,24 @@ Example of file logging (contains time stamp, category & log level)
 
 I do plan on supporting adding custom categories in the future (similar to Unreal Engines system).
 
+### Debugging - Asserts
+- Assert only triggers in debug, the message is an optional parameter that will be logged to the console / file logger.
+- Check triggers in all builds, message is an optional parameter that will be logged to the console / file logger.
+- Verify logs a warning in release builds, fails in debug. This means code in the macro is still executed in release. Message is an optional parameter that will be logged to the console / file logger.
+
+| Macro       | Build Type  | Fails on Condition? | Removed in Release? | Use Case									|
+|-------------|-------------|---------------------|---------------------|-------------------------------------------|
+| ME_ASSERT	  | Debug-only  | Yes (fatal)         | Yes                 | Catching programmer errors				|
+| ME_CHECK    | All builds  | Yes (fatal)         | No                  | Critical runtime invariants				|
+| ME_VERIFY   | All builds* | No (log only)*      | No*                 | Validate logic without halting execution  |
+
+```cpp
+// Some assert examples
+ME_ASSERT(std::filesystem::exists("Path123.txt"));
+ME_CHECK(pRenderer, "Renderer must be valid");
+ME_VERIFY(CalculateAndValidatePath(), "Path must be valid");
+```
+
 ## Engine
 
 ## Renderer

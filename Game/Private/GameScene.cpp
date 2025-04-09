@@ -1,7 +1,6 @@
+#include "PCH.h"
+
 #include "GameScene.h"
-
-#include "ServiceLocator.h"
-
 #include <iostream>
 
 #include "GameTime.h"
