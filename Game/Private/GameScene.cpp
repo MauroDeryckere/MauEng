@@ -22,9 +22,6 @@ namespace MauGam
 		Mesh m1{ "Resources/Models/Gun.obj" };
 		Mesh m2{ "Resources/Models/Skull.obj" };
 
-		ME_ASSERT(std::filesystem::exists("Resources/Models/Skull2.obj"));
-		ME_ASSERT_MSG(std::filesystem::exists("Resources/Models/Skull2.obj"), "must make file");
-
 		RENDERER.UpLoadModel(m1);
 		RENDERER.UpLoadModel(m2);
 

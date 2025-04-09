@@ -13,27 +13,10 @@
 #include "Config/EngineConfig.h"
 
 #include "LoggerFactory.h"
+#include "LogCategories.h"
 
 namespace MauCor
 {
-	enum class LogPriority : uint8_t
-	{
-		Trace,
-		Info,
-		Debug,
-		Warn,
-		Error,
-		Fatal
-	};
-
-	enum class LogCategory : uint8_t
-	{
-		Core,
-		Engine,
-		Renderer,
-		Game
-	};
-
 	class Logger
 	{
 	public:

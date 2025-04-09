@@ -20,7 +20,7 @@ namespace MauRen
         vertices = {};
         indices = {};
 
-		assert(std::filesystem::exists(path));
+		ME_RENDERER_ASSERT(std::filesystem::exists(path));
 
         tinyobj::attrib_t attrib;
         std::vector<tinyobj::shape_t> shapes;

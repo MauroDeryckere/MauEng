@@ -13,8 +13,6 @@
 #include <memory>
 
 #include <stdexcept>
-#include <cassert>
-
 #include <algorithm>
 #include <optional>
 

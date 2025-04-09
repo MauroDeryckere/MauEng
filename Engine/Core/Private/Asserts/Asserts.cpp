@@ -4,8 +4,8 @@
 
 namespace MauCor
 {
-	void InternalAssert(const char* expression, const char* file, int line, const char* message)
+	void InternalAssert(LogCategory category, char const* expression, char const* file, int line, char const* message) noexcept
 	{
-		ME_LOG_FATAL(LogCategory::Core, "Assertion failed: {} File: {}, Line: {}, Message: {}", expression, file, line, message ? message : "NO MESSAGE SPECIFIED");
+		ME_LOG_FATAL(category, "Assertion failed: {} File: {}, Line: {}, Message: {}", expression, file, line, message ? message : "NO MESSAGE SPECIFIED");
 	}
 }
