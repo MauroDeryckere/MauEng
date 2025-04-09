@@ -1,7 +1,6 @@
+#include "PCH.h"
+
 #include "GameScene.h"
-
-#include "ServiceLocator.h"
-
 #include <iostream>
 
 #include "GameTime.h"
@@ -11,6 +10,8 @@ namespace MauGam
 {
 	GameScene::GameScene()
 	{
+		//ME_ASSERT(1 < 0);
+		
 		m_CameraManager.GetActiveCamera().SetPosition(glm::vec3{ 0.f, 2, 4 });
 		m_CameraManager.GetActiveCamera().SetFOV(60.f);
 
@@ -20,6 +21,9 @@ namespace MauGam
 		// init meshes
 		Mesh m1{ "Resources/Models/Gun.obj" };
 		Mesh m2{ "Resources/Models/Skull.obj" };
+
+		ME_ASSERT(std::filesystem::exists("Resources/Models/Skull2.obj"));
+		ME_ASSERT_MSG(std::filesystem::exists("Resources/Models/Skull2.obj"), "must make file");
 
 		RENDERER.UpLoadModel(m1);
 		RENDERER.UpLoadModel(m2);
@@ -148,10 +152,10 @@ namespace MauGam
 		}
 
 		// 90 degrees per second
-	//	float constexpr rotationSpeed{ glm::radians(90.0f) };
-	//	m_Mehses[0].Rotate(rotationSpeed * TIME.ElapsedSec(), glm::vec3(0.0f, 0.0f, 1.0f));
-	//	m_Mehses[1].Rotate(rotationSpeed * TIME.ElapsedSec(), glm::vec3(0.0f, 0.0f, 1.0f));
-	//	m_Mehses[2].Rotate(rotationSpeed * TIME.ElapsedSec(), glm::vec3(0.0f, 1.0f, 0.0f));
+		float constexpr rotationSpeed{ glm::radians(90.0f) };
+		m_Mehses[0].Rotate(rotationSpeed * TIME.ElapsedSec(), glm::vec3(0.0f, 0.0f, 1.0f));
+		m_Mehses[1].Rotate(rotationSpeed * TIME.ElapsedSec(), glm::vec3(0.0f, 0.0f, 1.0f));
+		m_Mehses[2].Rotate(rotationSpeed * TIME.ElapsedSec(), glm::vec3(0.0f, 1.0f, 0.0f));
 	}
 
 	void GameScene::OnRender() const

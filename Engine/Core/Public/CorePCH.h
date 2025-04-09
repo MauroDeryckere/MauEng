@@ -20,5 +20,6 @@
 
 #include "Singleton.h"
 #include "CoreServiceLocator.h"
+#include "Asserts/Asserts.h"
 
 #endif
