@@ -4,8 +4,11 @@ namespace MauCor
 {
 	void Instrumentor::BeginSession(std::string const& name, std::string const& filepath)
     {
-        std::cout << filepath << "\n";
+        ME_LOG_ERROR(LogCategory::Core, "Beginning profile session {}", filepath);
         m_OutputStream.open(filepath);
+
+        m_Buffer.str("");
+        m_Buffer.clear();
 
         WriteHeader();
 
@@ -20,6 +23,8 @@ namespace MauCor
 	    }
 
         WriteFooter();
+
+        m_OutputStream << m_Buffer.str();
         m_OutputStream.close();
 
 		m_CurrentSession = nullptr;
@@ -31,23 +36,25 @@ namespace MauCor
     {
         if (m_ProfileCount++ > 0)
         {
-            m_OutputStream << ",";
+            m_Buffer << ",";
         }
 
-        std::string name{ result.name };
-        std::replace(name.begin(), name.end(), '"', '\'');
+        std::string_view const name{ result.name };
 
-        m_OutputStream << "{";
-        m_OutputStream << R"("cat":"function",)";
-        m_OutputStream << "\"dur\":" << (result.end - result.start) << ',';
-        m_OutputStream << R"("name":")" << name << "\",";
-        m_OutputStream << R"("ph":"X",)";
-        m_OutputStream << "\"pid\":0,";
-        m_OutputStream << "\"tid\":" << result.threadID << ",";
-        m_OutputStream << "\"ts\":" << result.start;
-        m_OutputStream << "}";
-
-        m_OutputStream.flush();
+        m_Buffer << "{";
+        m_Buffer << R"("cat":"function",)";
+        m_Buffer << R"("dur":)" << (result.end - result.start) << ",";
+        m_Buffer << R"("name":")";
+        for (char const c : name)
+        {
+            m_Buffer << (c == '"' ? '\'' : c);
+        }
+        m_Buffer << R"(",)";
+        m_Buffer << R"("ph":"X",)";
+        m_Buffer << R"("pid":0,)";
+        m_Buffer << R"("tid":)" << result.threadID << ",";
+        m_Buffer << R"("ts":)" << result.start;
+        m_Buffer << "}";
     }
 
 	Instrumentor::~Instrumentor()
@@ -57,14 +64,12 @@ namespace MauCor
 
 	void Instrumentor::WriteHeader()
     {
-        m_OutputStream << R"({"otherData": {},"traceEvents":[)";
-        m_OutputStream.flush();
+        m_Buffer << R"({"otherData": {},"traceEvents":[)";
     }
 
 	void Instrumentor::WriteFooter()
     {
-        m_OutputStream << "]}";
-        m_OutputStream.flush();
+        m_Buffer << "]}";
     }
 
 }

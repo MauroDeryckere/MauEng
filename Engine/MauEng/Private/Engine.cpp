@@ -17,7 +17,6 @@
 #include "Logger/logger.h"
 
 #include "InternalDebugRenderer.h"
-#include "Profiling/Instrumentor.h"
 
 namespace MauEng
 {

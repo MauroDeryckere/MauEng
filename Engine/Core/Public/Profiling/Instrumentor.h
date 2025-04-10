@@ -25,7 +25,7 @@ namespace MauCor
     class Instrumentor final : public Singleton<Instrumentor>
     {
     public:
-		void BeginSession(std::string const& name, std::string const& filepath = "results.json");
+		void BeginSession(std::string const& name, std::string const& filepath);
 
 		void WriteProfile(ProfileResult const& result);
 
@@ -41,9 +41,9 @@ namespace MauCor
 		virtual ~Instrumentor() override;
 
 		std::unique_ptr<InstrumentationSession> m_CurrentSession{ nullptr };
+		std::ostringstream m_Buffer{};
     	std::ofstream m_OutputStream{ };
         uint32_t m_ProfileCount{ 0 };
-
 		void WriteHeader();
 		void WriteFooter();
     };
