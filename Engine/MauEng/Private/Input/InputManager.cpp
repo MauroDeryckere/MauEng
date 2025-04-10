@@ -124,7 +124,7 @@ namespace MauEng
 			mouseActionfunc(event, SDL_EVENT_WINDOW_MOUSE_LEAVE, MouseInfo::ActionType::LeftWindow);
 
 		// Keyboard
-			if (event.type == SDL_EVENT_KEY_DOWN)
+			if (event.type == SDL_EVENT_KEY_DOWN && !event.key.repeat)
 			{
 				auto const& actions{ m_MappedKeyboardActions[static_cast<size_t>(KeyInfo::ActionType::Down)] };
 				auto it{ actions.find(static_cast<uint32_t>(event.key.key)) };
