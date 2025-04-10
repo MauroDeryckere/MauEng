@@ -31,7 +31,10 @@ namespace MauEng
 	#define ENABLE_ASSERTS
 #endif
 
-#define ENABLE_PROFILER 
+#define ENABLE_PROFILER
+#ifdef ENABLE_PROFILER
+  uint32_t constexpr NUM_FRAMES_TO_PROFILE{ 1 };
+#endif
 
 }
 

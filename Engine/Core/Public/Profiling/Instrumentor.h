@@ -51,7 +51,6 @@ namespace MauCor
         uint32_t m_ProfileCount{ 0 };
 		void WriteHeader();
 		void WriteFooter();
-
     };
 
 #ifdef ENABLE_PROFILER

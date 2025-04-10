@@ -17,6 +17,7 @@
 #include "Logger/logger.h"
 
 #include "InternalDebugRenderer.h"
+#include "Input/KeyInfo.h"
 
 namespace MauEng
 {
@@ -46,6 +47,12 @@ namespace MauEng
 		m_Window->Initialize();
 
 		SDL_GL_SetSwapInterval(0);
+
+		auto& inputManager{ InputManager::GetInstance() };
+
+		#ifdef ENABLE_PROFILER
+				inputManager.BindAction("PROFILE", KeyInfo{ SDLK_F1, KeyInfo::ActionType::Down });
+		#endif
 	}
 
 	Engine::~Engine()
@@ -56,18 +63,17 @@ namespace MauEng
 
 	void Engine::Run(std::function<void()> const& load)
 	{
-		ME_PROFILE_BEGIN_SESSION("Startup", "Startup.json");
+		ME_PROFILE_BEGIN_SESSION("Startup", "Profiling/Startup.json");
 		// First load everything the user wants us to load using their "load function"
 		load();
 		ME_PROFILE_END_SESSION();
 
-		ME_PROFILE_BEGIN_SESSION("Run", "Run.json");
 		GameLoop();
-		ME_PROFILE_END_SESSION();
 	}
 
 	void Engine::GameLoop()
 	{
+
 		using namespace MauRen;
 
 		bool constexpr LIMIT_FPS{ true };
@@ -76,6 +82,13 @@ namespace MauEng
 		bool constexpr LOG_FPS{ true };
 		int frameCount{ 0 };
 		float elapsedTime{ 0.f };
+
+	#ifdef ENABLE_PROFILER
+		uint32_t profiledFrames{ 0 };
+		bool isProfiling{ false };
+
+		uint32_t numExecutedProfiles{ 0 };
+	#endif
 
 		bool IsMinimised = false;
 
@@ -88,6 +101,19 @@ namespace MauEng
 
 		while (doContinue)
 		{
+
+		#ifdef ENABLE_PROFILER
+			if (inputManager.IsActionExecuted("PROFILE"))
+			{
+				std::string fileName{"Profiling/Run"};
+				fileName += std::to_string(numExecutedProfiles);
+				fileName += ".json";
+
+				ME_PROFILE_BEGIN_SESSION("Run", fileName);
+				isProfiling = true;
+			}
+		#endif
+
 			SDL_GetWindowFlags(m_Window->window) & (SDL_WINDOW_MINIMIZED | SDL_WINDOW_HIDDEN) ? IsMinimised = true : IsMinimised = false;
 
 			time.Update();
@@ -137,6 +163,21 @@ namespace MauEng
 			{
 				std::this_thread::sleep_for(time.SleepTime());
 			}
+
+		#ifdef ENABLE_PROFILER
+			if (isProfiling)
+			{
+				profiledFrames++;
+			}
+			if (profiledFrames == NUM_FRAMES_TO_PROFILE)
+			{
+				numExecutedProfiles++;
+				profiledFrames = 0;
+				isProfiling = false;
+
+				ME_PROFILE_END_SESSION();
+			}
+		#endif
 		}
 	}
 }

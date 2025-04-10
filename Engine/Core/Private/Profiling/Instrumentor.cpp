@@ -4,9 +4,29 @@ namespace MauCor
 {
 	void Instrumentor::BeginSession(std::string const& name, std::string const& filepath, size_t reserveSize)
     {
-        ME_LOG_ERROR(LogCategory::Core, "Beginning profile session {}", filepath);
+        ME_LOG_INFO(LogCategory::Core, "Beginning profile session {}", filepath);
+
+        std::filesystem::path const dir{ std::filesystem::path(filepath).parent_path() };
+        if (!std::filesystem::exists(dir)) 
+        {
+            std::filesystem::create_directories(dir);
+        }
+
+        if (std::filesystem::exists(filepath))
+        {
+            std::filesystem::remove(filepath);
+            ME_LOG_INFO(LogCategory::Core, "Existing file deleted: {}", filepath);
+        }
+
+
         m_OutputStream.open(filepath);
-        
+
+        if (!m_OutputStream.is_open()) 
+        {
+            ME_LOG_ERROR(LogCategory::Core, "Failed to open the file: {}", filepath);
+            return;
+        }
+
         m_Buffer.clear();
         m_Buffer.reserve(reserveSize);
         BUFFER_FLUSH_THRESHOLD = static_cast<size_t>(.9f * reserveSize);
@@ -22,6 +42,8 @@ namespace MauCor
 	    {
             return;
 	    }
+
+        ME_LOG_INFO(LogCategory::Core, "Ending profile session");
 
         WriteFooter();
 
