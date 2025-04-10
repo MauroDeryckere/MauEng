@@ -117,7 +117,6 @@ namespace MauRen
 		void UpdateDebugVertexBuffer();
 
 		void RenderDebug(VkCommandBuffer commandBuffer);
-
 	};
 }
 

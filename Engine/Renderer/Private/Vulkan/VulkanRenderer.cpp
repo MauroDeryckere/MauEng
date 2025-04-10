@@ -178,9 +178,6 @@ namespace MauRen
 	void VulkanRenderer::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex)
 	{
 		ME_PROFILE_FUNCTION();
-
-		ME_PROFILE_SCOPE("Setup command buffer");
-		{
 			
 		VkCommandBufferBeginInfo beginInfo{};
 
@@ -230,17 +227,9 @@ namespace MauRen
 			scissor.offset = { 0, 0 };
 			scissor.extent = m_SwapChainContext.GetExtent();
 			vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
-		}
 
-		{
-			ME_PROFILE_SCOPE("Draw meshes");
-			VulkanMeshManager::GetInstance().Draw(commandBuffer, m_GraphicsPipeline.GetPipelineLayout(), 1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame]);
-		}
-
-		{
-			ME_PROFILE_SCOPE("Draw debug");
-			RenderDebug(commandBuffer);
-		}
+		VulkanMeshManager::GetInstance().Draw(commandBuffer, m_GraphicsPipeline.GetPipelineLayout(), 1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame]);
+		RenderDebug(commandBuffer);
 
 		vkCmdEndRenderPass(commandBuffer);
 
@@ -287,10 +276,7 @@ namespace MauRen
 
 	void VulkanRenderer::DrawFrame(glm::mat4 const& view, glm::mat4 const& proj)
 	{
-		ME_PROFILE_FUNCTION();
-
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
-
 
 		{
 			ME_PROFILE_SCOPE("Wait for GPU");
@@ -299,24 +285,29 @@ namespace MauRen
 		}
 
 		uint32_t imageIndex;
-		VkResult const acquireNextImageResult{ vkAcquireNextImageKHR(deviceContext->GetLogicalDevice(), m_SwapChainContext.GetSwapchain(), UINT64_MAX, m_ImageAvailableSemaphores[m_CurrentFrame], VK_NULL_HANDLE, &imageIndex) };
-
-		if (acquireNextImageResult == VK_ERROR_OUT_OF_DATE_KHR)
 		{
-			RecreateSwapchain();
-			return;
+			ME_PROFILE_SCOPE("acquireNextImageResult");
+
+			VkResult const acquireNextImageResult{ vkAcquireNextImageKHR(deviceContext->GetLogicalDevice(), m_SwapChainContext.GetSwapchain(), UINT64_MAX, m_ImageAvailableSemaphores[m_CurrentFrame], VK_NULL_HANDLE, &imageIndex) };
+
+			if (acquireNextImageResult == VK_ERROR_OUT_OF_DATE_KHR)
+			{
+				RecreateSwapchain();
+				return;
+			}
+
+			// TODO
+			// You could also decide to do that if the swap chain is suboptimal, but I've chosen to proceed anyway in that case because we've already acquired an image.
+			// Both VK_SUCCESS and VK_SUBOPTIMAL_KHR are considered "success" return codes.
+			if (acquireNextImageResult != VK_SUCCESS && acquireNextImageResult != VK_SUBOPTIMAL_KHR)
+			{
+				throw std::runtime_error("Failed to acquire swap chain image!");
+			}
+
+			// Only reset the fence if we are submitting work
+			vkResetFences(deviceContext->GetLogicalDevice(), 1, &m_InFlightFences[m_CurrentFrame]);
 		}
 
-		// TODO
-		// You could also decide to do that if the swap chain is suboptimal, but I've chosen to proceed anyway in that case because we've already acquired an image.
-		// Both VK_SUCCESS and VK_SUBOPTIMAL_KHR are considered "success" return codes.
-		if (acquireNextImageResult != VK_SUCCESS && acquireNextImageResult != VK_SUBOPTIMAL_KHR)
-		{
-			throw std::runtime_error("Failed to acquire swap chain image!");
-		}
-
-		// Only reset the fence if we are submitting work
-		vkResetFences(deviceContext->GetLogicalDevice(), 1, &m_InFlightFences[m_CurrentFrame]);
 		UpdateUniformBuffer(m_CurrentFrame, view, proj);
 		UpdateDebugVertexBuffer();
 

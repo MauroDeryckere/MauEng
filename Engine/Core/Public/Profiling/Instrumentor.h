@@ -52,7 +52,7 @@ namespace MauCor
 
 		void WriteHeader();
 		void WriteFooter();
-    	void CleanUpFunctionName(std::string& name);
+    	static void CleanUpFunctionName(std::string& name);
     };
 
 #ifdef ENABLE_PROFILER

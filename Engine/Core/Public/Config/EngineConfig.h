@@ -33,10 +33,10 @@ namespace MauEng
 
 #define ENABLE_PROFILER
 #ifdef ENABLE_PROFILER
-  uint32_t constexpr NUM_FRAMES_TO_PROFILE{ 1 };
+  uint32_t constexpr NUM_FRAMES_TO_PROFILE{ 2 };
 #endif
 
-	bool constexpr LIMIT_FPS{ true };
+	bool constexpr LIMIT_FPS{ false };
 	bool constexpr LOG_FPS{ true };
 }
 

@@ -161,10 +161,7 @@ namespace MauGam
 
 	void GameScene::OnRender() const
 	{
-		ME_PROFILE_FUNCTION();
-
 		Scene::OnRender();
-
 		{
 			ME_PROFILE_SCOPE("Queue draws");
 			for (auto const& m : m_Mehses)

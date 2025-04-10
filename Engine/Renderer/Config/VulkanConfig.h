@@ -27,7 +27,7 @@ namespace MauRen
 		VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME
 	};
 
-	uint32_t constexpr MAX_FRAMES_IN_FLIGHT{ 3 };
+	uint32_t constexpr MAX_FRAMES_IN_FLIGHT{ 5 };
 	static_assert(MAX_FRAMES_IN_FLIGHT > 0);
 
 	uint32_t constexpr MAX_TEXTURES{ 10 };

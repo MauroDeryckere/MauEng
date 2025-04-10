@@ -76,7 +76,7 @@ namespace MauCor
 	    }
 
         m_Buffer += "{";
-        m_Buffer += R"("cat":"function",)";
+        m_Buffer += R"("cat":")" + std::string(isFunction ? "function" : "scope") + R"(",)";
         m_Buffer += R"("dur":)" + std::to_string(result.end - result.start) + ",";
         m_Buffer += R"("name":")";
         m_Buffer += functionName;
@@ -111,17 +111,18 @@ namespace MauCor
 
 	void Instrumentor::CleanUpFunctionName(std::string& name)
 	{
-        size_t firstSpace = name.find_first_of(' ');
+        size_t const firstSpace{ name.find_first_of(' ') };
         if (firstSpace != std::string::npos)
         {
             name = name.substr(firstSpace + 1);
         }
 
         // Remove the class or namespace prefix (if any)
-        size_t pos = name.find("::");
+        size_t const pos{ name.find("::") };
         if (pos != std::string::npos)
         {
-            name = name.substr(pos + 2);  // Skip past the "::"
+        	// Skip past the "::"
+            name = name.substr(pos + 2);
         }
 	}
 }
