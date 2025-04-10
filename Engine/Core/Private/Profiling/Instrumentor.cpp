@@ -2,13 +2,13 @@
 
 namespace MauCor
 {
-	void Instrumentor::BeginSession(std::string const& name, std::string const& filepath)
+	void Instrumentor::BeginSession(std::string const& name, std::string const& filepath, size_t reserveSize)
     {
         ME_LOG_ERROR(LogCategory::Core, "Beginning profile session {}", filepath);
         m_OutputStream.open(filepath);
 
-        m_Buffer.str("");
         m_Buffer.clear();
+        m_Buffer.reserve(reserveSize);
 
         WriteHeader();
 
@@ -24,7 +24,7 @@ namespace MauCor
 
         WriteFooter();
 
-        m_OutputStream << m_Buffer.str();
+        m_OutputStream << m_Buffer;
         m_OutputStream.close();
 
 		m_CurrentSession = nullptr;
@@ -36,25 +36,31 @@ namespace MauCor
     {
         if (m_ProfileCount++ > 0)
         {
-            m_Buffer << ",";
+            m_Buffer += ",";
         }
 
         std::string_view const name{ result.name };
 
-        m_Buffer << "{";
-        m_Buffer << R"("cat":"function",)";
-        m_Buffer << R"("dur":)" << (result.end - result.start) << ",";
-        m_Buffer << R"("name":")";
+        m_Buffer += "{";
+        m_Buffer += R"("cat":"function",)";
+        m_Buffer += R"("dur":)" + std::to_string(result.end - result.start) + ",";
+        m_Buffer += R"("name":")";
         for (char const c : name)
         {
-            m_Buffer << (c == '"' ? '\'' : c);
+            m_Buffer += (c == '"' ? '\'' : c);
         }
-        m_Buffer << R"(",)";
-        m_Buffer << R"("ph":"X",)";
-        m_Buffer << R"("pid":0,)";
-        m_Buffer << R"("tid":)" << result.threadID << ",";
-        m_Buffer << R"("ts":)" << result.start;
-        m_Buffer << "}";
+        m_Buffer += R"(",)";
+        m_Buffer += R"("ph":"X",)";
+        m_Buffer += R"("pid":0,)";
+        m_Buffer += R"("tid":)" + std::to_string(result.threadID) + ",";
+        m_Buffer += R"("ts":)" + std::to_string(result.start);
+        m_Buffer += "}";
+
+        if (m_Buffer.size() >= BUFFER_FLUSH_THRESHOLD)
+        {
+            m_OutputStream << m_Buffer;
+            m_Buffer.clear();
+        }
     }
 
 	Instrumentor::~Instrumentor()
@@ -64,12 +70,12 @@ namespace MauCor
 
 	void Instrumentor::WriteHeader()
     {
-        m_Buffer << R"({"otherData": {},"traceEvents":[)";
+        m_Buffer += R"({"otherData": {},"traceEvents":[)";
     }
 
 	void Instrumentor::WriteFooter()
     {
-        m_Buffer << "]}";
+        m_Buffer += "]}";
     }
 
 }

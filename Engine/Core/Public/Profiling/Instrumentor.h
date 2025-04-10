@@ -25,7 +25,7 @@ namespace MauCor
     class Instrumentor final : public Singleton<Instrumentor>
     {
     public:
-		void BeginSession(std::string const& name, std::string const& filepath);
+		void BeginSession(std::string const& name, std::string const& filepath, size_t reserveSize = 100'000);
 
 		void WriteProfile(ProfileResult const& result);
 
@@ -41,8 +41,11 @@ namespace MauCor
 		virtual ~Instrumentor() override;
 
 		std::unique_ptr<InstrumentationSession> m_CurrentSession{ nullptr };
-		std::ostringstream m_Buffer{};
-    	std::ofstream m_OutputStream{ };
+		std::string m_Buffer;
+
+    	size_t const BUFFER_FLUSH_THRESHOLD{ 90'000 };
+
+		std::ofstream m_OutputStream{  };
         uint32_t m_ProfileCount{ 0 };
 		void WriteHeader();
 		void WriteFooter();
