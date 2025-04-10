@@ -10,6 +10,8 @@ namespace MauGam
 {
 	GameScene::GameScene()
 	{
+		ME_PROFILE_FUNCTION();
+
 		m_CameraManager.GetActiveCamera().SetPosition(glm::vec3{ 0.f, 2, 4 });
 		m_CameraManager.GetActiveCamera().SetFOV(60.f);
 
@@ -60,6 +62,8 @@ namespace MauGam
 
 	void GameScene::OnLoad()
 	{
+		ME_PROFILE_FUNCTION();
+
 		Scene::OnLoad();
 		
 		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "Demo Scene Loaded! ");
@@ -67,6 +71,8 @@ namespace MauGam
 
 	void GameScene::Tick()
 	{
+		ME_PROFILE_FUNCTION();
+
 		Scene::Tick();
 
 		// Demo logging tests
@@ -155,11 +161,17 @@ namespace MauGam
 
 	void GameScene::OnRender() const
 	{
+		ME_PROFILE_FUNCTION();
+
 		Scene::OnRender();
 
-		for (auto const& m : m_Mehses)
 		{
-			m.Draw();
+			ME_PROFILE_SCOPE("Queue draws");
+			for (auto const& m : m_Mehses)
+			{
+				m.Draw();
+			}
 		}
+
 	}
 }

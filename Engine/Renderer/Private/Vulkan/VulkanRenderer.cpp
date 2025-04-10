@@ -19,6 +19,8 @@ namespace MauRen
 		Renderer{ pWindow, debugRenderer },
 		m_pWindow{ pWindow }
 	{
+		ME_PROFILE_FUNCTION();
+
 		if (dynamic_cast<NullDebugRenderer*>(&debugRenderer))
 		{
 			m_DebugRenderer = nullptr;
@@ -31,6 +33,8 @@ namespace MauRen
 
 	void VulkanRenderer::Init()
 	{
+		ME_PROFILE_FUNCTION();
+
 		m_InstanceContext.Initialize();
 		m_SurfaceContext.Initialize(&m_InstanceContext, m_pWindow);
 		m_DebugContext.Initialize(&m_InstanceContext);
@@ -173,6 +177,11 @@ namespace MauRen
 
 	void VulkanRenderer::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex)
 	{
+		ME_PROFILE_FUNCTION();
+
+		ME_PROFILE_SCOPE("Setup command buffer");
+		{
+			
 		VkCommandBufferBeginInfo beginInfo{};
 
 		// VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT: The command buffer will be rerecorded right after executing it once.
@@ -221,10 +230,17 @@ namespace MauRen
 			scissor.offset = { 0, 0 };
 			scissor.extent = m_SwapChainContext.GetExtent();
 			vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+		}
 
+		{
+			ME_PROFILE_SCOPE("Draw meshes");
 			VulkanMeshManager::GetInstance().Draw(commandBuffer, m_GraphicsPipeline.GetPipelineLayout(), 1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame]);
+		}
 
+		{
+			ME_PROFILE_SCOPE("Draw debug");
 			RenderDebug(commandBuffer);
+		}
 
 		vkCmdEndRenderPass(commandBuffer);
 
@@ -271,10 +287,16 @@ namespace MauRen
 
 	void VulkanRenderer::DrawFrame(glm::mat4 const& view, glm::mat4 const& proj)
 	{
+		ME_PROFILE_FUNCTION();
+
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 
-		// At the start of the frame, we want to wait until the previous frame has finished, so that the command buffer and semaphores are available to use.
-		vkWaitForFences(deviceContext->GetLogicalDevice(), 1, &m_InFlightFences[m_CurrentFrame], VK_TRUE, UINT64_MAX);
+
+		{
+			ME_PROFILE_SCOPE("Wait for GPU");
+			// At the start of the frame, we want to wait until the previous frame has finished, so that the command buffer and semaphores are available to use.
+			vkWaitForFences(deviceContext->GetLogicalDevice(), 1, &m_InFlightFences[m_CurrentFrame], VK_TRUE, UINT64_MAX);
+		}
 
 		uint32_t imageIndex;
 		VkResult const acquireNextImageResult{ vkAcquireNextImageKHR(deviceContext->GetLogicalDevice(), m_SwapChainContext.GetSwapchain(), UINT64_MAX, m_ImageAvailableSemaphores[m_CurrentFrame], VK_NULL_HANDLE, &imageIndex) };
@@ -357,12 +379,15 @@ namespace MauRen
 
 	void VulkanRenderer::UpdateUniformBuffer(uint32_t currentImage, glm::mat4 const& view, glm::mat4 const& proj)
 	{
+		ME_PROFILE_FUNCTION();
 		UniformBufferObject const ubo{view, proj};
 		memcpy(m_MappedUniformBuffers[currentImage].mapped, &ubo, sizeof(ubo));
 	}
 
 	bool VulkanRenderer::RecreateSwapchain()
 	{
+		ME_PROFILE_FUNCTION();
+
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 
 		// TODO 
@@ -411,6 +436,8 @@ namespace MauRen
 
 	void VulkanRenderer::UpdateDebugVertexBuffer()
 	{
+		ME_PROFILE_FUNCTION();
+
 		if (!m_DebugRenderer)
 		{
 			return;
@@ -472,6 +499,8 @@ namespace MauRen
 
 	void VulkanRenderer::RenderDebug(VkCommandBuffer commandBuffer)
 	{
+		ME_PROFILE_FUNCTION();
+
 		if (!m_DebugRenderer)
 		{
 			return;

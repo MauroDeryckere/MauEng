@@ -68,16 +68,15 @@ namespace MauCor
         }
         ++m_ProfileCount;
 
-        std::string_view const name{ result.name };
+
+        std::string functionName{ result.name };
+        CleanUpFunctionName(functionName);
 
         m_Buffer += "{";
         m_Buffer += R"("cat":"function",)";
         m_Buffer += R"("dur":)" + std::to_string(result.end - result.start) + ",";
         m_Buffer += R"("name":")";
-        for (char const c : name)
-        {
-            m_Buffer += (c == '"' ? '\'' : c);
-        }
+        m_Buffer += functionName;
         m_Buffer += R"(",)";
         m_Buffer += R"("ph":"X",)";
         m_Buffer += R"("pid":0,)";
@@ -107,4 +106,19 @@ namespace MauCor
         m_Buffer += "]}";
     }
 
+	void Instrumentor::CleanUpFunctionName(std::string& name)
+	{
+        size_t firstSpace = name.find_first_of(' ');
+        if (firstSpace != std::string::npos)
+        {
+            name = name.substr(firstSpace + 1);
+        }
+
+        // Remove the class or namespace prefix (if any)
+        size_t pos = name.find("::");
+        if (pos != std::string::npos)
+        {
+            name = name.substr(pos + 2);  // Skip past the "::"
+        }
+	}
 }

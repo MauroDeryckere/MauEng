@@ -63,6 +63,8 @@ namespace MauEng
 
 	bool InputManager::ProcessInput() noexcept
 	{
+		ME_PROFILE_FUNCTION();
+
 		// Reset all state that should be reset
 		m_ExecutedActions.clear();
 

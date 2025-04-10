@@ -36,6 +36,8 @@ namespace MauEng
   uint32_t constexpr NUM_FRAMES_TO_PROFILE{ 1 };
 #endif
 
+	bool constexpr LIMIT_FPS{ true };
+	bool constexpr LOG_FPS{ true };
 }
 
 #endif

@@ -47,6 +47,8 @@ namespace MauRen
 
 	uint32_t VulkanTextureManager::LoadOrGetTexture(VulkanCommandPoolManager& cmdPoolManager, VulkanDescriptorContext& descriptorContext, std::string const& textureName) noexcept
 	{
+		ME_PROFILE_FUNCTION();
+
 		if (m_Textures.size() == MAX_TEXTURES)
 		{
 			return INVALID_TEXTURE_ID;
@@ -104,6 +106,8 @@ namespace MauRen
 
 	VulkanImage VulkanTextureManager::CreateTextureImage(VulkanCommandPoolManager& cmdPoolManager, std::string const& path)
 	{
+		ME_PROFILE_FUNCTION();
+
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 
 		int texWidth{};

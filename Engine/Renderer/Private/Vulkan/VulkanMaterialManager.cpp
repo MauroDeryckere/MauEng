@@ -10,6 +10,8 @@ namespace MauRen
 {
 	void VulkanMaterialManager::Initialize()
 	{
+		ME_PROFILE_FUNCTION();
+
 		m_TextureManager = std::make_unique<VulkanTextureManager>();
 	}
 
@@ -35,6 +37,8 @@ namespace MauRen
 
 	uint32_t VulkanMaterialManager::LoadMaterial(VulkanCommandPoolManager& cmdPoolManager, VulkanDescriptorContext& descriptorContext, Material const& material)
 	{
+		ME_PROFILE_FUNCTION();
+
 		auto it{ m_MaterialIDMap.find(material.name) };
 		if (it != end(m_MaterialIDMap))
 		{
@@ -50,6 +54,8 @@ namespace MauRen
 
 	VulkanMaterial const& VulkanMaterialManager::GetMaterial(uint32_t ID) const noexcept
 	{
+		ME_PROFILE_FUNCTION();
+
 		return m_Materials[ID];
 	}
 }

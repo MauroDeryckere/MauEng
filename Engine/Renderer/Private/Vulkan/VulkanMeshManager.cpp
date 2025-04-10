@@ -24,6 +24,8 @@ namespace MauRen
 
 	void VulkanMeshManager::LoadMesh(Mesh& mesh)
 	{
+		ME_PROFILE_FUNCTION();
+
 		auto it{ m_Meshes.find(mesh.GetMeshID()) };
 		if (it != end(m_Meshes))
 		{
@@ -55,16 +57,22 @@ namespace MauRen
 
 	void VulkanMeshManager::Draw(VkCommandBuffer commandBuffer, VkPipelineLayout layout, uint32_t setCount, VkDescriptorSet const* pDescriptorSets)
 	{
+		ME_PROFILE_FUNCTION();
+
 		// Draw each batch for each mesh
 		// TODO actually batch them
 
 		for (auto const& [meshID, instances] : m_MeshBatches)
 		{
+			ME_PROFILE_SCOPE("DrawMesh");
+
 			VulkanMesh const& mesh = m_Meshes.at(meshID);
 
 			std::vector<glm::mat4> modelMatrices;
 			for (auto const& instance : instances)
 			{
+				ME_PROFILE_SCOPE("DrawMesh Instance");
+
 				MeshPushConstant mPush{ };
 				mPush.m_ModelMatrix = instance.GetModelMatrix();
 

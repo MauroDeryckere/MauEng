@@ -48,9 +48,10 @@ namespace MauCor
     	size_t BUFFER_FLUSH_THRESHOLD{ };
 
 		std::ofstream m_OutputStream{  };
-        int m_ProfileCount{ 0 };
+        uint32_t m_ProfileCount{ 0 };
 		void WriteHeader();
 		void WriteFooter();
+    	void CleanUpFunctionName(std::string& name);
     };
 
 #ifdef ENABLE_PROFILER

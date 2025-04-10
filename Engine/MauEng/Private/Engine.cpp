@@ -73,13 +73,9 @@ namespace MauEng
 
 	void Engine::GameLoop()
 	{
-
 		using namespace MauRen;
 
-		bool constexpr LIMIT_FPS{ true };
-
-		// FPS tracking 
-		bool constexpr LOG_FPS{ true };
+		// FPS
 		int frameCount{ 0 };
 		float elapsedTime{ 0.f };
 
@@ -161,6 +157,7 @@ namespace MauEng
 
 			if constexpr (LIMIT_FPS)
 			{
+				ME_PROFILE_SCOPE("sleep");
 				std::this_thread::sleep_for(time.SleepTime());
 			}
 
