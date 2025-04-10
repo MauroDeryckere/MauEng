@@ -27,7 +27,7 @@ namespace MauCor
     public:
 		void BeginSession(std::string const& name, std::string const& filepath, size_t reserveSize = 100'000);
 
-		void WriteProfile(ProfileResult const& result);
+		void WriteProfile(ProfileResult const& result, bool isFunction);
 
 		void EndSession();
 
@@ -49,6 +49,7 @@ namespace MauCor
 
 		std::ofstream m_OutputStream{  };
         uint32_t m_ProfileCount{ 0 };
+
 		void WriteHeader();
 		void WriteFooter();
     	void CleanUpFunctionName(std::string& name);
@@ -61,8 +62,8 @@ namespace MauCor
 	// Name, filepath, reserve size - allows you to specifiy a reserve size for the buffer to prevent big resizes.
 	#define ME_PROFILE_BEGIN_SESSION(name, filepath, ...) MauCor::Instrumentor::GetInstance().BeginSession(name, filepath, __VA_ARGS__)
 	#define ME_PROFILE_END_SESSION() MauCor::Instrumentor::GetInstance().EndSession()
-	#define ME_PROFILE_SCOPE(name) MauCor::InstrumentorTimer C(timer, __LINE__) { name }
-	#define ME_PROFILE_FUNCTION() ME_PROFILE_SCOPE(__FUNCSIG__)
+	#define ME_PROFILE_SCOPE(name) MauCor::InstrumentorTimer C(timer, __LINE__) { name, false }
+	#define ME_PROFILE_FUNCTION() MauCor::InstrumentorTimer C(timer, __LINE__) { __FUNCSIG__, true }
 #else
 	#define ME_PROFILE_BEGIN_SESSION(name, filepath, ...)
 	#define ME_PROFILE_END_SESSION()

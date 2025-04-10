@@ -6,8 +6,9 @@
 
 namespace MauCor
 {
-	InstrumentorTimer::InstrumentorTimer(char const* timerName):
-		m_Name{ timerName }
+	InstrumentorTimer::InstrumentorTimer(char const* timerName, bool isFunction):
+		m_Name{ timerName },
+		m_IsFunction{isFunction}
 	{
 		m_StartPoint = std::chrono::high_resolution_clock::now();
 	}
@@ -29,6 +30,6 @@ namespace MauCor
 		m_IsStopped = true;
 
 		uint32_t const threadID{ static_cast<uint32_t>(std::hash<std::thread::id>{}(std::this_thread::get_id())) };
-		Instrumentor::GetInstance().WriteProfile({ m_Name, start, end, threadID });
+		Instrumentor::GetInstance().WriteProfile({ m_Name, start, end, threadID }, m_IsFunction);
 	}
 }

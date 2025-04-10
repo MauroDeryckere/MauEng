@@ -8,7 +8,7 @@ namespace MauCor
 	class InstrumentorTimer final
 	{
 	public:
-		explicit InstrumentorTimer(char const* timerName);
+		explicit InstrumentorTimer(char const* timerName, bool isFunction);
 		~InstrumentorTimer();
 
 		void Stop() noexcept;
@@ -22,6 +22,8 @@ namespace MauCor
 
 		std::chrono::time_point<std::chrono::high_resolution_clock> m_StartPoint{ };
 		bool m_IsStopped{ false };
+
+		bool m_IsFunction{};
 	};
 }
 

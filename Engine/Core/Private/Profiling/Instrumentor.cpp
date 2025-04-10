@@ -53,7 +53,7 @@ namespace MauCor
         m_ProfileCount = 0;
     }
 
-	void Instrumentor::WriteProfile(ProfileResult const& result)
+	void Instrumentor::WriteProfile(ProfileResult const& result, bool isFunction)
     {
 	    if (!m_CurrentSession)
 	    {
@@ -70,7 +70,10 @@ namespace MauCor
 
 
         std::string functionName{ result.name };
-        CleanUpFunctionName(functionName);
+	    if (isFunction)
+	    {
+            CleanUpFunctionName(functionName);
+	    }
 
         m_Buffer += "{";
         m_Buffer += R"("cat":"function",)";
