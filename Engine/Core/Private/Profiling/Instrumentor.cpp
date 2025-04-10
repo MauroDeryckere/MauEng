@@ -6,9 +6,10 @@ namespace MauCor
     {
         ME_LOG_ERROR(LogCategory::Core, "Beginning profile session {}", filepath);
         m_OutputStream.open(filepath);
-
+        
         m_Buffer.clear();
         m_Buffer.reserve(reserveSize);
+        BUFFER_FLUSH_THRESHOLD = .9 * reserveSize;
 
         WriteHeader();
 

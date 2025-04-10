@@ -43,7 +43,7 @@ namespace MauCor
 		std::unique_ptr<InstrumentationSession> m_CurrentSession{ nullptr };
 		std::string m_Buffer;
 
-    	size_t const BUFFER_FLUSH_THRESHOLD{ 90'000 };
+    	size_t BUFFER_FLUSH_THRESHOLD{ };
 
 		std::ofstream m_OutputStream{  };
         uint32_t m_ProfileCount{ 0 };
@@ -55,7 +55,8 @@ namespace MauCor
 	#define CONCAT(x, y) x ## y
 	#define C(x, y) CONCAT(x, y)
 
-	#define ME_PROFILE_BEGIN_SESSION(name, filepath) MauCor::Instrumentor::GetInstance().BeginSession(name, filepath)
+	// Name, filepath, reserve size - allows you to specifiy a reserve size for the buffer to prevent big resizes.
+	#define ME_PROFILE_BEGIN_SESSION(name, filepath, ...) MauCor::Instrumentor::GetInstance().BeginSession(name, filepath, __VA_ARGS__)
 	#define ME_PROFILE_END_SESSION() MauCor::Instrumentor::GetInstance().EndSession()
 	#define ME_PROFILE_SCOPE(name) MauCor::InstrumentorTimer C(timer, __LINE__) { name }
 	#define ME_PROFILE_FUNCTION() ME_PROFILE_SCOPE(__FUNCSIG__)
