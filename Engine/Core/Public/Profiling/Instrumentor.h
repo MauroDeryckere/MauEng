@@ -40,8 +40,10 @@ namespace MauCor
 		Instrumentor() = default;
 		virtual ~Instrumentor() override;
 
+		mutable std::mutex m_Mutex;
+
 		std::unique_ptr<InstrumentationSession> m_CurrentSession{ nullptr };
-		std::string m_Buffer;
+    	std::string m_Buffer;
 
     	size_t BUFFER_FLUSH_THRESHOLD{ };
 
@@ -49,6 +51,7 @@ namespace MauCor
         uint32_t m_ProfileCount{ 0 };
 		void WriteHeader();
 		void WriteFooter();
+
     };
 
 #ifdef ENABLE_PROFILER
@@ -61,7 +64,7 @@ namespace MauCor
 	#define ME_PROFILE_SCOPE(name) MauCor::InstrumentorTimer C(timer, __LINE__) { name }
 	#define ME_PROFILE_FUNCTION() ME_PROFILE_SCOPE(__FUNCSIG__)
 #else
-	#define ME_PROFILE_BEGIN_SESSION(name, filepath)
+	#define ME_PROFILE_BEGIN_SESSION(name, filepath, ...)
 	#define ME_PROFILE_END_SESSION()
 	#define ME_PROFILE_FUNCTION()
 	#define ME_PROFILE_SCOPE(name)

@@ -9,7 +9,7 @@ namespace MauCor
         
         m_Buffer.clear();
         m_Buffer.reserve(reserveSize);
-        BUFFER_FLUSH_THRESHOLD = .9 * reserveSize;
+        BUFFER_FLUSH_THRESHOLD = static_cast<size_t>(.9f * reserveSize);
 
         WriteHeader();
 
@@ -31,10 +31,12 @@ namespace MauCor
 		m_CurrentSession = nullptr;
 
         m_ProfileCount = 0;
+
     }
 
 	void Instrumentor::WriteProfile(ProfileResult const& result)
     {
+        m_Mutex.lock();
         if (m_ProfileCount++ > 0)
         {
             m_Buffer += ",";
@@ -62,6 +64,8 @@ namespace MauCor
             m_OutputStream << m_Buffer;
             m_Buffer.clear();
         }
+
+        m_Mutex.unlock();
     }
 
 	Instrumentor::~Instrumentor()
