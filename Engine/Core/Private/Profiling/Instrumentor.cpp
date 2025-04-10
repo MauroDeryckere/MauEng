@@ -4,6 +4,8 @@ namespace MauCor
 {
 	void Instrumentor::BeginSession(std::string const& name, std::string const& filepath, size_t reserveSize)
     {
+        EndSession();
+
         ME_LOG_INFO(LogCategory::Core, "Beginning profile session {}", filepath);
 
         std::filesystem::path const dir{ std::filesystem::path(filepath).parent_path() };
@@ -15,9 +17,8 @@ namespace MauCor
         if (std::filesystem::exists(filepath))
         {
             std::filesystem::remove(filepath);
-            ME_LOG_INFO(LogCategory::Core, "Existing file deleted: {}", filepath);
+            ME_LOG_WARN(LogCategory::Core, "Existing file deleted: {}", filepath);
         }
-
 
         m_OutputStream.open(filepath);
 
@@ -38,32 +39,34 @@ namespace MauCor
 
 	void Instrumentor::EndSession()
     {
+        if (m_CurrentSession)
+        {
+			ME_LOG_INFO(LogCategory::Core, "Ending profile session");
+			WriteFooter();
+
+            m_OutputStream << m_Buffer;
+            m_OutputStream.close();
+
+            m_CurrentSession = nullptr;
+        }
+
+        m_ProfileCount = 0;
+    }
+
+	void Instrumentor::WriteProfile(ProfileResult const& result)
+    {
 	    if (!m_CurrentSession)
 	    {
             return;
 	    }
 
-        ME_LOG_INFO(LogCategory::Core, "Ending profile session");
-
-        WriteFooter();
-
-        m_OutputStream << m_Buffer;
-        m_OutputStream.close();
-
-		m_CurrentSession = nullptr;
-
-        m_ProfileCount = 0;
-
-    }
-
-	void Instrumentor::WriteProfile(ProfileResult const& result)
-    {
         std::lock_guard lock(m_Mutex);
 
-		if (m_ProfileCount++ > 0)
+		if (m_ProfileCount > 0)
         {
             m_Buffer += ",";
         }
+        ++m_ProfileCount;
 
         std::string_view const name{ result.name };
 
@@ -91,7 +94,7 @@ namespace MauCor
 
 	Instrumentor::~Instrumentor()
 	{
-        EndSession();
+		EndSession();
 	}
 
 	void Instrumentor::WriteHeader()
