@@ -28,8 +28,11 @@ namespace MauEng
   uint32_t constexpr MAX_FILE_SIZE_BEFORE_ROTATE{ 5'000 };
 
 #if _DEBUG
-  #define ENABLE_ASSERTS
+	#define ENABLE_ASSERTS
 #endif
+
+#define ENABLE_PROFILER 
+
 }
 
 #endif

@@ -17,6 +17,7 @@
 #include "Logger/logger.h"
 
 #include "InternalDebugRenderer.h"
+#include "Profiling/Instrumentor.h"
 
 namespace MauEng
 {
@@ -43,7 +44,6 @@ namespace MauEng
 		ServiceLocator::RegisterRenderer(MauRen::CreateVulkanRenderer(m_Window->window, DEBUG_RENDERER));
 		ServiceLocator::GetRenderer().Init();
 
-
 		m_Window->Initialize();
 
 		SDL_GL_SetSwapInterval(0);
@@ -57,7 +57,21 @@ namespace MauEng
 
 	void Engine::Run(std::function<void()> const& load)
 	{
-		bool constexpr LIMIT_FPS{ false };
+		ME_PROFILE_BEGIN_SESSION("Startup", "Startup.json");
+		// First load everything the user wants us to load using their "load function"
+		load();
+		ME_PROFILE_END_SESSION();
+
+		ME_PROFILE_BEGIN_SESSION("Run", "Run.json");
+		GameLoop();
+		ME_PROFILE_END_SESSION();
+	}
+
+	void Engine::GameLoop()
+	{
+		using namespace MauRen;
+
+		bool constexpr LIMIT_FPS{ true };
 
 		// FPS tracking 
 		bool constexpr LOG_FPS{ true };
@@ -66,27 +80,25 @@ namespace MauEng
 
 		bool IsMinimised = false;
 
-		// First load everything the user wants us to load using their "load function"
-		load();
-		
-		using namespace MauRen;
-
 		// Get all the systems we wish to use during the game loop
 		auto& time{ Time::GetInstance() };
 		auto& sceneManager{ SceneManager::GetInstance() };
 		auto& inputManager{ InputManager::GetInstance() };
 
 		bool doContinue{ true };
+
 		while (doContinue)
 		{
-			SDL_GetWindowFlags(m_Window->window)& (SDL_WINDOW_MINIMIZED | SDL_WINDOW_HIDDEN) ? IsMinimised = true : IsMinimised = false;
+			SDL_GetWindowFlags(m_Window->window) & (SDL_WINDOW_MINIMIZED | SDL_WINDOW_HIDDEN) ? IsMinimised = true : IsMinimised = false;
 
 			time.Update();
 
-			if constexpr(LOG_FPS)
+			if constexpr (LOG_FPS)
 			{
 				if (IsMinimised)
 				{
+					LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Engine, "Window is minimized");
+
 					elapsedTime = 0.f;
 					frameCount = 0;
 				}

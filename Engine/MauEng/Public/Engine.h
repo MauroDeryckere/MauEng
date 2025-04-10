@@ -26,6 +26,8 @@ namespace MauEng
 
 	private:
 		std::unique_ptr<SDLWindow> m_Window{ nullptr };
+
+		void GameLoop();
 	};
 }
 
