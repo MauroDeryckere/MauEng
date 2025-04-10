@@ -36,8 +36,9 @@ namespace MauCor
 
 	void Instrumentor::WriteProfile(ProfileResult const& result)
     {
-        m_Mutex.lock();
-        if (m_ProfileCount++ > 0)
+        std::lock_guard lock(m_Mutex);
+
+		if (m_ProfileCount++ > 0)
         {
             m_Buffer += ",";
         }
@@ -64,8 +65,6 @@ namespace MauCor
             m_OutputStream << m_Buffer;
             m_Buffer.clear();
         }
-
-        m_Mutex.unlock();
     }
 
 	Instrumentor::~Instrumentor()
