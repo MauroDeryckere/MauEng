@@ -31,6 +31,7 @@ namespace MauCor
         m_Buffer.clear();
         m_Buffer.reserve(reserveSize);
         BUFFER_FLUSH_THRESHOLD = static_cast<size_t>(.9f * reserveSize);
+        BUFFER_RESERVE_SIZE = reserveSize;
 
         WriteHeader();
 
@@ -42,15 +43,14 @@ namespace MauCor
         if (m_CurrentSession)
         {
 			ME_LOG_INFO(LogCategory::Core, "Ending profile session");
-			WriteFooter();
+
+        	WriteFooter();
 
             m_OutputStream << m_Buffer;
             m_OutputStream.close();
 
             m_CurrentSession = nullptr;
         }
-
-        m_ProfileCount = 0;
     }
 
 	void Instrumentor::WriteProfile(ProfileResult const& result, bool isFunction)
@@ -60,21 +60,15 @@ namespace MauCor
             return;
 	    }
 
-        std::lock_guard lock(m_Mutex);
-
-		if (m_ProfileCount > 0)
-        {
-            m_Buffer += ",";
-        }
-        ++m_ProfileCount;
-
-
         std::string functionName{ result.name };
 	    if (isFunction)
 	    {
             CleanUpFunctionName(functionName);
 	    }
 
+        std::lock_guard lock(m_Mutex);
+
+        m_Buffer += ",";
         m_Buffer += "{";
         m_Buffer += R"("cat":")" + std::string(isFunction ? "function" : "scope") + R"(",)";
         m_Buffer += R"("dur":)" + std::to_string(result.end - result.start) + ",";
@@ -102,6 +96,10 @@ namespace MauCor
 	void Instrumentor::WriteHeader()
     {
         m_Buffer += R"({"otherData": {},"traceEvents":[)";
+        m_Buffer += "{}";
+        m_OutputStream << m_Buffer;
+
+        m_Buffer.clear();
     }
 
 	void Instrumentor::WriteFooter()

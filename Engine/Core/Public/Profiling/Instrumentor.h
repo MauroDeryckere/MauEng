@@ -45,10 +45,10 @@ namespace MauCor
 		std::unique_ptr<InstrumentationSession> m_CurrentSession{ nullptr };
     	std::string m_Buffer;
 
-    	size_t BUFFER_FLUSH_THRESHOLD{ };
+		size_t BUFFER_RESERVE_SIZE{};
+    	size_t BUFFER_FLUSH_THRESHOLD{};
 
 		std::ofstream m_OutputStream{  };
-        uint32_t m_ProfileCount{ 0 };
 
 		void WriteHeader();
 		void WriteFooter();
