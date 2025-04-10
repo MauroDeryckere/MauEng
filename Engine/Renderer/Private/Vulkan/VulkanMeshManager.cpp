@@ -64,15 +64,11 @@ namespace MauRen
 
 		for (auto const& [meshID, instances] : m_MeshBatches)
 		{
-			ME_PROFILE_SCOPE("DrawMesh");
-
 			VulkanMesh const& mesh = m_Meshes.at(meshID);
 
 			std::vector<glm::mat4> modelMatrices;
 			for (auto const& instance : instances)
 			{
-				ME_PROFILE_SCOPE("DrawMesh Instance");
-
 				MeshPushConstant mPush{ };
 				mPush.m_ModelMatrix = instance.GetModelMatrix();
 

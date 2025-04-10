@@ -20,11 +20,14 @@ namespace MauCor
 	private:
 		char const* m_Name{ "NO NAME" };
 
+		//static thread_local uint32_t m_NestCount;
+
 		std::chrono::time_point<std::chrono::high_resolution_clock> m_StartPoint{ };
 		bool m_IsStopped{ false };
 
 		bool m_IsFunction{};
 	};
 }
+
 
 #endif

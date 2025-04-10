@@ -54,8 +54,6 @@ namespace MauRen
 
 	VulkanMaterial const& VulkanMaterialManager::GetMaterial(uint32_t ID) const noexcept
 	{
-		ME_PROFILE_FUNCTION();
-
 		return m_Materials[ID];
 	}
 }

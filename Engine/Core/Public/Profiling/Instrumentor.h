@@ -14,7 +14,7 @@ namespace MauCor
 		std::string name;
 		long long start;
 		long long end;
-		uint32_t threadID;
+		std::thread::id threadID;
 	};
 
 	struct InstrumentationSession final
@@ -52,7 +52,6 @@ namespace MauCor
 
 		void WriteHeader();
 		void WriteFooter();
-    	static void CleanUpFunctionName(std::string& name);
     };
 
 #ifdef ENABLE_PROFILER
@@ -63,7 +62,7 @@ namespace MauCor
 	#define ME_PROFILE_BEGIN_SESSION(name, filepath, ...) MauCor::Instrumentor::GetInstance().BeginSession(name, filepath, __VA_ARGS__)
 	#define ME_PROFILE_END_SESSION() MauCor::Instrumentor::GetInstance().EndSession()
 	#define ME_PROFILE_SCOPE(name) MauCor::InstrumentorTimer C(timer, __LINE__) { name, false }
-	#define ME_PROFILE_FUNCTION() MauCor::InstrumentorTimer C(timer, __LINE__) { __FUNCSIG__, true }
+	#define ME_PROFILE_FUNCTION() MauCor::InstrumentorTimer C(timer, __LINE__) { __FUNCTION__, true }
 #else
 	#define ME_PROFILE_BEGIN_SESSION(name, filepath, ...)
 	#define ME_PROFILE_END_SESSION()

@@ -5,8 +5,7 @@ namespace MauCor
 	void Instrumentor::BeginSession(std::string const& name, std::string const& filepath, size_t reserveSize)
     {
         EndSession();
-
-        ME_LOG_INFO(LogCategory::Core, "Beginning profile session {}", filepath);
+		ME_LOG_INFO(LogCategory::Core, "Beginning profile session {}", filepath);
 
         std::filesystem::path const dir{ std::filesystem::path(filepath).parent_path() };
         if (!std::filesystem::exists(dir)) 
@@ -60,27 +59,22 @@ namespace MauCor
             return;
 	    }
 
-        std::string functionName{ result.name };
-	    if (isFunction)
-	    {
-            CleanUpFunctionName(functionName);
-	    }
+        std::stringstream ss;
+        ss << ",";
+        ss << "{";
+        ss << R"("cat":")" << (isFunction ? "function" : "scope") <<  R"(",)";
+        ss << R"("dur":)" <<  (result.end - result.start) << ",";
+        ss << R"("name":")";
+        ss << result.name;
+        ss << R"(",)";
+        ss << R"("ph":"X",)";
+        ss << R"("pid":0,)";
+        ss << R"("tid":)" << std::hash<std::thread::id>{}(result.threadID) << ",";
+        ss << R"("ts":)" << result.start;
+        ss << "}";
 
         std::lock_guard lock(m_Mutex);
-
-        m_Buffer += ",";
-        m_Buffer += "{";
-        m_Buffer += R"("cat":")" + std::string(isFunction ? "function" : "scope") + R"(",)";
-        m_Buffer += R"("dur":)" + std::to_string(result.end - result.start) + ",";
-        m_Buffer += R"("name":")";
-        m_Buffer += functionName;
-        m_Buffer += R"(",)";
-        m_Buffer += R"("ph":"X",)";
-        m_Buffer += R"("pid":0,)";
-        m_Buffer += R"("tid":)" + std::to_string(result.threadID) + ",";
-        m_Buffer += R"("ts":)" + std::to_string(result.start);
-        m_Buffer += "}";
-
+        m_Buffer += ss.str();
         if (m_Buffer.size() >= BUFFER_FLUSH_THRESHOLD)
         {
             m_OutputStream << m_Buffer;
@@ -95,32 +89,12 @@ namespace MauCor
 
 	void Instrumentor::WriteHeader()
     {
-        m_Buffer += R"({"otherData": {},"traceEvents":[)";
-        m_Buffer += "{}";
-        m_OutputStream << m_Buffer;
-
-        m_Buffer.clear();
+		m_OutputStream << R"({"otherData": {},"traceEvents":[{})";
+        m_OutputStream.flush();
     }
 
 	void Instrumentor::WriteFooter()
     {
         m_Buffer += "]}";
     }
-
-	void Instrumentor::CleanUpFunctionName(std::string& name)
-	{
-        size_t const firstSpace{ name.find_first_of(' ') };
-        if (firstSpace != std::string::npos)
-        {
-            name = name.substr(firstSpace + 1);
-        }
-
-        // Remove the class or namespace prefix (if any)
-        size_t const pos{ name.find("::") };
-        if (pos != std::string::npos)
-        {
-        	// Skip past the "::"
-            name = name.substr(pos + 2);
-        }
-	}
 }
