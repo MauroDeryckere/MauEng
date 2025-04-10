@@ -49,10 +49,13 @@ namespace MauCor
     };
 
 #ifdef ENABLE_PROFILER
+	#define CONCAT(x, y) x ## y
+	#define C(x, y) CONCAT(x, y)
+
 	#define ME_PROFILE_BEGIN_SESSION(name, filepath) MauCor::Instrumentor::GetInstance().BeginSession(name, filepath)
 	#define ME_PROFILE_END_SESSION() MauCor::Instrumentor::GetInstance().EndSession()
-	#define ME_PROFILE_SCOPE(name) MauCor::InstrumentorTimer timer##__LINE__ { name }
-	#define ME_PROFILE_FUNCTION()
+	#define ME_PROFILE_SCOPE(name) MauCor::InstrumentorTimer C(timer, __LINE__) { name }
+	#define ME_PROFILE_FUNCTION() ME_PROFILE_SCOPE(__FUNCSIG__)
 #else
 	#define ME_PROFILE_BEGIN_SESSION(name, filepath)
 	#define ME_PROFILE_END_SESSION()

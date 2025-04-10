@@ -6,7 +6,7 @@ namespace MauEng
 {
 	void SceneManager::LoadScene(std::unique_ptr<Scene> pScene)
 	{
-		ME_PROFILE_FUNCTION()
+		ME_PROFILE_FUNCTION();
 
 		m_Scene = std::move(pScene);
 		m_Scene->OnLoad();
@@ -14,13 +14,13 @@ namespace MauEng
 
 	void SceneManager::FixedUpdate()
 	{
-		ME_PROFILE_FUNCTION()
+		ME_PROFILE_FUNCTION();
 		//TODO
 	}
 
 	void SceneManager::Render() const
 	{
-		ME_PROFILE_FUNCTION()
+		ME_PROFILE_FUNCTION();
 
 		m_Scene->OnRender();
 
@@ -29,7 +29,7 @@ namespace MauEng
 
 	void SceneManager::Tick()
 	{
-		ME_PROFILE_FUNCTION()
+		ME_PROFILE_FUNCTION();
 
 		m_Scene->Tick();
 	}
