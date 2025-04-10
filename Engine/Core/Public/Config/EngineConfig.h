@@ -17,7 +17,9 @@ namespace MauEng
 	auto constexpr LOG_COLOR_FATAL{ "\033[1;31m" };
 
 
-#if _DEBUG
+//#define SHIPPING
+
+#ifndef SHIPPING
 	bool constexpr ENABLE_DEBUG_RENDERING{ true };
 	bool constexpr LOG_TO_FILE{ false };
 #else
@@ -31,7 +33,10 @@ namespace MauEng
 	#define ENABLE_ASSERTS
 #endif
 
-#define ENABLE_PROFILER
+#ifndef SHIPPING
+	#define ENABLE_PROFILER
+#endif
+
 #ifdef ENABLE_PROFILER
   uint32_t constexpr NUM_FRAMES_TO_PROFILE{ 2 };
 #endif
