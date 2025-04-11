@@ -20,6 +20,7 @@ namespace MauCor
 		virtual ~Profiler() = default;
 
 		virtual void BeginSession(std::string const& name, std::string& filepath, size_t reserveSize = 100'000) = 0;
+		void BeginSession(std::string const& name, char const* path, size_t reserveSize = 100'000);
 
 		virtual void WriteProfile(ProfileResult const& result, bool isFunction) = 0;
 		virtual void WriteProfile(std::string const& name) = 0;

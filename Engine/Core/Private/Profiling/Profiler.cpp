@@ -2,6 +2,12 @@
 
 namespace MauCor
 {
+	void Profiler::BeginSession(std::string const& name, char const* path, size_t reserveSize)
+	{
+		std::string tempPath{ path };
+		BeginSession(name, path, reserveSize);
+	}
+
 	void Profiler::Start(char const* path)
 	{
 		if (isProfiling)
