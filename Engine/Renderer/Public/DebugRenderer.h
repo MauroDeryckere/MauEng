@@ -26,8 +26,8 @@ namespace MauRen
 
 		virtual void DrawCylinder(glm::vec3 const& center, float radius, float height, glm::vec3 const& colour = { 1, 0, 0 }, uint32_t segments = 24) noexcept = 0;
 
-		virtual void DrawSphere(glm::vec3 const& center, float radius, glm::vec3 const& colour = { 1, 0, 0 }, uint32_t segments = 24) noexcept = 0;
-		virtual void DrawSphereComplex(glm::vec3 const& center, float radius, glm::vec3 const& colour = { 1, 0, 0 }, uint32_t segments = 24, uint32_t layers = 4) noexcept = 0;
+		virtual void DrawSphere(glm::vec3 const& center, float radius, MauCor::Rotator const& rot = {}, glm::vec3 const& colour = { 1, 0, 0 }, uint32_t segments = 24) noexcept = 0;
+		virtual void DrawSphereComplex(glm::vec3 const& center, float radius, MauCor::Rotator const& rot = {}, glm::vec3 const& colour = { 1, 0, 0 }, uint32_t segments = 24, uint32_t layers = 4) noexcept = 0;
 		virtual	void DrawEllipsoid(glm::vec3 const& center, float radiusX, float radiusY, float radiusZ, glm::vec3 const& colour = { 1, 0, 0 }, uint32_t segments = 24) noexcept = 0;
 		virtual	void DrawEllipsoidComplex(glm::vec3 const& center, float radiusX, float radiusY, float radiusZ, glm::vec3 const& colour = { 1, 0, 0 }, uint32_t segments = 24, uint32_t layers = 6) noexcept = 0;
 
@@ -59,8 +59,8 @@ namespace MauRen
 
 		virtual void DrawCylinder(glm::vec3 const& center, float radius, float height, glm::vec3 const& colour = { 1, 0, 0 }, uint32_t segments = 24) noexcept override {}
 
-		virtual void DrawSphere(glm::vec3 const& center, float radius, glm::vec3 const& colour = { 1, 0, 0 }, uint32_t segments = 24) noexcept override {}
-		virtual void DrawSphereComplex(glm::vec3 const& center, float radius, glm::vec3 const& colour = { 1, 0, 0 }, uint32_t segments = 24, uint32_t layers = 4) noexcept override {}
+		virtual void DrawSphere(glm::vec3 const& center, float radius, MauCor::Rotator const& rot = {}, glm::vec3 const& colour = { 1, 0, 0 }, uint32_t segments = 24) noexcept override {}
+		virtual void DrawSphereComplex(glm::vec3 const& center, float radius, MauCor::Rotator const& rot = {}, glm::vec3 const& colour = { 1, 0, 0 }, uint32_t segments = 24, uint32_t layers = 4) noexcept override {}
 		virtual	void DrawEllipsoid(glm::vec3 const& center, float radiusX, float radiusY, float radiusZ, glm::vec3 const& colour = { 1, 0, 0 }, uint32_t segments = 24) noexcept override {}
 		virtual	void DrawEllipsoidComplex(glm::vec3 const& center, float radiusX, float radiusY, float radiusZ, glm::vec3 const& colour = { 1, 0, 0 }, uint32_t segments = 24, uint32_t layers = 6) noexcept override {}
 	private:

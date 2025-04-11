@@ -166,32 +166,11 @@ namespace MauRen
 
 	void InternalDebugRenderer::DrawEllipse(glm::vec3 const& center, glm::vec2 const& size, MauCor::Rotator const& rot, glm::vec3 const& colour, uint32_t segments) noexcept
 	{
-		float const delta{ glm::two_pi<float>() / static_cast<float>(segments) };
-
-		// Define unit vectors along the X and Y axis in local space
-		glm::vec3 constexpr localV1{ 1.0f, 0.0f, 0.0f };
-		glm::vec3 constexpr localV2{ 0.0f, 1.0f, 0.0f };
-
-		std::vector<glm::vec3> circlePoints{};
-		circlePoints.reserve(segments);
-
-		for (uint32_t i{ 0 }; i < segments; ++i)
-		{
-			float const angle{ i * delta };
-
-			glm::vec3 const point{  (size.x * glm::cos(angle) * localV1 + size.y * glm::sin(angle) * localV2) };
-			circlePoints.emplace_back(point);
-		}
-
+		std::vector<glm::vec3> points{};
 		std::vector<std::pair<uint32_t, uint32_t>> indices{};
-		indices.reserve(segments);
-		for (uint32_t i{ 0 }; i < segments; ++i)
-		{
-			uint32_t const nextIndex{ (i + 1) % segments };
-			indices.emplace_back(i, nextIndex);
-		}
+		DrawEllipseInternal(size, points, indices, segments);
 
-		AddDebugLines(circlePoints, indices, rot.rotation, colour, center);
+		AddDebugLines(points, indices, rot.rotation, colour, center);
 	}
 
 	void InternalDebugRenderer::DrawCylinder(glm::vec3 const& center, float radius, float height, glm::vec3 const& colour, uint32_t segments) noexcept
@@ -221,44 +200,94 @@ namespace MauRen
 		}
 	}
 
-	void InternalDebugRenderer::DrawSphere(glm::vec3 const& center, float radius, glm::vec3 const& colour, uint32_t segments) noexcept
+	void InternalDebugRenderer::DrawSphere(glm::vec3 const& center, float radius, MauCor::Rotator const& rot, glm::vec3 const& colour, uint32_t segments) noexcept
 	{
-		if (std::size(m_ActivePoints) + (segments * 3) * 2 < MAX_LINES)
 		{
-			//DrawCircle(center, radius, glm::vec3{ 1, 0, 0 }, colour, segments); // YZ plane
-			//DrawCircle(center, radius, glm::vec3{ 0, 1, 0 }, colour, segments); // XZ plane
-			//DrawCircle(center, radius, glm::vec3{ 0, 0, 1 }, colour, segments); // XY plane
+			std::vector<glm::vec3> points{};
+			std::vector<std::pair<uint32_t, uint32_t>> indices{};
+			DrawEllipseInternal({ radius , radius }, points, indices, segments);
+
+			for (auto& p : points)
+			{
+				p = MauCor::Rotator{ 0, 90, 0 }  *p - center;
+			}
+
+			AddDebugLines(points, indices, rot.rotation, colour, center);
+		}
+
+		
+		{
+			std::vector<glm::vec3> points{};
+			std::vector<std::pair<uint32_t, uint32_t>> indices{};
+			DrawEllipseInternal({ radius , radius }, points, indices, segments);
+
+			for (auto& p : points)
+			{
+				p = MauCor::Rotator{ 0, 0, 90 }  *p - center;
+			}
+
+			AddDebugLines(points, indices, rot.rotation, colour, center);
+		}
+			
+		{
+			std::vector<glm::vec3> points{};
+			std::vector<std::pair<uint32_t, uint32_t>> indices{};
+			DrawEllipseInternal({ radius , radius }, points, indices, segments);
+
+			for (auto& p : points)
+			{
+				p = MauCor::Rotator{ 90, 0, 0 }  *p - center;
+			}
+
+			AddDebugLines(points, indices, rot.rotation, colour, center);
 		}
 	}
 
-	void InternalDebugRenderer::DrawSphereComplex(glm::vec3 const& center, float radius, glm::vec3 const& colour, uint32_t segments, uint32_t layers) noexcept
+	void InternalDebugRenderer::DrawSphereComplex(glm::vec3 const& center, float radius, MauCor::Rotator const& rot, glm::vec3 const& colour, uint32_t segments, uint32_t layers) noexcept
 	{
-		if (std::size(m_ActivePoints) + ((segments * 3) * (layers * 2 - 1)) * 2 < MAX_LINES)
+		// Horizontal rings from pole to pole (latitude)
+		for (uint32_t i{ 1 }; i < layers; ++i)
 		{
-			// Horizontal rings from pole to pole (latitude)
-			for (uint32_t i{ 1 }; i < layers; ++i)
+			// 0 - PI
+			float const theta{ glm::pi<float>() * static_cast<float>(i) / static_cast<float>(layers) };
+
+			float const height{ glm::cos(theta) };
+			// radius of current ring
+			float const rad{ glm::sin(theta) };
+
+			glm::vec3 const ringCenter{ center + glm::vec3{0.0f, height * radius, 0.0f} };
+			MauCor::Rotator const localRot{ 90, 0, 0 };
+
+			// XY rings along Y
+
+			std::vector<glm::vec3> points{};
+			std::vector<std::pair<uint32_t, uint32_t>> indices{};
+			DrawEllipseInternal(glm::vec2 { rad* radius, rad* radius }, points, indices, segments);
+
+			for (auto & p : points)
 			{
-				// 0 - PI
-				float const theta{ glm::pi<float>() * static_cast<float>(i) / static_cast<float>(layers) };
-
-				float const height{ glm::cos(theta) };
-				// radius of current ring
-				float const rad{ glm::sin(theta) };
-
-				glm::vec3 const ringCenter{ center + glm::vec3{0.0f, height * radius, 0.0f} };
-
-				// XY rings along Y
-				//DrawCircle(ringCenter, rad * radius, glm::vec3{ 0, 1, 0 }, colour, segments);
+				p = (ringCenter + localRot.rotation * p) - center;
 			}
 
-			// Vertical rings (longitude)
-			for (uint32_t i{ 0 }; i < layers; ++i)
-			{
-				float const phi{ glm::pi<float>() * static_cast<float>(i) / static_cast<float>(layers) };
-				glm::vec3 const axis{ glm::vec3{glm::cos(phi), 0.0f, glm::sin(phi)} };
+			AddDebugLines(points, indices, rot.rotation , colour, center);
+		}
 
-				//DrawCircle(center, radius, axis, colour, segments);
+		// Vertical rings (longitude)
+		for (uint32_t i{ 0 }; i < layers; ++i)
+		{
+			float const phi{ 180.f * static_cast<float>(i) / static_cast<float>(layers) };
+			MauCor::Rotator const localRot{ 0.0f, phi, 0.0f };
+
+			std::vector<glm::vec3> points{};
+			std::vector<std::pair<uint32_t, uint32_t>> indices{};
+			DrawEllipseInternal(glm::vec2{  radius,  radius }, points, indices, segments);
+
+			for (auto& p : points)
+			{
+				p = localRot.rotation * p;
 			}
+
+			AddDebugLines(points, indices, rot.rotation, colour, center);
 		}
 	}
 
@@ -320,6 +349,33 @@ namespace MauRen
 		{
 			m_IndexBuffer.emplace_back(baseIndex + start);
 			m_IndexBuffer.emplace_back(baseIndex + end);
+		}
+	}
+
+	void InternalDebugRenderer::DrawEllipseInternal( glm::vec2 const& size, std::vector<glm::vec3>& localPoints,
+		std::vector<std::pair<uint32_t, uint32_t>>& lineIndices, uint32_t segments)
+	{
+		float const delta{ glm::two_pi<float>() / static_cast<float>(segments) };
+
+		// Define unit vectors along the X and Y axis in local space
+		glm::vec3 constexpr localV1{ 1.0f, 0.0f, 0.0f };
+		glm::vec3 constexpr localV2{ 0.0f, 1.0f, 0.0f };
+
+		localPoints.reserve(segments);
+
+		for (uint32_t i{ 0 }; i < segments; ++i)
+		{
+			float const angle{ i * delta };
+
+			glm::vec3 const point{ (size.x * glm::cos(angle) * localV1 + size.y * glm::sin(angle) * localV2) };
+			localPoints.emplace_back(point);
+		}
+
+		lineIndices.reserve(segments);
+		for (uint32_t i{ 0 }; i < segments; ++i)
+		{
+			uint32_t const nextIndex{ (i + 1) % segments };
+			lineIndices.emplace_back(i, nextIndex);
 		}
 	}
 }

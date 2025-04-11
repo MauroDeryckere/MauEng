@@ -162,7 +162,8 @@ namespace MauGam
 		bool constexpr DRAW_RECTS{ false };
 		bool constexpr DRAW_TRIANGLES{ false };
 		bool constexpr DRAW_ARROWS{ false };
-		bool constexpr DRAW_CIRCLES{ true };
+		bool constexpr DRAW_CIRCLES{ false };
+		bool constexpr DRAW_SPHERES{ true };
 
 		// Demo debug drawing tests
 		if constexpr (DRAW_LINES)
@@ -237,12 +238,24 @@ namespace MauGam
 			circleRot += CIRCLE_ROT_SPEED * TIME.ElapsedSec();
 		}
 
-		//DEBUG_RENDERER.DrawSphere({}, 20.f, { 1, 1, 0 });
-		//DEBUG_RENDERER.DrawSphereComplex({ 20,20,20 }, 20.f, { 1, 1, 1 }, 24, 10);
+		if constexpr(DRAW_SPHERES)
+		{
+			static float constexpr SPHERE_ROT_SPEED{ 10.f };
+			static float sphereRot{};
+
+			DEBUG_RENDERER.DrawSphere({}, 20.f);
+			DEBUG_RENDERER.DrawSphere({}, 20.f, sphereRot, {1,1,1});
+
+			DEBUG_RENDERER.DrawSphereComplex({ 20,20,20 }, 20.f, { }, {1, 0, 0}, 24, 6);
+			DEBUG_RENDERER.DrawSphereComplex({ 20,20,20 }, 20.f, { sphereRot }, {1, 1, 1}, 24, 6);
+
+			//DEBUG_RENDERER.DrawEllipsoid({}, 10, 20, 30.f, { 0, 1, 0 });
+			//DEBUG_RENDERER.DrawEllipsoidComplex({}, 10, 20, 30.f, { 0, 0, 1 }, 24,6);
+
+			sphereRot += SPHERE_ROT_SPEED * TIME.ElapsedSec();
+		}
 
 
-		//DEBUG_RENDERER.DrawEllipsoid({}, 10, 20, 30.f, { 0, 1, 0 });
-		//DEBUG_RENDERER.DrawEllipsoidComplex({}, 10, 20, 30.f, { 0, 0, 1 }, 24,6);
 
 		//DEBUG_RENDERER.DrawCylinder({ -10, 0, -10 }, 10, 100);
 

@@ -16,13 +16,27 @@ namespace MauCor
 		constexpr Rotator() = default;
 		Rotator(float pitch, float yaw = 0.f, float roll = 0.f)
 		{
-			glm::quat pitchRotation{ glm::angleAxis(glm::radians(pitch), glm::vec3{1, 0, 0}) };
-			glm::quat yawRotation{ glm::angleAxis(glm::radians(yaw), glm::vec3{0, 1, 0}) };
-			glm::quat rollRotation{ glm::angleAxis(glm::radians(roll), glm::vec3{0, 0, 1}) };
+			glm::quat const pitchRotation{ glm::angleAxis(glm::radians(pitch), glm::vec3{1, 0, 0}) };
+			glm::quat const yawRotation{ glm::angleAxis(glm::radians(yaw), glm::vec3{0, 1, 0}) };
+			glm::quat const rollRotation{ glm::angleAxis(glm::radians(roll), glm::vec3{0, 0, 1}) };
 
 			rotation = glm::normalize(rollRotation * yawRotation * pitchRotation);
 		}
+
+		explicit Rotator(glm::quat const& quat) : rotation { quat } { }
 	};
+
+	inline Rotator operator*(MauCor::Rotator const& lhs, MauCor::Rotator const& rhs) noexcept
+	{
+		// Multiply two quaternions (rotation concatenation)
+		return MauCor::Rotator{ lhs.rotation * rhs.rotation };
+	}
+
+	inline glm::vec3 operator*(MauCor::Rotator const& rot, glm::vec3 const& vec) noexcept
+	{
+		// Apply the rotation to the vector using glm::rotate
+		return glm::rotate(rot.rotation, vec);
+	}
 }
 
 #endif	

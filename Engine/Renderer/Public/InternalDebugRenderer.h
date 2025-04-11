@@ -32,8 +32,8 @@ namespace MauRen
 
 		void DrawCylinder(glm::vec3 const& center, float radius, float height, glm::vec3 const& colour = { 1, 0, 0 }, uint32_t segments = 24) noexcept override;
 
-		void DrawSphere(glm::vec3 const& center, float radius, glm::vec3 const& colour = { 1, 0, 0 }, uint32_t segments = 24) noexcept override;
-		void DrawSphereComplex(glm::vec3 const& center, float radius, glm::vec3 const& colour = { 1, 0, 0 }, uint32_t segments = 24, uint32_t layers = 4) noexcept override;
+		void DrawSphere(glm::vec3 const& center, float radius, MauCor::Rotator const& rot = {}, glm::vec3 const& colour = { 1, 0, 0 }, uint32_t segments = 24) noexcept override;
+		void DrawSphereComplex(glm::vec3 const& center, float radius, MauCor::Rotator const& rot = {}, glm::vec3 const& colour = { 1, 0, 0 }, uint32_t segments = 24, uint32_t layers = 4) noexcept override;
 		void DrawEllipsoid(glm::vec3 const& center, float radiusX, float radiusY, float radiusZ, glm::vec3 const& colour = { 1, 0, 0 }, uint32_t segments = 24) noexcept override;
 		void DrawEllipsoidComplex(glm::vec3 const& center, float radiusX, float radiusY, float radiusZ, glm::vec3 const& colour = { 1, 0, 0 }, uint32_t segments = 24, uint32_t layers = 6) noexcept override;
 
@@ -60,6 +60,8 @@ namespace MauRen
 			glm::quat const& rotation,
 			glm::vec3 const& color, 
 			glm::vec3 const& center);
+
+		void DrawEllipseInternal(glm::vec2 const& size, std::vector<glm::vec3>& localPoints, std::vector<std::pair<uint32_t, uint32_t>>& lineIndices, uint32_t segments);
 	};
 }
 
