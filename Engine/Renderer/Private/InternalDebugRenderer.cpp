@@ -12,7 +12,7 @@ namespace MauRen
 
 	void InternalDebugRenderer::DrawLine(glm::vec3 const& start, glm::vec3 const& end, MauCor::Rotator const& rot, glm::vec3 const& colour) noexcept
 	{
-		if (std::size(m_ActivePoints) + 2 * 2 < MAX_LINES)
+		if (std::size(m_ActivePoints) + 2 < MAX_LINES)
 		{
 			m_IndexBuffer.emplace_back(static_cast<uint32_t>(m_ActivePoints.size()));
 			m_ActivePoints.emplace_back(glm::rotate(rot.rotation, start), colour);
@@ -159,53 +159,39 @@ namespace MauRen
 		}
 	}
 
-	void InternalDebugRenderer::DrawCircle(glm::vec3 const& center, float radius, glm::vec3 const& axis, glm::vec3 const& colour, uint32_t segments) noexcept
+	void InternalDebugRenderer::DrawCircle(glm::vec3 const& center, float radius, MauCor::Rotator const& rot, glm::vec3 const& colour, uint32_t segments) noexcept
 	{
-		if (std::size(m_ActivePoints) + (segments) * 2 < MAX_LINES)
-		{
-			float const delta{ glm::two_pi<float>() / static_cast<float>(segments) };
-
-			// Pick an arbitrary perpendicular vector for rotation
-			glm::vec3 v1{ glm::normalize(glm::abs(axis.x) > 0.99f ? glm::vec3{0, 1, 0} : glm::vec3{1, 0, 0}) };
-			glm::vec3 const v2{ glm::normalize(glm::cross(axis, v1)) };
-			v1 = glm::normalize(glm::cross(v2, axis));
-
-			for (uint32_t i{ 0 }; i < segments; ++i)
-			{
-				float const angle0{ i * delta };
-				float const angle1{ (i + 1) * delta };
-
-				glm::vec3 const p0{ center + radius * (glm::cos(angle0) * v1 + glm::sin(angle0) * v2) };
-				glm::vec3 const p1{ center + radius * (glm::cos(angle1) * v1 + glm::sin(angle1) * v2) };
-
-				//DrawLine(p0, p1, colour);
-			}
-		}
-
+		DrawEllipse(center, { radius, radius }, rot, colour, segments);
 	}
 
-	void InternalDebugRenderer::DrawEllipse(glm::vec3 const& center, float radiusX, float radiusY, glm::vec3 const& axis, glm::vec3 const& colour, uint32_t segments) noexcept
+	void InternalDebugRenderer::DrawEllipse(glm::vec3 const& center, glm::vec2 const& size, MauCor::Rotator const& rot, glm::vec3 const& colour, uint32_t segments) noexcept
 	{
-		if (std::size(m_ActivePoints) + (segments) * 2 < MAX_LINES)
+		float const delta{ glm::two_pi<float>() / static_cast<float>(segments) };
+
+		// Define unit vectors along the X and Y axis in local space
+		glm::vec3 constexpr localV1{ 1.0f, 0.0f, 0.0f };
+		glm::vec3 constexpr localV2{ 0.0f, 1.0f, 0.0f };
+
+		std::vector<glm::vec3> circlePoints{};
+		circlePoints.reserve(segments);
+
+		for (uint32_t i{ 0 }; i < segments; ++i)
 		{
-			float const delta{ glm::two_pi<float>() / static_cast<float>(segments) };
+			float const angle{ i * delta };
 
-			// Pick an arbitrary perpendicular vector for rotation
-			glm::vec3 v1{ glm::normalize(glm::abs(axis.x) > 0.99f ? glm::vec3{0, 1, 0} : glm::vec3{1, 0, 0}) };
-			glm::vec3 const v2{ glm::normalize(glm::cross(axis, v1)) };
-			v1 = glm::normalize(glm::cross(v2, axis));  // Final perpendicular vector to axis
-
-			for (uint32_t i{ 0 }; i < segments; ++i)
-			{
-				float const angle0{ i * delta };
-				float const angle1{ (i + 1) * delta };
-
-				glm::vec3 const p0{ center + radiusX * glm::cos(angle0) * v1 + radiusY * glm::sin(angle0) * v2 };
-				glm::vec3 const p1{ center + radiusX * glm::cos(angle1) * v1 + radiusY * glm::sin(angle1) * v2 };
-
-				//DrawLine(p0, p1, colour);
-			}
+			glm::vec3 const point{  (size.x * glm::cos(angle) * localV1 + size.y * glm::sin(angle) * localV2) };
+			circlePoints.emplace_back(point);
 		}
+
+		std::vector<std::pair<uint32_t, uint32_t>> indices{};
+		indices.reserve(segments);
+		for (uint32_t i{ 0 }; i < segments; ++i)
+		{
+			uint32_t const nextIndex{ (i + 1) % segments };
+			indices.emplace_back(i, nextIndex);
+		}
+
+		AddDebugLines(circlePoints, indices, rot.rotation, colour, center);
 	}
 
 	void InternalDebugRenderer::DrawCylinder(glm::vec3 const& center, float radius, float height, glm::vec3 const& colour, uint32_t segments) noexcept
@@ -239,9 +225,9 @@ namespace MauRen
 	{
 		if (std::size(m_ActivePoints) + (segments * 3) * 2 < MAX_LINES)
 		{
-			DrawCircle(center, radius, glm::vec3{ 1, 0, 0 }, colour, segments); // YZ plane
-			DrawCircle(center, radius, glm::vec3{ 0, 1, 0 }, colour, segments); // XZ plane
-			DrawCircle(center, radius, glm::vec3{ 0, 0, 1 }, colour, segments); // XY plane
+			//DrawCircle(center, radius, glm::vec3{ 1, 0, 0 }, colour, segments); // YZ plane
+			//DrawCircle(center, radius, glm::vec3{ 0, 1, 0 }, colour, segments); // XZ plane
+			//DrawCircle(center, radius, glm::vec3{ 0, 0, 1 }, colour, segments); // XY plane
 		}
 	}
 
@@ -262,7 +248,7 @@ namespace MauRen
 				glm::vec3 const ringCenter{ center + glm::vec3{0.0f, height * radius, 0.0f} };
 
 				// XY rings along Y
-				DrawCircle(ringCenter, rad * radius, glm::vec3{ 0, 1, 0 }, colour, segments);
+				//DrawCircle(ringCenter, rad * radius, glm::vec3{ 0, 1, 0 }, colour, segments);
 			}
 
 			// Vertical rings (longitude)
@@ -271,7 +257,7 @@ namespace MauRen
 				float const phi{ glm::pi<float>() * static_cast<float>(i) / static_cast<float>(layers) };
 				glm::vec3 const axis{ glm::vec3{glm::cos(phi), 0.0f, glm::sin(phi)} };
 
-				DrawCircle(center, radius, axis, colour, segments);
+				//DrawCircle(center, radius, axis, colour, segments);
 			}
 		}
 	}
@@ -280,9 +266,9 @@ namespace MauRen
 	{
 		if (std::size(m_ActivePoints) + (segments * 3) * 2 < MAX_LINES)
 		{
-			DrawEllipse(center, radiusX, radiusY, glm::vec3{ 0, 0, 1 }, colour, segments); // XZ plane
-			DrawEllipse(center, radiusX, radiusZ, glm::vec3{ 0, 1, 0 }, colour, segments); // XZ plane
-			DrawEllipse(center, radiusY, radiusZ, glm::vec3{ 1, 0, 0 }, colour, segments); // YZ plane
+			//DrawEllipse(center, radiusX, radiusY, glm::vec3{ 0, 0, 1 }, colour, segments); // XZ plane
+			//DrawEllipse(center, radiusX, radiusZ, glm::vec3{ 0, 1, 0 }, colour, segments); // XZ plane
+			//DrawEllipse(center, radiusY, radiusZ, glm::vec3{ 1, 0, 0 }, colour, segments); // YZ plane
 		}
 	}
 
@@ -299,7 +285,7 @@ namespace MauRen
 
 				glm::vec3 const ringCenter{ center + glm::vec3{ 0.0f, height, 0.0f } };
 
-				DrawEllipse(ringCenter, glm::sin(theta) * radiusX, glm::sin(theta) * radiusZ, glm::vec3{ 0, 1, 0 }, colour, segments);
+			//	DrawEllipse(ringCenter, glm::sin(theta) * radiusX, glm::sin(theta) * radiusZ, glm::vec3{ 0, 1, 0 }, colour, segments);
 			}
 
 			// Vertical rings (longitude)
@@ -308,7 +294,7 @@ namespace MauRen
 				float const phi{ glm::pi<float>() * static_cast<float>(i) / static_cast<float>(layers) };
 				glm::vec3 const axis{ glm::vec3{glm::cos(phi), glm::sin(phi), 0} };
 
-				DrawEllipse(center, radiusY * glm::cos(phi), radiusZ, axis, colour, segments);
+			//	DrawEllipse(center, radiusY * glm::cos(phi), radiusZ, axis, colour, segments);
 			}
 		}
 	}
