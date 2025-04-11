@@ -39,6 +39,33 @@ ME_CHECK(pRenderer, "Renderer must be valid");
 ME_VERIFY(CalculateAndValidatePath(), "Path must be valid");
 ```
 
+### Profiling
+The engine has 2 available profilers, a very barebones profiler that simply parses to a .json file and can be uploaded to chrome://tracing/. The other profiler is an integration of the Optick library and provides a lot more information if required.
+
+Profiling requires 2 steps. 
+1. add the macros in all the functions & scopes you wish to profile: 
+```cpp
+// Examples
+void MySleepFunc() {
+	// Do stuff
+	{
+		ME_PROFILE_SCOPE("Main Thread Sleep");
+		Sleep();
+	}
+}
+
+void Render(){
+	ME_PROFILE_FUNCTION();
+}
+
+```
+
+2. Press F1 to start profiling & upload it to the exe or chrome://tracing/.
+
+Profiling only happens when it is enabled in the Config.cmake file.
+
+
+
 ## Engine
 
 ## Renderer
