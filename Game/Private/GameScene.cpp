@@ -75,61 +75,11 @@ namespace MauGam
 
 		Scene::Tick();
 
-		bool constexpr DRAW_LINES{ false };
-		bool constexpr DRAW_RECTS{ true };
+		DemoDebugDrawing();
 
 		// Demo logging tests
 		//LOGGER.Log(MauCor::LogPriority::Error, MauCor::LogCategory::Game,"test {}", 1000);
 		//ME_LOG_ERROR(MauCor::LogCategory::Game, "TEST");
-
-		// Demo debug drawing tests
-		// Drawing (rotated) lines
-		if constexpr(DRAW_LINES)
-		{
-			DEBUG_RENDERER.DrawLine({ 0, 0,0 }, { 100, 10, 10 }, { 0, 0, 0 });
-			DEBUG_RENDERER.DrawLine({ 0, 0,0 }, { 100, 10, 10 }, { 90, 0, 0 }, { 0, 1, 0 });
-			DEBUG_RENDERER.DrawLine({ 0, 0,0 }, { 100, 10, 10 }, { 180, 0, 0 }, { 0, 1, 0 });
-			DEBUG_RENDERER.DrawLine({ 0, 0,0 }, { 100, 10, 10 }, { 0, 90, 0 }, { 0, 0, 1 });
-			DEBUG_RENDERER.DrawLine({ 0, 0,0 }, { 100, 10, 10 }, { 0, 180, 0 }, { 0, 0, 1 });
-			DEBUG_RENDERER.DrawLine({ 0, 0,0 }, { 100, 10, 10 }, { 0, 0, 90 }, { 0, 1, 1 });
-			DEBUG_RENDERER.DrawLine({ 0, 0,0 }, { 100, 10, 10 }, { 0, 0, 180 }, { 0, 1, 1 });
-
-			static float constexpr ROT_SPEED{ 10.f };
-			static float lineRot{};
-			DEBUG_RENDERER.DrawLine({ 0, 0,0 }, { 100, 0, 0 }, { lineRot, lineRot, lineRot }, { 1, 1, 1 });
-
-			DEBUG_RENDERER.DrawLine({ 0, 0,0 }, { 100, 0, 0 }, { 0, lineRot, 0 }, { 1, 1, 0 });
-			DEBUG_RENDERER.DrawLine({ 0, 0,0 }, { 100, 0, 0 }, { 0, 0, lineRot }, { 1, 1, 0 });
-
-			lineRot += ROT_SPEED * TIME.ElapsedSec();
-		}
-
-		if constexpr(DRAW_RECTS)
-		{
-			static float constexpr CUBE_ROT_SPEED{ 10.f };
-			static float cubeRot{};
-
-			DEBUG_RENDERER.DrawRect({ 0, 0, 0 }, { 20, 30 }, { 0, 0, cubeRot }, { 1, 0, 0 });
-			DEBUG_RENDERER.DrawRect({ 0, 0, 0 }, {20, 30} ,{ 0, 0, 0 }, {1, 1, 1});
-			DEBUG_RENDERER.DrawCube({ 20, 20, 20 }, { 69, 20, 20 }, { 0, 0, 0 }, {1, 1, 1});
-			DEBUG_RENDERER.DrawCube({ 20, 20, 20 }, { 69, 20, 20 }, {0, cubeRot, 0 });
-
-			cubeRot += CUBE_ROT_SPEED * TIME.ElapsedSec();
-		}
-
-
-		//DEBUG_RENDERER.DrawSphere({}, 20.f, { 1, 1, 0 });
-		//DEBUG_RENDERER.DrawSphereComplex({ 20,20,20 }, 20.f, { 1, 1, 1 }, 24, 10);
-
-		//DEBUG_RENDERER.DrawEllipse({}, 20, 50, { 1, 0, 0 });
-
-		//DEBUG_RENDERER.DrawEllipsoid({}, 10, 20, 30.f, { 0, 1, 0 });
-		//DEBUG_RENDERER.DrawEllipsoidComplex({}, 10, 20, 30.f, { 0, 0, 1 }, 24,6);
-
-		//DEBUG_RENDERER.DrawArrow({}, { 2, 3, 3});
-		//DEBUG_RENDERER.DrawCylinder({ -10, 0, -10 }, 10, 100);
-
-		//DEBUG_RENDERER.DrawPolygon({ {0, 0, 0}, { 0, 19, 20 }, {32, 10, -10}, {10, 20, 5}, {-2, -2, -2 } });
 
 		auto const& input{ INPUT_MANAGER };
 
@@ -201,5 +151,74 @@ namespace MauGam
 			}
 		}
 
+	}
+
+	void GameScene::DemoDebugDrawing()
+	{
+		ME_PROFILE_FUNCTION()
+
+		bool constexpr DRAW_LINES{ false };
+		bool constexpr DRAW_RECTS{ false };
+		bool constexpr DRAW_TRIANGLES{ true };
+
+		// Demo debug drawing tests
+// Drawing (rotated) lines
+		if constexpr (DRAW_LINES)
+		{
+			DEBUG_RENDERER.DrawLine({ 0, 0,0 }, { 100, 10, 10 }, { 0, 0, 0 });
+			DEBUG_RENDERER.DrawLine({ 0, 0,0 }, { 100, 10, 10 }, { 90, 0, 0 }, { 0, 1, 0 });
+			DEBUG_RENDERER.DrawLine({ 0, 0,0 }, { 100, 10, 10 }, { 180, 0, 0 }, { 0, 1, 0 });
+			DEBUG_RENDERER.DrawLine({ 0, 0,0 }, { 100, 10, 10 }, { 0, 90, 0 }, { 0, 0, 1 });
+			DEBUG_RENDERER.DrawLine({ 0, 0,0 }, { 100, 10, 10 }, { 0, 180, 0 }, { 0, 0, 1 });
+			DEBUG_RENDERER.DrawLine({ 0, 0,0 }, { 100, 10, 10 }, { 0, 0, 90 }, { 0, 1, 1 });
+			DEBUG_RENDERER.DrawLine({ 0, 0,0 }, { 100, 10, 10 }, { 0, 0, 180 }, { 0, 1, 1 });
+
+			static float constexpr ROT_SPEED{ 10.f };
+			static float lineRot{};
+			DEBUG_RENDERER.DrawLine({ 0, 0,0 }, { 100, 0, 0 }, { lineRot, lineRot, lineRot }, { 1, 1, 1 });
+
+			DEBUG_RENDERER.DrawLine({ 0, 0,0 }, { 100, 0, 0 }, { 0, lineRot, 0 }, { 1, 1, 0 });
+			DEBUG_RENDERER.DrawLine({ 0, 0,0 }, { 100, 0, 0 }, { 0, 0, lineRot }, { 1, 1, 0 });
+
+			lineRot += ROT_SPEED * TIME.ElapsedSec();
+		}
+
+		if constexpr (DRAW_RECTS)
+		{
+			static float constexpr CUBE_ROT_SPEED{ 10.f };
+			static float cubeRot{};
+
+			DEBUG_RENDERER.DrawRect({ 0, 0, 0 }, { 20, 30 }, { 0, 0, cubeRot }, { 1, 0, 0 });
+			DEBUG_RENDERER.DrawRect({ 0, 0, 0 }, { 20, 30 }, { 0, 0, 0 }, { 1, 1, 1 });
+			DEBUG_RENDERER.DrawCube({ 20, 20, 20 }, { 69, 20, 20 }, { 0, 0, 0 }, { 1, 1, 1 });
+			DEBUG_RENDERER.DrawCube({ 20, 20, 20 }, { 69, 20, 20 }, { 0, cubeRot, 0 });
+
+			cubeRot += CUBE_ROT_SPEED * TIME.ElapsedSec();
+		}
+
+		if constexpr (DRAW_TRIANGLES)
+		{
+			static float constexpr TRIANGLE_ROT_SPEED{ 10.f };
+			static float triRot{};
+
+			DEBUG_RENDERER.DrawTriangle({ 0,0,0 }, { 10, 10, 10 }, { 20, 10, 16 });
+			DEBUG_RENDERER.DrawTriangle({0,0,0}, {10, 10, 10}, {20, 10, 16}, {0, triRot, triRot }, {1, 1, 1});
+
+			triRot += TRIANGLE_ROT_SPEED * TIME.ElapsedSec();
+		}
+
+
+		//DEBUG_RENDERER.DrawSphere({}, 20.f, { 1, 1, 0 });
+		//DEBUG_RENDERER.DrawSphereComplex({ 20,20,20 }, 20.f, { 1, 1, 1 }, 24, 10);
+
+		//DEBUG_RENDERER.DrawEllipse({}, 20, 50, { 1, 0, 0 });
+
+		//DEBUG_RENDERER.DrawEllipsoid({}, 10, 20, 30.f, { 0, 1, 0 });
+		//DEBUG_RENDERER.DrawEllipsoidComplex({}, 10, 20, 30.f, { 0, 0, 1 }, 24,6);
+
+		//DEBUG_RENDERER.DrawArrow({}, { 2, 3, 3});
+		//DEBUG_RENDERER.DrawCylinder({ -10, 0, -10 }, 10, 100);
+
+		//DEBUG_RENDERER.DrawPolygon({ {0, 0, 0}, { 0, 19, 20 }, {32, 10, -10}, {10, 20, 5}, {-2, -2, -2 } });
 	}
 }

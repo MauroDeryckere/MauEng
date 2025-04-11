@@ -77,7 +77,7 @@ namespace MauRen
 		};
 
 
-		std::vector<std::pair<uint32_t, uint32_t>> lines 
+		std::vector<std::pair<uint32_t, uint32_t>> const lines 
 		{
 			// Bottom face edges
 			{ 0, 1 }, { 1, 2 }, { 2, 3 }, { 3, 0 },
@@ -92,14 +92,22 @@ namespace MauRen
 		AddDebugLines(localPoints, lines, rot.rotation, colour, center);
 	}
 
-	void InternalDebugRenderer::DrawTriangle(glm::vec3 const& p0, glm::vec3 const& p1, glm::vec3 const& p2, glm::vec3 const& colour) noexcept
+	void InternalDebugRenderer::DrawTriangle(glm::vec3 const& p0, glm::vec3 const& p1, glm::vec3 const& p2, MauCor::Rotator const& rot, glm::vec3 const& colour) noexcept
 	{
-		if (std::size(m_ActivePoints) + 3 * 2 < MAX_LINES)
+		glm::vec3 const center{ (p0 + p1 + p2) / 3.0f };
+		std::vector<glm::vec3> const localPoints
 		{
-			//DrawLine(p0, p1, colour);
-			//DrawLine(p1, p2, colour);
-			//DrawLine(p2, p1, colour);
-		}
+			glm::vec3 { p0 - center },
+			glm::vec3 { p1 - center },
+			glm::vec3 { p2 - center }
+		};
+
+		std::vector<std::pair<uint32_t, uint32_t>> const lines
+		{
+			{0, 1}, {1, 2}, {2, 0}
+		};
+
+		AddDebugLines(localPoints, lines, rot.rotation, colour, center);
 	}
 
 	void InternalDebugRenderer::DrawArrow(glm::vec3 const& start, glm::vec3 const& end, glm::vec3 const& colour, float arrowHeadLength) noexcept

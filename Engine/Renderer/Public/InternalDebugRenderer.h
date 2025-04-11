@@ -20,7 +20,8 @@ namespace MauRen
 		void DrawRect(glm::vec3 const& center, glm::vec2 const& size, MauCor::Rotator const& rot = {}, glm::vec3 const& colour = { 1, 0, 0 }) noexcept override;
 		void DrawCube(glm::vec3 const& center, glm::vec3 const& size, MauCor::Rotator const& rot = {}, glm::vec3 const& colour = { 1, 0, 0 }) noexcept override;
 
-		void DrawTriangle(glm::vec3 const& p0, glm::vec3 const& p1, glm::vec3 const& p2, glm::vec3 const& colour = { 1, 0, 0 }) noexcept override;
+		void DrawTriangle(glm::vec3 const& p0, glm::vec3 const& p1, glm::vec3 const& p2, MauCor::Rotator const& rot = {}, glm::vec3 const& colour = { 1, 0, 0 }) noexcept override;
+
 
 		void DrawArrow(glm::vec3 const& start, glm::vec3 const& end, glm::vec3 const& colour = { 1, 0, 0 }, float arrowHeadLength = .5f) noexcept override;
 
