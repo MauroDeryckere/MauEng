@@ -14,11 +14,12 @@ namespace MauCor
 
 	void OptickProfiler::WriteProfile(ProfileResult const& result, bool isFunction)
 	{
+		ME_CHECK(false);
 	}
 
 	void OptickProfiler::WriteProfile(std::string const& name)
 	{
-
+		ME_CHECK(false);
 	}
 
 	void OptickProfiler::EndSession()

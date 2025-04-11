@@ -14,7 +14,7 @@ namespace MauCor
 			fileName += std::to_string(numExecutedProfiles);
 
 			ME_LOG_INFO(MauCor::LogCategory::Core, "Beginning profile session {}", fileName);
-			BeginSession(path, path);
+			BeginSession(fileName, fileName);
 			isProfiling = true;
 		}
 	}

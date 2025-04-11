@@ -15,13 +15,13 @@ namespace MauCor
 		auto fullFilepath{ std::move(filepath) };
 		fullFilepath += ".json";
 
-		FixFilePath(filepath.c_str());
+		FixFilePath(fullFilepath.c_str());
 
-		m_OutputStream.open(filepath);
+		m_OutputStream.open(fullFilepath);
 
 		if (!m_OutputStream.is_open())
 		{
-			ME_LOG_ERROR(LogCategory::Core, "Failed to open the file: {}", filepath);
+			ME_LOG_ERROR(LogCategory::Core, "Failed to open the file: {}", fullFilepath);
 			return;
 		}
 

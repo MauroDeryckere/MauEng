@@ -61,22 +61,16 @@ add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/Libs/glm")
 
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/Libs/fmt")
 
+ add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/Libs/Optick")
 
 target_link_libraries(MauEngCore
     PUBLIC
         SDL3::SDL3
         glm
         fmt::fmt # While it is not necessary to link against this publicly, users could prefer using this so might as well keep it public 
+        OptickCore
     PRIVATE
 )
-
-if(MAUENG_USE_OPTICK)
-     add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/Libs/Optick")
-     target_link_libraries(MauEngCore
-        PUBLIC
-        OptickCore
-     )
-endif()
 
 target_include_directories(MauEngCore
     PUBLIC
