@@ -26,6 +26,9 @@ namespace MauCor
 
 		virtual void EndSession() = 0;
 
+		void Start(char const* path);
+		void Update();
+
 		static void FixFilePath(char const* filepath);
 
 		Profiler(Profiler const&) = delete;
@@ -36,6 +39,12 @@ namespace MauCor
 		Profiler() = default;
 
 	private:
+		uint32_t profiledFrames{ 0 };
+		bool isProfiling{ false };
+
+		uint32_t numExecutedProfiles{ 0 };
+
+		std::string fileName;
 	};
 }
 

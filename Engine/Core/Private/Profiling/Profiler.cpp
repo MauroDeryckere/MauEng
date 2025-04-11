@@ -2,6 +2,41 @@
 
 namespace MauCor
 {
+	void Profiler::Start(char const* path)
+	{
+		if (isProfiling)
+		{
+			ME_LOG_INFO(MauCor::LogCategory::Core, "Already profiling {}", fileName);
+		}
+		else
+		{
+			fileName = path;
+			fileName += std::to_string(numExecutedProfiles);
+
+			ME_LOG_INFO(MauCor::LogCategory::Core, "Beginning profile session {}", fileName);
+			BeginSession(path, path);
+			isProfiling = true;
+		}
+	}
+
+	void Profiler::Update()
+	{
+		if (isProfiling)
+		{
+			++profiledFrames;
+		}
+		if (profiledFrames == MauEng::NUM_FRAMES_TO_PROFILE)
+		{
+			++numExecutedProfiles;
+			profiledFrames = 0;
+			isProfiling = false;
+
+			EndSession();
+
+			ME_LOG_INFO(MauCor::LogCategory::Core, "Ending profile session {}", fileName);
+		}
+	}
+
 	void Profiler::FixFilePath(char const* filepath)
 	{
 		std::filesystem::path const dir{ std::filesystem::path(filepath).parent_path() };

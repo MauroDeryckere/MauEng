@@ -25,18 +25,22 @@ namespace MauEng
 #define	USE_OPTICK_LIBRARY 0
 
 #ifdef MAUENG_LOG_TO_FILE
+	#undef ENABLE_FILE_LOGGING
 	#define ENABLE_FILE_LOGGING 1
 #endif
 
 #ifdef MAUENG_ENABLE_DEBUG_RENDERING
+	#undef ENABLE_DEBUG_RENDERING
 	#define ENABLE_DEBUG_RENDERING 1
 #endif
 
 #ifdef MAUENG_ENABLE_ASSERTS
+	#undef ENABLE_ASSERTS
 	#define ENABLE_ASSERTS 1
 #endif
 
 #ifdef MAUENG_ENABLE_PROFILER
+	#undef ENABLE_PROFILER
 	#define ENABLE_PROFILER 1
 #endif
 
@@ -45,6 +49,7 @@ namespace MauEng
 
 	// Toggle using ME profiler (w/ google://tracing) or optick library
 	#ifdef MAUENG_USE_OPTICK
+		#undef USE_OPTICK_LIBRARY
 		#define USE_OPTICK_LIBRARY 1
 	#endif
 

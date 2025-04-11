@@ -80,15 +80,6 @@ namespace MauEng
 		int frameCount{ 0 };
 		float elapsedTime{ 0.f };
 
-	#ifdef ENABLE_PROFILER
-		uint32_t profiledFrames{ 0 };
-		bool isProfiling{ false };
-
-		uint32_t numExecutedProfiles{ 0 };
-
-		std::string fileName;
-	#endif
-
 		bool IsMinimised = false;
 
 		// Get all the systems we wish to use during the game loop
@@ -100,26 +91,15 @@ namespace MauEng
 
 		while (doContinue)
 		{
-		ME_PROFILE_FRAME()
-			#ifdef ENABLE_PROFILER
+			ME_PROFILE_FRAME()
+
+			if constexpr(ENABLE_PROFILER)
+			{
 				if (inputManager.IsActionExecuted("PROFILE"))
 				{
-					if (isProfiling)
-					{
-						ME_LOG_INFO(MauCor::LogCategory::Core, "Already profiling {}", fileName);
-					}
-					else
-					{
-						fileName = "Profiling/Run/Run";
-						fileName += std::to_string(numExecutedProfiles);
-
-						ME_LOG_INFO(MauCor::LogCategory::Core, "Beginning profile session {}", fileName);
-						ME_PROFILE_BEGIN_SESSION("Run", fileName)
-						isProfiling = true;
-					}
+					PROFILER.Start("Profiling/Run/Run");
 				}
-			#endif
-
+			}
 
 			SDL_GetWindowFlags(m_Window->window) & (SDL_WINDOW_MINIMIZED | SDL_WINDOW_HIDDEN) ? IsMinimised = true : IsMinimised = false;
 
@@ -172,22 +152,7 @@ namespace MauEng
 				std::this_thread::sleep_for(time.SleepTime());
 			}
 
-
-		#ifdef ENABLE_PROFILER
-			if (isProfiling)
-			{
-				++profiledFrames;
-			}
-			if (profiledFrames == NUM_FRAMES_TO_PROFILE)
-			{
-				++numExecutedProfiles;
-				profiledFrames = 0;
-				isProfiling = false;
-
-				ME_PROFILE_END_SESSION()
-				ME_LOG_INFO(MauCor::LogCategory::Core, "Ending profile session");
-			}
-		#endif
+			PROFILER.Update();
 		}
 	}
 }

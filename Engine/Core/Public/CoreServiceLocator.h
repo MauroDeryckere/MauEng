@@ -5,7 +5,7 @@
 
 #include "Logger/Logger.h"
 #include "Profiling/Profiler.h"
-#include "Profiling/InstrumentorTimer.h";
+#include "Profiling/InstrumentorTimer.h"
 
 #if USE_OPTICK
 	#include <optick.h>
