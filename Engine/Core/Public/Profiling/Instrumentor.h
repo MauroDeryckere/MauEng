@@ -3,9 +3,14 @@
 #define MAUCOR_INSTRUMENTOR_H
 
 #include "CorePCH.h"
-#include "Config/EngineConfig.h"
 
 #include "Profiling/InstrumentorTimer.h"
+
+// must be included before optick.h to control macros
+#include "Config/EngineConfig.h"
+#if USE_OPTICK_LIBRARY
+	#include <Optick.h>
+#endif
 
 namespace MauCor
 {
@@ -58,16 +63,31 @@ namespace MauCor
 	#define CONCAT(x, y) x ## y
 	#define C(x, y) CONCAT(x, y)
 
-	// Name, filepath, reserve size - allows you to specifiy a reserve size for the buffer to prevent big resizes.
-	#define ME_PROFILE_BEGIN_SESSION(name, filepath, ...) MauCor::Instrumentor::GetInstance().BeginSession(name, filepath, __VA_ARGS__)
-	#define ME_PROFILE_END_SESSION() MauCor::Instrumentor::GetInstance().EndSession()
-	#define ME_PROFILE_SCOPE(name) MauCor::InstrumentorTimer C(timer, __LINE__) { name, false }
-	#define ME_PROFILE_FUNCTION() MauCor::InstrumentorTimer C(timer, __LINE__) { __FUNCTION__, true }
+	#if USE_OPTICK_LIBRARY
+		#define ME_PROFILE_BEGIN_SESSION(name, filepath, ...)
+		#define ME_PROFILE_END_SESSION()
+		#define ME_PROFILE_SCOPE(name)  OPTICK_EVENT(name)
+		#define ME_PROFILE_FUNCTION() OPTICK_EVENT()
+
+		#define ME_PROFILE_THREAD(name) OPTICK_THREAD(name)
+		#define ME_PROFILE_FRAME(name) OPTICK_FRAME("MainThread")
+
+	#else
+		// Name, filepath, reserve size - allows you to specifiy a reserve size for the buffer to prevent big resizes.
+		#define ME_PROFILE_BEGIN_SESSION(name, filepath, ...) MauCor::Instrumentor::GetInstance().BeginSession(name, filepath, __VA_ARGS__)
+		#define ME_PROFILE_END_SESSION() MauCor::Instrumentor::GetInstance().EndSession()
+		#define ME_PROFILE_SCOPE(name) MauCor::InstrumentorTimer C(timer, __LINE__) { name, false }
+		#define ME_PROFILE_FUNCTION() MauCor::InstrumentorTimer C(timer, __LINE__) { __FUNCTION__, true }
+
+		#define ME_PROFILE_THREAD(name)
+	#endif
 #else
 	#define ME_PROFILE_BEGIN_SESSION(name, filepath, ...)
 	#define ME_PROFILE_END_SESSION()
 	#define ME_PROFILE_FUNCTION()
 	#define ME_PROFILE_SCOPE(name)
+
+	#define ME_PROFILE_THREAD(name)
 #endif
 }
 

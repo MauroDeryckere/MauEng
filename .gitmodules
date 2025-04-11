@@ -13,3 +13,6 @@
 [submodule "Engine/Core/Libs/fmt"]
 	path = Engine/Core/Libs/fmt
 	url = https://github.com/fmtlib/fmt.git
+[submodule "Engine/Core/Libs/Optick"]
+	path = Engine/Core/Libs/Optick
+	url = https://github.com/bombomby/optick.git

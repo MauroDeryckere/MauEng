@@ -97,14 +97,18 @@ namespace MauEng
 
 		while (doContinue)
 		{
-
 		#ifdef ENABLE_PROFILER
+			ME_PROFILE_FRAME();
+
 			if (inputManager.IsActionExecuted("PROFILE"))
 			{
 				std::string fileName{"Profiling/Run"};
 				fileName += std::to_string(numExecutedProfiles);
 				fileName += ".json";
 
+				#if USE_OPTICK
+					OPTICK_START_CAPTURE()
+				#endif
 				ME_PROFILE_BEGIN_SESSION("Run", fileName);
 				isProfiling = true;
 			}
@@ -171,6 +175,11 @@ namespace MauEng
 				numExecutedProfiles++;
 				profiledFrames = 0;
 				isProfiling = false;
+
+				#if USE_OPTICK
+					OPTICK_STOP_CAPTURE()
+					OPTICK_SAVE_CAPTURE("Profiling/")
+				#endif
 
 				ME_PROFILE_END_SESSION();
 			}

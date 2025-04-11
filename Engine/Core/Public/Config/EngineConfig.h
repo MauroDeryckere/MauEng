@@ -35,6 +35,18 @@ namespace MauEng
 
 #ifndef SHIPPING
 	#define ENABLE_PROFILER
+
+	// Toggle using ME profiler (w/ google://tracing) or optick library
+	#define USE_OPTICK_LIBRARY 1
+
+	#if USE_OPTICK_LIBRARY
+		#define USE_OPTICK 1
+	#else
+		#define USE_OPTICK 0
+	#endif
+#else
+
+
 #endif
 
 #ifdef ENABLE_PROFILER
