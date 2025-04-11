@@ -6,10 +6,11 @@
 
 namespace MauCor
 {
-	void OptickProfiler::BeginSessionInternal(std::string const& name, std::string& filepath, size_t reserveSize)
+	void OptickProfiler::BeginSessionInternal(std::string const& name, size_t reserveSize)
 	{
-		filepath += ".opt";
-		m_Path = filepath;
+		fileName += ".opt";
+
+		OPTICK_START_CAPTURE()
 	}
 
 	void OptickProfiler::WriteProfile(ProfileResult const& result, bool isFunction)
@@ -24,9 +25,9 @@ namespace MauCor
 
 	void OptickProfiler::EndSession()
 	{
-		Profiler::FixFilePath(m_Path.c_str());
+		Profiler::FixFilePath(fileName.c_str());
 
 		OPTICK_STOP_CAPTURE()
-		OPTICK_SAVE_CAPTURE(m_Path.c_str())
+		OPTICK_SAVE_CAPTURE(fileName.c_str())
 	}
 }

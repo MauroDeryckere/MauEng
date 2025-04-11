@@ -8,18 +8,18 @@ namespace MauCor
 		EndSession();
 	}
 
-	void GoogleProfiler::BeginSessionInternal(std::string const& name, std::string& filepath, size_t reserveSize)
+	void GoogleProfiler::BeginSessionInternal(std::string const& name, size_t reserveSize)
 	{
 		EndSession();
-		filepath += ".json";
+		fileName += ".json";
 
-		FixFilePath(filepath.c_str());
+		FixFilePath(fileName.c_str());
 
-		m_OutputStream.open(filepath);
+		m_OutputStream.open(fileName);
 
 		if (!m_OutputStream.is_open())
 		{
-			ME_LOG_ERROR(LogCategory::Core, "Failed to open the file: {}", filepath);
+			ME_LOG_ERROR(LogCategory::Core, "Failed to open the file: {}", fileName);
 			return;
 		}
 

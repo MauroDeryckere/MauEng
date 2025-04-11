@@ -11,7 +11,7 @@ namespace MauCor
 		OptickProfiler() = default;
 		virtual ~OptickProfiler() override = default;
 
-		virtual void BeginSessionInternal(std::string const& name, std::string& filepath, size_t reserveSize = 100'000) override;
+		virtual void BeginSessionInternal(std::string const& name, size_t reserveSize = 100'000) override;
 
 		virtual void WriteProfile(ProfileResult const& result, bool isFunction) override;
 		virtual void WriteProfile(std::string const& name) override;
@@ -23,7 +23,6 @@ namespace MauCor
 		OptickProfiler& operator=(OptickProfiler const&) = delete;
 		OptickProfiler& operator=(OptickProfiler&&) = delete;
 	private:
-		std::string m_Path{ };
 	};
 }
 

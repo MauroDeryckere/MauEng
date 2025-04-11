@@ -39,13 +39,14 @@ namespace MauCor
 		Profiler() = default;
 
 	private:
-		virtual void BeginSessionInternal(std::string const& name, std::string& filepath, size_t reserveSize = 100'000) = 0;
+		virtual void BeginSessionInternal(std::string const& name, size_t reserveSize = 100'000) = 0;
 
 		uint32_t profiledFrames{ 0 };
 		bool isProfiling{ false };
 
 		uint32_t numExecutedProfiles{ 0 };
 
+	protected:
 		std::string fileName;
 	};
 }
