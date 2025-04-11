@@ -1,5 +1,7 @@
 # Core CMakeLists.txt
 
+include("${CMAKE_CURRENT_SOURCE_DIR}/Public/Config/Config.cmake")
+
 set(CORE_PUBLIC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Public")
 set(CORE_PRIVATE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Private")
 
@@ -18,6 +20,17 @@ add_library(MauEngCore STATIC
     ${CORE_PUBLIC_SOURCES}
     ${CORE_PRIVATE_SOURCES}
 )
+
+# Pass configuration options to the compiler
+target_compile_definitions(MauEngCore PUBLIC
+    $<$<BOOL:${MAUENG_ENABLE_DEBUG_RENDERING}>:MAUENG_ENABLE_DEBUG_RENDERING>
+    $<$<BOOL:${MAUENG_LOG_TO_FILE}>:MAUENG_LOG_TO_FILE>
+    $<$<BOOL:${MAUENG_ENABLE_ASSERTS}>:MAUENG_ENABLE_ASSERTS>
+
+    $<$<BOOL:${MAUENG_ENABLE_PROFILER}>:MAUENG_ENABLE_PROFILER>
+    $<$<BOOL:${MAUENG_USE_OPTICK}>:MAUENG_USE_OPTICK>
+)
+
 
 # Tests & similar
 set(DSDL_TESTS OFF)
@@ -46,18 +59,24 @@ set(SDL3_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/SDL/include/SDL3")
 
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/Libs/glm")
 
-add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/Libs/Optick")
-
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/Libs/fmt")
+
 
 target_link_libraries(MauEngCore
     PUBLIC
         SDL3::SDL3
         glm
         fmt::fmt # While it is not necessary to link against this publicly, users could prefer using this so might as well keep it public 
-        OptickCore
     PRIVATE
 )
+
+if(MAUENG_USE_OPTICK)
+     add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/Libs/Optick")
+     target_link_libraries(MauEngCore
+        PUBLIC
+        OptickCore
+     )
+endif()
 
 target_include_directories(MauEngCore
     PUBLIC

@@ -32,8 +32,6 @@ namespace MauRen
 
 	uint32_t constexpr MAX_TEXTURES{ 10 };
 	bool constexpr DEBUG_OUT_MAT{ true };
-
-	bool constexpr ENABLE_DEBUG_RENDERING{ false };
 }
 
 #endif // MAUREN_VULKANCONFIG_H

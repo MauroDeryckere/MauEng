@@ -20,6 +20,4 @@
 #include "CoreServiceLocator.h"
 #include "Asserts/Asserts.h"
 
-#include "Profiling/Instrumentor.h"
-
 #endif

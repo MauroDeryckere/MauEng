@@ -1,3 +1,5 @@
+#include "CorePCH.h"
+
 #include "Logger/LoggerFactory.h"
 
 #include "ConsoleLogger.h"

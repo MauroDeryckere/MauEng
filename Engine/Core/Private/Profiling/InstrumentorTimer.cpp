@@ -1,8 +1,8 @@
 #include "Profiling/InstrumentorTimer.h"
 
-#include <iostream>
+#include "CoreServiceLocator.h"
 
-#include "Profiling/Instrumentor.h"
+#include <iostream>
 
 namespace MauCor
 {
@@ -28,11 +28,11 @@ namespace MauCor
 	{
 		auto const endPoint{ std::chrono::high_resolution_clock::now() };
 		auto const start{ std::chrono::time_point_cast<std::chrono::microseconds>(m_StartPoint).time_since_epoch().count() };
-		auto end{ std::chrono::time_point_cast<std::chrono::microseconds>(endPoint).time_since_epoch().count() };
+		auto const end{ std::chrono::time_point_cast<std::chrono::microseconds>(endPoint).time_since_epoch().count() };
 
 		m_IsStopped = true;
 
-		Instrumentor::GetInstance().WriteProfile({ m_Name, start, end, std::this_thread::get_id() }, m_IsFunction);
+		PROFILER.WriteProfile({ m_Name, start, end, std::this_thread::get_id() }, m_IsFunction);
 		//--m_NestCount;
 	}
 }

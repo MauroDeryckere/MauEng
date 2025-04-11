@@ -24,13 +24,13 @@ namespace MauCor
 		#define DEBUG_BREAK() std::abort()
 	#endif
 
-	#ifdef ENABLE_ASSERTS
+	#if ENABLE_ASSERTS
 		#define VERIFY_BREAK() DEBUG_BREAK()
 	#else
 		#define VERIFY_BREAK()
 	#endif
 
-	#ifdef ENABLE_ASSERTS
+	#if ENABLE_ASSERTS
 		// Internal assert
 		#define ME_ASSERT_INTERNAL(category, expr, ...) \
 		        do { \

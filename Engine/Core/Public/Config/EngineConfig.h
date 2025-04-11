@@ -17,40 +17,42 @@ namespace MauEng
 	auto constexpr LOG_COLOR_FATAL{ "\033[1;31m" };
 
 
-//#define SHIPPING
+#define ENABLE_FILE_LOGGING 0
+#define ENABLE_DEBUG_RENDERING 0
+#define ENABLE_ASSERTS 0
 
-#ifndef SHIPPING
-	bool constexpr ENABLE_DEBUG_RENDERING{ true };
-	bool constexpr LOG_TO_FILE{ false };
-#else
-	bool constexpr ENABLE_DEBUG_RENDERING{ false };
-	bool constexpr LOG_TO_FILE{ true };
+#define ENABLE_PROFILER 0
+#define	USE_OPTICK_LIBRARY 0
+
+#ifdef MAUENG_LOG_TO_FILE
+	#define ENABLE_FILE_LOGGING 1
 #endif
 
-  uint32_t constexpr MAX_FILE_SIZE_BEFORE_ROTATE{ 5'000 };
-
-#if _DEBUG
-	#define ENABLE_ASSERTS
+#ifdef MAUENG_ENABLE_DEBUG_RENDERING
+	#define ENABLE_DEBUG_RENDERING 1
 #endif
 
-#ifndef SHIPPING
-	#define ENABLE_PROFILER
+#ifdef MAUENG_ENABLE_ASSERTS
+	#define ENABLE_ASSERTS 1
+#endif
+
+#ifdef MAUENG_ENABLE_PROFILER
+	#define ENABLE_PROFILER 1
+#endif
+
+#if ENABLE_PROFILER
+	uint32_t constexpr NUM_FRAMES_TO_PROFILE{ 2 };
 
 	// Toggle using ME profiler (w/ google://tracing) or optick library
-	#define USE_OPTICK_LIBRARY 1
+	#ifdef MAUENG_USE_OPTICK
+		#define USE_OPTICK_LIBRARY 1
+	#endif
 
 	#if USE_OPTICK_LIBRARY
 		#define USE_OPTICK 1
 	#else
 		#define USE_OPTICK 0
 	#endif
-#else
-
-
-#endif
-
-#ifdef ENABLE_PROFILER
-  uint32_t constexpr NUM_FRAMES_TO_PROFILE{ 2 };
 #endif
 
 	bool constexpr LIMIT_FPS{ false };

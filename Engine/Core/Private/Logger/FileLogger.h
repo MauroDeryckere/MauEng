@@ -23,6 +23,8 @@ namespace MauCor
 		std::filesystem::path m_LogFilePath{ };
 		std::ofstream m_LogFile{ };
 
+		const uint32_t MAX_FILE_SIZE_BEFORE_ROTATE{ 5'000 };
+
 		void LogInternal(LogPriority priority, LogCategory category, std::string const& message) override;
 
 		void OpenLogFile();

@@ -27,7 +27,7 @@ namespace MauCor
 
 			m_LogFile << fmt::format("[{}] [{}] [{}] {}\n", timestamp, PriorityToString(priority), CategoryToString(category), message);
 
-			if (m_LogFile.tellp() >= MauEng::MAX_FILE_SIZE_BEFORE_ROTATE)
+			if (m_LogFile.tellp() >= MAX_FILE_SIZE_BEFORE_ROTATE)
 			{
 				RotateFile();
 			}

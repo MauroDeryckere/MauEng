@@ -26,7 +26,7 @@ namespace MauEng
 	{
 		// Initialize all core dependences & singletons
 
-		if constexpr(LOG_TO_FILE)
+		if constexpr (ENABLE_FILE_LOGGING)
 		{
 			MauCor::CoreServiceLocator::RegisterLogger(MauCor::CreateFileLogger("Log.txt"));
 			MauCor::CoreServiceLocator::GetLogger().SetPriorityLevel(MauCor::LogPriority::Warn);
@@ -50,9 +50,10 @@ namespace MauEng
 
 		auto& inputManager{ InputManager::GetInstance() };
 
-		#ifdef ENABLE_PROFILER
-				inputManager.BindAction("PROFILE", KeyInfo{ SDLK_F1, KeyInfo::ActionType::Down });
-		#endif
+		if constexpr(ENABLE_PROFILER)
+		{
+			inputManager.BindAction("PROFILE", KeyInfo{ SDLK_F1, KeyInfo::ActionType::Down });
+		}
 	}
 
 	Engine::~Engine()
@@ -63,10 +64,10 @@ namespace MauEng
 
 	void Engine::Run(std::function<void()> const& load)
 	{
-		ME_PROFILE_BEGIN_SESSION("Startup", "Profiling/Startup.json");
+		ME_PROFILE_BEGIN_SESSION("Startup", "Profiling/Startup/Startup")
 		// First load everything the user wants us to load using their "load function"
 		load();
-		ME_PROFILE_END_SESSION();
+		ME_PROFILE_END_SESSION()
 
 		GameLoop();
 	}
@@ -84,6 +85,8 @@ namespace MauEng
 		bool isProfiling{ false };
 
 		uint32_t numExecutedProfiles{ 0 };
+
+		std::string fileName;
 	#endif
 
 		bool IsMinimised = false;
@@ -97,22 +100,26 @@ namespace MauEng
 
 		while (doContinue)
 		{
-		#ifdef ENABLE_PROFILER
-			ME_PROFILE_FRAME();
+		ME_PROFILE_FRAME()
+			#ifdef ENABLE_PROFILER
+				if (inputManager.IsActionExecuted("PROFILE"))
+				{
+					if (isProfiling)
+					{
+						ME_LOG_INFO(MauCor::LogCategory::Core, "Already profiling {}", fileName);
+					}
+					else
+					{
+						fileName = "Profiling/Run/Run";
+						fileName += std::to_string(numExecutedProfiles);
 
-			if (inputManager.IsActionExecuted("PROFILE"))
-			{
-				std::string fileName{"Profiling/Run"};
-				fileName += std::to_string(numExecutedProfiles);
-				fileName += ".json";
+						ME_LOG_INFO(MauCor::LogCategory::Core, "Beginning profile session {}", fileName);
+						ME_PROFILE_BEGIN_SESSION("Run", fileName)
+						isProfiling = true;
+					}
+				}
+			#endif
 
-				#if USE_OPTICK
-					OPTICK_START_CAPTURE()
-				#endif
-				ME_PROFILE_BEGIN_SESSION("Run", fileName);
-				isProfiling = true;
-			}
-		#endif
 
 			SDL_GetWindowFlags(m_Window->window) & (SDL_WINDOW_MINIMIZED | SDL_WINDOW_HIDDEN) ? IsMinimised = true : IsMinimised = false;
 
@@ -161,27 +168,24 @@ namespace MauEng
 
 			if constexpr (LIMIT_FPS)
 			{
-				ME_PROFILE_SCOPE("sleep");
+				ME_PROFILE_SCOPE("Main Thread Sleep")
 				std::this_thread::sleep_for(time.SleepTime());
 			}
+
 
 		#ifdef ENABLE_PROFILER
 			if (isProfiling)
 			{
-				profiledFrames++;
+				++profiledFrames;
 			}
 			if (profiledFrames == NUM_FRAMES_TO_PROFILE)
 			{
-				numExecutedProfiles++;
+				++numExecutedProfiles;
 				profiledFrames = 0;
 				isProfiling = false;
 
-				#if USE_OPTICK
-					OPTICK_STOP_CAPTURE()
-					OPTICK_SAVE_CAPTURE("Profiling/")
-				#endif
-
-				ME_PROFILE_END_SESSION();
+				ME_PROFILE_END_SESSION()
+				ME_LOG_INFO(MauCor::LogCategory::Core, "Ending profile session");
 			}
 		#endif
 		}
