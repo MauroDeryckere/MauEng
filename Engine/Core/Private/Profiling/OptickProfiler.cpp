@@ -6,10 +6,10 @@
 
 namespace MauCor
 {
-	void OptickProfiler::BeginSession(std::string const& name, std::string const& filepath, size_t reserveSize)
+	void OptickProfiler::BeginSession(std::string const& name, std::string& filepath, size_t reserveSize)
 	{
-		m_Path = std::move(filepath);
-		m_Path += ".opt";
+		filepath += ".opt";
+		m_Path = filepath;
 	}
 
 	void OptickProfiler::WriteProfile(ProfileResult const& result, bool isFunction)

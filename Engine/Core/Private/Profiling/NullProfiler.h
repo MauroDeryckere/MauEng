@@ -11,7 +11,7 @@ namespace MauCor
 		NullProfiler() = default;
 		virtual ~NullProfiler() override = default;
 
-		virtual void BeginSession(std::string const& name, std::string const& filepath, size_t reserveSize = 100'000) override {}
+		virtual void BeginSession(std::string const& name, std::string& filepath, size_t reserveSize = 100'000) override {}
 
 		virtual void WriteProfile(ProfileResult const& result, bool isFunction) override {}
 		virtual void WriteProfile(std::string const& name) override {}

@@ -4,7 +4,7 @@ option(MAUENG_LOG_TO_FILE "Log to file" OFF)
 option(MAUENG_ENABLE_ASSERTS "Enable asserts" ON)
 
 option(MAUENG_ENABLE_PROFILER "Enable profiling" ON)
-option(MAUENG_USE_OPTICK "Use Optick instead of custom profiler" OFF)
+option(MAUENG_USE_OPTICK "Use Optick instead of custom profiler" ON)
 
 # set(MAUENG_ENABLE_DEBUG_RENDERING ${MAUENG_ENABLE_DEBUG_RENDERING} CACHE BOOL "Enable debug rendering")
 # set(MAUENG_LOG_TO_FILE ${MAUENG_LOG_TO_FILE} CACHE BOOL "Log to file")
