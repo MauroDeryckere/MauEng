@@ -1,3 +1,5 @@
+#include "EnginePCH.h"
+
 #include "Engine.h"
 
 #include <algorithm>
@@ -91,14 +93,14 @@ namespace MauEng
 
 		while (doContinue)
 		{
-			ME_PROFILE_FRAME()
-
 			if constexpr(ENABLE_PROFILER)
 			{
 				if (inputManager.IsActionExecuted("PROFILE"))
 				{
 					PROFILER.Start("Profiling/Run/Run");
 				}
+
+				ME_PROFILE_FRAME()
 			}
 
 			SDL_GetWindowFlags(m_Window->window) & (SDL_WINDOW_MINIMIZED | SDL_WINDOW_HIDDEN) ? IsMinimised = true : IsMinimised = false;

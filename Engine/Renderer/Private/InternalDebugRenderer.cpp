@@ -1,5 +1,7 @@
 #include "InternalDebugRenderer.h"
 
+#include "Math/Rotator.h"
+
 namespace MauRen
 {
 	InternalDebugRenderer::InternalDebugRenderer()
@@ -8,26 +10,30 @@ namespace MauRen
 		m_IndexBuffer.reserve(MAX_LINES / 2);
 	}
 
-	void InternalDebugRenderer::DrawLine(glm::vec3 const& start, glm::vec3 const& end, glm::vec3 const& colour) noexcept
+	void InternalDebugRenderer::DrawLine(glm::vec3 const& start, glm::vec3 const& end, MauCor::Rotator const& rot, glm::vec3 const& colour) noexcept
 	{
 		if (std::size(m_ActivePoints) + 2 * 2 < MAX_LINES)
 		{
 			m_IndexBuffer.emplace_back(static_cast<uint32_t>(m_ActivePoints.size()));
-			m_ActivePoints.emplace_back(start, colour);
+			m_ActivePoints.emplace_back(glm::rotate(rot.rotation, start), colour);
 			m_IndexBuffer.emplace_back(static_cast<uint32_t>(m_ActivePoints.size()));
-			m_ActivePoints.emplace_back(end, colour);
+			m_ActivePoints.emplace_back(glm::rotate(rot.rotation, end), colour);
+		}
+		else
+		{
+			ME_LOG_WARN(MauCor::LogCategory::Renderer, "Debug renderer active points has surpassed the set limit, edit the config or try drawing less points! ");
 		}
 	}
 
-	void InternalDebugRenderer::DrawRect(glm::vec3 const& p0, glm::vec3 const& p1, glm::vec3 const& p2, glm::vec3 const& p3, glm::vec3 const& colour) noexcept
+	void InternalDebugRenderer::DrawRect(glm::vec3 const& center, float width, float height, glm::vec3 const& axis, glm::vec3 const& colour) noexcept
 	{
-		if (std::size(m_ActivePoints) + 4 * 2 < MAX_LINES)
-		{
-			DrawLine(p0, p1, colour);
-			DrawLine(p1, p2, colour);
-			DrawLine(p2, p3, colour);
-			DrawLine(p3, p0, colour);
-		}
+		//if (std::size(m_ActivePoints) + 4 * 2 < MAX_LINES)
+		//{
+		//	DrawLine(p0, p1, colour);
+		//	DrawLine(p1, p2, colour);
+		//	DrawLine(p2, p3, colour);
+		//	DrawLine(p3, p0, colour);
+		//}
 	}
 
 	void InternalDebugRenderer::DrawCube(glm::vec3 const& center, float size, glm::vec3 const& colour) noexcept
@@ -56,32 +62,32 @@ namespace MauRen
 		glm::vec3 const p6{ center + glm::vec3{horHalfSize, verHalfSize, depthHalfSize} };
 		glm::vec3 const p7{ center + glm::vec3{-horHalfSize, verHalfSize, depthHalfSize} };
 
-		// Bottom face
-		DrawLine(p0, p1, colour);
-		DrawLine(p1, p2, colour);
-		DrawLine(p2, p3, colour);
-		DrawLine(p3, p0, colour);
+		//// Bottom face
+		//DrawLine(p0, p1, colour);
+		//DrawLine(p1, p2, colour);
+		//DrawLine(p2, p3, colour);
+		//DrawLine(p3, p0, colour);
 
-		// Top face
-		DrawLine(p4, p5, colour);
-		DrawLine(p5, p6, colour);
-		DrawLine(p6, p7, colour);
-		DrawLine(p7, p4, colour);
+		//// Top face
+		//DrawLine(p4, p5, colour);
+		//DrawLine(p5, p6, colour);
+		//DrawLine(p6, p7, colour);
+		//DrawLine(p7, p4, colour);
 
-		// Vertical edges
-		DrawLine(p0, p4, colour);
-		DrawLine(p1, p5, colour);
-		DrawLine(p2, p6, colour);
-		DrawLine(p3, p7, colour);
+		//// Vertical edges
+		//DrawLine(p0, p4, colour);
+		//DrawLine(p1, p5, colour);
+		//DrawLine(p2, p6, colour);
+		//DrawLine(p3, p7, colour);
 	}
 
 	void InternalDebugRenderer::DrawTriangle(glm::vec3 const& p0, glm::vec3 const& p1, glm::vec3 const& p2, glm::vec3 const& colour) noexcept
 	{
 		if (std::size(m_ActivePoints) + 3 * 2 < MAX_LINES)
 		{
-			DrawLine(p0, p1, colour);
-			DrawLine(p1, p2, colour);
-			DrawLine(p2, p1, colour);
+			//DrawLine(p0, p1, colour);
+			//DrawLine(p1, p2, colour);
+			//DrawLine(p2, p1, colour);
 		}
 	}
 
@@ -89,23 +95,23 @@ namespace MauRen
 	{
 		if (std::size(m_ActivePoints) + 3 * 2 < MAX_LINES)
 		{
-			DrawLine(start, end, colour);
+			//DrawLine(start, end, colour);
 
-			glm::vec3 const direction{ glm::normalize(end - start) };
-			float constexpr arrowheadAngle{ glm::pi<float>() / 6.0f };
+			//glm::vec3 const direction{ glm::normalize(end - start) };
+			//float constexpr arrowheadAngle{ glm::pi<float>() / 6.0f };
 
-			glm::vec3 const right{ glm::normalize(glm::cross(direction, glm::vec3{ 0.0f, 1.0f, 0.0f })) * arrowHeadLength };
+			//glm::vec3 const right{ glm::normalize(glm::cross(direction, glm::vec3{ 0.0f, 1.0f, 0.0f })) * arrowHeadLength };
 
-			glm::quat const rotationRight(glm::angleAxis(arrowheadAngle, right));
-			glm::quat const rotationLeft(glm::angleAxis(-arrowheadAngle, right));
+			//glm::quat const rotationRight(glm::angleAxis(arrowheadAngle, right));
+			//glm::quat const rotationLeft(glm::angleAxis(-arrowheadAngle, right));
 
-			// Apply the rotations to the direction vector
-			glm::vec3 const arrowhead1{ end - rotationRight * direction * arrowHeadLength };
-			glm::vec3 const arrowhead2{ end - rotationLeft * direction * arrowHeadLength };
+			//// Apply the rotations to the direction vector
+			//glm::vec3 const arrowhead1{ end - rotationRight * direction * arrowHeadLength };
+			//glm::vec3 const arrowhead2{ end - rotationLeft * direction * arrowHeadLength };
 
-			// Draw the two lines forming the arrowhead
-			DrawLine(end, arrowhead1, colour);
-			DrawLine(end, arrowhead2, colour);
+			//// Draw the two lines forming the arrowhead
+			//DrawLine(end, arrowhead1, colour);
+			//DrawLine(end, arrowhead2, colour);
 		}
 	}
 
@@ -119,10 +125,10 @@ namespace MauRen
 
 		for (size_t i{ 0 }; i < points.size(); ++i)
 		{
-			glm::vec3 const& p1 = points[i];
-			glm::vec3 const& p2 = points[(i + 1) % points.size()];
+			//glm::vec3 const& p1 = points[i];
+			//glm::vec3 const& p2 = points[(i + 1) % points.size()];
 
-			DrawLine(p1, p2, colour);
+			//DrawLine(p1, p2, colour);
 		}
 	}
 
@@ -145,7 +151,7 @@ namespace MauRen
 				glm::vec3 const p0{ center + radius * (glm::cos(angle0) * v1 + glm::sin(angle0) * v2) };
 				glm::vec3 const p1{ center + radius * (glm::cos(angle1) * v1 + glm::sin(angle1) * v2) };
 
-				DrawLine(p0, p1, colour);
+				//DrawLine(p0, p1, colour);
 			}
 		}
 
@@ -170,7 +176,7 @@ namespace MauRen
 				glm::vec3 const p0{ center + radiusX * glm::cos(angle0) * v1 + radiusY * glm::sin(angle0) * v2 };
 				glm::vec3 const p1{ center + radiusX * glm::cos(angle1) * v1 + radiusY * glm::sin(angle1) * v2 };
 
-				DrawLine(p0, p1, colour);
+				//DrawLine(p0, p1, colour);
 			}
 		}
 	}
@@ -196,8 +202,8 @@ namespace MauRen
 				glm::vec3 const bottomPoint1{ bottomCenter + glm::vec3{ radius * glm::cos(angle1), 0.0f, radius * glm::sin(angle1) } };
 				glm::vec3 const bottomPoint2{ bottomCenter + glm::vec3{ radius * glm::cos(angle2), 0.0f, radius * glm::sin(angle2) } };
 
-				DrawLine(topPoint1, bottomPoint1, colour);
-				DrawLine(topPoint2, bottomPoint2, colour);
+				//DrawLine(topPoint1, bottomPoint1, colour);
+				//DrawLine(topPoint2, bottomPoint2, colour);
 			}
 		}
 	}

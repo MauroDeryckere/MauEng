@@ -10,7 +10,7 @@ namespace MauGam
 {
 	GameScene::GameScene()
 	{
-		ME_PROFILE_FUNCTION();
+		ME_PROFILE_FUNCTION()
 
 		m_CameraManager.GetActiveCamera().SetPosition(glm::vec3{ 0.f, 2, 4 });
 		m_CameraManager.GetActiveCamera().SetFOV(60.f);
@@ -62,7 +62,7 @@ namespace MauGam
 
 	void GameScene::OnLoad()
 	{
-		ME_PROFILE_FUNCTION();
+		ME_PROFILE_FUNCTION()
 
 		Scene::OnLoad();
 		
@@ -71,19 +71,42 @@ namespace MauGam
 
 	void GameScene::Tick()
 	{
-		ME_PROFILE_FUNCTION();
+		ME_PROFILE_FUNCTION()
 
 		Scene::Tick();
+
+		bool constexpr DRAW_LINES{ true };
 
 		// Demo logging tests
 		//LOGGER.Log(MauCor::LogPriority::Error, MauCor::LogCategory::Game,"test {}", 1000);
 		//ME_LOG_ERROR(MauCor::LogCategory::Game, "TEST");
 
 		// Demo debug drawing tests
-		//DEBUG_RENDERER.DrawLine({0, 0,0 },  {0, 100, 100} );
+		// Drawing (rotated) lines
+		if constexpr(DRAW_LINES)
+		{
+			DEBUG_RENDERER.DrawLine({ 0, 0,0 }, { 100, 10, 10 }, { 0, 0, 0 });
+			DEBUG_RENDERER.DrawLine({ 0, 0,0 }, { 100, 10, 10 }, { 90, 0, 0 }, { 0, 1, 0 });
+			DEBUG_RENDERER.DrawLine({ 0, 0,0 }, { 100, 10, 10 }, { 180, 0, 0 }, { 0, 1, 0 });
+			DEBUG_RENDERER.DrawLine({ 0, 0,0 }, { 100, 10, 10 }, { 0, 90, 0 }, { 0, 0, 1 });
+			DEBUG_RENDERER.DrawLine({ 0, 0,0 }, { 100, 10, 10 }, { 0, 180, 0 }, { 0, 0, 1 });
+			DEBUG_RENDERER.DrawLine({ 0, 0,0 }, { 100, 10, 10 }, { 0, 0, 90 }, { 0, 1, 1 });
+			DEBUG_RENDERER.DrawLine({ 0, 0,0 }, { 100, 10, 10 }, { 0, 0, 180 }, { 0, 1, 1 });
+
+			static float constexpr ROT_SPEED{ 10.f };
+			static float lineRot{};
+			DEBUG_RENDERER.DrawLine({ 0, 0,0 }, { 100, 0, 0 }, { lineRot, lineRot, lineRot }, { 1, 1, 1 });
+
+			DEBUG_RENDERER.DrawLine({ 0, 0,0 }, { 100, 0, 0 }, { 0, lineRot, 0 }, { 1, 1, 0 });
+			DEBUG_RENDERER.DrawLine({ 0, 0,0 }, { 100, 0, 0 }, { 0, 0, lineRot }, { 1, 1, 0 });
+
+			lineRot += ROT_SPEED * TIME.ElapsedSec();
+		}
+		
+
 		//DEBUG_RENDERER.DrawLine({-10 , 10, -10}, {10, 10, 10}, { 0, 1, 0});
 
-		//DEBUG_RENDERER.DrawRect({ -10, 0, 0 }, { 10, 0, 0 }, { 10, 20, 5 }, { -10, 20, 5 }, {0, 0, 1});
+//		DEBUG_RENDERER.DrawRect({ -10, 0, 0 }, { 10, 0, 0 }, { 10, 20, 5 }, { -10, 20, 5 }, {0, 0, 1});
 
 		//DEBUG_RENDERER.DrawSphere({}, 20.f, { 1, 1, 0 });
 		//DEBUG_RENDERER.DrawSphereComplex({ 20,20,20 }, 20.f, { 1, 1, 1 }, 24, 10);

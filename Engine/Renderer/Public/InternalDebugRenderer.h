@@ -16,9 +16,9 @@ namespace MauRen
 		explicit InternalDebugRenderer();
 		~InternalDebugRenderer() override = default;
 
-		void DrawLine(glm::vec3 const& start, glm::vec3 const& end, glm::vec3 const& colour = { 1, 0, 0 }) noexcept override;
+		void DrawLine(glm::vec3 const& start, glm::vec3 const& end, MauCor::Rotator const& rot = {}, glm::vec3 const& colour = { 1, 0, 0 }) noexcept override;
 
-		void DrawRect(glm::vec3 const& p0, glm::vec3 const& p1, glm::vec3 const& p2, glm::vec3 const& p3, glm::vec3 const& colour = { 1, 0, 0 }) noexcept override;
+		void DrawRect(glm::vec3 const& center, float width, float height, glm::vec3 const& axis = { 1, 0, 0 }, glm::vec3 const& colour = { 1, 0, 0 }) noexcept override;
 		void DrawCube(glm::vec3 const& center, float size, glm::vec3 const& colour = { 1, 0, 0 }) noexcept override;
 		void DrawCube(glm::vec3 const& center, float width, float height, float depth, glm::vec3 const& colour = { 1, 0, 0 }) noexcept override;
 
