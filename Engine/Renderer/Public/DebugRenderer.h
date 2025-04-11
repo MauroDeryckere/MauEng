@@ -17,7 +17,7 @@ namespace MauRen
 
 		virtual void DrawTriangle(glm::vec3 const& p0, glm::vec3 const& p1, glm::vec3 const& p2, MauCor::Rotator const& rot = {}, glm::vec3 const& colour = { 1, 0, 0 }) noexcept = 0;
 
-		virtual void DrawArrow(glm::vec3 const& start, glm::vec3 const& end, glm::vec3 const& colour = { 1, 0, 0 }, float arrowHeadLength = .5f) noexcept = 0;
+		virtual void DrawArrow(glm::vec3 const& start, glm::vec3 const& end, MauCor::Rotator const& rot = {}, glm::vec3 const& colour = { 1, 0, 0 }, float arrowHeadLength = .5f) noexcept = 0;
 
 		virtual void DrawPolygon(std::vector<glm::vec3> const& points, glm::vec3 const& colour = { 1, 0, 0 }) noexcept = 0;
 
@@ -50,7 +50,7 @@ namespace MauRen
 
 		virtual void DrawTriangle(glm::vec3 const& p0, glm::vec3 const& p1, glm::vec3 const& p2, MauCor::Rotator const& rot = {}, glm::vec3 const& colour = { 1, 0, 0 }) noexcept override {}
 
-		virtual void DrawArrow(glm::vec3 const& start, glm::vec3 const& end, glm::vec3 const& colour = { 1, 0, 0 }, float arrowHeadLength = .5f) noexcept override {}
+		virtual void DrawArrow(glm::vec3 const& start, glm::vec3 const& end, MauCor::Rotator const& rot = {}, glm::vec3 const& colour = { 1, 0, 0 }, float arrowHeadLength = .5f) noexcept override {}
 
 		virtual void DrawPolygon(std::vector<glm::vec3> const& points, glm::vec3 const& colour = { 1, 0, 0 }) noexcept override {}
 

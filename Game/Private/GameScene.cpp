@@ -157,12 +157,13 @@ namespace MauGam
 	{
 		ME_PROFILE_FUNCTION()
 
+		// Config
 		bool constexpr DRAW_LINES{ false };
 		bool constexpr DRAW_RECTS{ false };
-		bool constexpr DRAW_TRIANGLES{ true };
+		bool constexpr DRAW_TRIANGLES{ false };
+		bool constexpr DRAW_ARROWS{ true };
 
 		// Demo debug drawing tests
-// Drawing (rotated) lines
 		if constexpr (DRAW_LINES)
 		{
 			DEBUG_RENDERER.DrawLine({ 0, 0,0 }, { 100, 10, 10 }, { 0, 0, 0 });
@@ -207,6 +208,20 @@ namespace MauGam
 			triRot += TRIANGLE_ROT_SPEED * TIME.ElapsedSec();
 		}
 
+		if constexpr (DRAW_ARROWS)
+		{
+			static float constexpr ARROW_ROT_SPEED{ 10.f };
+			static float arrRot{};
+
+			DEBUG_RENDERER.DrawArrow({}, { 2, 3, 3 });
+			DEBUG_RENDERER.DrawArrow({}, { 2, 3, 3}, {0, arrRot, 0}, {1, 1, 1});
+
+			DEBUG_RENDERER.DrawArrow({}, { 0, 0, 3 });
+			DEBUG_RENDERER.DrawArrow({}, { 0, 0, 3 }, { arrRot,0 , 0 }, { 1, 1, 1 });
+
+			arrRot += ARROW_ROT_SPEED * TIME.ElapsedSec();
+		}
+
 
 		//DEBUG_RENDERER.DrawSphere({}, 20.f, { 1, 1, 0 });
 		//DEBUG_RENDERER.DrawSphereComplex({ 20,20,20 }, 20.f, { 1, 1, 1 }, 24, 10);
@@ -216,7 +231,6 @@ namespace MauGam
 		//DEBUG_RENDERER.DrawEllipsoid({}, 10, 20, 30.f, { 0, 1, 0 });
 		//DEBUG_RENDERER.DrawEllipsoidComplex({}, 10, 20, 30.f, { 0, 0, 1 }, 24,6);
 
-		//DEBUG_RENDERER.DrawArrow({}, { 2, 3, 3});
 		//DEBUG_RENDERER.DrawCylinder({ -10, 0, -10 }, 10, 100);
 
 		//DEBUG_RENDERER.DrawPolygon({ {0, 0, 0}, { 0, 19, 20 }, {32, 10, -10}, {10, 20, 5}, {-2, -2, -2 } });

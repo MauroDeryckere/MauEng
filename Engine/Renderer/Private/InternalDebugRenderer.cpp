@@ -110,28 +110,36 @@ namespace MauRen
 		AddDebugLines(localPoints, lines, rot.rotation, colour, center);
 	}
 
-	void InternalDebugRenderer::DrawArrow(glm::vec3 const& start, glm::vec3 const& end, glm::vec3 const& colour, float arrowHeadLength) noexcept
+	void InternalDebugRenderer::DrawArrow(glm::vec3 const& start, glm::vec3 const& end, MauCor::Rotator const& rot, glm::vec3 const& colour, float arrowHeadLength) noexcept
 	{
-		if (std::size(m_ActivePoints) + 3 * 2 < MAX_LINES)
+		glm::vec3 const direction{ glm::normalize(end - start) };
+		float constexpr arrowheadAngle{ glm::pi<float>() / 6.0f };
+
+		glm::vec3 const right{ glm::normalize(glm::cross(direction, glm::vec3{ 0.0f, 1.0f, 0.0f })) * arrowHeadLength };
+
+		glm::quat const rotationRight(glm::angleAxis(arrowheadAngle, right));
+		glm::quat const rotationLeft(glm::angleAxis(-arrowheadAngle, right));
+
+		// Apply the rotations to the direction vector
+		glm::vec3 const arrowhead1{ end - rotationRight * direction * arrowHeadLength };
+		glm::vec3 const arrowhead2{ end - rotationLeft * direction * arrowHeadLength };
+
+		auto const center{ (end - start) *.5f};
+
+		std::vector<glm::vec3> const localPoints
 		{
-			//DrawLine(start, end, colour);
+			glm::vec3 { start - center },
+			glm::vec3 { end - center },
+			glm::vec3 { arrowhead1 - center },
+			glm::vec3 { arrowhead2 - center }
+		};
 
-			//glm::vec3 const direction{ glm::normalize(end - start) };
-			//float constexpr arrowheadAngle{ glm::pi<float>() / 6.0f };
+		std::vector<std::pair<uint32_t, uint32_t>> const lines
+		{
+			{0, 1}, {1, 2}, {1, 3}
+		};
 
-			//glm::vec3 const right{ glm::normalize(glm::cross(direction, glm::vec3{ 0.0f, 1.0f, 0.0f })) * arrowHeadLength };
-
-			//glm::quat const rotationRight(glm::angleAxis(arrowheadAngle, right));
-			//glm::quat const rotationLeft(glm::angleAxis(-arrowheadAngle, right));
-
-			//// Apply the rotations to the direction vector
-			//glm::vec3 const arrowhead1{ end - rotationRight * direction * arrowHeadLength };
-			//glm::vec3 const arrowhead2{ end - rotationLeft * direction * arrowHeadLength };
-
-			//// Draw the two lines forming the arrowhead
-			//DrawLine(end, arrowhead1, colour);
-			//DrawLine(end, arrowhead2, colour);
-		}
+		AddDebugLines(localPoints, lines, rot.rotation, colour, center);
 	}
 
 	void InternalDebugRenderer::DrawPolygon(std::vector<glm::vec3> const& points, glm::vec3 const& colour) noexcept
