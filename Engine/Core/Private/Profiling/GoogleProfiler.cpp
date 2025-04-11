@@ -8,7 +8,7 @@ namespace MauCor
 		EndSession();
 	}
 
-	void GoogleProfiler::BeginSession(std::string const& name, std::string& filepath, size_t reserveSize)
+	void GoogleProfiler::BeginSessionInternal(std::string const& name, std::string& filepath, size_t reserveSize)
 	{
 		EndSession();
 		filepath += ".json";

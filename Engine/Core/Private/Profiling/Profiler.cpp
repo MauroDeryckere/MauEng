@@ -4,8 +4,8 @@ namespace MauCor
 {
 	void Profiler::BeginSession(std::string const& name, char const* path, size_t reserveSize)
 	{
-		std::string tempPath{ path };
-		BeginSession(name, path, reserveSize);
+		std::string p{ path };
+		BeginSessionInternal(name, p, reserveSize);
 	}
 
 	void Profiler::Start(char const* path)
@@ -20,7 +20,7 @@ namespace MauCor
 			fileName += std::to_string(numExecutedProfiles);
 
 			ME_LOG_INFO(MauCor::LogCategory::Core, "Beginning profile session {}", fileName);
-			BeginSession(fileName, fileName);
+			BeginSessionInternal(fileName, fileName, 10'000);
 			isProfiling = true;
 		}
 	}

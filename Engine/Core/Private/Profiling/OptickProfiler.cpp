@@ -6,7 +6,7 @@
 
 namespace MauCor
 {
-	void OptickProfiler::BeginSession(std::string const& name, std::string& filepath, size_t reserveSize)
+	void OptickProfiler::BeginSessionInternal(std::string const& name, std::string& filepath, size_t reserveSize)
 	{
 		filepath += ".opt";
 		m_Path = filepath;
