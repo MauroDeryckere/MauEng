@@ -25,60 +25,71 @@ namespace MauRen
 		}
 	}
 
-	void InternalDebugRenderer::DrawRect(glm::vec3 const& center, float width, float height, glm::vec3 const& axis, glm::vec3 const& colour) noexcept
+	void InternalDebugRenderer::DrawRect(glm::vec3 const& center, glm::vec2 const& size, MauCor::Rotator const& rot, glm::vec3 const& colour) noexcept
 	{
-		//if (std::size(m_ActivePoints) + 4 * 2 < MAX_LINES)
-		//{
-		//	DrawLine(p0, p1, colour);
-		//	DrawLine(p1, p2, colour);
-		//	DrawLine(p2, p3, colour);
-		//	DrawLine(p3, p0, colour);
-		//}
-	}
+		// Points: 
+		// 01 --- 02
+		// |	  |
+		// |	  |
+		// 03 --- 04
 
-	void InternalDebugRenderer::DrawCube(glm::vec3 const& center, float size, glm::vec3 const& colour) noexcept
-	{
-		DrawCube(center, size, size, size, colour);
-	}
+		// Indices:
+		// 01 -> 02
+		// 02 -> 04
+		// 04 -> 03
+		// 03 -> 01
 
-	void InternalDebugRenderer::DrawCube(glm::vec3 const& center, float width, float height, float depth, glm::vec3 const& colour) noexcept
-	{
-		if (std::size(m_ActivePoints) + 12 * 2 < MAX_LINES)
+		glm::vec2 const halfSize{ size * 0.5f };
+
+		std::vector<glm::vec3> const localPoints
 		{
-			
-		}
-		float const horHalfSize{ width * .5f };
-		float const verHalfSize{ height * .5f };
-		float const depthHalfSize{ depth * .5f };
+			{ -halfSize.x, -halfSize.y, 0},
+			{ halfSize.x, -halfSize.y, 0},
+			{ halfSize.x, halfSize.y, 0},
+			{ -halfSize.x, halfSize.y, 0}
+		};
+
+		std::vector<std::pair<uint32_t, uint32_t>> const lines
+		{
+			{0, 1}, {1, 2}, {2, 3}, {3, 0}
+		};
+
+		AddDebugLines(localPoints, lines, rot.rotation, colour, center);
+	}
+
+	void InternalDebugRenderer::DrawCube(glm::vec3 const& center, glm::vec3 const& size, MauCor::Rotator const& rot, glm::vec3 const& colour) noexcept
+	{
+		float const horHalfSize{ size.x *.5f };
+		float const verHalfSize{ size.y * .5f };
+		float const depthHalfSize{ size.z * .5f };
+
+		std::vector<glm::vec3> const localPoints
+		{
+			glm::vec3 { glm::vec3{-horHalfSize, -verHalfSize, -depthHalfSize} },
+			glm::vec3 { glm::vec3{horHalfSize, -verHalfSize, -depthHalfSize} },
+			glm::vec3 { glm::vec3{horHalfSize, -verHalfSize, depthHalfSize } },
+			glm::vec3 { glm::vec3{-horHalfSize, -verHalfSize, depthHalfSize} },
+
+			glm::vec3 { glm::vec3{-horHalfSize, verHalfSize, -depthHalfSize} },
+			glm::vec3 { glm::vec3{horHalfSize, verHalfSize, -depthHalfSize} },
+			glm::vec3 { glm::vec3{horHalfSize, verHalfSize, depthHalfSize} },
+			glm::vec3 { glm::vec3{-horHalfSize, verHalfSize, depthHalfSize} }
+		};
 
 
-		glm::vec3 const p0{ center + glm::vec3{-horHalfSize, -verHalfSize, -depthHalfSize} };
-		glm::vec3 const p1{ center + glm::vec3{horHalfSize, -verHalfSize, -depthHalfSize} };
-		glm::vec3 const p2{ center + glm::vec3{horHalfSize, -verHalfSize, depthHalfSize } };
-		glm::vec3 const p3{ center + glm::vec3{-horHalfSize, -verHalfSize, depthHalfSize} };
+		std::vector<std::pair<uint32_t, uint32_t>> lines 
+		{
+			// Bottom face edges
+			{ 0, 1 }, { 1, 2 }, { 2, 3 }, { 3, 0 },
 
-		glm::vec3 const p4{ center + glm::vec3{-horHalfSize, verHalfSize, -depthHalfSize} };
-		glm::vec3 const p5{ center + glm::vec3{horHalfSize, verHalfSize, -depthHalfSize} };
-		glm::vec3 const p6{ center + glm::vec3{horHalfSize, verHalfSize, depthHalfSize} };
-		glm::vec3 const p7{ center + glm::vec3{-horHalfSize, verHalfSize, depthHalfSize} };
+			// Top face edges
+			{ 4, 5 }, { 5, 6 }, { 6, 7 }, { 7, 4 },
 
-		//// Bottom face
-		//DrawLine(p0, p1, colour);
-		//DrawLine(p1, p2, colour);
-		//DrawLine(p2, p3, colour);
-		//DrawLine(p3, p0, colour);
+			// Connecting lines between top and bottom faces
+			{ 0, 4 }, { 1, 5 }, { 2, 6 }, { 3, 7 }
+		};
 
-		//// Top face
-		//DrawLine(p4, p5, colour);
-		//DrawLine(p5, p6, colour);
-		//DrawLine(p6, p7, colour);
-		//DrawLine(p7, p4, colour);
-
-		//// Vertical edges
-		//DrawLine(p0, p4, colour);
-		//DrawLine(p1, p5, colour);
-		//DrawLine(p2, p6, colour);
-		//DrawLine(p3, p7, colour);
+		AddDebugLines(localPoints, lines, rot.rotation, colour, center);
 	}
 
 	void InternalDebugRenderer::DrawTriangle(glm::vec3 const& p0, glm::vec3 const& p1, glm::vec3 const& p2, glm::vec3 const& colour) noexcept
@@ -283,6 +294,30 @@ namespace MauRen
 
 				DrawEllipse(center, radiusY * glm::cos(phi), radiusZ, axis, colour, segments);
 			}
+		}
+	}
+
+	void InternalDebugRenderer::AddDebugLines(std::vector<glm::vec3> const& localPoints,
+		std::vector<std::pair<uint32_t, uint32_t>> const& lineIndices, glm::quat const& rotation,
+		glm::vec3 const& color, glm::vec3 const& center)
+	{
+		if (std::size(m_ActivePoints) + localPoints.size() >= MAX_LINES)
+		{
+			ME_LOG_WARN(MauCor::LogCategory::Renderer, "Debug renderer active points has surpassed the set limit.");
+			return;
+		}
+
+		auto const baseIndex = static_cast<uint32_t>(m_ActivePoints.size());
+
+		for (auto const& localPoint : localPoints)
+		{
+			m_ActivePoints.emplace_back(center + rotation * localPoint, color);
+		}
+
+		for (auto const& [start, end] : lineIndices)
+		{
+			m_IndexBuffer.emplace_back(baseIndex + start);
+			m_IndexBuffer.emplace_back(baseIndex + end);
 		}
 	}
 }

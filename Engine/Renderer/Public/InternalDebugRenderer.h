@@ -9,7 +9,6 @@ namespace MauRen
 	class Renderer;
 
 	// Debug renderer class allows rendering debug shapes with a single call per tick
-	// Most shapes currentl't don't support rotation, can be added in the future if necessary
 	class InternalDebugRenderer final : public DebugRenderer
 	{
 	public:
@@ -18,9 +17,8 @@ namespace MauRen
 
 		void DrawLine(glm::vec3 const& start, glm::vec3 const& end, MauCor::Rotator const& rot = {}, glm::vec3 const& colour = { 1, 0, 0 }) noexcept override;
 
-		void DrawRect(glm::vec3 const& center, float width, float height, glm::vec3 const& axis = { 1, 0, 0 }, glm::vec3 const& colour = { 1, 0, 0 }) noexcept override;
-		void DrawCube(glm::vec3 const& center, float size, glm::vec3 const& colour = { 1, 0, 0 }) noexcept override;
-		void DrawCube(glm::vec3 const& center, float width, float height, float depth, glm::vec3 const& colour = { 1, 0, 0 }) noexcept override;
+		void DrawRect(glm::vec3 const& center, glm::vec2 const& size, MauCor::Rotator const& rot = {}, glm::vec3 const& colour = { 1, 0, 0 }) noexcept override;
+		void DrawCube(glm::vec3 const& center, glm::vec3 const& size, MauCor::Rotator const& rot = {}, glm::vec3 const& colour = { 1, 0, 0 }) noexcept override;
 
 		void DrawTriangle(glm::vec3 const& p0, glm::vec3 const& p1, glm::vec3 const& p2, glm::vec3 const& colour = { 1, 0, 0 }) noexcept override;
 
@@ -54,6 +52,13 @@ namespace MauRen
 
 
 		uint32_t const MAX_LINES{ 10'000 };
+
+		void AddDebugLines(
+			std::vector<glm::vec3> const& localPoints,
+			std::vector<std::pair<uint32_t, uint32_t>> const& lineIndices,
+			glm::quat const& rotation,
+			glm::vec3 const& color, 
+			glm::vec3 const& center);
 	};
 }
 

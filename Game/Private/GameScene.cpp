@@ -75,7 +75,8 @@ namespace MauGam
 
 		Scene::Tick();
 
-		bool constexpr DRAW_LINES{ true };
+		bool constexpr DRAW_LINES{ false };
+		bool constexpr DRAW_RECTS{ true };
 
 		// Demo logging tests
 		//LOGGER.Log(MauCor::LogPriority::Error, MauCor::LogCategory::Game,"test {}", 1000);
@@ -102,16 +103,23 @@ namespace MauGam
 
 			lineRot += ROT_SPEED * TIME.ElapsedSec();
 		}
-		
 
-		//DEBUG_RENDERER.DrawLine({-10 , 10, -10}, {10, 10, 10}, { 0, 1, 0});
+		if constexpr(DRAW_RECTS)
+		{
+			static float constexpr CUBE_ROT_SPEED{ 10.f };
+			static float cubeRot{};
 
-//		DEBUG_RENDERER.DrawRect({ -10, 0, 0 }, { 10, 0, 0 }, { 10, 20, 5 }, { -10, 20, 5 }, {0, 0, 1});
+			DEBUG_RENDERER.DrawRect({ 0, 0, 0 }, { 20, 30 }, { 0, 0, cubeRot }, { 1, 0, 0 });
+			DEBUG_RENDERER.DrawRect({ 0, 0, 0 }, {20, 30} ,{ 0, 0, 0 }, {1, 1, 1});
+			DEBUG_RENDERER.DrawCube({ 20, 20, 20 }, { 69, 20, 20 }, { 0, 0, 0 }, {1, 1, 1});
+			DEBUG_RENDERER.DrawCube({ 20, 20, 20 }, { 69, 20, 20 }, {0, cubeRot, 0 });
+
+			cubeRot += CUBE_ROT_SPEED * TIME.ElapsedSec();
+		}
+
 
 		//DEBUG_RENDERER.DrawSphere({}, 20.f, { 1, 1, 0 });
 		//DEBUG_RENDERER.DrawSphereComplex({ 20,20,20 }, 20.f, { 1, 1, 1 }, 24, 10);
-		//DEBUG_RENDERER.DrawCube({}, 20);
-		//DEBUG_RENDERER.DrawCube({}, 20, 50, 30);
 
 		//DEBUG_RENDERER.DrawEllipse({}, 20, 50, { 1, 0, 0 });
 

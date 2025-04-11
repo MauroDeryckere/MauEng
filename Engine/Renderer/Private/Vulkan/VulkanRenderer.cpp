@@ -490,7 +490,7 @@ namespace MauRen
 
 	void VulkanRenderer::RenderDebug(VkCommandBuffer commandBuffer)
 	{
-		ME_PROFILE_FUNCTION();
+		ME_PROFILE_FUNCTION()
 
 		if (!m_DebugRenderer)
 		{
