@@ -10,14 +10,24 @@ namespace MauRen
 		m_IndexBuffer.reserve(MAX_LINES / 2);
 	}
 
-	void InternalDebugRenderer::DrawLine(glm::vec3 const& start, glm::vec3 const& end, MauCor::Rotator const& rot, glm::vec3 const& colour) noexcept
+	void InternalDebugRenderer::DrawLine(glm::vec3 const& start, glm::vec3 const& end, MauCor::Rotator const& rot, glm::vec3 const& colour, bool isPivotOverride, glm::vec3 const& pivot) noexcept
 	{
 		if (std::size(m_ActivePoints) + 2 < MAX_LINES)
 		{
-			m_IndexBuffer.emplace_back(static_cast<uint32_t>(m_ActivePoints.size()));
-			m_ActivePoints.emplace_back(glm::rotate(rot.rotation, start), colour);
-			m_IndexBuffer.emplace_back(static_cast<uint32_t>(m_ActivePoints.size()));
-			m_ActivePoints.emplace_back(glm::rotate(rot.rotation, end), colour);
+			if (isPivotOverride)
+			{
+				m_IndexBuffer.emplace_back(static_cast<uint32_t>(m_ActivePoints.size()));
+				m_ActivePoints.emplace_back(glm::rotate(rot.rotation, start - pivot) + pivot, colour);
+				m_IndexBuffer.emplace_back(static_cast<uint32_t>(m_ActivePoints.size()));
+				m_ActivePoints.emplace_back(glm::rotate(rot.rotation, end - pivot) + pivot, colour);
+			}
+			else
+			{
+				m_IndexBuffer.emplace_back(static_cast<uint32_t>(m_ActivePoints.size()));
+				m_ActivePoints.emplace_back(glm::rotate(rot.rotation, start), colour);
+				m_IndexBuffer.emplace_back(static_cast<uint32_t>(m_ActivePoints.size()));
+				m_ActivePoints.emplace_back(glm::rotate(rot.rotation, end), colour);
+			}
 		}
 		else
 		{
@@ -25,7 +35,7 @@ namespace MauRen
 		}
 	}
 
-	void InternalDebugRenderer::DrawRect(glm::vec3 const& center, glm::vec2 const& size, MauCor::Rotator const& rot, glm::vec3 const& colour) noexcept
+	void InternalDebugRenderer::DrawRect(glm::vec3 const& center, glm::vec2 const& size, MauCor::Rotator const& rot, glm::vec3 const& colour, bool isPivotOverride, glm::vec3 const& pivot) noexcept
 	{
 		// Points: 
 		// 01 --- 02
@@ -54,10 +64,30 @@ namespace MauRen
 			{0, 1}, {1, 2}, {2, 3}, {3, 0}
 		};
 
-		AddDebugLines(localPoints, lines, rot.rotation, colour, center);
+		if (isPivotOverride)
+		{
+			AddDebugLines(localPoints, lines,
+				[&](glm::vec3 const& p)->glm::vec3 const
+				{
+					glm::vec3 const worldPoint{ p + center };
+					glm::vec3 const rotatedPoint{ rot.rotation * (worldPoint - pivot) + pivot };
+					return rotatedPoint;
+				}
+			, colour);
+
+		}
+		else
+		{
+			AddDebugLines(localPoints, lines,
+				[&](glm::vec3 const& p)->glm::vec3 const
+				{
+					return  rot.rotation * p + center;
+				}
+			, colour);
+		}
 	}
 
-	void InternalDebugRenderer::DrawCube(glm::vec3 const& center, glm::vec3 const& size, MauCor::Rotator const& rot, glm::vec3 const& colour) noexcept
+	void InternalDebugRenderer::DrawCube(glm::vec3 const& center, glm::vec3 const& size, MauCor::Rotator const& rot, glm::vec3 const& colour, bool isPivotOverride, glm::vec3 const& pivot) noexcept
 	{
 		float const horHalfSize{ size.x *.5f };
 		float const verHalfSize{ size.y * .5f };
@@ -89,10 +119,30 @@ namespace MauRen
 			{ 0, 4 }, { 1, 5 }, { 2, 6 }, { 3, 7 }
 		};
 
-		AddDebugLines(localPoints, lines, rot.rotation, colour, center);
+		if (isPivotOverride)
+		{
+			AddDebugLines(localPoints, lines,
+				[&](glm::vec3 const& p)->glm::vec3 const
+				{
+					glm::vec3 const worldPoint{ p + center };
+					glm::vec3 const rotatedPoint{ rot.rotation * (worldPoint - pivot) + pivot };
+					return rotatedPoint;
+				}
+			, colour);
+
+		}
+		else
+		{
+			AddDebugLines(localPoints, lines,
+				[&](glm::vec3 const& p)->glm::vec3 const
+				{
+					return  rot.rotation * p + center;
+				}
+			, colour);
+		}
 	}
 
-	void InternalDebugRenderer::DrawTriangle(glm::vec3 const& p0, glm::vec3 const& p1, glm::vec3 const& p2, MauCor::Rotator const& rot, glm::vec3 const& colour) noexcept
+	void InternalDebugRenderer::DrawTriangle(glm::vec3 const& p0, glm::vec3 const& p1, glm::vec3 const& p2, MauCor::Rotator const& rot, glm::vec3 const& colour, bool isPivotOverride, glm::vec3 const& pivot) noexcept
 	{
 		glm::vec3 const center{ (p0 + p1 + p2) / 3.0f };
 		std::vector<glm::vec3> const localPoints
@@ -107,10 +157,30 @@ namespace MauRen
 			{0, 1}, {1, 2}, {2, 0}
 		};
 
-		AddDebugLines(localPoints, lines, rot.rotation, colour, center);
+		if (isPivotOverride)
+		{
+			AddDebugLines(localPoints, lines,
+				[&](glm::vec3 const& p)->glm::vec3 const
+				{
+					glm::vec3 const worldPoint{ p + center };
+					glm::vec3 const rotatedPoint{ rot.rotation * (worldPoint - pivot) + pivot };
+					return rotatedPoint;
+				}
+			, colour);
+
+		}
+		else
+		{
+			AddDebugLines(localPoints, lines,
+				[&](glm::vec3 const& p)->glm::vec3 const
+				{
+					return  rot.rotation * p + center;
+				}
+			, colour);
+		}
 	}
 
-	void InternalDebugRenderer::DrawArrow(glm::vec3 const& start, glm::vec3 const& end, MauCor::Rotator const& rot, glm::vec3 const& colour, float arrowHeadLength) noexcept
+	void InternalDebugRenderer::DrawArrow(glm::vec3 const& start, glm::vec3 const& end, MauCor::Rotator const& rot, glm::vec3 const& colour, float arrowHeadLength, bool isPivotOverride, glm::vec3 const& pivot) noexcept
 	{
 		glm::vec3 const direction{ glm::normalize(end - start) };
 		float constexpr arrowheadAngle{ glm::pi<float>() / 6.0f };
@@ -139,7 +209,27 @@ namespace MauRen
 			{0, 1}, {1, 2}, {1, 3}
 		};
 
-		AddDebugLines(localPoints, lines, rot.rotation, colour, center);
+		if (isPivotOverride)
+		{
+			AddDebugLines(localPoints, lines,
+				[&](glm::vec3 const& p)->glm::vec3 const
+				{
+					glm::vec3 const worldPoint{ p + center };
+					glm::vec3 const rotatedPoint{ rot.rotation * (worldPoint - pivot) + pivot };
+					return rotatedPoint;
+				}
+			, colour);
+
+		}
+		else
+		{
+			AddDebugLines(localPoints, lines,
+				[&](glm::vec3 const& p)->glm::vec3 const
+				{
+					return  rot.rotation * p + center;
+				}
+			, colour);
+		}
 	}
 
 	void InternalDebugRenderer::DrawPolygon(std::vector<glm::vec3> const& points, MauCor::Rotator const& rot, glm::vec3 const& colour, bool isPivotOverride, glm::vec3 const& pivot) noexcept
@@ -184,12 +274,12 @@ namespace MauRen
 		}
 	}
 
-	void InternalDebugRenderer::DrawCircle(glm::vec3 const& center, float radius, MauCor::Rotator const& rot, glm::vec3 const& colour, uint32_t segments) noexcept
+	void InternalDebugRenderer::DrawCircle(glm::vec3 const& center, float radius, MauCor::Rotator const& rot, glm::vec3 const& colour, uint32_t segments, bool isPivotOverride, glm::vec3 const& pivot) noexcept
 	{
-		DrawEllipse(center, { radius, radius }, rot, colour, segments);
+		DrawEllipse(center, { radius, radius }, rot, colour, segments, isPivotOverride, pivot);
 	}
 
-	void InternalDebugRenderer::DrawEllipse(glm::vec3 const& center, glm::vec2 const& size, MauCor::Rotator const& rot, glm::vec3 const& colour, uint32_t segments) noexcept
+	void InternalDebugRenderer::DrawEllipse(glm::vec3 const& center, glm::vec2 const& size, MauCor::Rotator const& rot, glm::vec3 const& colour, uint32_t segments, bool isPivotOverride, glm::vec3 const& pivot) noexcept
 	{
 		if (std::size(m_ActivePoints) + segments >= MAX_LINES)
 		{
@@ -211,7 +301,16 @@ namespace MauRen
 
 			glm::vec3 const localPoint{ size.x * glm::cos(angle) * localV1 + size.y * glm::sin(angle) * localV2 };
 
-			m_ActivePoints.emplace_back((rot.rotation * localPoint) + center, colour);
+			if (isPivotOverride)
+			{
+				glm::vec3 const worldPoint{ localPoint + center };
+				glm::vec3 const rotatedPoint{ rot.rotation * (worldPoint - pivot) + pivot };
+				m_ActivePoints.emplace_back(rotatedPoint, colour);
+			}
+			else
+			{
+				m_ActivePoints.emplace_back((rot.rotation * localPoint) + center, colour);
+			}
 
 			uint32_t const nextIndex{ (i + 1) % segments };
 			m_IndexBuffer.emplace_back(baseIndex + i);
@@ -308,9 +407,9 @@ namespace MauRen
 
 	void InternalDebugRenderer::DrawEllipsoid(glm::vec3 const& center, glm::vec3 const& size, MauCor::Rotator const& rot, glm::vec3 const& colour, uint32_t segments, bool isPivotOverride, glm::vec3 const& pivot) noexcept
 	{
-		DrawEllipse(center, size, rot * MauCor::Rotator{ 0, 0, 90 }, colour, segments);
-		DrawEllipse(center, size, rot * MauCor::Rotator{ 0, 90, 0 }, colour, segments);
-		DrawEllipse(center, size, rot * MauCor::Rotator{ 90, 0, 0 }, colour, segments);
+		DrawEllipse(center, size, rot * MauCor::Rotator{ 0, 0, 90 }, colour, segments, isPivotOverride, pivot);
+		DrawEllipse(center, size, rot * MauCor::Rotator{ 0, 90, 0 }, colour, segments, isPivotOverride, pivot);
+		DrawEllipse(center, size, rot * MauCor::Rotator{ 90, 0, 0 }, colour, segments, isPivotOverride, pivot);
 	}
 
 	void InternalDebugRenderer::DrawEllipsoidComplex(glm::vec3 const& center, glm::vec3 const& size, MauCor::Rotator const& rot, glm::vec3 const& colour, uint32_t segments, uint32_t layers, bool isPivotOverride, glm::vec3 const& pivot) noexcept
@@ -374,22 +473,22 @@ namespace MauRen
 		}
 	}
 
+	template <typename TransformFunc>
 	void InternalDebugRenderer::AddDebugLines(std::vector<glm::vec3> const& localPoints,
-	                                          std::vector<std::pair<uint32_t, uint32_t>> const& lineIndices, glm::quat const& rotation,
-	                                          glm::vec3 const& color, glm::vec3 const& center)
+		std::vector<std::pair<uint32_t, uint32_t>> const& lineIndices, TransformFunc&& transform, glm::vec3 const& color)
 	{
 		ME_PROFILE_FUNCTION()
-		if (std::size(m_ActivePoints) + localPoints.size() >= MAX_LINES)
-		{
-			ME_LOG_WARN(MauCor::LogCategory::Renderer, "Debug renderer active points has surpassed the set limit.");
-			return;
-		}
+			if (std::size(m_ActivePoints) + localPoints.size() >= MAX_LINES)
+			{
+				ME_LOG_WARN(MauCor::LogCategory::Renderer, "Debug renderer active points has surpassed the set limit.");
+				return;
+			}
 
 		auto const baseIndex{ static_cast<uint32_t>(m_ActivePoints.size()) };
 
 		for (auto const& localPoint : localPoints)
 		{
-			m_ActivePoints.emplace_back(center + rotation * localPoint, color);
+			m_ActivePoints.emplace_back(transform(localPoint), color);
 		}
 
 		for (auto const& [start, end] : lineIndices)

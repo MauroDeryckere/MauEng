@@ -165,7 +165,7 @@ namespace MauGam
 		bool constexpr DRAW_ARROWS{ false };
 		bool constexpr DRAW_CIRCLES{ false };
 		bool constexpr DRAW_SPHERES{ false };
-		bool constexpr DRAW_CYL{ true };
+		bool constexpr DRAW_CYL{ false };
 		bool constexpr DRAW_POLY{ false };
 
 		// Demo debug drawing tests
@@ -183,8 +183,9 @@ namespace MauGam
 			static float lineRot{};
 			DEBUG_RENDERER.DrawLine({ 0, 0,0 }, { 100, 0, 0 }, { lineRot, lineRot, lineRot }, { 1, 1, 1 });
 
-			DEBUG_RENDERER.DrawLine({ 0, 0,0 }, { 100, 0, 0 }, { 0, lineRot, 0 }, { 1, 1, 0 });
-			DEBUG_RENDERER.DrawLine({ 0, 0,0 }, { 100, 0, 0 }, { 0, 0, lineRot }, { 1, 1, 0 });
+			DEBUG_RENDERER.DrawLine({ 0, 0,0 }, { 10, 0, 0 }, { 0, lineRot, 0 }, { 1, 1, 0 });
+			DEBUG_RENDERER.DrawLine({ 0, 0,0 }, { 10, 0, 0 }, { 0, lineRot, 0 }, { 1, 1, 1 }, true, {100, 100, 100});
+			DEBUG_RENDERER.DrawLine({ 0, 0,0 }, { 10, 0, 0 }, { 0, 0, lineRot }, { 1, 1, 0 });
 
 			lineRot += ROT_SPEED * TIME.ElapsedSec();
 		}
@@ -199,6 +200,10 @@ namespace MauGam
 			DEBUG_RENDERER.DrawCube({ 20, 20, 20 }, { 69, 20, 20 }, { 0, 0, 0 }, { 1, 1, 1 });
 			DEBUG_RENDERER.DrawCube({ 20, 20, 20 }, { 69, 20, 20 }, { 0, cubeRot, 0 });
 
+			DEBUG_RENDERER.DrawRect({ 0, 0, 0 }, { 20, 30 }, { 0, 0, cubeRot }, { 0, 1, 1 }, true, { 20, 20, 20 });
+			DEBUG_RENDERER.DrawCube({ 20, 20, 20 }, { 69, 20, 20 }, { 0, cubeRot, 0 }, {1, 1,0},true, { 0, 0, 0 });
+
+
 			cubeRot += CUBE_ROT_SPEED * TIME.ElapsedSec();
 		}
 
@@ -209,6 +214,9 @@ namespace MauGam
 
 			DEBUG_RENDERER.DrawTriangle({ 0,0,0 }, { 10, 10, 10 }, { 20, 10, 16 });
 			DEBUG_RENDERER.DrawTriangle({0,0,0}, {10, 10, 10}, {20, 10, 16}, {0, triRot, triRot }, {1, 1, 1});
+
+			DEBUG_RENDERER.DrawTriangle({ 0,0,0 }, { 10, 10, 10 }, { 20, 10, 16 }, { 0, triRot, triRot }, { 1, 1, 1 }, true, {25,25, 0});
+
 
 			triRot += TRIANGLE_ROT_SPEED * TIME.ElapsedSec();
 		}
@@ -224,6 +232,8 @@ namespace MauGam
 			DEBUG_RENDERER.DrawArrow({}, { 0, 0, 3 });
 			DEBUG_RENDERER.DrawArrow({}, { 0, 0, 3 }, { arrRot,0 , 0 }, { 1, 1, 1 });
 
+			DEBUG_RENDERER.DrawArrow({}, { 0, 0, 3 }, { arrRot,0 , 0 }, { 1, 1, 1 }, 1, true, {20, 20, 0});
+
 			arrRot += ARROW_ROT_SPEED * TIME.ElapsedSec();
 		}
 
@@ -237,6 +247,8 @@ namespace MauGam
 
 			DEBUG_RENDERER.DrawEllipse({}, { 100, 10 }, {}, { 0, 1, 0 });
 			DEBUG_RENDERER.DrawEllipse({}, {100, 10}, {circleRot}, { 1, 1, 1 });
+
+			DEBUG_RENDERER.DrawEllipse({}, { 100, 10 }, { circleRot }, { 1, 1, 1 }, 24, true, {20, 20, 0});
 
 			circleRot += CIRCLE_ROT_SPEED * TIME.ElapsedSec();
 		}
