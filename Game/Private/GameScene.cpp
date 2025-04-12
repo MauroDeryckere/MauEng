@@ -244,12 +244,15 @@ namespace MauGam
 			static float sphereRot{};
 
 			DEBUG_RENDERER.DrawSphere({}, 20.f);
-			DEBUG_RENDERER.DrawSphere({}, 20.f, sphereRot, {1,1,1});
+			DEBUG_RENDERER.DrawSphere({}, 20.f, sphereRot, { 0, 0,1 });
 
-			DEBUG_RENDERER.DrawSphereComplex({ 20,20,20 }, 20.f, { }, {1, 0, 0}, 24, 6);
-			DEBUG_RENDERER.DrawSphereComplex({ 20,20,20 }, 20.f, { sphereRot }, {1, 1, 1}, 24, 6);
+			DEBUG_RENDERER.DrawSphere({ -10, -10, -10 }, 20.f, {}, { 1, 1, 0 });
+			DEBUG_RENDERER.DrawSphere({-10, -10, -10}, 20.f, sphereRot, {1,1,1});
 
-			//DEBUG_RENDERER.DrawEllipsoid({}, 10, 20, 30.f, { 0, 1, 0 });
+			//DEBUG_RENDERER.DrawSphereComplex({ 20,20,20 }, 20.f, { }, {1, 0, 0}, 24, 6);
+			//DEBUG_RENDERER.DrawSphereComplex({ 20,20,20 }, 20.f, { sphereRot }, {1, 1, 1}, 24, 6);
+
+			//DEBUG_RENDERER.DrawEllipsoid({ -100, -100, -100 }, { 10, 20, 20 }, {}, {0, 1, 0});
 			//DEBUG_RENDERER.DrawEllipsoidComplex({}, 10, 20, 30.f, { 0, 0, 1 }, 24,6);
 
 			sphereRot += SPHERE_ROT_SPEED * TIME.ElapsedSec();
