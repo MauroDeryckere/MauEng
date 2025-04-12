@@ -166,6 +166,12 @@ namespace MauRen
 
 	void InternalDebugRenderer::DrawEllipse(glm::vec3 const& center, glm::vec2 const& size, MauCor::Rotator const& rot, glm::vec3 const& colour, uint32_t segments) noexcept
 	{
+		if (std::size(m_ActivePoints) + segments >= MAX_LINES)
+		{
+			ME_LOG_WARN(MauCor::LogCategory::Renderer, "Debug renderer active points has surpassed the set limit, edit the config or try drawing less points! ");
+			return;
+		}
+
 		float const delta{ glm::two_pi<float>() / static_cast<float>(segments) };
 
 		// Define unit vectors along the X and Y axis in local space
@@ -190,6 +196,8 @@ namespace MauRen
 
 	void InternalDebugRenderer::DrawCylinder(glm::vec3 const& center, float radius, float height, glm::vec3 const& colour, uint32_t segments) noexcept
 	{
+		//TODO
+
 		if (std::size(m_ActivePoints) + 2 * ( 2 * segments + segments * 2) < MAX_LINES)
 		{
 			glm::vec3 const topCenter{ center + glm::vec3{ 0.0f, height * 0.5f, 0.0f } };
@@ -225,11 +233,13 @@ namespace MauRen
 	void InternalDebugRenderer::DrawSphereComplex(glm::vec3 const& center, float radius, MauCor::Rotator const& rot, glm::vec3 const& colour, uint32_t segments, uint32_t layers) noexcept
 	{
 		ME_PROFILE_FUNCTION()
+
 		if (std::size(m_ActivePoints) + ((layers + 1) * (segments + 1)) >= MAX_LINES)
 		{
 			ME_LOG_WARN(MauCor::LogCategory::Renderer, "Debug renderer active points has surpassed the set limit.");
 			return;
 		}
+
 		auto const baseId{ m_ActivePoints.size() };
 
 		// Need an additional point to close the circle
@@ -276,44 +286,9 @@ namespace MauRen
 
 	void InternalDebugRenderer::DrawEllipsoid(glm::vec3 const& center, glm::vec3 const& size, MauCor::Rotator const& rot, glm::vec3 const& colour, uint32_t segments) noexcept
 	{
-		{
-			std::vector<glm::vec3> points{};
-			std::vector<std::pair<uint32_t, uint32_t>> indices{};
-//			DrawEllipseLocal({ size.x , size.z }, points, indices, segments);
-
-			for (auto& p : points)
-			{
-				p = MauCor::Rotator{ 0, 90, 0 } * p;
-			}
-
-			AddDebugLines(points, indices, rot.rotation, colour, center);
-		}
-
-		{
-			std::vector<glm::vec3> points{};
-			std::vector<std::pair<uint32_t, uint32_t>> indices{};
-			//DrawEllipseLocal({ size.x , size.y }, points, indices, segments);
-
-			for (auto& p : points)
-			{
-				p = MauCor::Rotator{ 0, 0, 90 } * p;
-			}
-
-			AddDebugLines(points, indices, rot.rotation, colour, center);
-		}
-
-		{
-			std::vector<glm::vec3> points{};
-			std::vector<std::pair<uint32_t, uint32_t>> indices{};
-		//	DrawEllipseLocal({ size.y , size.z }, points, indices, segments);
-
-			for (auto& p : points)
-			{
-				p = MauCor::Rotator{ 90, 0, 0 } * p;
-			}
-
-			AddDebugLines(points, indices, rot.rotation, colour, center);
-		}
+		DrawEllipse(center, size, rot * MauCor::Rotator{ 0, 0, 90 }, colour, segments);
+		DrawEllipse(center, size, rot * MauCor::Rotator{ 0, 90, 0 }, colour, segments);
+		DrawEllipse(center, size, rot * MauCor::Rotator{ 90, 0, 0 }, colour, segments);
 	}
 
 	void InternalDebugRenderer::DrawEllipsoidComplex(glm::vec3 const& center, glm::vec3 const& size, MauCor::Rotator const& rot, glm::vec3 const& colour, uint32_t segments, uint32_t layers) noexcept
