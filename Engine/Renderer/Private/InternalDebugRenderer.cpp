@@ -219,7 +219,7 @@ namespace MauRen
 		}
 	}
 
-	void InternalDebugRenderer::DrawCylinder(glm::vec3 const& center, glm::vec3 const& size, MauCor::Rotator const& rot, glm::vec3 const& colour, uint32_t segments) noexcept
+	void InternalDebugRenderer::DrawCylinder(glm::vec3 const& center, glm::vec3 const& size, MauCor::Rotator const& rot, glm::vec3 const& colour, uint32_t segments, bool isPivotOverride, glm::vec3 const& pivot) noexcept
 	{
 		if (std::size(m_ActivePoints) + segments + 2 >= MAX_LINES)
 		{
@@ -249,8 +249,16 @@ namespace MauRen
 				size.z * glm::sin(angle),
 			};
 
-			m_ActivePoints.emplace_back(rot.rotation * bottomPoint + center, colour);
-			m_ActivePoints.emplace_back(rot.rotation * topPoint + center, colour);
+			if (isPivotOverride)
+			{
+				m_ActivePoints.emplace_back(rot.rotation * (bottomPoint - pivot ) + pivot + center , colour);
+				m_ActivePoints.emplace_back(rot.rotation * (topPoint - pivot) + pivot + center, colour);
+			}
+			else
+			{
+				m_ActivePoints.emplace_back(rot.rotation * bottomPoint + center, colour);
+				m_ActivePoints.emplace_back(rot.rotation * topPoint + center, colour);
+			}
 
 			uint32_t const nextIndex{ (i + 1) % segments };
 			uint32_t const oppositeIndex{ (i + segments / 2) % segments };

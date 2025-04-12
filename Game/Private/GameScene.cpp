@@ -165,8 +165,8 @@ namespace MauGam
 		bool constexpr DRAW_ARROWS{ false };
 		bool constexpr DRAW_CIRCLES{ false };
 		bool constexpr DRAW_SPHERES{ false };
-		bool constexpr DRAW_CYL{ false };
-		bool constexpr DRAW_POLY{ true };
+		bool constexpr DRAW_CYL{ true };
+		bool constexpr DRAW_POLY{ false };
 
 		// Demo debug drawing tests
 		if constexpr (DRAW_LINES)
@@ -270,7 +270,9 @@ namespace MauGam
 			static float cylRot{};
 
 			DEBUG_RENDERER.DrawCylinder({ -10, 0, -10 }, { 20, 100, 20 });
-			DEBUG_RENDERER.DrawCylinder({ -10, 0, -10 }, {20, 100, 20}, {cylRot, cylRot, cylRot}, {1, 1, 1});
+			DEBUG_RENDERER.DrawCylinder({ -10, 0, -10 }, { 20, 100, 20 }, { cylRot, cylRot, cylRot }, { 1, 1, 1 });
+			DEBUG_RENDERER.DrawCylinder({ -10, 0, -10 }, { 20, 100, 20 }, { cylRot, cylRot, cylRot }, { 0, 1, 0 }, 24, true, { 20, 20, 20 });
+			DEBUG_RENDERER.DrawCylinder({ -10, 0, -10 }, {20, 100, 20}, {}, {0, 1, 1}, 24, true,{20, 20, 20});
 
 			cylRot += CYL_ROT_SPEED * TIME.ElapsedSec();
 		}
