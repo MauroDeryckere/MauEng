@@ -25,7 +25,7 @@ namespace MauRen
 
 		void DrawArrow(glm::vec3 const& start, glm::vec3 const& end, MauCor::Rotator const& rot = {}, glm::vec3 const& colour = { 1, 0, 0 }, float arrowHeadLength = .5f) noexcept override;
 
-		void DrawPolygon(std::vector<glm::vec3> const& points, glm::vec3 const& colour = { 1, 0, 0 }) noexcept override;
+		void DrawPolygon(std::vector<glm::vec3> const& points, MauCor::Rotator const& rot = {}, glm::vec3 const& colour = { 1, 0, 0 }) noexcept override;
 
 		void DrawCircle(glm::vec3 const& center, float radius, MauCor::Rotator const& rot = {}, glm::vec3 const& colour = { 1, 0, 0 }, uint32_t segments = 24) noexcept override;
 		void DrawEllipse(glm::vec3 const& center, glm::vec2 const& size, MauCor::Rotator const& rot = {}, glm::vec3 const& colour = { 1, 0, 0 }, uint32_t segments = 24) noexcept override;

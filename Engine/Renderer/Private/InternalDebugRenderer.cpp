@@ -142,20 +142,38 @@ namespace MauRen
 		AddDebugLines(localPoints, lines, rot.rotation, colour, center);
 	}
 
-	void InternalDebugRenderer::DrawPolygon(std::vector<glm::vec3> const& points, glm::vec3 const& colour) noexcept
+	void InternalDebugRenderer::DrawPolygon(std::vector<glm::vec3> const& points, MauCor::Rotator const& rot, glm::vec3 const& colour) noexcept
 	{
-		assert(points.size() > 3);
-		if (points.size() < 3)
+		ME_ASSERT(points.size() > 3, "Polygon must be contain more than 3 points");
+		if (points.size() <= 3)
 		{
+			ME_LOG_WARN(MauCor::LogCategory::Renderer, "Polygon must be contain more than 3 points");
 			return;
 		}
 
+		if (std::size(m_ActivePoints) + std::size(points) >= MAX_LINES)
+		{
+			ME_LOG_WARN(MauCor::LogCategory::Renderer, "Debug renderer active points has surpassed the set limit, edit the config or try drawing less points! ");
+			return;
+		}
+
+		// Center is simply the average point
+		glm::vec3 center{};
+		for (auto const& p : points)
+		{
+			center += p;
+		}
+		center /= points.size();
+
+		auto const baseIndex{ m_ActivePoints.size() };
 		for (size_t i{ 0 }; i < points.size(); ++i)
 		{
-			//glm::vec3 const& p1 = points[i];
-			//glm::vec3 const& p2 = points[(i + 1) % points.size()];
+			uint32_t const nextIndex{ static_cast<uint32_t>((i + 1) % points.size()) };
 
-			//DrawLine(p1, p2, colour);
+			m_ActivePoints.emplace_back((rot.rotation * points[i]) + center, colour);
+
+			m_IndexBuffer.emplace_back(baseIndex + i);
+			m_IndexBuffer.emplace_back(baseIndex + nextIndex);
 		}
 	}
 
