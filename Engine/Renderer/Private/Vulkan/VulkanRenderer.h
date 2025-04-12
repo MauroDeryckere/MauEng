@@ -19,7 +19,7 @@
 
 #include "VulkanImage.h"
 
-#include "DebugVertex.h"
+#include "DebugRenderer/DebugVertex.h"
 
 // Sources
 // https://github.com/KhronosGroup/Vulkan-Docs/wiki/Synchronization-Examples#swapchain-image-acquire-and-present

@@ -3,7 +3,7 @@
 
 #include "RendererPCH.h"
 #include "Vertex.h"
-#include "DebugVertex.h"
+#include "DebugRenderer/DebugVertex.h"
 
 namespace MauRen
 {

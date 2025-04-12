@@ -11,7 +11,7 @@
 
 #include "VulkanMeshManager.h"
 #include "VulkanMaterialManager.h"
-#include "InternalDebugRenderer.h"
+#include "DebugRenderer/InternalDebugRenderer.h"
 #include "NullDebugRenderer.h"
 
 namespace MauRen

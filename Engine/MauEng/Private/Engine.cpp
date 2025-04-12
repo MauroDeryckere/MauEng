@@ -18,7 +18,7 @@
 
 #include "Logger/logger.h"
 
-#include "InternalDebugRenderer.h"
+#include "../../Renderer/Private/DebugRenderer/InternalDebugRenderer.h"
 #include "Input/KeyInfo.h"
 
 namespace MauEng

@@ -164,8 +164,8 @@ namespace MauGam
 		bool constexpr DRAW_TRIANGLES{ false };
 		bool constexpr DRAW_ARROWS{ false };
 		bool constexpr DRAW_CIRCLES{ false };
-		bool constexpr DRAW_SPHERES{ false };
-		bool constexpr DRAW_CYL{ true };
+		bool constexpr DRAW_SPHERES{ true };
+		bool constexpr DRAW_CYL{ false };
 		bool constexpr DRAW_POLY{ false };
 
 		// Demo debug drawing tests
