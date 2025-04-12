@@ -74,9 +74,6 @@ namespace MauGam
 		ME_PROFILE_FUNCTION()
 
 		Scene::Tick();
-
-		DemoDebugDrawing();
-
 		// Demo logging tests
 		//LOGGER.Log(MauCor::LogPriority::Error, MauCor::LogCategory::Game,"test {}", 1000);
 		//ME_LOG_ERROR(MauCor::LogCategory::Game, "TEST");
@@ -138,6 +135,8 @@ namespace MauGam
 	//	m_Mehses[0].Rotate(rotationSpeed * TIME.ElapsedSec(), glm::vec3(0.0f, 0.0f, 1.0f));
 	//	m_Mehses[1].Rotate(rotationSpeed * TIME.ElapsedSec(), glm::vec3(0.0f, 0.0f, 1.0f));
 	//	m_Mehses[2].Rotate(rotationSpeed * TIME.ElapsedSec(), glm::vec3(0.0f, 1.0f, 0.0f));
+
+		DemoDebugDrawing();
 	}
 
 	void GameScene::OnRender() const
@@ -249,11 +248,21 @@ namespace MauGam
 			DEBUG_RENDERER.DrawSphere({ -10, -10, -10 }, 20.f, {}, { 1, 1, 0 });
 			DEBUG_RENDERER.DrawSphere({-10, -10, -10}, 20.f, sphereRot, {1,1,1});
 
-			//DEBUG_RENDERER.DrawSphereComplex({ 20,20,20 }, 20.f, { }, {1, 0, 0}, 24, 6);
-			//DEBUG_RENDERER.DrawSphereComplex({ 20,20,20 }, 20.f, { sphereRot }, {1, 1, 1}, 24, 6);
+			DEBUG_RENDERER.DrawSphereComplex({ 20,20,20 }, 20.f, { }, {1, 0, 0}, 50, 20);
+			DEBUG_RENDERER.DrawSphereComplex({ 20,20,20 }, 20.f, { sphereRot }, {1, 1, 1}, 50, 20);
 
-			//DEBUG_RENDERER.DrawEllipsoid({ -100, -100, -100 }, { 10, 20, 20 }, {}, {0, 1, 0});
-			//DEBUG_RENDERER.DrawEllipsoidComplex({}, 10, 20, 30.f, { 0, 0, 1 }, 24,6);
+			DEBUG_RENDERER.DrawSphereComplex_Parametric({ 20,20,20 }, 20.f, { }, { 1, 1, 0 }, 50, 20);
+			DEBUG_RENDERER.DrawSphereComplex_Parametric({ 20,20,20 }, 20.f, { sphereRot }, { 0, 1, 1 }, 50, 20);
+
+
+			DEBUG_RENDERER.DrawEllipsoid({ -30, -30, 0 }, { 10, 20, 20 }, {});
+			DEBUG_RENDERER.DrawEllipsoid({ -30, -30, 0 }, { 10, 20, 20 }, { sphereRot }, {1, 1, 1} );
+
+			DEBUG_RENDERER.DrawEllipsoidComplex({ 0, 0, 50 }, { 20, 50, 20 }, {}, { 1, 0, 0 }, 100, 30);
+			DEBUG_RENDERER.DrawEllipsoidComplex({ 0, 0, 50 }, { 20, 50, 20 }, { sphereRot }, { 1, 1, 1 }, 100, 30);
+
+			DEBUG_RENDERER.DrawEllipsoidComplex_Parametric({ 0, 0, 50 }, { 20, 50, 20 }, {}, {0, 1, 0}, 100, 30);
+			DEBUG_RENDERER.DrawEllipsoidComplex_Parametric({ 0, 0, 50 }, { 20, 50, 20 }, {sphereRot}, {1,1,0}, 100, 30);
 
 			sphereRot += SPHERE_ROT_SPEED * TIME.ElapsedSec();
 		}
