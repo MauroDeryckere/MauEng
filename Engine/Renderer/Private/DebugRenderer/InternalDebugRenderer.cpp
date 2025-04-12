@@ -251,8 +251,19 @@ namespace MauRen
 
 			if (isPivotOverride)
 			{
-				m_ActivePoints.emplace_back(rot.rotation * (bottomPoint - pivot ) + pivot + center , colour);
-				m_ActivePoints.emplace_back(rot.rotation * (topPoint - pivot) + pivot + center, colour);
+				{
+					glm::vec3 const worldPoint{ bottomPoint + center };
+					glm::vec3 const rotatedPoint{ rot.rotation * (worldPoint - pivot) + pivot };
+
+					m_ActivePoints.emplace_back(rotatedPoint, colour);
+				}
+
+				{
+					glm::vec3 const worldPoint{ topPoint + center };
+					glm::vec3 const rotatedPoint{ rot.rotation * (worldPoint - pivot) + pivot };
+
+					m_ActivePoints.emplace_back(rotatedPoint, colour);
+				}
 			}
 			else
 			{
@@ -285,24 +296,24 @@ namespace MauRen
 		}
 	}
 
-	void InternalDebugRenderer::DrawSphere(glm::vec3 const& center, float radius, MauCor::Rotator const& rot, glm::vec3 const& colour, uint32_t segments) noexcept
+	void InternalDebugRenderer::DrawSphere(glm::vec3 const& center, float radius, MauCor::Rotator const& rot, glm::vec3 const& colour, uint32_t segments, bool isPivotOverride, glm::vec3 const& pivot) noexcept
 	{
-		DrawEllipsoid(center, { radius, radius, radius }, rot, colour, segments);
+		DrawEllipsoid(center, { radius, radius, radius }, rot, colour, segments, isPivotOverride, pivot);
 	}
 
-	void InternalDebugRenderer::DrawSphereComplex(glm::vec3 const& center, float radius, MauCor::Rotator const& rot, glm::vec3 const& colour, uint32_t segments, uint32_t layers) noexcept
+	void InternalDebugRenderer::DrawSphereComplex(glm::vec3 const& center, float radius, MauCor::Rotator const& rot, glm::vec3 const& colour, uint32_t segments, uint32_t layers, bool isPivotOverride, glm::vec3 const& pivot) noexcept
 	{
-		DrawEllipsoidComplex(center, { radius, radius, radius }, rot, colour, segments, layers);
+		DrawEllipsoidComplex(center, { radius, radius, radius }, rot, colour, segments, layers, isPivotOverride, pivot);
 	}
 
-	void InternalDebugRenderer::DrawEllipsoid(glm::vec3 const& center, glm::vec3 const& size, MauCor::Rotator const& rot, glm::vec3 const& colour, uint32_t segments) noexcept
+	void InternalDebugRenderer::DrawEllipsoid(glm::vec3 const& center, glm::vec3 const& size, MauCor::Rotator const& rot, glm::vec3 const& colour, uint32_t segments, bool isPivotOverride, glm::vec3 const& pivot) noexcept
 	{
 		DrawEllipse(center, size, rot * MauCor::Rotator{ 0, 0, 90 }, colour, segments);
 		DrawEllipse(center, size, rot * MauCor::Rotator{ 0, 90, 0 }, colour, segments);
 		DrawEllipse(center, size, rot * MauCor::Rotator{ 90, 0, 0 }, colour, segments);
 	}
 
-	void InternalDebugRenderer::DrawEllipsoidComplex(glm::vec3 const& center, glm::vec3 const& size, MauCor::Rotator const& rot, glm::vec3 const& colour, uint32_t segments, uint32_t layers) noexcept
+	void InternalDebugRenderer::DrawEllipsoidComplex(glm::vec3 const& center, glm::vec3 const& size, MauCor::Rotator const& rot, glm::vec3 const& colour, uint32_t segments, uint32_t layers, bool isPivotOverride, glm::vec3 const& pivot) noexcept
 	{
 		ME_PROFILE_FUNCTION()
 
@@ -336,7 +347,17 @@ namespace MauRen
 					size.z * sinTheta * sinPhi
 				};
 
-				m_ActivePoints.emplace_back((rot.rotation * localPoint) + center, colour);
+				if (isPivotOverride)
+				{
+					glm::vec3 const worldPoint{ localPoint + center };
+					glm::vec3 const rotatedPoint{ rot.rotation * (worldPoint - pivot) + pivot };
+
+					m_ActivePoints.emplace_back(rotatedPoint, colour);
+				}
+				else
+				{
+					m_ActivePoints.emplace_back((rot.rotation * localPoint) + center, colour);
+				}
 
 				if (j > 0)
 				{

@@ -164,8 +164,8 @@ namespace MauGam
 		bool constexpr DRAW_TRIANGLES{ false };
 		bool constexpr DRAW_ARROWS{ false };
 		bool constexpr DRAW_CIRCLES{ false };
-		bool constexpr DRAW_SPHERES{ true };
-		bool constexpr DRAW_CYL{ false };
+		bool constexpr DRAW_SPHERES{ false };
+		bool constexpr DRAW_CYL{ true };
 		bool constexpr DRAW_POLY{ false };
 
 		// Demo debug drawing tests
@@ -260,6 +260,14 @@ namespace MauGam
 
 			DEBUG_RENDERER.DrawEllipsoidComplex({ 0, 0, 50 }, { 20, 50, 20 }, {}, { 1, 0, 0 }, 100, 30);
 			DEBUG_RENDERER.DrawEllipsoidComplex({ 0, 0, 50 }, { 20, 50, 20 }, { sphereRot }, { 1, 1, 1 }, 100, 30);
+
+			DEBUG_RENDERER.DrawSphere({ 20, 20, 20 }, 1, {},  { .5, .5, 1 });
+
+			DEBUG_RENDERER.DrawEllipsoidComplex({ 0, 0, -50 }, { 20, 50, 20 }, {}, { 1, 0, 1 }, 100, 30, false);
+			DEBUG_RENDERER.DrawEllipsoidComplex({ 0, 0, -50 }, { 20, 50, 20 }, {}, { 1, 1, 1 }, 100, 30, true);
+			DEBUG_RENDERER.DrawEllipsoidComplex({ 0, 0, -50 }, { 20, 50, 20 }, {}, { 1, 1, 1 }, 100, 30, true, {20, 20, 20});
+			DEBUG_RENDERER.DrawEllipsoidComplex({ 0, 0, -50 }, { 20, 50, 20 }, { 0, sphereRot }, { 1, 1, 0 }, 100, 30, true, {20, 20, 20});
+
 
 			sphereRot += SPHERE_ROT_SPEED * TIME.ElapsedSec();
 		}
