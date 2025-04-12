@@ -19,7 +19,7 @@ namespace MauRen
 
 		virtual void DrawArrow(glm::vec3 const& start, glm::vec3 const& end, MauCor::Rotator const& rot = {}, glm::vec3 const& colour = { 1, 0, 0 }, float arrowHeadLength = .5f) noexcept = 0;
 
-		virtual void DrawPolygon(std::vector<glm::vec3> const& points, MauCor::Rotator const& rot = {}, glm::vec3 const& colour = { 1, 0, 0 }) noexcept = 0;
+		virtual void DrawPolygon(std::vector<glm::vec3> const& points, MauCor::Rotator const& rot = {}, glm::vec3 const& colour = { 1, 0, 0 }, bool isPivotOverride = false, glm::vec3 const& pivot = {}) noexcept = 0;
 
 		virtual void DrawCircle(glm::vec3 const& center, float radius, MauCor::Rotator const& rot = {}, glm::vec3 const& colour = { 1, 0, 0 }, uint32_t segments = 24) noexcept = 0;
 		virtual void DrawEllipse(glm::vec3 const& center, glm::vec2 const& size, MauCor::Rotator const& rot = {}, glm::vec3 const& colour = { 1, 0, 0 }, uint32_t segments = 24) noexcept = 0;
@@ -50,7 +50,7 @@ namespace MauRen
 
 		virtual void DrawArrow(glm::vec3 const& start, glm::vec3 const& end, MauCor::Rotator const& rot = {}, glm::vec3 const& colour = { 1, 0, 0 }, float arrowHeadLength = .5f) noexcept override {}
 
-		virtual void DrawPolygon(std::vector<glm::vec3> const& points, MauCor::Rotator const& rot = {}, glm::vec3 const& colour = { 1, 0, 0 }) noexcept override {}
+		virtual void DrawPolygon(std::vector<glm::vec3> const& points, MauCor::Rotator const& rot = {}, glm::vec3 const& colour = { 1, 0, 0 }, bool isPivotOverride = false, glm::vec3 const& pivot = {}) noexcept override {}
 
 		virtual void DrawCircle(glm::vec3 const& center, float radius, MauCor::Rotator const& rot = {}, glm::vec3 const& colour = { 1, 0, 0 }, uint32_t segments = 24) noexcept override {}
 		virtual void DrawEllipse(glm::vec3 const& center, glm::vec2 const& size, MauCor::Rotator const& rot = {}, glm::vec3 const& colour = { 1, 0, 0 }, uint32_t segments = 24) noexcept override {}

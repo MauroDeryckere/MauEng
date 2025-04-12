@@ -280,8 +280,13 @@ namespace MauGam
 			static float constexpr POL_ROT_SPEED{ 10.f };
 			static float polRot{};
 
-			DEBUG_RENDERER.DrawPolygon({ {0, 0, 0}, { 0, 19, 20 }, {32, 10, -10}, {10, 20, 5}, {-2, -2, -2 } });
-			DEBUG_RENDERER.DrawPolygon({ {0, 0, 0}, { 0, 19, 20 }, {32, 10, -10}, {10, 20, 5}, {-2, -2, -2 } }, { polRot , polRot , polRot }, {1, 1, 1});
+			DEBUG_RENDERER.DrawSphere({}, 1);
+
+			DEBUG_RENDERER.DrawPolygon({ {20, 0, 0}, { 30, 0, 0 }, {30, 10, 0}, {20, 10, 0} });
+			DEBUG_RENDERER.DrawPolygon({ {20, 0, 0}, { 30, 0,0 }, {30, 10, 0}, {20, 10, 0} }, { 0, polRot }, {1, 1, 1});
+
+			DEBUG_RENDERER.DrawPolygon({ {20, 0, 0}, { 30, 0, 0  }, {30, 10, 0 }, {20, 10, 0} }, { 0, polRot }, { 1, 1, 1 }, true);
+
 
 			polRot += POL_ROT_SPEED * TIME.ElapsedSec();
 		}

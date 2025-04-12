@@ -142,7 +142,7 @@ namespace MauRen
 		AddDebugLines(localPoints, lines, rot.rotation, colour, center);
 	}
 
-	void InternalDebugRenderer::DrawPolygon(std::vector<glm::vec3> const& points, MauCor::Rotator const& rot, glm::vec3 const& colour) noexcept
+	void InternalDebugRenderer::DrawPolygon(std::vector<glm::vec3> const& points, MauCor::Rotator const& rot, glm::vec3 const& colour, bool isPivotOverride, glm::vec3 const& pivot) noexcept
 	{
 		ME_ASSERT(points.size() > 3, "Polygon must be contain more than 3 points");
 		if (points.size() <= 3)
@@ -159,18 +159,25 @@ namespace MauRen
 
 		// Center is simply the average point
 		glm::vec3 center{};
-		for (auto const& p : points)
+		if (isPivotOverride)
 		{
-			center += p;
+			center = pivot;
 		}
-		center /= points.size();
+		else
+		{
+			for (auto const& p : points)
+			{
+				center += p;
+			}
+			center /= points.size();
+		}
 
 		auto const baseIndex{ m_ActivePoints.size() };
 		for (size_t i{ 0 }; i < points.size(); ++i)
 		{
 			uint32_t const nextIndex{ static_cast<uint32_t>((i + 1) % points.size()) };
 
-			m_ActivePoints.emplace_back((rot.rotation * points[i]) + center, colour);
+			m_ActivePoints.emplace_back((rot.rotation * (points[i] - center)) + center, colour);
 
 			m_IndexBuffer.emplace_back(baseIndex + i);
 			m_IndexBuffer.emplace_back(baseIndex + nextIndex);
