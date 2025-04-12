@@ -337,7 +337,7 @@ namespace MauRen
 
 		VkPipelineRasterizationStateCreateInfo debugRasterizer{};
 		debugRasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-		debugRasterizer.polygonMode = VK_POLYGON_MODE_LINE;
+		debugRasterizer.polygonMode = VK_POLYGON_MODE_FILL;
 		debugRasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
 		debugRasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
 		debugRasterizer.lineWidth = 1.0f;

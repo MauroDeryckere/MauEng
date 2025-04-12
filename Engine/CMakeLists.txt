@@ -40,7 +40,9 @@ target_link_libraries(Engine
 )
 
 # Enable precompiled header support for Engine
-target_precompile_headers(Engine PRIVATE 
+target_precompile_headers(Engine
+    PRIVATE 
     "${ENGINE_PRIVATE_DIR}/EnginePCH.h"
+    PUBLIC
     "${ENGINE_PUBLIC_DIR}/PCH.h"
 )

@@ -13,6 +13,8 @@ namespace MauEng
 
 	void InputManager::HandleMouseHeldAndMovement()
 	{
+		ME_PROFILE_FUNCTION();
+
 		float x{ m_MouseX };
 		float y{ m_MouseY };
 		SDL_MouseButtonFlags mouseButtonState{ SDL_GetMouseState(&x, &y) };
@@ -42,6 +44,8 @@ namespace MauEng
 
 	void InputManager::HandleKeyboardHeld()
 	{
+		ME_PROFILE_FUNCTION();
+
 		auto const& actions{ m_MappedKeyboardActions[static_cast<size_t>(KeyInfo::ActionType::Held)] };
 		int numKeys{ };
 		bool const* keyState{ SDL_GetKeyboardState(&numKeys) };
@@ -109,48 +113,53 @@ namespace MauEng
 			}
 		};
 
-		SDL_Event event;
-		while (SDL_PollEvent(&event))
 		{
-			if (event.type == SDL_EVENT_QUIT || event.type == SDL_EVENT_WINDOW_CLOSE_REQUESTED)
+			ME_PROFILE_SCOPE("Process events")
+			SDL_Event event;
+			while (SDL_PollEvent(&event))
 			{
-				return false;
-			}
-
-		// Mouse
-			mouseActionfunc(event, SDL_EVENT_MOUSE_BUTTON_DOWN, MouseInfo::ActionType::Down);
-			mouseActionfunc(event, SDL_EVENT_MOUSE_BUTTON_UP, MouseInfo::ActionType::Up);
-			mouseActionfunc(event, SDL_EVENT_MOUSE_WHEEL, MouseInfo::ActionType::Scrolled);
-			mouseActionfunc(event, SDL_EVENT_MOUSE_MOTION, MouseInfo::ActionType::Moved);
-			mouseActionfunc(event, SDL_EVENT_WINDOW_MOUSE_ENTER, MouseInfo::ActionType::EnteredWindow);
-			mouseActionfunc(event, SDL_EVENT_WINDOW_MOUSE_LEAVE, MouseInfo::ActionType::LeftWindow);
-
-		// Keyboard
-			if (event.type == SDL_EVENT_KEY_DOWN && !event.key.repeat)
-			{
-				auto const& actions{ m_MappedKeyboardActions[static_cast<size_t>(KeyInfo::ActionType::Down)] };
-				auto it{ actions.find(static_cast<uint32_t>(event.key.key)) };
-				if (it != end(actions))
+				if (event.type == SDL_EVENT_QUIT || event.type == SDL_EVENT_WINDOW_CLOSE_REQUESTED)
 				{
-					for (auto const& action : it->second)
+					return false;
+				}
+
+				// Mouse
+				mouseActionfunc(event, SDL_EVENT_MOUSE_BUTTON_DOWN, MouseInfo::ActionType::Down);
+				mouseActionfunc(event, SDL_EVENT_MOUSE_BUTTON_UP, MouseInfo::ActionType::Up);
+				mouseActionfunc(event, SDL_EVENT_MOUSE_WHEEL, MouseInfo::ActionType::Scrolled);
+				mouseActionfunc(event, SDL_EVENT_MOUSE_MOTION, MouseInfo::ActionType::Moved);
+				mouseActionfunc(event, SDL_EVENT_WINDOW_MOUSE_ENTER, MouseInfo::ActionType::EnteredWindow);
+				mouseActionfunc(event, SDL_EVENT_WINDOW_MOUSE_LEAVE, MouseInfo::ActionType::LeftWindow);
+
+				// Keyboard
+				if (event.type == SDL_EVENT_KEY_DOWN && !event.key.repeat)
+				{
+					auto const& actions{ m_MappedKeyboardActions[static_cast<size_t>(KeyInfo::ActionType::Down)] };
+					auto it{ actions.find(static_cast<uint32_t>(event.key.key)) };
+					if (it != end(actions))
 					{
-						m_ExecutedActions.emplace(action);
+						for (auto const& action : it->second)
+						{
+							m_ExecutedActions.emplace(action);
+						}
 					}
 				}
-			}
-			else if (event.type == SDL_EVENT_KEY_UP)
-			{
-				auto const& actions{ m_MappedKeyboardActions[static_cast<size_t>(KeyInfo::ActionType::Up)] };
-				auto it{ actions.find(static_cast<uint32_t>(event.key.key)) };
-				if (it != end(actions))
+				else if (event.type == SDL_EVENT_KEY_UP)
 				{
-					for (auto const& action : it->second)
+					auto const& actions{ m_MappedKeyboardActions[static_cast<size_t>(KeyInfo::ActionType::Up)] };
+					auto it{ actions.find(static_cast<uint32_t>(event.key.key)) };
+					if (it != end(actions))
 					{
-						m_ExecutedActions.emplace(action);
+						for (auto const& action : it->second)
+						{
+							m_ExecutedActions.emplace(action);
+						}
 					}
 				}
 			}
 		}
+
+	
 
 		HandleMouseHeldAndMovement();
 		HandleKeyboardHeld();

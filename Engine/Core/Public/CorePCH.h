@@ -20,4 +20,6 @@
 #include "CoreServiceLocator.h"
 #include "Asserts/Asserts.h"
 
+#include "Math/Rotator.h"
+
 #endif
