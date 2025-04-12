@@ -217,7 +217,9 @@ namespace MauRen
 
 	void InternalDebugRenderer::DrawSphere(glm::vec3 const& center, float radius, MauCor::Rotator const& rot, glm::vec3 const& colour, uint32_t segments) noexcept
 	{
-	//DrawSphereComplex(center, radius, rot, colour, segments, 1);
+		DrawCircle(center, radius, rot * MauCor::Rotator{ 0, 0, 90 }, colour, segments);
+		DrawCircle(center, radius, rot * MauCor::Rotator{ 0, 90, 0 }, colour, segments);
+		DrawCircle(center, radius, rot * MauCor::Rotator{90, 0, 0}, colour, segments);
 	}
 
 	void InternalDebugRenderer::DrawSphereComplex(glm::vec3 const& center, float radius, MauCor::Rotator const& rot, glm::vec3 const& colour, uint32_t segments, uint32_t layers) noexcept
