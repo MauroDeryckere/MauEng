@@ -194,32 +194,61 @@ namespace MauRen
 		}
 	}
 
-	void InternalDebugRenderer::DrawCylinder(glm::vec3 const& center, float radius, float height, glm::vec3 const& colour, uint32_t segments) noexcept
+	void InternalDebugRenderer::DrawCylinder(glm::vec3 const& center, glm::vec3 const& size, MauCor::Rotator const& rot, glm::vec3 const& colour, uint32_t segments) noexcept
 	{
-		//TODO
-
-		if (std::size(m_ActivePoints) + 2 * ( 2 * segments + segments * 2) < MAX_LINES)
+		if (std::size(m_ActivePoints) + segments + 2 >= MAX_LINES)
 		{
-			glm::vec3 const topCenter{ center + glm::vec3{ 0.0f, height * 0.5f, 0.0f } };
-			glm::vec3 const bottomCenter{ center - glm::vec3{ 0.0f, height * 0.5f, 0.0f } };
+			ME_LOG_WARN(MauCor::LogCategory::Renderer, "Debug renderer active points has surpassed the set limit, edit the config or try drawing less points! ");
+			return;
+		}
 
-			DrawCircle(topCenter, radius, { 0, 1, 0 }, colour, segments);
-			DrawCircle(bottomCenter, radius, { 0, 1, 0 }, colour, segments);
+		float const deltaU{ glm::two_pi<float>() / static_cast<float>(segments) };
+		auto const baseIndex{ m_ActivePoints.size() };
 
-			for (uint32_t i{ 0 }; i < segments; ++i)
+		for (uint32_t i{ 0 }; i < segments; ++i)
+		{
+			float const angle{ i * deltaU };
+			// Bottom circle points (y = -height/2)
+			glm::vec3 const bottomPoint
 			{
-				float const angle1{ (2.0f * glm::pi<float>() * static_cast<float>(i)) / static_cast<float>(segments) };
-				float const angle2{ (2.0f * glm::pi<float>() * static_cast<float>(i + 1)) / static_cast<float>(segments) };
+				size.x * glm::cos(angle),
+				-size.y / 2.0f,
+				size.z * glm::sin(angle)
+			};
 
-				glm::vec3 const topPoint1{ topCenter + glm::vec3{ radius * glm::cos(angle1), 0.0f, radius * glm::sin(angle1) } };
-				glm::vec3 const topPoint2{ topCenter + glm::vec3{ radius * glm::cos(angle2), 0.0f, radius * glm::sin(angle2) } };
+			// Top circle points (y = height/2)
+			glm::vec3 const topPoint
+			{
+				size.x * glm::cos(angle),
+				size.y / 2.0f,
+				size.z * glm::sin(angle),
+			};
 
-				glm::vec3 const bottomPoint1{ bottomCenter + glm::vec3{ radius * glm::cos(angle1), 0.0f, radius * glm::sin(angle1) } };
-				glm::vec3 const bottomPoint2{ bottomCenter + glm::vec3{ radius * glm::cos(angle2), 0.0f, radius * glm::sin(angle2) } };
+			m_ActivePoints.emplace_back(rot.rotation * bottomPoint + center, colour);
+			m_ActivePoints.emplace_back(rot.rotation * topPoint + center, colour);
 
-				//DrawLine(topPoint1, bottomPoint1, colour);
-				//DrawLine(topPoint2, bottomPoint2, colour);
-			}
+			uint32_t const nextIndex{ (i + 1) % segments };
+			uint32_t const oppositeIndex{ (i + segments / 2) % segments };
+
+			// Bottom face edges
+			m_IndexBuffer.emplace_back(baseIndex + 2 * i);
+			m_IndexBuffer.emplace_back(baseIndex + 2 * nextIndex);
+
+			// Add lines between opposite points on the bottom circle
+			m_IndexBuffer.emplace_back(baseIndex + 2 * i);
+			m_IndexBuffer.emplace_back(baseIndex + 2 * oppositeIndex);
+
+			// Top face edges
+			m_IndexBuffer.emplace_back(baseIndex + 2 * i + 1);
+			m_IndexBuffer.emplace_back(baseIndex + 2 * nextIndex + 1);
+
+			// Add lines between opposite points on the top circle
+			m_IndexBuffer.emplace_back(baseIndex + 2 * i + 1);
+			m_IndexBuffer.emplace_back(baseIndex + 2 * oppositeIndex + 1);
+
+			// Side edges (connecting top and bottom)
+			m_IndexBuffer.emplace_back(baseIndex + 2 * i);
+			m_IndexBuffer.emplace_back(baseIndex + 2 * i + 1);
 		}
 	}
 

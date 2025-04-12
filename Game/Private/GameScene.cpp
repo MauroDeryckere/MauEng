@@ -6,6 +6,8 @@
 #include "GameTime.h"
 #include <glm/glm.hpp>
 
+#include "optick_server.h"
+
 namespace MauGam
 {
 	GameScene::GameScene()
@@ -162,7 +164,8 @@ namespace MauGam
 		bool constexpr DRAW_TRIANGLES{ false };
 		bool constexpr DRAW_ARROWS{ false };
 		bool constexpr DRAW_CIRCLES{ false };
-		bool constexpr DRAW_SPHERES{ true };
+		bool constexpr DRAW_SPHERES{ false };
+		bool constexpr DRAW_CYL{ true };
 
 		// Demo debug drawing tests
 		if constexpr (DRAW_LINES)
@@ -261,8 +264,16 @@ namespace MauGam
 		}
 
 
+		if constexpr(DRAW_CYL)
+		{
+			static float constexpr CYL_ROT_SPEED{ 10.f };
+			static float cylRot{};
 
-		//DEBUG_RENDERER.DrawCylinder({ -10, 0, -10 }, 10, 100);
+			DEBUG_RENDERER.DrawCylinder({ -10, 0, -10 }, { 20, 100, 20 });
+			DEBUG_RENDERER.DrawCylinder({ -10, 0, -10 }, {20, 100, 20}, {cylRot, cylRot, cylRot}, {1, 1, 1});
+
+			cylRot += CYL_ROT_SPEED * TIME.ElapsedSec();
+		}
 
 		//DEBUG_RENDERER.DrawPolygon({ {0, 0, 0}, { 0, 19, 20 }, {32, 10, -10}, {10, 20, 5}, {-2, -2, -2 } });
 	}
