@@ -225,63 +225,12 @@ namespace MauRen
 
 	void InternalDebugRenderer::DrawSphere(glm::vec3 const& center, float radius, MauCor::Rotator const& rot, glm::vec3 const& colour, uint32_t segments) noexcept
 	{
-		DrawCircle(center, radius, rot * MauCor::Rotator{ 0, 0, 90 }, colour, segments);
-		DrawCircle(center, radius, rot * MauCor::Rotator{ 0, 90, 0 }, colour, segments);
-		DrawCircle(center, radius, rot * MauCor::Rotator{90, 0, 0}, colour, segments);
+		DrawEllipsoid(center, { radius, radius, radius }, rot, colour, segments);
 	}
 
 	void InternalDebugRenderer::DrawSphereComplex(glm::vec3 const& center, float radius, MauCor::Rotator const& rot, glm::vec3 const& colour, uint32_t segments, uint32_t layers) noexcept
 	{
-		ME_PROFILE_FUNCTION()
-
-		if (std::size(m_ActivePoints) + ((layers + 1) * (segments + 1)) >= MAX_LINES)
-		{
-			ME_LOG_WARN(MauCor::LogCategory::Renderer, "Debug renderer active points has surpassed the set limit.");
-			return;
-		}
-
-		auto const baseId{ m_ActivePoints.size() };
-
-		// Need an additional point to close the circle
-		uint32_t const indexStride{ segments + 1 };
-
-		for (uint32_t i{ 0}; i <= layers; ++i)
-		{
-			// 0 to PI (latitude)
-			float const theta{ glm::pi<float>() * static_cast<float>(i) / static_cast<float>(layers) };
-			float const sinTheta{ std::sin(theta) };
-			float const cosTheta{ std::cos(theta) };
-
-			// Need an additional layer to close the circle
-			for (uint32_t j{ 0 }; j <= segments; ++j)
-			{
-				// 0 to 2PI (longitude)
-				float const phi{ glm::two_pi<float>() * static_cast<float>(j) / static_cast<float>(segments) };
-				float const sinPhi{ std::sin(phi) };
-				float const cosPhi{ std::cos(phi) };
-
-				glm::vec3 const localPoint
-				{
-					radius * sinTheta * cosPhi,
-					radius * cosTheta,
-					radius * sinTheta * sinPhi
-				};
-
-				m_ActivePoints.emplace_back(rot.rotation * localPoint + center, colour);
-
-				if (j > 0)
-				{
-					m_IndexBuffer.emplace_back(baseId + (i * indexStride + j - 1));
-					m_IndexBuffer.emplace_back(baseId + (i * indexStride + j));
-				}
-
-				if (i > 0)
-				{
-					m_IndexBuffer.emplace_back(baseId + ((i - 1) * indexStride + j));
-					m_IndexBuffer.emplace_back(baseId + (i * indexStride + j));
-				}
-			}
-		}
+		DrawEllipsoidComplex(center, { radius, radius, radius }, rot, colour, segments, layers);
 	}
 
 	void InternalDebugRenderer::DrawEllipsoid(glm::vec3 const& center, glm::vec3 const& size, MauCor::Rotator const& rot, glm::vec3 const& colour, uint32_t segments) noexcept
@@ -295,28 +244,37 @@ namespace MauRen
 	{
 		ME_PROFILE_FUNCTION()
 
+		if (std::size(m_ActivePoints) + ((layers + 1) * (segments + 1)) >= MAX_LINES)
+		{
+			ME_LOG_WARN(MauCor::LogCategory::Renderer, "Debug renderer active points has surpassed the set limit.");
+			return;
+		}
+
 		auto const baseId{ m_ActivePoints.size() };
 		uint32_t const indexStride{ segments + 1 };
 
-		for (uint32_t i = 0; i <= layers; ++i)
+		for (uint32_t i{ 0 }; i <= layers; ++i)
 		{
-			float theta = glm::pi<float>() * static_cast<float>(i) / static_cast<float>(layers); // 0 to PI (latitude)
-			float sinTheta = std::sin(theta);
-			float cosTheta = std::cos(theta);
+			// 0 to PI (latitude)
+			float const theta{ glm::pi<float>() * static_cast<float>(i) / static_cast<float>(layers) };
+			float const sinTheta{ std::sin(theta) };
+			float const cosTheta{ std::cos(theta) };
 
-			for (uint32_t j = 0; j <= segments; ++j)
+			for (uint32_t j{ 0 }; j <= segments; ++j)
 			{
-				float phi = glm::two_pi<float>() * static_cast<float>(j) / static_cast<float>(segments); // 0 to 2PI (longitude)
-				float sinPhi = std::sin(phi);
-				float cosPhi = std::cos(phi);
+				// 0 to 2PI (longitude)
+				float const phi{ glm::two_pi<float>() * static_cast<float>(j) / static_cast<float>(segments) };
+				float const sinPhi{ std::sin(phi) };
+				float const cosPhi{ std::cos(phi) };
 
-				glm::vec3 localPoint{
+				glm::vec3 const localPoint
+				{
 					size.x * sinTheta * cosPhi,
 					size.y * cosTheta,
 					size.z * sinTheta * sinPhi
 				};
 
-				m_ActivePoints.emplace_back(rot.rotation * localPoint + center, colour);
+				m_ActivePoints.emplace_back((rot.rotation * localPoint) + center, colour);
 
 				if (j > 0)
 				{
