@@ -166,11 +166,26 @@ namespace MauRen
 
 	void InternalDebugRenderer::DrawEllipse(glm::vec3 const& center, glm::vec2 const& size, MauCor::Rotator const& rot, glm::vec3 const& colour, uint32_t segments) noexcept
 	{
-		std::vector<glm::vec3> points{};
-		std::vector<std::pair<uint32_t, uint32_t>> indices{};
-		DrawEllipseLocal(size, points, indices, segments);
+		float const delta{ glm::two_pi<float>() / static_cast<float>(segments) };
 
-		AddDebugLines(points, indices, rot.rotation, colour, center);
+		// Define unit vectors along the X and Y axis in local space
+		glm::vec3 constexpr localV1{ 1.0f, 0.0f, 0.0f };
+		glm::vec3 constexpr localV2{ 0.0f, 1.0f, 0.0f };
+
+		auto const baseIndex{ m_ActivePoints.size() };
+
+		for (uint32_t i{ 0 }; i < segments; ++i)
+		{
+			float const angle{ i * delta };
+
+			glm::vec3 const localPoint{ size.x * glm::cos(angle) * localV1 + size.y * glm::sin(angle) * localV2 };
+
+			m_ActivePoints.emplace_back((rot.rotation * localPoint) + center, colour);
+
+			uint32_t const nextIndex{ (i + 1) % segments };
+			m_IndexBuffer.emplace_back(baseIndex + i);
+			m_IndexBuffer.emplace_back(baseIndex + nextIndex);
+		}
 	}
 
 	void InternalDebugRenderer::DrawCylinder(glm::vec3 const& center, float radius, float height, glm::vec3 const& colour, uint32_t segments) noexcept
@@ -202,125 +217,43 @@ namespace MauRen
 
 	void InternalDebugRenderer::DrawSphere(glm::vec3 const& center, float radius, MauCor::Rotator const& rot, glm::vec3 const& colour, uint32_t segments) noexcept
 	{
-		{
-			std::vector<glm::vec3> points{};
-			std::vector<std::pair<uint32_t, uint32_t>> indices{};
-			DrawEllipseLocal({ radius , radius }, points, indices, segments);
-
-			for (auto& p : points)
-			{
-				p = (MauCor::Rotator{ 0, 90, 0 } * p);
-			}
-
-			AddDebugLines(points, indices, rot.rotation, colour, center);
-		}
-
-		
-		{
-			std::vector<glm::vec3> points{};
-			std::vector<std::pair<uint32_t, uint32_t>> indices{};
-			DrawEllipseLocal({ radius , radius }, points, indices, segments);
-
-			for (auto& p : points)
-			{
-				p = (MauCor::Rotator{ 0, 0, 90 }  * p);
-			}
-
-			AddDebugLines(points, indices, rot.rotation, colour, center);
-		}
-			
-		{
-			std::vector<glm::vec3> points{};
-			std::vector<std::pair<uint32_t, uint32_t>> indices{};
-			DrawEllipseLocal({ radius , radius }, points, indices, segments);
-
-			for (auto& p : points)
-			{
-				p = (MauCor::Rotator{ 90, 0, 0 }  * p);
-			}
-
-			AddDebugLines(points, indices, rot.rotation, colour, center);
-		}
+	//DrawSphereComplex(center, radius, rot, colour, segments, 1);
 	}
 
 	void InternalDebugRenderer::DrawSphereComplex(glm::vec3 const& center, float radius, MauCor::Rotator const& rot, glm::vec3 const& colour, uint32_t segments, uint32_t layers) noexcept
 	{
 		ME_PROFILE_FUNCTION()
-
-		// Horizontal rings from pole to pole (latitude)
-		for (uint32_t i{ 1 }; i < layers; ++i)
+		if (std::size(m_ActivePoints) + ((layers + 1) * (segments + 1)) >= MAX_LINES)
 		{
-			// 0 - PI
-			float const theta{ glm::pi<float>() * static_cast<float>(i) / static_cast<float>(layers) };
-
-			float const height{ glm::cos(theta) };
-			// radius of current ring
-			float const rad{ glm::sin(theta) };
-
-			glm::vec3 const ringCenter{ center + glm::vec3{0.0f, height * radius, 0.0f} };
-			MauCor::Rotator const localRot{ 90, 0, 0 };
-
-			// XY rings along Y
-
-			std::vector<glm::vec3> points{};
-			std::vector<std::pair<uint32_t, uint32_t>> indices{};
-			DrawEllipseLocal(glm::vec2 { rad* radius, rad* radius }, points, indices, segments);
-
-			for (auto & p : points)
-			{
-				p = (ringCenter + localRot.rotation * p) - center;
-			}
-
-			AddDebugLines(points, indices, rot.rotation , colour, center);
+			ME_LOG_WARN(MauCor::LogCategory::Renderer, "Debug renderer active points has surpassed the set limit.");
+			return;
 		}
-
-		// Vertical rings (longitude)
-		for (uint32_t i{ 0 }; i < layers; ++i)
-		{
-			float const phi{ 180.f * static_cast<float>(i) / static_cast<float>(layers) };
-			MauCor::Rotator const localRot{ 0.0f, phi, 0.0f };
-
-			std::vector<glm::vec3> points{};
-			std::vector<std::pair<uint32_t, uint32_t>> indices{};
-			DrawEllipseLocal(glm::vec2{  radius,  radius }, points, indices, segments);
-
-			for (auto& p : points)
-			{
-				p = localRot.rotation * p;
-			}
-
-			AddDebugLines(points, indices, rot.rotation, colour, center);
-		}
-	}
-
-	void InternalDebugRenderer::DrawSphereComplex_Parametric(glm::vec3 const& center, float radius,
-		MauCor::Rotator const& rot, glm::vec3 const& colour, uint32_t segments, uint32_t layers) noexcept
-	{
-		ME_PROFILE_FUNCTION()
-
-		std::vector<std::pair<uint32_t, uint32_t>> indices;
 		auto const baseId{ m_ActivePoints.size() };
+
+		// Need an additional point to close the circle
 		uint32_t const indexStride{ segments + 1 };
 
-		// Generate grid of points
-		for (uint32_t i = 0; i <= layers; ++i)
+		for (uint32_t i{ 0}; i <= layers; ++i)
 		{
-			float theta = glm::pi<float>() * static_cast<float>(i) / static_cast<float>(layers); // 0 to PI (latitude)
-			float sinTheta = std::sin(theta);
-			float cosTheta = std::cos(theta);
+			// 0 to PI (latitude)
+			float const theta{ glm::pi<float>() * static_cast<float>(i) / static_cast<float>(layers) };
+			float const sinTheta{ std::sin(theta) };
+			float const cosTheta{ std::cos(theta) };
 
-			for (uint32_t j = 0; j <= segments; ++j)
+			// Need an additional layer to close the circle
+			for (uint32_t j{ 0 }; j <= segments; ++j)
 			{
-				float phi = glm::two_pi<float>() * static_cast<float>(j) / static_cast<float>(segments); // 0 to 2PI (longitude)
-				float sinPhi = std::sin(phi);
-				float cosPhi = std::cos(phi);
+				// 0 to 2PI (longitude)
+				float const phi{ glm::two_pi<float>() * static_cast<float>(j) / static_cast<float>(segments) };
+				float const sinPhi{ std::sin(phi) };
+				float const cosPhi{ std::cos(phi) };
 
-				glm::vec3 localPoint{
+				glm::vec3 const localPoint
+				{
 					radius * sinTheta * cosPhi,
 					radius * cosTheta,
 					radius * sinTheta * sinPhi
 				};
-
 
 				m_ActivePoints.emplace_back(rot.rotation * localPoint + center, colour);
 
@@ -344,7 +277,7 @@ namespace MauRen
 		{
 			std::vector<glm::vec3> points{};
 			std::vector<std::pair<uint32_t, uint32_t>> indices{};
-			DrawEllipseLocal({ size.x , size.z }, points, indices, segments);
+//			DrawEllipseLocal({ size.x , size.z }, points, indices, segments);
 
 			for (auto& p : points)
 			{
@@ -357,7 +290,7 @@ namespace MauRen
 		{
 			std::vector<glm::vec3> points{};
 			std::vector<std::pair<uint32_t, uint32_t>> indices{};
-			DrawEllipseLocal({ size.x , size.y }, points, indices, segments);
+			//DrawEllipseLocal({ size.x , size.y }, points, indices, segments);
 
 			for (auto& p : points)
 			{
@@ -370,7 +303,7 @@ namespace MauRen
 		{
 			std::vector<glm::vec3> points{};
 			std::vector<std::pair<uint32_t, uint32_t>> indices{};
-			DrawEllipseLocal({ size.y , size.z }, points, indices, segments);
+		//	DrawEllipseLocal({ size.y , size.z }, points, indices, segments);
 
 			for (auto& p : points)
 			{
@@ -385,58 +318,9 @@ namespace MauRen
 	{
 		ME_PROFILE_FUNCTION()
 
-		// Horizontal rings from pole to pole (latitude)
-		for (uint32_t i{ 1 }; i < layers; ++i)
-		{
-			// 0 - PI
-			float const theta{ glm::pi<float>() * static_cast<float>(i) / static_cast<float>(layers) };
-			float const height{ glm::cos(theta) * size.y };
-
-			glm::vec3 const ringCenter{ center + glm::vec3{ 0.0f, height, 0.0f } };
-
-			std::vector<glm::vec3> points{};
-			std::vector<std::pair<uint32_t, uint32_t>> indices{};
-			DrawEllipseLocal(glm::vec2{ glm::sin(theta) * size.x, glm::sin(theta) * size.z }, points, indices, segments);
-
-			MauCor::Rotator const localRot{ 90, 0 , 0 };
-
-			for (auto& p : points)
-			{
-				p = (ringCenter + localRot.rotation * p) - center;
-			}
-
-			AddDebugLines(points, indices, rot.rotation, colour, center);
-		}
-
-		// Vertical rings (longitude)
-		for (uint32_t i{ 0 }; i < layers; ++i)
-		{
-			float const phi{ 180.f * static_cast<float>(i) / static_cast<float>(layers) };
-			MauCor::Rotator const localRot{ 0 ,90 , phi };
-
-			std::vector<glm::vec3> points{};
-			std::vector<std::pair<uint32_t, uint32_t>> indices{};
-			DrawEllipseLocal(glm::vec2{ size.y, size.z }, points, indices, segments);
-
-			for (auto& p : points)
-			{
-				p = (center + localRot.rotation * p) - center;
-			}
-
-			AddDebugLines(points, indices, MauCor::Rotator{90, 0, 0}.rotation * rot.rotation, colour, center);
-		}
-	}
-
-	void InternalDebugRenderer::DrawEllipsoidComplex_Parametric(glm::vec3 const& center, glm::vec3 const& size,
-		MauCor::Rotator const& rot, glm::vec3 const& colour, uint32_t segments, uint32_t layers) noexcept
-	{
-		ME_PROFILE_FUNCTION()
-
-		std::vector<std::pair<uint32_t, uint32_t>> indices;
 		auto const baseId{ m_ActivePoints.size() };
 		uint32_t const indexStride{ segments + 1 };
 
-		// Generate grid of points
 		for (uint32_t i = 0; i <= layers; ++i)
 		{
 			float theta = glm::pi<float>() * static_cast<float>(i) / static_cast<float>(layers); // 0 to PI (latitude)
@@ -494,32 +378,6 @@ namespace MauRen
 		{
 			m_IndexBuffer.emplace_back(baseIndex + start);
 			m_IndexBuffer.emplace_back(baseIndex + end);
-		}
-	}
-
-	void InternalDebugRenderer::DrawEllipseLocal(glm::vec2 const& size, std::vector<glm::vec3>& localPoints,
-		std::vector<std::pair<uint32_t, uint32_t>>& lineIndices, uint32_t segments)
-	{
-		float const delta{ glm::two_pi<float>() / static_cast<float>(segments) };
-
-		// Define unit vectors along the X and Y axis in local space
-		glm::vec3 constexpr localV1{ 1.0f, 0.0f, 0.0f };
-		glm::vec3 constexpr localV2{ 0.0f, 1.0f, 0.0f };
-
-		localPoints.reserve(segments);
-		for (uint32_t i{ 0 }; i < segments; ++i)
-		{
-			float const angle{ i * delta };
-
-			glm::vec3 const point{ (size.x * glm::cos(angle) * localV1 + size.y * glm::sin(angle) * localV2) };
-			localPoints.emplace_back(point);
-		}
-
-		lineIndices.reserve(segments);
-		for (uint32_t i{ 0 }; i < segments; ++i)
-		{
-			uint32_t const nextIndex{ (i + 1) % segments };
-			lineIndices.emplace_back(i, nextIndex);
 		}
 	}
 }

@@ -161,8 +161,8 @@ namespace MauGam
 		bool constexpr DRAW_RECTS{ false };
 		bool constexpr DRAW_TRIANGLES{ false };
 		bool constexpr DRAW_ARROWS{ false };
-		bool constexpr DRAW_CIRCLES{ false };
-		bool constexpr DRAW_SPHERES{ true };
+		bool constexpr DRAW_CIRCLES{ true };
+		bool constexpr DRAW_SPHERES{ false };
 
 		// Demo debug drawing tests
 		if constexpr (DRAW_LINES)
@@ -248,21 +248,14 @@ namespace MauGam
 			DEBUG_RENDERER.DrawSphere({ -10, -10, -10 }, 20.f, {}, { 1, 1, 0 });
 			DEBUG_RENDERER.DrawSphere({-10, -10, -10}, 20.f, sphereRot, {1,1,1});
 
-			DEBUG_RENDERER.DrawSphereComplex({ 20,20,20 }, 20.f, { }, {1, 0, 0}, 50, 20);
-			DEBUG_RENDERER.DrawSphereComplex({ 20,20,20 }, 20.f, { sphereRot }, {1, 1, 1}, 50, 20);
-
-			DEBUG_RENDERER.DrawSphereComplex_Parametric({ 20,20,20 }, 20.f, { }, { 1, 1, 0 }, 50, 20);
-			DEBUG_RENDERER.DrawSphereComplex_Parametric({ 20,20,20 }, 20.f, { sphereRot }, { 0, 1, 1 }, 50, 20);
-
+			DEBUG_RENDERER.DrawSphereComplex({ 20,20,20 }, 20.f, { }, { 1, 0, 0 }, 24, 6);
+			DEBUG_RENDERER.DrawSphereComplex({ 20,20,20 }, 20.f, { sphereRot }, {1, 1, 1}, 24, 6);
 
 			DEBUG_RENDERER.DrawEllipsoid({ -30, -30, 0 }, { 10, 20, 20 }, {});
 			DEBUG_RENDERER.DrawEllipsoid({ -30, -30, 0 }, { 10, 20, 20 }, { sphereRot }, {1, 1, 1} );
 
 			DEBUG_RENDERER.DrawEllipsoidComplex({ 0, 0, 50 }, { 20, 50, 20 }, {}, { 1, 0, 0 }, 100, 30);
 			DEBUG_RENDERER.DrawEllipsoidComplex({ 0, 0, 50 }, { 20, 50, 20 }, { sphereRot }, { 1, 1, 1 }, 100, 30);
-
-			DEBUG_RENDERER.DrawEllipsoidComplex_Parametric({ 0, 0, 50 }, { 20, 50, 20 }, {}, {0, 1, 0}, 100, 30);
-			DEBUG_RENDERER.DrawEllipsoidComplex_Parametric({ 0, 0, 50 }, { 20, 50, 20 }, {sphereRot}, {1,1,0}, 100, 30);
 
 			sphereRot += SPHERE_ROT_SPEED * TIME.ElapsedSec();
 		}
