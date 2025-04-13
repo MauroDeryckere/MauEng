@@ -16,3 +16,6 @@
 [submodule "Engine/Core/Libs/Optick"]
 	path = Engine/Core/Libs/Optick
 	url = https://github.com/bombomby/optick.git
+[submodule "Engine/ECS/Libs/Entt"]
+	path = Engine/ECS/Libs/Entt
+	url = https://github.com/skypjack/entt.git

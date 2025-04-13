@@ -31,7 +31,6 @@ target_compile_definitions(MauEngCore PUBLIC
     $<$<BOOL:${MAUENG_USE_OPTICK}>:MAUENG_USE_OPTICK>
 )
 
-
 # Tests & similar
 set(DSDL_TESTS OFF)
 set(DSDL_TEST_LIBRARY OFF)
@@ -79,6 +78,7 @@ target_include_directories(MauEngCore
         ${SDL3_INCLUDE_DIRS}
     PRIVATE
         ${CORE_PRIVATE_DIR}       # Private headers for Core
+        "${CMAKE_CURRENT_SOURCE_DIR}/Shared"
 )
 
 target_precompile_headers(MauEngCore PRIVATE 

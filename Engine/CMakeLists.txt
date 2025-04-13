@@ -22,6 +22,7 @@ add_library(Engine STATIC
 )
 
 add_subdirectory(Core)
+add_subdirectory(ECS)
 add_subdirectory(Renderer)
 
 target_include_directories(Engine
@@ -30,6 +31,7 @@ target_include_directories(Engine
     PRIVATE
         ${ENGINE_PRIVATE_DIR}       # Private headers for Engine
         "${CMAKE_CURRENT_SOURCE_DIR}/Renderer/Shared"
+        "${CMAKE_CURRENT_SOURCE_DIR}/Core/Shared"
 )
 
 # Link the Renderer to the Engine
@@ -38,6 +40,7 @@ target_link_libraries(Engine
         MauEngCore
         Renderer
     PRIVATE
+        ECS
 )
 
 # Enable precompiled header support for Engine

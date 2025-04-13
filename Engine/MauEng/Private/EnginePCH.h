@@ -16,9 +16,7 @@
 #include <cassert>
 
 #include "Config/EngineConfig.h"
-#include "../../Core/Private/Asserts/AsseertsInternal.h"
-
-#include "CorePCH.h"
+#include "AssertsInternal.h"
 
 #include "CorePCH.h"
 

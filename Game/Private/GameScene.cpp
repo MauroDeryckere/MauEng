@@ -6,8 +6,6 @@
 #include "GameTime.h"
 #include <glm/glm.hpp>
 
-#include "optick_server.h"
-
 namespace MauGam
 {
 	GameScene::GameScene()

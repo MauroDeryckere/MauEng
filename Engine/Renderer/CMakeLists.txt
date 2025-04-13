@@ -53,7 +53,8 @@ target_include_directories(Renderer
         ${RENDERER_PUBLIC_DIR}        # Public headers for Renderer
     PRIVATE  
         ${RENDERER_PRIVATE_DIR}       # Private headers for Renderer
-        ${RENDERER_SHARED_DIR}       # Shared headers for Renderer
+        ${RENDERER_SHARED_DIR}
+        "../Core/Shared"
 )
 
 # Enable precompiled header support for Engine
