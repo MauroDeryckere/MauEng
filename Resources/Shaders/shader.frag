@@ -1,16 +1,30 @@
 #version 450
 #extension GL_EXT_nonuniform_qualifier : enable
 
-layout(push_constant) uniform PushConstants {
+layout(push_constant) uniform PushConstants 
+{
     mat4 modelMatrix;
-    uint albedoID;
-    uint normalID;
-    uint roughnessID;
-    uint metallicID;
+    uint materialID;
 } pc;
 
+struct MaterialData 
+{
+    vec4 baseColor;
+    uint albedoTextureID;
+    uint normalTextureID;
+    uint roughnessTextureID;
+    uint metallicTextureID;
+};
+
 layout(set = 0, binding = 1) uniform sampler globalSampler;
-layout(set = 0, binding = 2) uniform texture2D bindlessTextures[];
+
+layout(set = 0, binding = 2) uniform texture2D TextureBuffer[];
+
+layout(set = 0, binding = 3) buffer MaterialDataBuffer 
+{
+    MaterialData materials[];
+};
+
 
 //layout(set = 0, binding = 1) uniform sampler2D texSampler;  // This line is defining a combined image sampler
 
@@ -21,22 +35,25 @@ layout(location = 0) out vec4 outColor;
 
 void main() 
 {
+    // Access the material data based on the materialID from PushConstants
+    MaterialData material = materials[pc.materialID];
+
     // When the push constant ID is 0xFFFFFFFF, we treat it as missing and return a zero vector.
-    vec4 albedo = (pc.albedoID == 0xFFFFFFFF)
+    vec4 albedo = (material.albedoTextureID == 0xFFFFFFFF)
         ? vec4(0.0)
-        : texture(sampler2D(bindlessTextures[pc.albedoID], globalSampler), fragTexCoord);
+        : texture(sampler2D(TextureBuffer[material.albedoTextureID], globalSampler), fragTexCoord);
+
+    vec4 normal = (material.normalTextureID == 0xFFFFFFFF)
+        ? vec4(0.0)
+        : texture(sampler2D(TextureBuffer[material.normalTextureID], globalSampler), fragTexCoord);
         
-    vec4 normal = (pc.normalID == 0xFFFFFFFF)
+    vec4 roughness = (material.roughnessTextureID == 0xFFFFFFFF)
         ? vec4(0.0)
-        : texture(sampler2D(bindlessTextures[pc.normalID], globalSampler), fragTexCoord);
+        : texture(sampler2D(TextureBuffer[material.roughnessTextureID], globalSampler), fragTexCoord);
         
-    vec4 roughness = (pc.roughnessID == 0xFFFFFFFF)
+    vec4 metallic = (material.metallicTextureID == 0xFFFFFFFF)
         ? vec4(0.0)
-        : texture(sampler2D(bindlessTextures[pc.roughnessID], globalSampler), fragTexCoord);
-        
-    vec4 metallic = (pc.metallicID == 0xFFFFFFFF)
-        ? vec4(0.0)
-        : texture(sampler2D(bindlessTextures[pc.metallicID], globalSampler), fragTexCoord);
+        : texture(sampler2D(TextureBuffer[material.metallicTextureID], globalSampler), fragTexCoord);
 
 
     vec3 n = normalize(normal.xyz);

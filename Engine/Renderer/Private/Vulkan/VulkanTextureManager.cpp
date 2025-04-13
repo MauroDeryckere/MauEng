@@ -47,20 +47,24 @@ namespace MauRen
 
 	uint32_t VulkanTextureManager::LoadOrGetTexture(VulkanCommandPoolManager& cmdPoolManager, VulkanDescriptorContext& descriptorContext, std::string const& textureName) noexcept
 	{
-		ME_PROFILE_FUNCTION();
+		ME_PROFILE_FUNCTION()
 
 		if (m_Textures.size() == MAX_TEXTURES)
 		{
 			return INVALID_TEXTURE_ID;
 		}
 
-		VulkanImage textureImage{ CreateTextureImage(cmdPoolManager, "Resources/Materials/" + textureName)};
-	//	std::cout << "Resources/Materials/" + textureName << "\n";
-		// Create texture img function
+		auto const it{ m_TextureIDMap.find(textureName) };
+		if (it != end(m_TextureIDMap))
+		{
+			return it->second;
+		}
 
-		descriptorContext.AddTexture(m_Textures.size(), textureImage.imageViews[0], m_TextureSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		VulkanImage textureImage{ CreateTextureImage(cmdPoolManager, "Resources/Materials/" + textureName)};
+		descriptorContext.AddTexture(m_Textures.size(), textureImage.imageViews[0], VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 		m_Textures.emplace_back(textureImage);
+		m_TextureIDMap[textureName] = m_Textures.size() - 1;
 
 		return m_Textures.size() - 1;
 	}

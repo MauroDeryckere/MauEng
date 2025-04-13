@@ -31,6 +31,7 @@ namespace MauRen
 	static_assert(MAX_FRAMES_IN_FLIGHT > 0);
 
 	uint32_t constexpr MAX_TEXTURES{ 1024 };
+	uint32_t constexpr MAX_MATERIALS{ 512 };
 	bool constexpr DEBUG_OUT_MAT{ true };
 }
 

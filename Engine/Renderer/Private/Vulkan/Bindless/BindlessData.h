@@ -11,8 +11,8 @@ struct alignas(16) InstanceData final
     uint32_t meshIndex;     // Index into MeshData[]
     uint32_t materialIndex; // Index into MaterialData[]
 
+    uint32_t flags;         // Flags for deletion or active status (E.g 0 = active, 1 = marked for deletion)
     uint32_t objectID;      // Optional: ID for selection/debug
-    uint32_t padding;       // Padding to 80 bytes - can be used for features in future
 };
 
 // (GPU-side resource)
@@ -25,20 +25,18 @@ struct alignas(16) MeshData final
     uint32_t flags;         // Flags for deletion or active status (E.g 0 = active, 1 = marked for deletion)
 };
 
-// TODO
-// - is it optimal at all to split up per texture as sep buffer & all unique ids?
-// or just have a global material buffer
-
 // (GPU-side resource)
 // Per material data
 struct alignas(16) MaterialData final
 {
-    glm::vec4 baseColor;
-    uint32_t albedoTextureIndex;
-    uint32_t metallicRoughnessTextureIndex;
+    glm::vec4 baseColor{ 0, 0, 0, 1 };
+    uint32_t albedoTextureID{ UINT32_MAX };
+    uint32_t normalTextureID{ UINT32_MAX };
+    uint32_t roughnessTextureID{ UINT32_MAX };
+    uint32_t metallicTextureID{ UINT32_MAX };
     //...
 
-    uint32_t flags; // Flags for deletion or active status (0 = active, 1 = marked for deletion)
+   // uint32_t flags; // Flags for deletion or active status (0 = active, 1 = marked for deletion)
 };
 
 // (CPU prepares, GPU uses)
@@ -56,11 +54,11 @@ struct DrawCommand final
 /*
 DrawCommand
 ->
-[ InstanceData[] ]  <- 1 per instance/draw
-    |
-    |--> meshIndex --> [ MeshData[] ] --> offset into large vertex/index buffer
-    |
-    |--> materialIndex --> [ MaterialData[] ]
-                                |
-                                |--> textureIndex --> [ bindless texture array ]
+    InstanceData
+        |
+        |--> meshIndex --> MeshData[] --> offset into large vertex/index buffer
+        |
+        |--> materialIndex --> MaterialData[]
+                                    |
+                                    |--> textureIndex --> bindless texture array[]
 */

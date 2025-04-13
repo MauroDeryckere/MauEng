@@ -57,11 +57,10 @@ namespace MauRen
 
 	void VulkanMeshManager::Draw(VkCommandBuffer commandBuffer, VkPipelineLayout layout, uint32_t setCount, VkDescriptorSet const* pDescriptorSets)
 	{
-		ME_PROFILE_FUNCTION();
+		ME_PROFILE_FUNCTION()
 
 		// Draw each batch for each mesh
 		// TODO actually batch them
-
 		for (auto const& [meshID, instances] : m_MeshBatches)
 		{
 			VulkanMesh const& mesh = m_Meshes.at(meshID);
@@ -72,10 +71,11 @@ namespace MauRen
 				MeshPushConstant mPush{ };
 				mPush.m_ModelMatrix = instance.GetModelMatrix();
 
-				auto const& mat{ VulkanMaterialManager::GetInstance().GetMaterial(instance.GetMaterialID()) };
-				assert(VulkanMaterialManager::GetInstance().Exists(instance.GetMaterialID()));
+				//auto const& mat{ VulkanMaterialManager::GetInstance().GetMaterial() };
+				ME_RENDERER_ASSERT(VulkanMaterialManager::GetInstance().Exists(instance.GetMaterialID()));
 
-				mPush.m_AlbedoTextureID = mat.albedoTexture;
+				//TODO! 
+				mPush.m_MaterialID = instance.GetMaterialID();
 
 				vkCmdPushConstants(commandBuffer, layout,
 									VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(mPush),

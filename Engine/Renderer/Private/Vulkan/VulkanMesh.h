@@ -13,12 +13,7 @@ namespace MauRen
 		glm::mat4 m_ModelMatrix{ 1.0f };
 
 		// Material Data
-		uint32_t m_AlbedoTextureID{ UINT32_MAX };
-
-		//TODO
-		uint32_t m_NormalTextureID{ UINT32_MAX };
-		uint32_t m_RoughnessTextureID{ UINT32_MAX };
-		uint32_t m_MetallicTextureID{ UINT32_MAX };
+		uint32_t m_MaterialID{ UINT32_MAX };
 	};
 
 	class VulkanMesh final

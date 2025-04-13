@@ -3,10 +3,7 @@
 
 layout(push_constant) uniform PushConstants {
     mat4 modelMatrix;
-    uint albedoID;
-    uint normalID;
-    uint roughnessID;
-    uint metallicID;
+    uint materialID;
 } pc;
 
 

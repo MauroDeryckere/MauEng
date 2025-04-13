@@ -4,6 +4,8 @@
 #include "RendererPCH.h"
 #include "VulkanBuffer.h"
 
+#include "Bindless/BindlessData.h"
+
 namespace MauRen
 {
 	// Currently only supports one layout
@@ -20,7 +22,8 @@ namespace MauRen
 		[[nodiscard]] std::vector<VkDescriptorSet> const& GetDescriptorSets() const noexcept { return m_DescriptorSets; }
 		[[nodiscard]] VkDescriptorPool GetDescriptorPool() const noexcept { return m_DescriptorPool; }
 
-		void AddTexture(uint32_t destLocation, VkImageView imageView, VkSampler sampler, VkImageLayout imageLayout);
+		void AddTexture(uint32_t destLocation, VkImageView imageView, VkImageLayout imageLayout);
+		void BindMaterialBuffer(VkDescriptorBufferInfo bufferInfo, uint32_t frame);
 
 		void CreateDescriptorSetLayout();
 		void CreateDescriptorPool();
@@ -43,6 +46,7 @@ namespace MauRen
 		const uint32_t UBO_BINDING_SLOT{ 0 };
 		const uint32_t SAMPLER_BINDING_SLOT{ 1 };
 		const uint32_t TEXTURE_BINDING_SLOT{ 2 };
+		const uint32_t MATERIAL_DATA_BINDING_SLOT{ 3 };
 	};
 }
 

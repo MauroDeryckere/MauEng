@@ -121,7 +121,6 @@ namespace MauRen
 			imageView = VK_NULL_HANDLE;
 			return true;
 		}
-
 		inline bool SafeDestroy(VkDevice device, VkSwapchainKHR& swapchain, VkAllocationCallbacks const* pAllocator)
 		{
 			if (swapchain == VK_NULL_HANDLE)
@@ -133,7 +132,6 @@ namespace MauRen
 			swapchain = VK_NULL_HANDLE;
 			return true;
 		}
-
 		inline bool SafeDestroy(VkDevice device, VkCommandPool& commandPool, VkAllocationCallbacks const* pAllocator)
 		{
 			if (commandPool == VK_NULL_HANDLE)
@@ -167,7 +165,6 @@ namespace MauRen
 			sampler = VK_NULL_HANDLE;
 			return true;
 		}
-
 #pragma endregion
 
 		inline [[nodiscard]] uint32_t FindMemoryType(VkPhysicalDevice physicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags properties)
