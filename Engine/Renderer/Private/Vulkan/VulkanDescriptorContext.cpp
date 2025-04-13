@@ -55,7 +55,6 @@ namespace MauRen
 
 		std::array<VkDescriptorSetLayoutBinding, 3> const bindings{ uboLayoutBinding, samplerBinding, bindlessTextureBinding };
 
-
 		// Flags for the binding - only use valid flags for image samplers
 		VkDescriptorBindingFlagsEXT bindingFlags[bindings.size()] = {
 			0,
@@ -63,9 +62,8 @@ namespace MauRen
 			VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT_EXT // Flags for bindless textures
 
 		};
-		VkDescriptorSetLayoutBindingFlagsCreateInfo bindingFlagsInfo{};
-
-		bindingFlagsInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO;
+		VkDescriptorSetLayoutBindingFlagsCreateInfoEXT bindingFlagsInfo{};
+		bindingFlagsInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO_EXT;
 		bindingFlagsInfo.bindingCount = static_cast<uint32_t>(bindings.size());
 		bindingFlagsInfo.pBindingFlags = bindingFlags;
 

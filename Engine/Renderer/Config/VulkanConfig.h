@@ -18,7 +18,7 @@ namespace MauRen
 
 	std::vector<char const*> const VULKAN_VALIDATION_LAYERS
 	{
-		"VK_LAYER_KHRONOS_validation",
+		"VK_LAYER_KHRONOS_validation"
 	};
 
 	std::vector<char const*> const DEVICE_EXTENSIONS
@@ -27,10 +27,10 @@ namespace MauRen
 		VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME
 	};
 
-	uint32_t constexpr MAX_FRAMES_IN_FLIGHT{ 5 };
+	uint32_t constexpr MAX_FRAMES_IN_FLIGHT{ 3 };
 	static_assert(MAX_FRAMES_IN_FLIGHT > 0);
 
-	uint32_t constexpr MAX_TEXTURES{ 10 };
+	uint32_t constexpr MAX_TEXTURES{ 1024 };
 	bool constexpr DEBUG_OUT_MAT{ true };
 }
 
