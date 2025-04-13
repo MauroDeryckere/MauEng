@@ -44,7 +44,6 @@ target_link_libraries(Renderer
         tinyobjloader # for loading models, only used in the renderer.
         stb
         MauEngCore
-    PUBLIC # Link Vulkan publicly because we need it for the window in the engine, later on this can be cleaned up
         Vulkan::Vulkan # Link Vulkan SDK
 )
 
