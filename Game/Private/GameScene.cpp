@@ -26,14 +26,15 @@ namespace MauGam
 		RENDERER.UpLoadModel(m2);
 
 		// Skulls
-		//TODO rotate skulls to correct dir
 		MeshInstance mi1{ m2 };
-		mi1.Translate({ 5, 20,  -3 });
+		mi1.Translate({ 5, 5,  -20 });
 		mi1.Scale({ .3f, .3f, .3f });
+		mi1.Rotate({ 270, 0, 0 });
 
 		MeshInstance mi2{ m2 };
-		mi2.Translate({ -5, 20,  -8 });
+		mi2.Translate({ -5, 5,  -20 });
 		mi2.Scale({ .3f, .3f, .3f });
+		mi2.Rotate({ 270, 0, 0 });
 
 		// Gun
 		MeshInstance mi3{ m1 };
@@ -131,10 +132,10 @@ namespace MauGam
 		}
 
 		// 90 degrees per second
-	//	float constexpr rotationSpeed{ glm::radians(90.0f) };
-	//	m_Mehses[0].Rotate(rotationSpeed * TIME.ElapsedSec(), glm::vec3(0.0f, 0.0f, 1.0f));
-	//	m_Mehses[1].Rotate(rotationSpeed * TIME.ElapsedSec(), glm::vec3(0.0f, 0.0f, 1.0f));
-	//	m_Mehses[2].Rotate(rotationSpeed * TIME.ElapsedSec(), glm::vec3(0.0f, 1.0f, 0.0f));
+		float constexpr rotationSpeed{ 90.0f };
+		m_Mehses[0].Rotate({ 0, 0, rotationSpeed * TIME.ElapsedSec() });
+		m_Mehses[1].Rotate({ 0, 0, -rotationSpeed * TIME.ElapsedSec() });
+		m_Mehses[2].Rotate({ 0, rotationSpeed * TIME.ElapsedSec() });
 
 		DemoDebugDrawing();
 	}

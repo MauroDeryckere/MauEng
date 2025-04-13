@@ -27,9 +27,9 @@ namespace MauRen
 		m_ModelMatrix = glm::mat4{1.0f};
 	}
 
-	void MeshInstance::Rotate(float angleRad, glm::vec3 const& axis) noexcept
+	void MeshInstance::Rotate(MauCor::Rotator const& rotator) noexcept
 	{
-		m_ModelMatrix = glm::rotate(m_ModelMatrix, angleRad, axis);
+		m_ModelMatrix *= glm::toMat4(rotator.rotation);
 	}
 
 	void MeshInstance::Scale(glm::vec3 const& scale) noexcept

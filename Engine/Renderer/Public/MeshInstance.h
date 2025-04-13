@@ -2,6 +2,9 @@
 #define MAUREN_MESHINSTANCE_H
 
 #include "Mesh.h"
+
+#include "Math/Rotator.h"
+
 #include <glm/mat4x4.hpp>
 #include <glm/glm.hpp>
 
@@ -25,9 +28,7 @@ namespace MauRen
 
 		void ResetTransformation() noexcept;
 
-
-		// Rotate the model by an angle (in radians) around a given axis
-		void Rotate(float angleRad, glm::vec3 const& axis) noexcept;
+		void Rotate(MauCor::Rotator const& rotator) noexcept;
 
 		void Scale(glm::vec3 const& scale) noexcept;
 
