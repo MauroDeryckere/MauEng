@@ -457,7 +457,7 @@ namespace MauRen
 
 	std::vector<char> VulkanGraphicsPipeline::ReadFile(std::filesystem::path const& filepath)
 	{
-		assert(std::filesystem::exists(filepath));
+		ME_RENDERER_ASSERT(std::filesystem::exists(filepath));
 
 		std::ifstream file(filepath, std::ios::binary | std::ios::in );
 		if (!file)

@@ -1,7 +1,5 @@
 # Core CMakeLists.txt
 
-include("${CMAKE_CURRENT_SOURCE_DIR}/Public/Config/Config.cmake")
-
 set(CORE_PUBLIC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Public")
 set(CORE_PRIVATE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Private")
 
@@ -44,6 +42,18 @@ set(SDL_INSTALL_DOCS OFF)
 set(SDL_INSTALL_TESTS OFF)
 
 set(SDL_EXAMPLES OFF)
+
+# Rendering 
+set(SDL_RENDER OFF)
+set(SDL_RENDER_GPU OFF)
+set(SDL_RENDER_METAL OFF)
+set(SDL_RENDER_D3D OFF)
+set(SDL_RENDER_D3D11 OFF)
+set(SDL_RENDER_VULKAN OFF)
+
+# Window
+set(SDL_CAMERA OFF)
+
 
 # We don't want to build shared libraries
 set(SDL_SHARED OFF)
