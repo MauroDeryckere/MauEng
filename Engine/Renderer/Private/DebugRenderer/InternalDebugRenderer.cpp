@@ -2,6 +2,8 @@
 
 #include "Math/Rotator.h"
 
+#include "DebugVertex.h"
+
 namespace MauRen
 {
 	InternalDebugRenderer::InternalDebugRenderer()

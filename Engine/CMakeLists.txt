@@ -29,6 +29,7 @@ target_include_directories(Engine
         ${ENGINE_PUBLIC_DIR}        # Public headers for Engine
     PRIVATE
         ${ENGINE_PRIVATE_DIR}       # Private headers for Engine
+        "${CMAKE_CURRENT_SOURCE_DIR}/Renderer/Shared"
 )
 
 # Link the Renderer to the Engine

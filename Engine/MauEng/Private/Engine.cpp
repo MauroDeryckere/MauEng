@@ -18,7 +18,6 @@
 
 #include "Logger/logger.h"
 
-#include "../../Renderer/Private/DebugRenderer/InternalDebugRenderer.h"
 #include "Input/KeyInfo.h"
 
 namespace MauEng
@@ -40,7 +39,7 @@ namespace MauEng
 
 		if constexpr (ENABLE_DEBUG_RENDERING)
 		{
-			ServiceLocator::RegisterDebugRenderer(std::make_unique<MauRen::InternalDebugRenderer>());
+			ServiceLocator::RegisterDebugRenderer(MauRen::CreateDebugRenderer(false));
 		}
 
 		ServiceLocator::RegisterRenderer(MauRen::CreateVulkanRenderer(m_Window->window, DEBUG_RENDERER));

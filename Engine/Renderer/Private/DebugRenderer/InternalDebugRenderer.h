@@ -1,8 +1,8 @@
 #ifndef MAUREN_INTERNALDEBUGRENDERER_H
 #define MAUREN_INTERNALDEBUGRENDERER_H
 
-#include "DebugVertex.h"
 #include "DebugRenderer.h"
+#include "DebugVertex.h"
 
 namespace MauRen
 {
@@ -49,7 +49,7 @@ namespace MauRen
 
 		// Currently index buffer is not really being used optimally,
 		// this can be improved but may not be worth spending a lot of time on since its used for debug only.
-		std::vector<DebugVertex> m_ActivePoints{};
+		std::vector<DebugVertex> m_ActivePoints;
 		std::vector<uint32_t> m_IndexBuffer;
 
 

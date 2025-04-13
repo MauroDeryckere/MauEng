@@ -12,7 +12,7 @@
 #include "VulkanMeshManager.h"
 #include "VulkanMaterialManager.h"
 #include "DebugRenderer/InternalDebugRenderer.h"
-#include "NullDebugRenderer.h"
+#include "DebugRenderer/NullDebugRenderer.h"
 
 namespace MauRen
 {

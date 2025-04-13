@@ -3,18 +3,21 @@
 set(CMAKE_CXX_STANDARD 20)  # C++20 is the closest to C++2, since C++2 is not an official version
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(RENDERER_PUBLIC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/public")
-set(RENDERER_PRIVATE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/private")
+set(RENDERER_PUBLIC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Public")
+set(RENDERER_PRIVATE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Private")
+set(RENDERER_SHARED_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Shared")
 
 # Gather all source files
 file(GLOB RENDERER_PUBLIC_SOURCES
     "${RENDERER_PUBLIC_DIR}/*.cpp"
+    "${RENDERER_PUBLIC_DIR}/**/*.cpp"
 )
 
 file(GLOB RENDERER_PRIVATE_SOURCES
-    "${RENDERER_PRIVATE_DIR}/Vulkan/*.cpp"
-    "${RENDERER_PRIVATE_DIR}/DebugRenderer/*.cpp"
     "${RENDERER_PRIVATE_DIR}/*.cpp"
+    "${RENDERER_PRIVATE_DIR}/**/*.cpp"
+    "${RENDERER_SHARED_DIR}/*.cpp"
+    "${RENDERER_SHARED_DIR}/**/*.cpp"
 )
 
 # Create the Engine target (as a library)
@@ -40,8 +43,8 @@ target_link_libraries(Renderer
     PRIVATE
         tinyobjloader # for loading models, only used in the renderer.
         stb
-    PUBLIC # Link Vulkan publicly because we need it for the window in the engine, later on this can be cleaned up
         MauEngCore
+    PUBLIC # Link Vulkan publicly because we need it for the window in the engine, later on this can be cleaned up
         Vulkan::Vulkan # Link Vulkan SDK
 )
 
@@ -50,6 +53,7 @@ target_include_directories(Renderer
         ${RENDERER_PUBLIC_DIR}        # Public headers for Renderer
     PRIVATE  
         ${RENDERER_PRIVATE_DIR}       # Private headers for Renderer
+        ${RENDERER_SHARED_DIR}       # Shared headers for Renderer
 )
 
 # Enable precompiled header support for Engine
