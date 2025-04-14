@@ -60,6 +60,12 @@ namespace MauRen
 		// All indices in one big buffer
 		VulkanMappedBuffer m_IndexBuffer;
 
+		// maps mesh ID -> index into m_DrawCommands
+		std::unordered_map<uint32_t, uint32_t> m_BatchedDrawCommands;
+
+		uint32_t m_CurrentVertexOffset{ 0 };
+		uint32_t m_CurrentIndexOffset{ 0 };
+
 		void InitializeMeshInstanceDataBuffers();
 		void InitializeMeshDataBuffers();
 		void InitializeDrawCommandBuffers();

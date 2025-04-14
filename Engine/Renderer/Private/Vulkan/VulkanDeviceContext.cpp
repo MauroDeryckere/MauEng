@@ -302,7 +302,7 @@ namespace MauRen
 			});
 	}
 
-	uint32_t VulkanDeviceContext::RateDeviceSuitability(VkPhysicalDevice device)
+	uint32_t VulkanDeviceContext::RateDeviceSuitability(VkPhysicalDevice device) const
 	{
 		QueueFamilyIndices const indices{ FindQueueFamilies(device) };
 

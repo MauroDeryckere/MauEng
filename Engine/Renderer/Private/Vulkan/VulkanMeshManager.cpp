@@ -53,87 +53,123 @@ namespace MauRen
 		return true;
 	}
 
+	//NOT THREAD SAFE CURRENTLY, but okay to call at start program
 	void VulkanMeshManager::LoadMesh(Mesh& mesh)
 	{
 		ME_PROFILE_FUNCTION()
 
-			// OLD LOGIC
-			//auto const it{ m_Meshes.find(mesh.GetMeshID()) };
-			//if (it != end(m_Meshes))
-			//{
-			//	return;
-			//}
-
-			//mesh.SetMeshID(m_NextID);
-			//m_Meshes.emplace(m_NextID, VulkanMesh{ *m_CmdPoolManager, mesh });
+		ME_RENDERER_ASSERT(mesh.GetMeshID() == UINT32_MAX);
 
 		mesh.SetMeshID(m_NextID);
-		m_MeshData.emplace_back(mesh.GetIndices().size());
 
+		const auto& indices = mesh.GetIndices();
+		const auto& vertices = mesh.GetVertices();
 
+		ME_RENDERER_ASSERT(m_CurrentVertexOffset + vertices.size() <= sizeof(Vertex) * MAX_VERTICES);
+		ME_RENDERER_ASSERT(m_CurrentIndexOffset + indices.size() <= sizeof(uint32_t) * MAX_INDICES);
 
-		m_NextID++;
+		MeshData data{};
+		data.vertexOffset = m_CurrentVertexOffset;
+		data.indexOffset = m_CurrentIndexOffset;
+		data.indexCount = static_cast<uint32_t>(mesh.GetIndices().size());
+		data.flags = 0;
+		m_MeshData.emplace_back(data);
+
+		// may want to store a copy of the buffers on the CPU  side to support compacting and be more "optimal" as its less copies.
+		{
+			uint8_t* basePtr = static_cast<uint8_t*>(m_VertexBuffer.mapped);
+			std::memcpy(basePtr + m_CurrentVertexOffset * sizeof(Vertex), vertices.data(), vertices.size() * sizeof(Vertex));
+		}
+
+		{
+			uint8_t* basePtr = static_cast<uint8_t*>(m_IndexBuffer.mapped);
+			std::memcpy(basePtr + m_CurrentIndexOffset * sizeof(uint32_t), indices.data(), indices.size() * sizeof(uint32_t));
+		}
+
+		m_CurrentVertexOffset += static_cast<uint32_t>(mesh.GetVertices().size());
+		m_CurrentIndexOffset += static_cast<uint32_t>(mesh.GetIndices().size());
+
+		++m_NextID;
 	}
 
 	const VulkanMesh& VulkanMeshManager::GetVulkanMesh(uint32_t meshID) const
 	{
 		auto const it{ m_Meshes.find(meshID) };
+
+		ME_RENDERER_ASSERT(it != end(m_Meshes), "Mesh not found in VulkanMeshManager");
+
 		if (it != m_Meshes.end())
 		{
 			return it->second;
 		}
-
-		assert(false && "Mesh not found in VulkanMeshManager");
 
 		throw std::runtime_error("");
 	}
 
 	void VulkanMeshManager::QueueDraw(MeshInstance const* instance)
 	{
-		//m_MeshBatches[instance->GetMeshID()].emplace_back(*instance);
+		uint32_t meshID = instance->GetMeshID();
+		uint32_t instanceOffset = static_cast<uint32_t>(m_MeshInstanceData.size());
 
-		//TODO
+		MeshInstanceData data{};
+		data.modelMatrix = instance->GetModelMatrix();
+		data.materialIndex = instance->GetMaterialID();
+		m_MeshInstanceData.emplace_back(data);
 
-		//instance->GetMeshID()
-		m_DrawCommands.emplace_back();
+		if (m_BatchedDrawCommands.contains(meshID))
+		{
+			// Already added this mesh this frame; just increment instance count
+			uint32_t cmdIndex = m_BatchedDrawCommands[meshID];
+			m_DrawCommands[cmdIndex].instanceCount++;
+		}
+
+		else
+		{
+			// First time seeing this mesh this frame; create a new draw command
+			const MeshData& mesh = m_MeshData[meshID];
+
+			DrawCommand cmd{};
+			cmd.indexCount = mesh.indexCount;
+			cmd.firstIndex = mesh.indexOffset;
+			cmd.vertexOffset = mesh.vertexOffset;
+			cmd.firstInstance = instanceOffset;
+			cmd.instanceCount = 1;
+
+			m_BatchedDrawCommands[meshID] = static_cast<uint32_t>(m_DrawCommands.size());
+			m_DrawCommands.emplace_back(cmd);
+		}
+
 	}
 
 	void VulkanMeshManager::Draw(VkCommandBuffer commandBuffer, VkPipelineLayout layout, uint32_t setCount, VkDescriptorSet const* pDescriptorSets, uint32_t frame)
 	{
 		ME_PROFILE_FUNCTION()
 
-		// OLD APPROACH
+		memcpy(m_MeshInstanceDataBuffers[frame].mapped, m_MeshInstanceData.data(), m_MeshInstanceData.size() * sizeof(MeshInstanceData));
+		memcpy(m_DrawCommandBuffers[frame].mapped, m_DrawCommands.data(), m_DrawCommands.size() * sizeof(DrawCommand));
 
-		//// Draw each batch for each mesh
-		//// TODO actually batch them
-		//for (auto const& [meshID, instances] : m_MeshBatches)
-		//{
-		//	VulkanMesh const& mesh = m_Meshes.at(meshID);
+		auto deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+		{
+			VkDescriptorBufferInfo bufferInfo = {};
+			bufferInfo.buffer = m_MeshInstanceDataBuffers[frame].buffer.buffer;  // The actual Vulkan buffer handle
+			bufferInfo.offset = 0;                                               // Typically 0, but if you're using a subrange of the buffer, adjust accordingly
+			bufferInfo.range = m_MeshInstanceData.size() * sizeof(MeshInstanceData); // The size of the data you're passing into the buffer
 
-		//	std::vector<glm::mat4> modelMatrices;
-		//	for (auto const& instance : instances)
-		//	{
-		//		MeshPushConstant mPush{ };
-		//		mPush.m_ModelMatrix = instance.GetModelMatrix();
+			// 2. Update descriptor sets
+			VkWriteDescriptorSet descriptorWrite = {};
+			descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+			descriptorWrite.dstSet = pDescriptorSets[0]; // Example: use the first descriptor set
+			descriptorWrite.dstBinding = 5; // Binding index
+			descriptorWrite.dstArrayElement = 0; // Array element offset (if applicable)
+			descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER; // or VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER depending on your data
+			descriptorWrite.descriptorCount = 1; // Number of descriptors to update
+			descriptorWrite.pBufferInfo = &bufferInfo; // You should fill in bufferInfo with the appropriate buffer info, including the pointer to the mapped memory
+			descriptorWrite.pImageInfo = nullptr; // Not used in this case
+			descriptorWrite.pTexelBufferView = nullptr; // Not used in this case
 
-		//		//auto const& mat{ VulkanMaterialManager::GetInstance().GetMaterial() };
-		//		ME_RENDERER_ASSERT(VulkanMaterialManager::GetInstance().Exists(instance.GetMaterialID()));
-
-		//		mPush.m_MaterialID = instance.GetMaterialID();
-
-		//		vkCmdPushConstants(commandBuffer, layout,
-		//							VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(mPush),
-		//							&mPush);
-
-		//		mesh.Draw(commandBuffer);
-
-		//		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, setCount, pDescriptorSets, 0, nullptr);
-		//		vkCmdDrawIndexed(commandBuffer, mesh.GetIndexCount(), 1, 0, 0, 0);
-		//	}
-		//}
-
-		//m_MeshBatches.clear();
-
+			// Update descriptor set with the new mesh instance data
+			vkUpdateDescriptorSets(deviceContext->GetLogicalDevice(), 1, &descriptorWrite, 0, nullptr);
+		}
 
 		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, setCount, pDescriptorSets, 0, nullptr);
 		vkCmdBindIndexBuffer(commandBuffer, m_IndexBuffer.buffer.buffer, 0, VK_INDEX_TYPE_UINT32);
@@ -150,6 +186,9 @@ namespace MauRen
 
 		// not optimal, useful for testing - just rebuild all draw commands every frame and queue them
 		m_DrawCommands.clear();
+		m_MeshInstanceData.clear();
+
+		m_BatchedDrawCommands.clear();
 	}
 
 	void VulkanMeshManager::InitializeMeshInstanceDataBuffers()
