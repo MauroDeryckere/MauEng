@@ -5,11 +5,11 @@
 namespace MauRen
 {
 	MeshInstance::MeshInstance(Mesh const& mesh) :
-	m_MeshID { mesh.GetMeshID() },
-	m_MaterialID { mesh.GetMaterialID() }
+		m_MeshID { mesh.GetMeshID() },
+		m_MaterialID { mesh.GetMaterialID() }
 	{
-		assert(m_MeshID != UINT32_MAX);
-		assert(m_MaterialID != UINT32_MAX);
+		ME_RENDERER_ASSERT(m_MeshID != UINT32_MAX);
+		ME_RENDERER_ASSERT(m_MaterialID != UINT32_MAX);
 	}
 
 	void MeshInstance::Draw() const

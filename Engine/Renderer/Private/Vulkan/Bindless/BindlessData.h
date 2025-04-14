@@ -5,7 +5,7 @@
 // (CPU prepares, GPU uses)
 // Per instance data
 // Maps to all used data from buffers
-struct alignas(16) InstanceData final
+struct alignas(16) MeshInstanceData final
 {
     glm::mat4 modelMatrix;
     uint32_t meshIndex;     // Index into MeshData[]
@@ -25,7 +25,10 @@ struct alignas(16) MeshData final
     uint32_t flags;         // Flags for deletion or active status (E.g 0 = active, 1 = marked for deletion)
 };
 
-// (GPU-side resource)
+
+//* ADDED
+
+// (GPU-side resource - CPU copy)
 // Per material data
 struct alignas(16) MaterialData final
 {
@@ -40,21 +43,20 @@ struct alignas(16) MaterialData final
 };
 
 // (CPU prepares, GPU uses)
-// CPU side only
 struct DrawCommand final
 {
-    uint32_t indexCount;    // Number of indices for the draw call
-    uint32_t instanceCount; // Number of instances to draw
-    uint32_t firstIndex;    // Starting index in the index buffer
-    int32_t  vertexOffset;  // Offset to add to the vertex indices
-    uint32_t firstInstance; // Starting instance index
+    uint32_t indexCount{ 0 };        // Number of indices for the draw call
+    uint32_t instanceCount{ 0 };     // Number of instances to draw
+    uint32_t firstIndex{ 0 };        // Starting index in the index buffer
+    int32_t  vertexOffset{ 0 };      // Offset to add to the vertex indices
+    uint32_t firstInstance{ 0 };     // Starting instance index
 };
 
 
 /*
-DrawCommand
-->
-    InstanceData
+DrawCommands 
+-> GPU
+  ->InstanceData
         |
         |--> meshIndex --> MeshData[] --> offset into large vertex/index buffer
         |

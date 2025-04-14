@@ -61,7 +61,7 @@ namespace MauRen
 		}
 
 		VulkanImage textureImage{ CreateTextureImage(cmdPoolManager, "Resources/Materials/" + textureName)};
-		descriptorContext.AddTexture(m_Textures.size(), textureImage.imageViews[0], VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		descriptorContext.BindTexture(m_Textures.size(), textureImage.imageViews[0], VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 		m_Textures.emplace_back(textureImage);
 		m_TextureIDMap[textureName] = m_Textures.size() - 1;

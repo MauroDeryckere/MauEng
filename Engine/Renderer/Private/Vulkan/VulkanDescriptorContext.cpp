@@ -3,7 +3,7 @@
 namespace MauRen
 {
 	// ! THIS IS NOT SAFE TO CALL DURING A FRAME, HAS TO BE HANDLED IF WE WANT THAT
-	void VulkanDescriptorContext::AddTexture(uint32_t destLocation, VkImageView imageView, VkImageLayout imageLayout)
+	void VulkanDescriptorContext::BindTexture(uint32_t destLocation, VkImageView imageView, VkImageLayout imageLayout)
 	{
 		VkDescriptorImageInfo imageInfo{};
 		imageInfo.imageLayout = imageLayout;
@@ -82,15 +82,37 @@ namespace MauRen
 		materialDataBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 		materialDataBinding.pImmutableSamplers = nullptr;
 
-		std::array<VkDescriptorSetLayoutBinding, 4> const bindings{ uboLayoutBinding, samplerBinding, bindlessTextureBinding, materialDataBinding };
+		VkDescriptorSetLayoutBinding meshDataBinding{};
+		meshDataBinding.binding = MESH_DATA_BINDING_SLOT;
+		meshDataBinding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+		meshDataBinding.descriptorCount = 1;
+		meshDataBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+		meshDataBinding.pImmutableSamplers = nullptr;
+
+		VkDescriptorSetLayoutBinding meshInstanceDataBinding{};
+		meshInstanceDataBinding.binding = MESH_INSTANCE_DATA_BINDING_SLOT;
+		meshInstanceDataBinding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+		meshInstanceDataBinding.descriptorCount = 1;
+		meshInstanceDataBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+		meshInstanceDataBinding.pImmutableSamplers = nullptr;
+
+		std::array<VkDescriptorSetLayoutBinding, 6> const bindings {
+			uboLayoutBinding,
+			samplerBinding,
+			bindlessTextureBinding,
+			materialDataBinding,
+			meshDataBinding,
+			meshInstanceDataBinding
+		};
 
 		// Flags for the binding - only use valid flags for image samplers
-		VkDescriptorBindingFlagsEXT bindingFlags[bindings.size()] = {
+		VkDescriptorBindingFlagsEXT bindingFlags[bindings.size()] {
 			0,
-			0 ,
+			0,
 			VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT_EXT, // Flags for bindless textures
-			VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT_EXT // Flags for material data
-
+			VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT_EXT, // Flags for material data
+			VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT_EXT,
+			VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT_EXT
 		};
 		VkDescriptorSetLayoutBindingFlagsCreateInfoEXT bindingFlagsInfo{};
 		bindingFlagsInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO_EXT;
@@ -112,7 +134,7 @@ namespace MauRen
 
 	void VulkanDescriptorContext::CreateDescriptorPool()
 	{
-		std::array<VkDescriptorPoolSize, 4> poolSizes{};
+		std::array<VkDescriptorPoolSize, 6> poolSizes{};
 		poolSizes[UBO_BINDING_SLOT].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 		poolSizes[UBO_BINDING_SLOT].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
 
@@ -124,6 +146,12 @@ namespace MauRen
 
 		poolSizes[MATERIAL_DATA_BINDING_SLOT].type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
 		poolSizes[MATERIAL_DATA_BINDING_SLOT].descriptorCount = static_cast<uint32_t>(1 * MAX_FRAMES_IN_FLIGHT);
+
+		poolSizes[MESH_DATA_BINDING_SLOT].type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+		poolSizes[MESH_DATA_BINDING_SLOT].descriptorCount = static_cast<uint32_t>(1 * MAX_FRAMES_IN_FLIGHT);
+
+		poolSizes[MESH_INSTANCE_DATA_BINDING_SLOT].type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+		poolSizes[MESH_INSTANCE_DATA_BINDING_SLOT].descriptorCount = static_cast<uint32_t>(1 * MAX_FRAMES_IN_FLIGHT);
 
 		VkDescriptorPoolCreateInfo poolInfo{};
 		poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;

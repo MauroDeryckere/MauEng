@@ -228,7 +228,7 @@ namespace MauRen
 			scissor.extent = m_SwapChainContext.GetExtent();
 			vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-		VulkanMeshManager::GetInstance().Draw(commandBuffer, m_GraphicsPipeline.GetPipelineLayout(), 1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame]);
+		VulkanMeshManager::GetInstance().Draw(commandBuffer, m_GraphicsPipeline.GetPipelineLayout(), 1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame], m_CurrentFrame);
 		RenderDebug(commandBuffer);
 
 		vkCmdEndRenderPass(commandBuffer);

@@ -1,12 +1,11 @@
 #version 450
 #extension GL_EXT_nonuniform_qualifier : enable
 
-layout(push_constant) uniform PushConstants 
-{
-    mat4 modelMatrix;
-    uint materialID;
-} pc;
+layout(set = 0, binding = 1) uniform sampler globalSampler;
 
+layout(set = 0, binding = 2) uniform texture2D TextureBuffer[];
+
+// 1 : 1 copy of material data on CPU
 struct MaterialData 
 {
     vec4 baseColor;
@@ -16,29 +15,24 @@ struct MaterialData
     uint metallicTextureID;
 };
 
-layout(set = 0, binding = 1) uniform sampler globalSampler;
-
-layout(set = 0, binding = 2) uniform texture2D TextureBuffer[];
-
-layout(set = 0, binding = 3) buffer MaterialDataBuffer 
+layout(set = 0, binding = 3) buffer readonly MaterialDataBuffer 
 {
     MaterialData materials[];
 };
 
-
-//layout(set = 0, binding = 1) uniform sampler2D texSampler;  // This line is defining a combined image sampler
-
 layout(location = 0) in vec3 fragColor;
 layout(location = 1) in vec2 fragTexCoord;
+layout(location = 2) flat in uint inMaterialIndex;
+
 
 layout(location = 0) out vec4 outColor;
 
 void main() 
 {
     // Access the material data based on the materialID from PushConstants
-    MaterialData material = materials[pc.materialID];
+    MaterialData material = materials[inMaterialIndex];
 
-    // When the push constant ID is 0xFFFFFFFF, we treat it as missing and return a zero vector.
+    // When the ID is 0xFFFFFFFF, we treat it as missing or invalid and return a zero vector.
     vec4 albedo = (material.albedoTextureID == 0xFFFFFFFF)
         ? vec4(0.0)
         : texture(sampler2D(TextureBuffer[material.albedoTextureID], globalSampler), fragTexCoord);
@@ -59,6 +53,7 @@ void main()
     vec3 n = normalize(normal.xyz);
 
 
+    // TODO
     vec3 lightDir = normalize(vec3(1.0, 1.0, 1.0));  // Example light direction
     float NdotL = max(dot(n, lightDir), 0.0);  // Diffuse lighting calculation
 
