@@ -177,7 +177,7 @@ namespace MauRen
 
 	void VulkanRenderer::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex)
 	{
-		ME_PROFILE_FUNCTION();
+		ME_PROFILE_FUNCTION()
 			
 		VkCommandBufferBeginInfo beginInfo{};
 

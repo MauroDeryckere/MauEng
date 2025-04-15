@@ -145,20 +145,26 @@ namespace MauRen
 	{
 		ME_PROFILE_FUNCTION()
 
-		memcpy(m_MeshInstanceDataBuffers[frame].mapped, m_MeshInstanceData.data(), m_MeshInstanceData.size() * sizeof(MeshInstanceData));
-		memcpy(m_DrawCommandBuffers[frame].mapped, m_DrawCommands.data(), m_DrawCommands.size() * sizeof(DrawCommand));
+		int frameToUpdate{ static_cast<int>(frame - 1)};
+		if (frameToUpdate < 0)
+		{
+			frameToUpdate = MAX_FRAMES_IN_FLIGHT - 1;
+		}
+		memcpy(m_MeshInstanceDataBuffers[frameToUpdate].mapped, m_MeshInstanceData.data(), m_MeshInstanceData.size() * sizeof(MeshInstanceData));
+		memcpy(m_DrawCommandBuffers[frameToUpdate].mapped, m_DrawCommands.data(), m_DrawCommands.size() * sizeof(DrawCommand));
 
 		auto deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 		{
+			ME_PROFILE_SCOPE("Mesh instance data update")
 			VkDescriptorBufferInfo bufferInfo = {};
-			bufferInfo.buffer = m_MeshInstanceDataBuffers[frame].buffer.buffer;  // The actual Vulkan buffer handle
+			bufferInfo.buffer = m_MeshInstanceDataBuffers[frameToUpdate].buffer.buffer;  // The actual Vulkan buffer handle
 			bufferInfo.offset = 0;                                               // Typically 0, but if you're using a subrange of the buffer, adjust accordingly
 			bufferInfo.range = m_MeshInstanceData.size() * sizeof(MeshInstanceData); // The size of the data you're passing into the buffer
 
 			// 2. Update descriptor sets
 			VkWriteDescriptorSet descriptorWrite = {};
 			descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-			descriptorWrite.dstSet = pDescriptorSets[0]; // Example: use the first descriptor set
+			descriptorWrite.dstSet = *pDescriptorSets; // Example: use the first descriptor set
 			descriptorWrite.dstBinding = 5; // Binding index
 			descriptorWrite.dstArrayElement = 0; // Array element offset (if applicable)
 			descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER; // or VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER depending on your data
