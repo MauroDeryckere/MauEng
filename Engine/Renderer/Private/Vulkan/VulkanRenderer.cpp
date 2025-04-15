@@ -29,12 +29,13 @@ namespace MauRen
 		else
 		{
 			m_DebugRenderer = &static_cast<InternalDebugRenderer&>(debugRenderer);
+			ME_RENDERER_ASSERT(m_DebugRenderer);
 		}
 	}
 
 	void VulkanRenderer::Init()
 	{
-		ME_PROFILE_FUNCTION();
+		ME_PROFILE_FUNCTION()
 
 		m_InstanceContext.Initialize();
 		m_SurfaceContext.Initialize(&m_InstanceContext, m_pWindow);
@@ -55,8 +56,6 @@ namespace MauRen
 		VulkanMaterialManager::GetInstance().Initialize();
 
 		CreateUniformBuffers();
-
-		//CreateGlobalBuffers();
 
 		m_DescriptorContext.CreateDescriptorPool();
 
@@ -154,7 +153,7 @@ namespace MauRen
 	void VulkanRenderer::UpLoadModel(Mesh& mesh)
 	{
 		VulkanMeshManager::GetInstance().LoadMesh(mesh);
-		mesh.SetMaterialID(VulkanMaterialManager::GetInstance().LoadMaterial(m_CommandPoolManager, m_DescriptorContext, mesh.GetMaterial()));
+		mesh.SetMaterialID(VulkanMaterialManager::GetInstance().LoadOrGetMaterial(m_CommandPoolManager, m_DescriptorContext, mesh.GetMaterial()));
 	}
 
 	void VulkanRenderer::CreateUniformBuffers()
@@ -178,7 +177,7 @@ namespace MauRen
 
 	void VulkanRenderer::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex)
 	{
-		ME_PROFILE_FUNCTION();
+		ME_PROFILE_FUNCTION()
 			
 		VkCommandBufferBeginInfo beginInfo{};
 
@@ -229,7 +228,7 @@ namespace MauRen
 			scissor.extent = m_SwapChainContext.GetExtent();
 			vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-		VulkanMeshManager::GetInstance().Draw(commandBuffer, m_GraphicsPipeline.GetPipelineLayout(), 1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame]);
+		VulkanMeshManager::GetInstance().Draw(commandBuffer, m_GraphicsPipeline.GetPipelineLayout(), 1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame], m_CurrentFrame);
 		RenderDebug(commandBuffer);
 
 		vkCmdEndRenderPass(commandBuffer);
@@ -280,14 +279,14 @@ namespace MauRen
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 
 		{
-			ME_PROFILE_SCOPE("Wait for GPU");
+			ME_PROFILE_SCOPE("Wait for GPU")
 			// At the start of the frame, we want to wait until the previous frame has finished, so that the command buffer and semaphores are available to use.
 			vkWaitForFences(deviceContext->GetLogicalDevice(), 1, &m_InFlightFences[m_CurrentFrame], VK_TRUE, UINT64_MAX);
 		}
 
 		uint32_t imageIndex;
 		{
-			ME_PROFILE_SCOPE("acquireNextImageResult");
+			ME_PROFILE_SCOPE("acquireNextImageResult")
 
 			VkResult const acquireNextImageResult{ vkAcquireNextImageKHR(deviceContext->GetLogicalDevice(), m_SwapChainContext.GetSwapchain(), UINT64_MAX, m_ImageAvailableSemaphores[m_CurrentFrame], VK_NULL_HANDLE, &imageIndex) };
 
@@ -371,14 +370,14 @@ namespace MauRen
 
 	void VulkanRenderer::UpdateUniformBuffer(uint32_t currentImage, glm::mat4 const& view, glm::mat4 const& proj)
 	{
-		ME_PROFILE_FUNCTION();
-		UniformBufferObject const ubo{view, proj};
+		ME_PROFILE_FUNCTION()
+		UniformBufferObject const ubo{ view, proj };
 		memcpy(m_MappedUniformBuffers[currentImage].mapped, &ubo, sizeof(ubo));
 	}
 
 	bool VulkanRenderer::RecreateSwapchain()
 	{
-		ME_PROFILE_FUNCTION();
+		ME_PROFILE_FUNCTION()
 
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 
@@ -411,24 +410,11 @@ namespace MauRen
 		return true;
 	}
 
-	void VulkanRenderer::CreateGlobalBuffers()
-	{
-		m_GlobalVertexBuffer = { MAX_VERTEX_BUFFER_SIZE,
-									VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-									VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT };
-
-		m_GlobalIndexBuffer = { MAX_INDEX_BUFFER_SIZE,
-									VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-									VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT };
-
-		m_InstanceDataBuffer = { MAX_INSTANCE_BUFFER_SIZE,
-									VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-									VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT };
-	}
-
 	void VulkanRenderer::UpdateDebugVertexBuffer()
 	{
-		ME_PROFILE_FUNCTION();
+		//TODO use VulkanMappedBuffer
+
+		ME_PROFILE_FUNCTION()
 
 		if (!m_DebugRenderer)
 		{
@@ -444,9 +430,10 @@ namespace MauRen
 
 		// Map the vertex buffer memory
 		{
-			size_t bufferSize = sizeof(m_DebugRenderer->m_ActivePoints[0]) * m_DebugRenderer->m_ActivePoints.size();
+			size_t const bufferSize{ sizeof(m_DebugRenderer->m_ActivePoints[0]) * m_DebugRenderer->m_ActivePoints.size() };
 
-			VulkanBuffer stagingBuffer{
+			VulkanBuffer stagingBuffer
+			{
 				bufferSize,
 				VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
 				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT // Make it accessible to CPU
@@ -466,9 +453,10 @@ namespace MauRen
 		}
 
 		{
-			size_t bufferSize = sizeof(m_DebugRenderer->m_IndexBuffer[0]) * m_DebugRenderer->m_IndexBuffer.size();
+			size_t const bufferSize{ sizeof(m_DebugRenderer->m_IndexBuffer[0]) * m_DebugRenderer->m_IndexBuffer.size() };
 
-			VulkanBuffer stagingBuffer{
+			VulkanBuffer stagingBuffer
+			{
 				bufferSize,
 				VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
 				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT // Make it accessible to CPU

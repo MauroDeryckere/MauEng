@@ -73,7 +73,7 @@ namespace MauRen
 		[[nodiscard]] bool CheckPhysicalDeviceExtensionSupport(VkPhysicalDevice device);
 
 		// Give a physical device a rating to allow automatically selecting the "best" option
-		[[nodiscard]] uint32_t RateDeviceSuitability(VkPhysicalDevice device);
+		[[nodiscard]] uint32_t RateDeviceSuitability(VkPhysicalDevice device) const;
 
 		// Is a physical device suitable for our application
 		[[nodiscard]] bool IsPhysicalDeviceSuitable(VkPhysicalDevice device);

@@ -1,9 +1,11 @@
 #ifndef MAUREN_VULKANMESHMANAGER_H
 #define MAUREN_VULKANMESHMANAGER_H
 
+#include "MeshInstance.h"
 #include "RendererPCH.h"
-#include "VulkanMesh.h"
-
+#include "Mesh.h"
+#include "VulkanBuffer.h"
+#include "Bindless/BindlessData.h"
 
 namespace MauRen
 {
@@ -17,11 +19,30 @@ namespace MauRen
 
 		void LoadMesh(Mesh& mesh);
 
-		[[nodiscard]] VulkanMesh const& GetVulkanMesh(uint32_t meshID) const;
+		[[nodiscard]] MeshData const& GetMesh(uint32_t meshID) const;
 
-		void QueueDraw(MeshInstance const* instance);
+		__forceinline void QueueDraw(MeshInstance const* instance)
+		{
+			uint32_t const meshID{ instance->GetMeshID() };
+			m_MeshInstanceData.emplace_back(instance->GetModelMatrix(), meshID, instance->GetMaterialID(), 0, 0);
 
-		void Draw(VkCommandBuffer commandBuffer, VkPipelineLayout layout, uint32_t setCount, VkDescriptorSet const* pDescriptorSets);
+			if (m_BatchedDrawCommands[meshID] != UINT32_MAX)
+			{
+				// Already added this mesh this frame; just increment instance count
+				m_DrawCommands[m_BatchedDrawCommands[meshID]].instanceCount++;
+			}
+			else
+			{
+				// First time seeing this mesh this frame; create a new draw command
+				const MeshData& mesh{ m_MeshData[m_LoadedMeshes.at(meshID)] };
+				uint32_t const instanceOffset{ static_cast<uint32_t>(m_MeshInstanceData.size() - 1) };
+
+				m_BatchedDrawCommands[meshID] = static_cast<uint32_t>(m_DrawCommands.size());
+				m_DrawCommands.emplace_back(mesh.indexCount, 1, mesh.firstIndex, mesh.vertexOffset, instanceOffset);
+			}
+		}
+
+		void Draw(VkCommandBuffer commandBuffer, VkPipelineLayout layout, uint32_t setCount, VkDescriptorSet const* pDescriptorSets, uint32_t frame);
 
 		VulkanMeshManager(VulkanMeshManager const&) = delete;
 		VulkanMeshManager(VulkanMeshManager&&) = delete;
@@ -35,10 +56,39 @@ namespace MauRen
 
 		VulkanCommandPoolManager const* m_CmdPoolManager;
 
-		uint32_t m_NextID{ 0 };
-		std::unordered_map<uint32_t, VulkanMesh> m_Meshes;
+		// 1:1 copy w/ GPU buffers
+		std::vector<MeshInstanceData> m_MeshInstanceData;
+		std::vector<MeshData> m_MeshData;
 
-		std::unordered_map<uint32_t, std::vector<MeshInstance>> m_MeshBatches;
+		std::vector<VulkanMappedBuffer> m_MeshInstanceDataBuffers;
+		std::vector<VulkanMappedBuffer> m_MeshDataBuffers;
+
+		// 1:1 copy w/ GPU buffers
+		std::vector<DrawCommand> m_DrawCommands;
+		std::vector<VulkanMappedBuffer> m_DrawCommandBuffers;
+
+		// All vertices in one big buffer
+		VulkanMappedBuffer m_VertexBuffer;
+		// All indices in one big buffer
+		VulkanMappedBuffer m_IndexBuffer;
+
+		// maps mesh ID -> index into m_DrawCommands
+		// DrawCommands[MeshId] == uint max -> no batch yet; else it's the idx into the vec
+		std::vector<uint32_t> m_BatchedDrawCommands;
+
+		// maps mesh ID -> index into m_MeshData
+		std::unordered_map<uint32_t, uint32_t> m_LoadedMeshes;
+
+
+		uint32_t m_CurrentVertexOffset{ 0 };
+		uint32_t m_CurrentIndexOffset{ 0 };
+		uint32_t m_NextID{ 0 };
+
+		void InitializeMeshInstanceDataBuffers();
+		void InitializeMeshDataBuffers();
+		void InitializeDrawCommandBuffers();
+
+		void CreateVertexAndIndexBuffers();
 	};
 }
 

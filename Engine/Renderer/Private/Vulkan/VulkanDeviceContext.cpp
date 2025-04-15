@@ -218,6 +218,7 @@ namespace MauRen
 		VkPhysicalDeviceFeatures deviceFeatures{};
 		deviceFeatures.samplerAnisotropy = VK_TRUE;
 		deviceFeatures.fillModeNonSolid = VK_TRUE;
+		deviceFeatures.multiDrawIndirect = VK_TRUE;
 
 		VkPhysicalDeviceDescriptorIndexingFeatures indexingFeatures{};
 		indexingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
@@ -301,7 +302,7 @@ namespace MauRen
 			});
 	}
 
-	uint32_t VulkanDeviceContext::RateDeviceSuitability(VkPhysicalDevice device)
+	uint32_t VulkanDeviceContext::RateDeviceSuitability(VkPhysicalDevice device) const
 	{
 		QueueFamilyIndices const indices{ FindQueueFamilies(device) };
 
@@ -359,7 +360,9 @@ namespace MauRen
 							&& deviceFeatures.fillModeNonSolid
 							&& indexingFeatures.runtimeDescriptorArray
 							&& indexingFeatures.descriptorBindingPartiallyBound
-							&& indexingFeatures.descriptorBindingVariableDescriptorCount;
+							&& indexingFeatures.descriptorBindingVariableDescriptorCount
+
+							&& deviceFeatures.multiDrawIndirect;
 		}
 
 		return indices.IsComplete() and extensionsSupported and swapChainAdequate;

@@ -15,7 +15,6 @@
 #include "VulkanCommandPoolManager.h"
 
 #include "VulkanBuffer.h"
-#include "VulkanMesh.h"
 
 #include "VulkanImage.h"
 
@@ -42,11 +41,11 @@ namespace MauRen
 
 		virtual void UpLoadModel(Mesh& mesh) override;
 
-
 		VulkanRenderer(VulkanRenderer const&) = delete;
 		VulkanRenderer(VulkanRenderer&&) = delete;
 		VulkanRenderer& operator=(VulkanRenderer const&) = delete;
 		VulkanRenderer& operator=(VulkanRenderer&&) = delete;
+
 	private:
 		// "reference" to the window
 		SDL_Window* m_pWindow{ nullptr };
@@ -76,26 +75,15 @@ namespace MauRen
 
 		bool m_FramebufferResized{ false };
 
-#pragma region BindlessSetupTODO
-		//TODO
-		// Using a fixed size for now to test the system, until moving on to use the allocator
-		const VkDeviceSize MAX_VERTEX_BUFFER_SIZE{ 64 * 1024 * 1024 }; // 64MB
-		const VkDeviceSize MAX_INDEX_BUFFER_SIZE{ 32 * 1024 * 1024 };  // 32MB
-		const VkDeviceSize MAX_INSTANCE_BUFFER_SIZE{ 16 * 1024 * 1024 }; // 16MB
-		//const VkDeviceSize MAX_MESH_DATA_SIZE = 1024 * sizeof(MeshData); // 1024 meshes
-		//const VkDeviceSize MAX_DRAW_COMMANDS = 1024 * sizeof(DrawCommand); // 1024 draw calls
-
-		VulkanBuffer m_GlobalVertexBuffer{};
-		VulkanBuffer m_GlobalIndexBuffer{};
-		VulkanBuffer m_InstanceDataBuffer{};  // Holds per-instance data
-#pragma endregion
-
 		struct UniformBufferObject final
 		{
 			alignas(16) glm::mat4 view;
 			alignas(16) glm::mat4 proj;
 		};
 		std::vector<VulkanMappedBuffer> m_MappedUniformBuffers{};
+
+		VulkanBuffer m_DebugVertexBuffer{};
+		VulkanBuffer m_DebugIndexBuffer{};
 
 		void CreateUniformBuffers();
 
@@ -108,11 +96,6 @@ namespace MauRen
 		// Recreate the swapchain on e.g a window resize
 		bool RecreateSwapchain();
 
-		//TODO
-		void CreateGlobalBuffers();
-
-		VulkanBuffer m_DebugVertexBuffer{};
-		VulkanBuffer m_DebugIndexBuffer{};
 		// Update the buffer for debug drawing
 		void UpdateDebugVertexBuffer();
 

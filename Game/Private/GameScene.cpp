@@ -6,6 +6,8 @@
 #include "GameTime.h"
 #include <glm/glm.hpp>
 
+#include <random>  // For random number generation
+
 namespace MauGam
 {
 	GameScene::GameScene()
@@ -26,23 +28,35 @@ namespace MauGam
 		RENDERER.UpLoadModel(m2);
 
 		// Skulls
-		//TODO rotate skulls to correct dir
 		MeshInstance mi1{ m2 };
-		mi1.Translate({ 5, 20,  -3 });
+		mi1.Translate({ 5, 5,  -20 });
 		mi1.Scale({ .3f, .3f, .3f });
+		mi1.Rotate({ 270, 0, 0 });
 
 		MeshInstance mi2{ m2 };
-		mi2.Translate({ -5, 20,  -8 });
+		mi2.Translate({ -5, 5,  -20 });
 		mi2.Scale({ .3f, .3f, .3f });
+		mi2.Rotate({ 270, 0, 0 });
 
 		// Gun
 		MeshInstance mi3{ m1 };
 		mi3.Translate({ 0, 2,  0 });
 		mi3.Scale({ 5.f, 5.f, 5.f });
 
+		std::random_device rd;  // Random device for seed
+		std::mt19937 gen(rd()); // Mersenne Twister generator
+		std::uniform_real_distribution<float> dis(-20.0f, 20.0f); // Random translation range
+
 		m_Mehses.emplace_back(mi1);
 		m_Mehses.emplace_back(mi2);
+		for (size_t i = 0; i < 99'000; i++)
+		{
+			m_Mehses.emplace_back(mi3);
+
+			m_Mehses.back().Translate({ dis(gen), dis(gen), dis(gen) });
+		}
 		m_Mehses.emplace_back(mi3);
+
 
 		// Setup input
 		auto& input{ INPUT_MANAGER };
@@ -131,10 +145,10 @@ namespace MauGam
 		}
 
 		// 90 degrees per second
-	//	float constexpr rotationSpeed{ glm::radians(90.0f) };
-	//	m_Mehses[0].Rotate(rotationSpeed * TIME.ElapsedSec(), glm::vec3(0.0f, 0.0f, 1.0f));
-	//	m_Mehses[1].Rotate(rotationSpeed * TIME.ElapsedSec(), glm::vec3(0.0f, 0.0f, 1.0f));
-	//	m_Mehses[2].Rotate(rotationSpeed * TIME.ElapsedSec(), glm::vec3(0.0f, 1.0f, 0.0f));
+		float constexpr rotationSpeed{ 90.0f };
+		m_Mehses[0].Rotate({ 0, 0, rotationSpeed * TIME.ElapsedSec() });
+		m_Mehses[1].Rotate({ 0, 0, -rotationSpeed * TIME.ElapsedSec() });
+		m_Mehses[2].Rotate({ 0, rotationSpeed * TIME.ElapsedSec() });
 
 		DemoDebugDrawing();
 	}

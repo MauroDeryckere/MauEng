@@ -18,7 +18,7 @@ namespace MauRen
 
 	std::vector<char const*> const VULKAN_VALIDATION_LAYERS
 	{
-		"VK_LAYER_KHRONOS_validation",
+		"VK_LAYER_KHRONOS_validation"
 	};
 
 	std::vector<char const*> const DEVICE_EXTENSIONS
@@ -27,10 +27,21 @@ namespace MauRen
 		VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME
 	};
 
-	uint32_t constexpr MAX_FRAMES_IN_FLIGHT{ 5 };
+	uint32_t constexpr MAX_FRAMES_IN_FLIGHT{ 3 };
 	static_assert(MAX_FRAMES_IN_FLIGHT > 0);
 
-	uint32_t constexpr MAX_TEXTURES{ 10 };
+	// These are ust arbitrary numbers for now, they have to actally be calculated in the futrue
+	uint32_t constexpr MAX_TEXTURES{ 1024 };			// For texture array
+	uint32_t constexpr MAX_MATERIALS{ 512 };			// Matches MaterialData[] buffer
+
+	uint32_t constexpr MAX_MESH_INSTANCES{ 100'000 };	// Matches MeshInstanceData[] buffer
+	uint32_t constexpr MAX_MESHES{ 512 };				// Matches MeshData[] buffer
+
+	uint32_t constexpr MAX_DRAW_COMMANDS{ 20'000 };		// Matches DrawCommand[] buffer
+
+	uint32_t constexpr MAX_VERTICES{ 10'000'000 };      // Maximum number of vertices (for all meshes)
+	uint32_t constexpr MAX_INDICES{ 20'000'000 };       // Maximum number of indices (for all meshes)
+
 	bool constexpr DEBUG_OUT_MAT{ true };
 }
 

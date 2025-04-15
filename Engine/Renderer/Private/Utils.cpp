@@ -134,7 +134,7 @@ namespace MauRen
         for (const auto& shape : shapes)
         {
             numIndices += shape.mesh.indices.size();
-            numVertices += shape.mesh.indices.size();
+            numVertices += shape.mesh.num_face_vertices.size();
         }
 
         vertices.reserve(numVertices);
@@ -171,6 +171,7 @@ namespace MauRen
                 indices.emplace_back(uniqueVertices[vertex]);
             }
         }
+        LOGGER.Log(MauCor::LogPriority::Trace, MauCor::LogCategory::Renderer, "Model: {}; indices: {}; vertices: {})", path.string(), indices.size(), vertices.size());
 
         vertices.shrink_to_fit();
         indices.shrink_to_fit();
