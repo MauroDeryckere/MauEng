@@ -34,7 +34,7 @@ namespace MauRen
 	uint32_t constexpr MAX_TEXTURES{ 1024 };			// For texture array
 	uint32_t constexpr MAX_MATERIALS{ 512 };			// Matches MaterialData[] buffer
 
-	uint32_t constexpr MAX_MESH_INSTANCES{ 10'000 };	// Matches MeshInstanceData[] buffer
+	uint32_t constexpr MAX_MESH_INSTANCES{ 50'000 };	// Matches MeshInstanceData[] buffer
 	uint32_t constexpr MAX_MESHES{ 512 };				// Matches MeshData[] buffer
 
 	uint32_t constexpr MAX_DRAW_COMMANDS{ 20'000 };		// Matches DrawCommand[] buffer

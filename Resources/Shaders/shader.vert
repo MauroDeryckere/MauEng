@@ -34,7 +34,8 @@ layout(location = 2) out flat uint outMaterialIndex;
 
 void main() 
 {
-    gl_Position = ubo.proj * ubo.view * instances[gl_InstanceIndex].modelMatrix * vec4(inPosition, 1.0);
+    mat4 model = instances[gl_InstanceIndex].modelMatrix;
+    gl_Position = ubo.proj * ubo.view * model * vec4(inPosition, 1.0);
 
     outFragColor = inColor;
     outFragTexCoord = inTexCoord;
