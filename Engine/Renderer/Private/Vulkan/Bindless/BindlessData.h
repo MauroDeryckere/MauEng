@@ -2,7 +2,7 @@
 
 #include <glm/glm.hpp>
 
-// (CPU prepares, GPU uses)
+// (GPU-side resource - CPU copy)
 // Per instance data
 // Maps to all used data from buffers
 struct alignas(16) MeshInstanceData final
@@ -15,7 +15,8 @@ struct alignas(16) MeshInstanceData final
     uint32_t objectID;      // Optional: ID for selection/debug
 };
 
-// (GPU-side resource)
+// NOT USED IN SHADER CURRENTLY
+//
 // Per mesh data
 struct alignas(16) MeshData final
 {
@@ -24,9 +25,6 @@ struct alignas(16) MeshData final
     int32_t vertexOffset;  // Offset into big VBO, added to indices
     uint32_t flags;         // Flags for deletion or active status (E.g 0 = active, 1 = marked for deletion)
 };
-
-
-//* ADDED
 
 // (GPU-side resource - CPU copy)
 // Per material data
@@ -58,9 +56,9 @@ DrawCommands
 -> GPU
   ->InstanceData
         |
-        |--> meshIndex --> MeshData[] --> offset into large vertex/index buffer
+        |--> meshID --> MeshData[] --> offset into large vertex/index buffer
         |
-        |--> materialIndex --> MaterialData[]
+        |--> materialID --> MaterialData[]
                                     |
                                     |--> textureIndex --> bindless texture array[]
 */
