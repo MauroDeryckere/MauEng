@@ -109,27 +109,6 @@ namespace MauRen
 		throw std::runtime_error("Mesh not found! ");
 	}
 
-	void VulkanMeshManager::QueueDraw(MeshInstance const* instance)
-	{
-		uint32_t const meshID{ instance->GetMeshID() };
-		m_MeshInstanceData.emplace_back(instance->GetModelMatrix(), meshID, instance->GetMaterialID(), 0, 0);
-
-		if (m_BatchedDrawCommands[meshID] != UINT32_MAX)
-		{
-			// Already added this mesh this frame; just increment instance count
-			m_DrawCommands[m_BatchedDrawCommands[meshID]].instanceCount++;
-		}
-		else
-		{
-			// First time seeing this mesh this frame; create a new draw command
-			const MeshData& mesh{ m_MeshData[m_LoadedMeshes.at(meshID)] };
-			uint32_t const instanceOffset{ static_cast<uint32_t>(m_MeshInstanceData.size() - 1) };
-
-			m_BatchedDrawCommands[meshID] = static_cast<uint32_t>(m_DrawCommands.size());
-			m_DrawCommands.emplace_back(mesh.indexCount, 1, mesh.firstIndex, mesh.vertexOffset, instanceOffset);
-		}
-	}
-
 	void VulkanMeshManager::Draw(VkCommandBuffer commandBuffer, VkPipelineLayout layout, uint32_t setCount, VkDescriptorSet const* pDescriptorSets, uint32_t frame)
 	{
 		ME_PROFILE_FUNCTION()

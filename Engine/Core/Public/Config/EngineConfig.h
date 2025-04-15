@@ -45,7 +45,7 @@ namespace MauEng
 #endif
 
 #if ENABLE_PROFILER
-	uint32_t constexpr NUM_FRAMES_TO_PROFILE{ 2 };
+	uint32_t constexpr NUM_FRAMES_TO_PROFILE{ 5 };
 
 	// Toggle using ME profiler (w/ google://tracing) or optick library
 	#ifdef MAUENG_USE_OPTICK
