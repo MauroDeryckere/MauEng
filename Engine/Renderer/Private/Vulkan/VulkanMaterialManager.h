@@ -3,7 +3,6 @@
 
 #include "RendererPCH.h"
 #include "VulkanBuffer.h"
-#include "VulkanMaterial.h"
 #include "VulkanTextureManager.h"
 
 #include "Bindless/BindlessData.h"
@@ -45,7 +44,7 @@ namespace MauRen
 		// Material name, ID
 		std::unordered_map<std::string, uint32_t> m_MaterialIDMap;
 
-		// All loaded materials
+		// All loaded materials - 1:1 copy of GPU buffer
 		std::vector<MaterialData> m_Materials;
 
 		std::vector<VulkanMappedBuffer> m_MaterialDataBuffers;

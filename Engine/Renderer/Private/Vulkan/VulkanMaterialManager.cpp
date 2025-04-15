@@ -3,7 +3,6 @@
 #include "VulkanDescriptorContext.h"
 
 #include "VulkanTextureManager.h"
-#include "VulkanMaterial.h"
 #include "Material.h"
 
 #include "VulkanDeviceContextManager.h"

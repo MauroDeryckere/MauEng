@@ -19,9 +19,9 @@ struct alignas(16) MeshInstanceData final
 // Per mesh data
 struct alignas(16) MeshData final
 {
-    uint32_t indexOffset;   // First index in global index buffer
+    uint32_t firstIndex;   // First index in global index buffer
     uint32_t indexCount;    // Indices to draw
-    uint32_t vertexOffset;  // Offset into big VBO, added to indices
+    int32_t vertexOffset;  // Offset into big VBO, added to indices
     uint32_t flags;         // Flags for deletion or active status (E.g 0 = active, 1 = marked for deletion)
 };
 

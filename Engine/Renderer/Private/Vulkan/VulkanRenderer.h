@@ -15,7 +15,6 @@
 #include "VulkanCommandPoolManager.h"
 
 #include "VulkanBuffer.h"
-#include "VulkanMesh.h"
 
 #include "VulkanImage.h"
 

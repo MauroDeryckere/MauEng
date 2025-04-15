@@ -2,8 +2,8 @@
 #define MAUREN_VULKANMESHMANAGER_H
 
 #include "RendererPCH.h"
-#include "VulkanMesh.h"
-
+#include "Mesh.h"
+#include "VulkanBuffer.h"
 #include "Bindless/BindlessData.h"
 
 namespace MauRen
@@ -18,7 +18,7 @@ namespace MauRen
 
 		void LoadMesh(Mesh& mesh);
 
-		[[nodiscard]] VulkanMesh const& GetVulkanMesh(uint32_t meshID) const;
+		[[nodiscard]] MeshData const& GetMesh(uint32_t meshID) const;
 
 		void QueueDraw(MeshInstance const* instance);
 
@@ -36,14 +36,6 @@ namespace MauRen
 
 		VulkanCommandPoolManager const* m_CmdPoolManager;
 
-		// Old Setup
-
-		uint32_t m_NextID{ 0 };
-		std::unordered_map<uint32_t, VulkanMesh> m_Meshes;
-
-		std::unordered_map<uint32_t, std::vector<MeshInstance>> m_MeshBatches;
-
-		// Bindless Setup
 		// 1:1 copy w/ GPU buffers
 		std::vector<MeshInstanceData> m_MeshInstanceData;
 		std::vector<MeshData> m_MeshData;
@@ -63,8 +55,13 @@ namespace MauRen
 		// maps mesh ID -> index into m_DrawCommands
 		std::unordered_map<uint32_t, uint32_t> m_BatchedDrawCommands;
 
+		// maps mesh ID -> index into m_MeshData
+		std::unordered_map<uint32_t, uint32_t> m_LoadedMeshes;
+
+
 		uint32_t m_CurrentVertexOffset{ 0 };
 		uint32_t m_CurrentIndexOffset{ 0 };
+		uint32_t m_NextID{ 0 };
 
 		void InitializeMeshInstanceDataBuffers();
 		void InitializeMeshDataBuffers();

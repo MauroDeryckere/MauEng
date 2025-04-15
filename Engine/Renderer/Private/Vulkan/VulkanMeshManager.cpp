@@ -44,12 +44,6 @@ namespace MauRen
 			m.buffer.Destroy();
 		}
 
-		// Old setup
-		for (auto& m : m_Meshes)
-		{
-			m.second.Destroy();
-		}
-
 		return true;
 	}
 
@@ -57,59 +51,66 @@ namespace MauRen
 	void VulkanMeshManager::LoadMesh(Mesh& mesh)
 	{
 		ME_PROFILE_FUNCTION()
-
-		ME_RENDERER_ASSERT(mesh.GetMeshID() == UINT32_MAX);
-
-		mesh.SetMeshID(m_NextID);
-
-		const auto& indices = mesh.GetIndices();
-		const auto& vertices = mesh.GetVertices();
-
-		ME_RENDERER_ASSERT(m_CurrentVertexOffset + vertices.size() <= sizeof(Vertex) * MAX_VERTICES);
-		ME_RENDERER_ASSERT(m_CurrentIndexOffset + indices.size() <= sizeof(uint32_t) * MAX_INDICES);
-
-		MeshData data{};
-		data.vertexOffset = m_CurrentVertexOffset;
-		data.indexOffset = m_CurrentIndexOffset;
-		data.indexCount = static_cast<uint32_t>(mesh.GetIndices().size());
-		data.flags = 0;
-		m_MeshData.emplace_back(data);
-
-		// may want to store a copy of the buffers on the CPU  side to support compacting and be more "optimal" as its less copies.
+		if (mesh.GetMeshID() == UINT32_MAX)
 		{
-			uint8_t* basePtr = static_cast<uint8_t*>(m_VertexBuffer.mapped);
-			std::memcpy(basePtr + m_CurrentVertexOffset * sizeof(Vertex), vertices.data(), vertices.size() * sizeof(Vertex));
+			auto const it{ m_LoadedMeshes.find(mesh.GetMeshID()) };
+			if (it == end(m_LoadedMeshes))
+			{
+				mesh.SetMeshID(m_NextID);
+
+				const auto& indices = mesh.GetIndices();
+				const auto& vertices = mesh.GetVertices();
+
+				ME_RENDERER_ASSERT(m_CurrentVertexOffset + vertices.size() <= sizeof(Vertex) * MAX_VERTICES);
+				ME_RENDERER_ASSERT(m_CurrentIndexOffset + indices.size() <= sizeof(uint32_t) * MAX_INDICES);
+
+				MeshData data{};
+				data.vertexOffset = static_cast<int32_t>(m_CurrentVertexOffset);
+				data.firstIndex = m_CurrentIndexOffset;
+				data.indexCount = static_cast<uint32_t>(mesh.GetIndices().size());
+				data.flags = 0;
+
+				m_LoadedMeshes[m_NextID] = static_cast<uint32_t>(m_MeshData.size());
+				m_MeshData.emplace_back(data);
+
+				// may want to store a copy of the buffers on the CPU  side to support compacting and be more "optimal" as its less copies.
+				{
+					uint8_t* basePtr = static_cast<uint8_t*>(m_VertexBuffer.mapped);
+					std::memcpy(basePtr + m_CurrentVertexOffset * sizeof(Vertex), vertices.data(), vertices.size() * sizeof(Vertex));
+				}
+
+				{
+					uint8_t* basePtr = static_cast<uint8_t*>(m_IndexBuffer.mapped);
+					std::memcpy(basePtr + m_CurrentIndexOffset * sizeof(uint32_t), indices.data(), indices.size() * sizeof(uint32_t));
+				}
+
+				m_CurrentVertexOffset += static_cast<uint32_t>(mesh.GetVertices().size());
+				m_CurrentIndexOffset += static_cast<uint32_t>(mesh.GetIndices().size());
+
+
+				++m_NextID;
+			}
 		}
-
-		{
-			uint8_t* basePtr = static_cast<uint8_t*>(m_IndexBuffer.mapped);
-			std::memcpy(basePtr + m_CurrentIndexOffset * sizeof(uint32_t), indices.data(), indices.size() * sizeof(uint32_t));
-		}
-
-		m_CurrentVertexOffset += static_cast<uint32_t>(mesh.GetVertices().size());
-		m_CurrentIndexOffset += static_cast<uint32_t>(mesh.GetIndices().size());
-
-		++m_NextID;
 	}
 
-	const VulkanMesh& VulkanMeshManager::GetVulkanMesh(uint32_t meshID) const
+	MeshData const& VulkanMeshManager::GetMesh(uint32_t meshID) const
 	{
-		auto const it{ m_Meshes.find(meshID) };
+		auto const it{ m_LoadedMeshes.find(meshID) };
 
-		ME_RENDERER_ASSERT(it != end(m_Meshes), "Mesh not found in VulkanMeshManager");
+		ME_RENDERER_ASSERT(it != end(m_LoadedMeshes), "Mesh not found in VulkanMeshManager");
 
-		if (it != m_Meshes.end())
+		if (it != m_LoadedMeshes.end())
 		{
-			return it->second;
+			return m_MeshData[it->second];
 		}
 
-		throw std::runtime_error("");
+		throw std::runtime_error("Mesh not found! ");
 	}
 
 	void VulkanMeshManager::QueueDraw(MeshInstance const* instance)
 	{
-		uint32_t meshID = instance->GetMeshID();
-		uint32_t instanceOffset = static_cast<uint32_t>(m_MeshInstanceData.size());
+		uint32_t const meshID{ instance->GetMeshID() };
+		uint32_t const instanceOffset{ static_cast<uint32_t>(m_MeshInstanceData.size()) };
 
 		MeshInstanceData data{};
 		data.modelMatrix = instance->GetModelMatrix();
@@ -119,18 +120,18 @@ namespace MauRen
 		if (m_BatchedDrawCommands.contains(meshID))
 		{
 			// Already added this mesh this frame; just increment instance count
-			uint32_t cmdIndex = m_BatchedDrawCommands[meshID];
+			uint32_t const cmdIndex{ m_BatchedDrawCommands[meshID] };
 			m_DrawCommands[cmdIndex].instanceCount++;
 		}
 
 		else
 		{
 			// First time seeing this mesh this frame; create a new draw command
-			const MeshData& mesh = m_MeshData[meshID];
+			const MeshData& mesh{ m_MeshData[m_LoadedMeshes.at(meshID)] };
 
 			DrawCommand cmd{};
 			cmd.indexCount = mesh.indexCount;
-			cmd.firstIndex = mesh.indexOffset;
+			cmd.firstIndex = mesh.firstIndex;
 			cmd.vertexOffset = mesh.vertexOffset;
 			cmd.firstInstance = instanceOffset;
 			cmd.instanceCount = 1;
@@ -150,30 +151,28 @@ namespace MauRen
 		{
 			frameToUpdate = MAX_FRAMES_IN_FLIGHT - 1;
 		}
+
 		memcpy(m_MeshInstanceDataBuffers[frameToUpdate].mapped, m_MeshInstanceData.data(), m_MeshInstanceData.size() * sizeof(MeshInstanceData));
 		memcpy(m_DrawCommandBuffers[frameToUpdate].mapped, m_DrawCommands.data(), m_DrawCommands.size() * sizeof(DrawCommand));
 
-		auto deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 		{
 			ME_PROFILE_SCOPE("Mesh instance data update")
-			VkDescriptorBufferInfo bufferInfo = {};
-			bufferInfo.buffer = m_MeshInstanceDataBuffers[frameToUpdate].buffer.buffer;  // The actual Vulkan buffer handle
-			bufferInfo.offset = 0;                                               // Typically 0, but if you're using a subrange of the buffer, adjust accordingly
-			bufferInfo.range = m_MeshInstanceData.size() * sizeof(MeshInstanceData); // The size of the data you're passing into the buffer
 
-			// 2. Update descriptor sets
+			auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+			VkDescriptorBufferInfo bufferInfo = {};
+			bufferInfo.buffer = m_MeshInstanceDataBuffers[frameToUpdate].buffer.buffer;
+			bufferInfo.offset = 0;
+			bufferInfo.range = m_MeshInstanceData.size() * sizeof(MeshInstanceData);
+
 			VkWriteDescriptorSet descriptorWrite = {};
 			descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-			descriptorWrite.dstSet = *pDescriptorSets; // Example: use the first descriptor set
-			descriptorWrite.dstBinding = 5; // Binding index
+			descriptorWrite.dstSet = *pDescriptorSets;
+			descriptorWrite.dstBinding = 5; // Binding index -TODO use a get Binding on the context
 			descriptorWrite.dstArrayElement = 0; // Array element offset (if applicable)
-			descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER; // or VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER depending on your data
-			descriptorWrite.descriptorCount = 1; // Number of descriptors to update
-			descriptorWrite.pBufferInfo = &bufferInfo; // You should fill in bufferInfo with the appropriate buffer info, including the pointer to the mapped memory
-			descriptorWrite.pImageInfo = nullptr; // Not used in this case
-			descriptorWrite.pTexelBufferView = nullptr; // Not used in this case
+			descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+			descriptorWrite.descriptorCount = 1;
+			descriptorWrite.pBufferInfo = &bufferInfo;
 
-			// Update descriptor set with the new mesh instance data
 			vkUpdateDescriptorSets(deviceContext->GetLogicalDevice(), 1, &descriptorWrite, 0, nullptr);
 		}
 
@@ -199,7 +198,7 @@ namespace MauRen
 
 	void VulkanMeshManager::InitializeMeshInstanceDataBuffers()
 	{
-		auto deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 
 		VkDeviceSize constexpr BUFFER_SIZE{ sizeof(MeshInstanceData) * MAX_MESH_INSTANCES };
 
@@ -218,7 +217,7 @@ namespace MauRen
 
 	void VulkanMeshManager::InitializeMeshDataBuffers()
 	{
-		auto deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 
 		VkDeviceSize constexpr BUFFER_SIZE{ sizeof(MeshData) * MAX_MESHES };
 
@@ -237,7 +236,7 @@ namespace MauRen
 
 	void VulkanMeshManager::InitializeDrawCommandBuffers()
 	{
-		auto deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 
 		VkDeviceSize constexpr BUFFER_SIZE{ sizeof(DrawCommand) * MAX_DRAW_COMMANDS };
 
@@ -256,7 +255,7 @@ namespace MauRen
 
 	void VulkanMeshManager::CreateVertexAndIndexBuffers()
 	{
-		auto deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 
 		{
 			VkDeviceSize constexpr BUFFER_SIZE{ sizeof(Vertex) * MAX_VERTICES };
