@@ -49,7 +49,7 @@ namespace MauGam
 
 		m_Mehses.emplace_back(mi1);
 		m_Mehses.emplace_back(mi2);
-		for (size_t i = 0; i < 45'000; i++)
+		for (size_t i = 0; i < 99'000; i++)
 		{
 			m_Mehses.emplace_back(mi3);
 
