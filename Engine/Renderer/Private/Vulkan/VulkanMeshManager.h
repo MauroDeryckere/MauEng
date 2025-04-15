@@ -53,7 +53,8 @@ namespace MauRen
 		VulkanMappedBuffer m_IndexBuffer;
 
 		// maps mesh ID -> index into m_DrawCommands
-		std::unordered_map<uint32_t, uint32_t> m_BatchedDrawCommands;
+		// DrawCommands[MeshId] == uint max -> no batch yet; else it's the idx into the vec
+		std::vector<uint32_t> m_BatchedDrawCommands;
 
 		// maps mesh ID -> index into m_MeshData
 		std::unordered_map<uint32_t, uint32_t> m_LoadedMeshes;

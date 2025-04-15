@@ -21,6 +21,8 @@ namespace MauRen
 
 		CreateVertexAndIndexBuffers();
 
+		m_BatchedDrawCommands.assign(MAX_MESHES + 1, UINT32_MAX);
+
 		return true;
 	}
 
@@ -110,35 +112,21 @@ namespace MauRen
 	void VulkanMeshManager::QueueDraw(MeshInstance const* instance)
 	{
 		uint32_t const meshID{ instance->GetMeshID() };
-		uint32_t const instanceOffset{ static_cast<uint32_t>(m_MeshInstanceData.size()) };
+		m_MeshInstanceData.emplace_back(instance->GetModelMatrix(), meshID, instance->GetMaterialID(), 0, 0);
 
-		MeshInstanceData data{};
-		data.modelMatrix = instance->GetModelMatrix();
-		data.materialIndex = instance->GetMaterialID();
-		m_MeshInstanceData.emplace_back(data);
-
-		auto const it{ m_BatchedDrawCommands.find(meshID) };
-		if (it != end(m_BatchedDrawCommands))
+		if (m_BatchedDrawCommands[meshID] != UINT32_MAX)
 		{
 			// Already added this mesh this frame; just increment instance count
-			uint32_t const cmdIndex{ it->second };
-			m_DrawCommands[cmdIndex].instanceCount++;
+			m_DrawCommands[m_BatchedDrawCommands[meshID]].instanceCount++;
 		}
-
 		else
 		{
 			// First time seeing this mesh this frame; create a new draw command
 			const MeshData& mesh{ m_MeshData[m_LoadedMeshes.at(meshID)] };
-
-			DrawCommand cmd{};
-			cmd.indexCount = mesh.indexCount;
-			cmd.firstIndex = mesh.firstIndex;
-			cmd.vertexOffset = mesh.vertexOffset;
-			cmd.firstInstance = instanceOffset;
-			cmd.instanceCount = 1;
+			uint32_t const instanceOffset{ static_cast<uint32_t>(m_MeshInstanceData.size() - 1) };
 
 			m_BatchedDrawCommands[meshID] = static_cast<uint32_t>(m_DrawCommands.size());
-			m_DrawCommands.emplace_back(cmd);
+			m_DrawCommands.emplace_back(mesh.indexCount, 1, mesh.firstIndex, mesh.vertexOffset, instanceOffset);
 		}
 	}
 
@@ -205,7 +193,7 @@ namespace MauRen
 			m_DrawCommands.resize(0);
 			m_MeshInstanceData.resize(0);
 
-			m_BatchedDrawCommands.clear();
+			m_BatchedDrawCommands.assign(MAX_MESHES + 1, UINT32_MAX);
 		}
 	}
 
