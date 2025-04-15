@@ -117,10 +117,11 @@ namespace MauRen
 		data.materialIndex = instance->GetMaterialID();
 		m_MeshInstanceData.emplace_back(data);
 
-		if (m_BatchedDrawCommands.contains(meshID))
+		auto const it{ m_BatchedDrawCommands.find(meshID) };
+		if (it != end(m_BatchedDrawCommands))
 		{
 			// Already added this mesh this frame; just increment instance count
-			uint32_t const cmdIndex{ m_BatchedDrawCommands[meshID] };
+			uint32_t const cmdIndex{ it->second };
 			m_DrawCommands[cmdIndex].instanceCount++;
 		}
 
@@ -139,7 +140,6 @@ namespace MauRen
 			m_BatchedDrawCommands[meshID] = static_cast<uint32_t>(m_DrawCommands.size());
 			m_DrawCommands.emplace_back(cmd);
 		}
-
 	}
 
 	void VulkanMeshManager::Draw(VkCommandBuffer commandBuffer, VkPipelineLayout layout, uint32_t setCount, VkDescriptorSet const* pDescriptorSets, uint32_t frame)
@@ -152,11 +152,20 @@ namespace MauRen
 			frameToUpdate = MAX_FRAMES_IN_FLIGHT - 1;
 		}
 
-		memcpy(m_MeshInstanceDataBuffers[frameToUpdate].mapped, m_MeshInstanceData.data(), m_MeshInstanceData.size() * sizeof(MeshInstanceData));
-		memcpy(m_DrawCommandBuffers[frameToUpdate].mapped, m_DrawCommands.data(), m_DrawCommands.size() * sizeof(DrawCommand));
+		{
+			ME_PROFILE_SCOPE("Mesh instance data update - buffer")
+
+			memcpy(m_MeshInstanceDataBuffers[frameToUpdate].mapped, m_MeshInstanceData.data(), m_MeshInstanceData.size() * sizeof(MeshInstanceData));
+		}
 
 		{
-			ME_PROFILE_SCOPE("Mesh instance data update")
+			ME_PROFILE_SCOPE("Draw commands data update - buffer")
+
+			memcpy(m_DrawCommandBuffers[frameToUpdate].mapped, m_DrawCommands.data(), m_DrawCommands.size() * sizeof(DrawCommand));
+		}
+
+		{
+			ME_PROFILE_SCOPE("Mesh instance data update - descriptor sets")
 
 			auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 			VkDescriptorBufferInfo bufferInfo = {};
@@ -189,11 +198,15 @@ namespace MauRen
 			sizeof(DrawCommand)
 		);
 
-		// not optimal, useful for testing - just rebuild all draw commands every frame and queue them
-		m_DrawCommands.clear();
-		m_MeshInstanceData.clear();
+		{
+			ME_PROFILE_SCOPE("Clearing the data")
 
-		m_BatchedDrawCommands.clear();
+			// not optimal, useful for testing - just rebuild all draw commands every frame and queue them
+			m_DrawCommands.resize(0);
+			m_MeshInstanceData.resize(0);
+
+			m_BatchedDrawCommands.clear();
+		}
 	}
 
 	void VulkanMeshManager::InitializeMeshInstanceDataBuffers()
