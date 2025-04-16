@@ -5,6 +5,7 @@ set(GAME_PRIVATE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/private")
 # Create the Game executable
 add_executable(${EXECUTABLE_NAME}
     ${GAME_PRIVATE_DIR}/main.cpp
+    ${GAME_PRIVATE_DIR}/DebugDrawingDemo.cpp
     ${GAME_PRIVATE_DIR}/GameScene.cpp
 )
 

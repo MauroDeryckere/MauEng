@@ -1,9 +1,14 @@
 #ifndef MAUENG_ECSWORLD_H
 #define MAUENG_ECSWORLD_H
 
-#include "Entity.h"
+#include "EntityID.h"
 #include <memory>
 #include <concepts>
+
+namespace MauEng
+{
+	class Entity;
+}
 
 namespace MauEng::ECS
 {

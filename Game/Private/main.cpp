@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "Engine.h"
+#include "DebugDrawingDemo.h"
 #include "GameScene.h"
 #include "Scene/SceneManager.h"
 
@@ -22,5 +23,7 @@ int main(int, char* [])
 void InitDemoScene()
 {
 	using namespace MauGam;
+
 	MauEng::SceneManager::GetInstance().LoadScene(std::make_unique<GameScene>());
+	//MauEng::SceneManager::GetInstance().LoadScene(std::make_unique<DebugDrawingScene>());
 }

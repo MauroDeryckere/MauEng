@@ -16,8 +16,6 @@ namespace MauGam
 		virtual void OnRender() const override;
 	private:
 		std::vector<MauRen::MeshInstance> m_Mehses{};
-
-		void DemoDebugDrawing();
 	};
 }
 

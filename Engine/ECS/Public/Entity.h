@@ -75,7 +75,7 @@ namespace MauEng
 		[[nodiscard]] bool HasComponent() const noexcept;
 
 #pragma region operators
-		operator bool() const noexcept { return m_pECSWorld && m_pECSWorld->IsValid(m_ID); }
+		operator bool() const noexcept;
 
 		[[nodiscard]] bool operator==(Entity const& other) const noexcept
 		{

@@ -15,6 +15,11 @@ namespace MauEng
 		m_pECSWorld->DestroyEntity(*this);
 	}
 
+	Entity::operator bool() const noexcept
+	{
+		return m_pECSWorld && m_pECSWorld->IsValid(m_ID);
+	}
+
 	template<typename ComponentType, typename... Args>
 	ComponentType& Entity::AddComponent(Args&&... args) noexcept
 	{

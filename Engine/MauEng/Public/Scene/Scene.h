@@ -2,11 +2,12 @@
 #define MAUENG_SCENE_H
 
 #include "CameraManager.h"
-
 //TODO fix
 //#include "ECSWorld.h"
 
 #include "../../ECS/Public/ECSWorld.h"
+#include "../../ECS/Public/Entity.h"
+
 namespace MauEng
 {
 	// Base scene class to inherit from when creating a scene for the game
