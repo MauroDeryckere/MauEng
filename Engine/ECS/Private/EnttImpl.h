@@ -23,6 +23,18 @@ namespace ECS
 			return registry.emplace<ComponentType>(static_cast<entt::entity>(id), std::forward<Args>(args)...);
 		}
 
+		template <typename ComponentType>
+		[[nodiscard]] ComponentType& GetComponent(EntityID id) const noexcept
+		{
+			return registry.get<ComponentType>(static_cast<entt::entity>(id));
+		}
+
+		template <typename ComponentType>
+		void RemoveComponent(EntityID id)
+		{
+			registry.remove<ComponentType>(static_cast<entt::entity>(id));
+		}
+
 		template<typename ComponentType>
 		[[nodiscard]] bool HasComponent(EntityID id) const noexcept
 		{

@@ -26,11 +26,21 @@ namespace MauEng
 		template<typename ComponentType, typename... Args>
 		ComponentType& AddComponent(Args&&... args) noexcept;
 
+		template<typename ComponentType>
+		void RemoveComponent() noexcept;
+
+		template<typename ComponentType>
+		[[nodiscard]] ComponentType& GetComponent() const noexcept;
+			
+		template<typename ComponentType>
+		[[nodiscard]] bool HasComponent() const noexcept;
+
 	private:
 		ECS::EntityID m_ID{ ECS::NULL_ENTITY_ID };
 
 		// Reference to the ECS world
 		ECS::ECSWorld* m_pECSWorld{ nullptr };
+
 	};
 }
 
