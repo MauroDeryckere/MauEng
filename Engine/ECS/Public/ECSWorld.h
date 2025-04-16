@@ -121,6 +121,11 @@ namespace MauEng::ECS
 		void DestroyEntity(Entity entity)& noexcept;
 		// Destroy an Entity & remove it from the ECS
 		void DestroyEntity(EntityID id)& noexcept;
+
+		// Checks if the entity is valid
+		[[nodiscard]] bool IsValid(Entity entity) const& noexcept;
+		// Checks if the entity is valid
+		[[nodiscard]] bool IsValid(EntityID id) const& noexcept;
 	private:
 		std::unique_ptr<ECSImpl> m_pImpl;
 	};

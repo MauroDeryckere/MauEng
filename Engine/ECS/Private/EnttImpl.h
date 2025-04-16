@@ -48,6 +48,11 @@ namespace MauEng::ECS
 		{
 			return registry.any_of<ComponentType>(static_cast<entt::entity>(id));
 		}
+
+		[[nodiscard]] bool IsValid(EntityID id) const noexcept
+		{
+			return registry.valid(static_cast<entt::entity>(id));
+		}
 	};
 }
 

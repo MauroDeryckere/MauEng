@@ -24,19 +24,31 @@ namespace MauEng::ECS
 
 	void ECSWorld::DestroyEntity(Entity entity)& noexcept
 	{
+		ME_ASSERT(IsValid(entity));
 		DestroyEntity(entity.ID());
 		entity.m_ID = NULL_ENTITY_ID;
 	}
 
 	void ECSWorld::DestroyEntity(EntityID id)& noexcept
 	{
+		ME_ASSERT(IsValid(id));
 		m_pImpl->DestroyEntity(id);
+	}
+
+	bool ECSWorld::IsValid(Entity entity) const & noexcept
+	{
+		return m_pImpl->IsValid(entity.ID());
+	}
+	bool ECSWorld::IsValid(EntityID id) const & noexcept
+	{
+		return m_pImpl->IsValid(id);
 	}
 
 	template <typename ComponentType, typename ... Args>
 	requires std::is_constructible_v<ComponentType, Args...>
 	ComponentType& ECSWorld::AddComponent(EntityID id, Args&&... args)& noexcept
 	{
+		ME_ASSERT(IsValid(id));
 		ME_ASSERT(not HasComponent<ComponentType>(id));
 		return m_pImpl->AddComponent<ComponentType>(id, std::forward<Args>(args)...);
 	}
@@ -44,6 +56,7 @@ namespace MauEng::ECS
 	requires std::is_constructible_v<ComponentType, Args...>
 	ComponentType& ECSWorld::AddComponent(Entity const entity, Args&&... args)& noexcept
 	{
+		ME_ASSERT(IsValid(entity));
 		ME_ASSERT(not HasComponent<ComponentType>(entity.ID()));
 		return m_pImpl->AddComponent<ComponentType>(entity.ID(), std::forward<Args>(args)...);
 	}
@@ -51,6 +64,7 @@ namespace MauEng::ECS
 	template <typename ComponentType>
 	ComponentType const& ECSWorld::GetComponent(EntityID id) const& noexcept
 	{
+		ME_ASSERT(IsValid(id));
 		ME_ASSERT(HasComponent<ComponentType>(id));
 		return m_pImpl->GetComponent<ComponentType>(id);
 	}
@@ -62,6 +76,7 @@ namespace MauEng::ECS
 	template <typename ComponentType>
 	ComponentType& ECSWorld::GetComponent(EntityID id)& noexcept
 	{
+		ME_ASSERT(IsValid(id));
 		ME_ASSERT(HasComponent<ComponentType>(id));
 		return m_pImpl->GetComponent<ComponentType>(id);
 	}
@@ -74,6 +89,7 @@ namespace MauEng::ECS
 	template <typename ComponentType>
 	bool ECSWorld::RemoveComponent(EntityID id)& noexcept
 	{
+		ME_ASSERT(IsValid(id));
 		ME_ASSERT(HasComponent<ComponentType>(id));
 		return m_pImpl->RemoveComponent<ComponentType>(id);
 	}
@@ -86,12 +102,14 @@ namespace MauEng::ECS
 	template<typename ComponentType>
 	bool ECSWorld::HasComponent(Entity const entity) const& noexcept
 	{
+		ME_ASSERT(IsValid(entity));
 		return m_pImpl->HasComponent<ComponentType>(entity.ID());
 	}
 
 	template <typename ComponentType>
 	bool ECSWorld::HasComponent(EntityID id) const& noexcept
 	{
+		ME_ASSERT(IsValid(id));
 		return m_pImpl->HasComponent<ComponentType>(id);
 	}
 }

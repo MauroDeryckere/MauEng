@@ -1,6 +1,7 @@
 #ifndef MAUENG_ENTITY_H
 #define MAUENG_ENTITY_H
 
+#include "ECSWorld.h"
 #include "EntityID.h"
 
 namespace MauEng
@@ -74,7 +75,7 @@ namespace MauEng
 		[[nodiscard]] bool HasComponent() const noexcept;
 
 #pragma region operators
-		operator bool() const noexcept { return m_ID != ECS::NULL_ENTITY_ID; }
+		operator bool() const noexcept { return m_pECSWorld && m_pECSWorld->IsValid(m_ID); }
 
 		[[nodiscard]] bool operator==(Entity const& other) const noexcept
 		{
