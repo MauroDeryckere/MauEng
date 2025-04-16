@@ -74,7 +74,7 @@ namespace MauGam
 		input.BindAction("Rotate", MauEng::MouseInfo{ {},   MauEng::MouseInfo::ActionType::Moved });
 
 		auto& w = GetECSWorld();
-		w.CreateEntity();
+		MauEng::Entity e = w.CreateEntity();
 	}
 
 	void GameScene::OnLoad()
