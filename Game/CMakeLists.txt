@@ -7,6 +7,7 @@ add_executable(${EXECUTABLE_NAME}
     ${GAME_PRIVATE_DIR}/main.cpp
     ${GAME_PRIVATE_DIR}/DebugDrawingDemo.cpp
     ${GAME_PRIVATE_DIR}/GameScene.cpp
+    ${GAME_PRIVATE_DIR}/ECSTestScene.cpp
 )
 
 # Include directories

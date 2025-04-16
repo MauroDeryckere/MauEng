@@ -20,7 +20,7 @@ file(GLOB_RECURSE ENGINE_PUBLIC_HEADERS
 
 # Create the Engine target (as a library)
 add_library(Engine STATIC
-    ${ENGINE_PUBLIC_SOURCES}
+    ${ENGINE_PRIVATE_SOURCES}
     ${ENGINE_PRIVATE_HEADERS}
     ${ENGINE_PUBLIC_HEADERS}
 )
