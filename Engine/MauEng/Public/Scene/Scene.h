@@ -3,6 +3,10 @@
 
 #include "CameraManager.h"
 
+//TODO fix
+//#include "ECSWorld.h"
+
+#include "../../ECS/Public/ECSWorld.h"
 namespace MauEng
 {
 	// Base scene class to inherit from when creating a scene for the game
@@ -27,8 +31,11 @@ namespace MauEng
 		// Called when the scene is unloaded
 		virtual void OnUnload(){}
 
-		[[nodiscard]] CameraManager const& GetCameraManager() const noexcept { return m_CameraManager; }
-		[[nodiscard]] CameraManager& GetCameraManager() noexcept { return m_CameraManager; }
+		[[nodiscard]] inline ECS::ECSWorld& GetECSWorld() noexcept { return m_ECSWorld; }
+		[[nodiscard]] inline ECS::ECSWorld const& GetECSWorld() const noexcept { return m_ECSWorld; }
+
+		[[nodiscard]] inline CameraManager const& GetCameraManager() const noexcept { return m_CameraManager; }
+		[[nodiscard]] inline CameraManager& GetCameraManager() noexcept { return m_CameraManager; }
 
 		Scene(Scene const&) = delete;
 		Scene(Scene&&) = delete;
@@ -39,6 +46,7 @@ namespace MauEng
 		CameraManager m_CameraManager{ };
 
 	private:
+		ECS::ECSWorld m_ECSWorld{ };
 
 	};
 }

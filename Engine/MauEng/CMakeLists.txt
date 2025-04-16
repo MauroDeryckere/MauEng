@@ -23,6 +23,7 @@ add_library(Engine STATIC
 
 target_include_directories(Engine
     PUBLIC
+        "${CMAKE_CURRENT_SOURCE_DIR}/../ECS/public"
         ${ENGINE_PUBLIC_DIR}        # Public headers for Engine
     PRIVATE
         ${ENGINE_PRIVATE_DIR}       # Private headers for Engine
@@ -35,8 +36,8 @@ target_link_libraries(Engine
     PUBLIC
         MauEngCore
         Renderer
-    PRIVATE
         ECS
+    PRIVATE
 )
 
 # Enable precompiled header support for Engine

@@ -72,6 +72,9 @@ namespace MauGam
 
 
 		input.BindAction("Rotate", MauEng::MouseInfo{ {},   MauEng::MouseInfo::ActionType::Moved });
+
+		auto& w = GetECSWorld();
+		w.CreateEntity();
 	}
 
 	void GameScene::OnLoad()
@@ -148,7 +151,11 @@ namespace MauGam
 		float constexpr rotationSpeed{ 90.0f };
 		m_Mehses[0].Rotate({ 0, 0, rotationSpeed * TIME.ElapsedSec() });
 		m_Mehses[1].Rotate({ 0, 0, -rotationSpeed * TIME.ElapsedSec() });
-		m_Mehses[2].Rotate({ 0, rotationSpeed * TIME.ElapsedSec() });
+
+		for (size_t i{ 2 }; i < m_Mehses.size(); ++i)
+		{
+			m_Mehses[i].Rotate({ 0, rotationSpeed * TIME.ElapsedSec() });
+		}
 
 		DemoDebugDrawing();
 	}
