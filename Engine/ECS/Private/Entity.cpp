@@ -10,6 +10,11 @@ namespace MauEng
 		m_ID{ id }
 	{}
 
+	void Entity::Destroy() noexcept
+	{
+		m_pECSWorld->DestroyEntity(*this);
+	}
+
 	template<typename ComponentType, typename... Args>
 	ComponentType& Entity::AddComponent(Args&&... args) noexcept
 	{

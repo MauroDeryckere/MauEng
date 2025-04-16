@@ -31,8 +31,13 @@ namespace MauEng
 		// Called when the scene is unloaded
 		virtual void OnUnload(){}
 
+#pragma region ECS
+		[[nodiscard]] Entity CreateEntity();
+		void DestroyEntity(Entity entity);
+
 		[[nodiscard]] inline ECS::ECSWorld& GetECSWorld() noexcept { return m_ECSWorld; }
 		[[nodiscard]] inline ECS::ECSWorld const& GetECSWorld() const noexcept { return m_ECSWorld; }
+#pragma endregion
 
 		[[nodiscard]] inline CameraManager const& GetCameraManager() const noexcept { return m_CameraManager; }
 		[[nodiscard]] inline CameraManager& GetCameraManager() noexcept { return m_CameraManager; }

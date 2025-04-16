@@ -2,21 +2,30 @@
 
 set(CORE_PUBLIC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Public")
 set(CORE_PRIVATE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Private")
+set(CORE_SHARED_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Shared")
 
 # Gather all source files
-file(GLOB CORE_PUBLIC_SOURCES
-    "${CORE_PUBLIC_DIR}/*.cpp"
-    "${CORE_PUBLIC_DIR}/**/*.cpp"
+file(GLOB_RECURSE CORE_PRIVATE_SOURCES
+    "${CORE_PRIVATE_DIR}/*.cpp"
 )
 
-file(GLOB CORE_PRIVATE_SOURCES
-    "${CORE_PRIVATE_DIR}/*.cpp"
-    "${CORE_PRIVATE_DIR}/**/*.cpp"
+file(GLOB_RECURSE CORE_PRIVATE_HEADERS
+    "${CORE_PRIVATE_DIR}/*.h"
+)
+
+file(GLOB_RECURSE CORE_SHARED_HEADERS
+    "${CORE_SHARED_DIR}/*.h"
+)
+
+file(GLOB_RECURSE CORE_PUBLIC_HEADERS
+    "${CORE_PUBLIC_DIR}/*.h"
 )
 
 add_library(MauEngCore STATIC
-    ${CORE_PUBLIC_SOURCES}
     ${CORE_PRIVATE_SOURCES}
+    ${CORE_PRIVATE_HEADERS}
+    ${CORE_SHARED_HEADERS}
+    ${CORE_PUBLIC_HEADERS}
 )
 
 # Pass configuration options to the compiler
@@ -94,3 +103,7 @@ target_include_directories(MauEngCore
 target_precompile_headers(MauEngCore PRIVATE 
     "${CORE_PUBLIC_DIR}/CorePCH.h"
 )
+
+source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/Public" PREFIX "Public" FILES ${CORE_PUBLIC_HEADERS})
+source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/Private" PREFIX "Private" FILES ${CORE_PRIVATE_HEADERS} ${CORE_PRIVATE_SOURCES})
+source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/Shared" PREFIX "Shared" FILES ${CORE_SHARED_HEADERS})

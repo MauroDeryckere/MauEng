@@ -35,5 +35,5 @@ target_include_directories(ECS
         ${CMAKE_CURRENT_SOURCE_DIR}/Libs/Entt/single_include
 )
 
-source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/Public PREFIX "Public" FILES ${ECS_PUBLIC_HEADERS})
-source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/Private PREFIX "Private" FILES ${ECS_PRIVATE_HEADERS} ${ECS_PRIVATE_SOURCES})
+source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/Public" PREFIX "Public" FILES ${ECS_PUBLIC_HEADERS})
+source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/Private" PREFIX "Private" FILES ${ECS_PRIVATE_HEADERS} ${ECS_PRIVATE_SOURCES})

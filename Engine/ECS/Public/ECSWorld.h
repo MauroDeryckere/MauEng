@@ -36,7 +36,16 @@ namespace ECS
 		template<typename ComponentType>
 		[[nodiscard]] bool HasComponent(EntityID id) const noexcept;
 
-		Entity CreateEntity() noexcept;
+		[[nodiscard]] Entity CreateEntity() noexcept;
+
+		void DestroyEntity(Entity entity) noexcept;
+		void DestroyEntity(EntityID id) noexcept;
+
+		//template<typename... Components>
+		//auto GetAllEntitiesWith()
+		//{
+		//	return m_Registry.view<Components...>();
+		//}
 
 	private:
 		std::unique_ptr<ECSImpl> m_pImpl;

@@ -22,6 +22,17 @@ namespace MauEng::ECS
 		return Entity{ this, m_pImpl->CreateEntity() };
 	}
 
+	void ECSWorld::DestroyEntity(Entity entity) noexcept
+	{
+		DestroyEntity(entity.ID());
+		entity.m_ID = NULL_ENTITY_ID;
+	}
+
+	void ECSWorld::DestroyEntity(EntityID id) noexcept
+	{
+		m_pImpl->DestroyEntity(id);
+	}
+
 	template <typename ComponentType, typename ... Args>
 	ComponentType& ECSWorld::AddComponent(EntityID id, Args&&... args) noexcept
 	{

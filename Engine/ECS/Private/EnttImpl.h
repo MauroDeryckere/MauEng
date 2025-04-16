@@ -17,6 +17,11 @@ namespace ECS
 			return static_cast<EntityID>(registry.create());
 		}
 
+		void DestroyEntity(EntityID id) noexcept
+		{
+			registry.destroy(static_cast<entt::entity>(id));
+		}
+
 		template <typename ComponentType, typename ... Args>
 		ComponentType& AddComponent(EntityID id, Args&&... args) noexcept
 		{
