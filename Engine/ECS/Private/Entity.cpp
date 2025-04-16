@@ -22,15 +22,20 @@ namespace MauEng
 	}
 
 	template <typename ComponentType>
-	void Entity::RemoveComponent() noexcept
+	bool Entity::RemoveComponent() noexcept
 	{
-		m_pECSWorld->RemoveComponent<ComponentType>(m_ID);
+		return m_pECSWorld->RemoveComponent<ComponentType>(m_ID);
 	}
 
 	template <typename ComponentType>
-	ComponentType& Entity::GetComponent() const noexcept
+	ComponentType const& Entity::GetComponent() const noexcept
 	{
-		return m_pECSWorld->GetComponent<ComponentType>(m_ID);;
+		return m_pECSWorld->GetComponent<ComponentType>(m_ID);
+	}
+	template <typename ComponentType>
+	ComponentType& Entity::GetComponent() noexcept
+	{
+		return m_pECSWorld->GetComponent<ComponentType>(m_ID);
 	}
 
 	template <typename ComponentType>

@@ -4,9 +4,7 @@
 #include <entt/entt.hpp>
 #include "EntityID.h"
 
-namespace MauEng
-{
-namespace ECS
+namespace MauEng::ECS
 {
 	struct ECSImpl final
 	{
@@ -29,15 +27,20 @@ namespace ECS
 		}
 
 		template <typename ComponentType>
-		[[nodiscard]] ComponentType& GetComponent(EntityID id) const noexcept
+		[[nodiscard]] ComponentType const& GetComponent(EntityID id) const noexcept
+		{
+			return registry.get<ComponentType>(static_cast<entt::entity>(id));
+		}
+		template <typename ComponentType>
+		[[nodiscard]] ComponentType& GetComponent(EntityID id) noexcept
 		{
 			return registry.get<ComponentType>(static_cast<entt::entity>(id));
 		}
 
 		template <typename ComponentType>
-		void RemoveComponent(EntityID id)
+		bool RemoveComponent(EntityID id) noexcept
 		{
-			registry.remove<ComponentType>(static_cast<entt::entity>(id));
+			return registry.remove<ComponentType>(static_cast<entt::entity>(id)) == 1;
 		}
 
 		template<typename ComponentType>
@@ -46,7 +49,6 @@ namespace ECS
 			return registry.any_of<ComponentType>(static_cast<entt::entity>(id));
 		}
 	};
-}
 }
 
 #endif
