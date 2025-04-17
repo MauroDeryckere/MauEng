@@ -10,6 +10,8 @@ project ("VulkanEngine")
 
 # Set the name of the executable
 set(EXECUTABLE_NAME "VulkanEngine")
+add_executable(${EXECUTABLE_NAME})
+set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${EXECUTABLE_NAME})
 
 # @ENDREGION PROJECT SETUP
 
@@ -114,6 +116,3 @@ add_custom_target(
 add_dependencies(${EXECUTABLE_NAME} shaders)
 
 # @ENDREGION PLATFORMS AND RESOURCES
-
-# on Visual Studio, set our app as the default project
-set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${EXECUTABLE_NAME})
