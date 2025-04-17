@@ -2,7 +2,7 @@
 #define MAUENG_ENTTIMPL_H
 
 //TODO fix include
-#include "../Libs/Entt/single_include/entt/entt.hpp"
+#include "../../ECS/Libs/Entt/single_include/entt/entt.hpp"
 #include "EntityID.h"
 
 namespace MauEng::ECS

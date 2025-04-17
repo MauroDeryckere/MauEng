@@ -17,7 +17,7 @@ file(GLOB_RECURSE ECS_PRIVATE_SOURCES
 )
 
 # Create the Engine target (as a library)
-add_library(ECS STATIC
+add_library(ECS OBJECT
     ${ECS_PUBLIC_HEADERS}
     ${ECS_PRIVATE_SOURCES}
     ${ECS_PRIVATE_HEADERS}
@@ -30,10 +30,11 @@ target_link_libraries(ECS
 target_include_directories(ECS
     PUBLIC
         ${ECS_PUBLIC_DIR}        # Public headers for ECS
-        ${CMAKE_CURRENT_SOURCE_DIR}/Libs/Entt/single_include
-        ${ECS_PRIVATE_DIR}       # Private headers for ECS
+        "${CMAKE_CURRENT_SOURCE_DIR}/Libs/Entt"
     PRIVATE  
+        ${ECS_PRIVATE_DIR}       # Private headers for ECS
 )
+message("${CMAKE_CURRENT_SOURCE_DIR}/Libs/Entt")
 
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/Public" PREFIX "Public" FILES ${ECS_PUBLIC_HEADERS})
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/Private" PREFIX "Private" FILES ${ECS_PRIVATE_HEADERS} ${ECS_PRIVATE_SOURCES})

@@ -119,14 +119,37 @@ namespace MauEng::ECS
 #pragma endregion
 
 #pragma region ViewsAndGroups
+		/**
+		 * @brief iterate over all entities with the given components
+		 * @tparam ComponentTypes Types of componennts to iterate over
+		 * @param func function to execute for each entitys
+		*/
 		template<typename... ComponentTypes, typename Func>
+			requires std::is_invocable_v<Func, EntityID, ComponentTypes&...>
 		void ForEach(Func&& func) & noexcept
 		{
 			auto&& view{ m_pImpl->View<ComponentTypes...>() };
-
+			
 			view.each([&](entt::entity ID, ComponentTypes&... comps)
 				{
-					func(static_cast<EntityID>(ID), comps...);
+					std::forward<Func>(func)(static_cast<EntityID>(ID), comps...);
+				});
+		}
+
+		/**
+		 * @brief iterate over all entities with the given components
+		 * @tparam ComponentTypes Types of componennts to iterate over
+		 * @param func function to execute for each entitys
+		*/
+		template<typename... ComponentTypes, typename Func>
+			requires std::is_invocable_v<Func, EntityID, ComponentTypes const&...>
+		void ForEach(Func&& func)const & noexcept
+		{
+			auto&& view{ m_pImpl->View<ComponentTypes...>() };
+
+			view.each([&](entt::entity ID, ComponentTypes const&... comps)
+				{
+					std::forward<Func>(func)(static_cast<EntityID>(ID), comps...);
 				});
 		}
 
