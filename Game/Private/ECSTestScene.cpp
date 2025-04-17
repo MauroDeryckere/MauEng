@@ -1,5 +1,6 @@
 #include "ECSTestScene.h"
 
+#include <execution>
 #include <random>
 
 namespace MauGam
@@ -136,11 +137,29 @@ namespace MauGam
 			m_CameraManager.GetActiveCamera().RotateY(-mouseMovement.second * rot);
 		}
 
+		using namespace MauEng;
+		auto& reg = GetECSWorld().Reg();
+		auto group = reg.group<CStaticMesh, CTransform>();
+		{
+			float constexpr rotationSpeed{ 90.0f };
+			ME_PROFILE_SCOPE("UPDATES")
 
-		float constexpr rotationSpeed{ 90.0f };
-		GetECSWorld().ForEach<MauEng::CStaticMesh, MauEng::CTransform>([&](MauEng::ECS::EntityID id, MauEng::CStaticMesh const& mesh, MauEng::CTransform& t)
+			// Iterate over the group to render each entity
+			for (auto entity : group)
 			{
-				t.Rotate({ 0, rotationSpeed * TIME.ElapsedSec() });
-			});
+				auto& transform = group.get<CTransform>(entity);
+				transform.Rotate({ 0, rotationSpeed * TIME.ElapsedSec() });
+			}
+
+			//auto view = GetECSWorld().View<CTransform, CStaticMesh>();
+
+			//// Using execution policy with std::for_each
+			//std::for_each(std::execution::par_unseq, view.begin(), view.end(), [&reg](auto entity) {
+			//	auto& transform = reg.get<CTransform>(entity);
+			//	auto& staticMesh = reg.get<CStaticMesh>(entity); 
+			//	transform.Rotate({ 0, rotationSpeed * TIME.ElapsedSec() });
+
+			//	});
+		}
 	}
 }
