@@ -1,6 +1,11 @@
 #ifndef MAUREN_NULLRENDERER
 #define MAUREN_NULLRENDERER
 
+namespace MauEng
+{
+	struct CStaticMesh;
+}
+
 namespace MauRen
 {
 	class NullRenderer final : public Renderer
@@ -18,7 +23,8 @@ namespace MauRen
 		virtual void Render(glm::mat4 const&, glm::mat4 const&) override {}
 		virtual void ResizeWindow() override {}
 
-		virtual void UpLoadModel(Mesh&) override {}
+		virtual void QueueDraw(glm::mat4 const&, MauEng::CStaticMesh const&) override {};
+		virtual MeshInstance LoadOrGetMeshData(char const*) override { return MeshInstance{}; }
 
 		NullRenderer(NullRenderer const&) = delete;
 		NullRenderer(NullRenderer&&) = delete;

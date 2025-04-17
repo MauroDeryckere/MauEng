@@ -13,6 +13,7 @@ namespace MauRen
 	class MeshInstance final
 	{
 	public:
+		MeshInstance() = default;
 		MeshInstance(Mesh const& mesh);
 		~MeshInstance() = default;
 
@@ -36,9 +37,10 @@ namespace MauRen
 		MeshInstance(MeshInstance&&) = default;
 		MeshInstance& operator=(MeshInstance const&) = default;
 		MeshInstance& operator=(MeshInstance&&) = default;
-	private:
 		uint32_t m_MeshID{ UINT32_MAX };
 		uint32_t m_MaterialID { UINT32_MAX };
+
+	private:
 
 		glm::mat4 m_ModelMatrix{ 1.0f };
 	};

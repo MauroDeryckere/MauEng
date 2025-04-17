@@ -50,48 +50,67 @@ namespace MauRen
 	}
 
 	//NOT THREAD SAFE CURRENTLY, but okay to call at start program
-	void VulkanMeshManager::LoadMesh(Mesh& mesh)
+	MeshInstance VulkanMeshManager::LoadMesh(char const* path, VulkanCommandPoolManager& cmdPoolManager, VulkanDescriptorContext& descriptorContext)
 	{
 		ME_PROFILE_FUNCTION()
-		if (mesh.GetMeshID() == UINT32_MAX)
+
+		auto const it{ m_LoadedMeshes_Path.find(path) };
+		if (it == end(m_LoadedMeshes_Path))
 		{
-			auto const it{ m_LoadedMeshes.find(mesh.GetMeshID()) };
-			if (it == end(m_LoadedMeshes))
+			Mesh m{ path };
+			m.SetMaterialID(VulkanMaterialManager::GetInstance().LoadOrGetMaterial(cmdPoolManager, descriptorContext, m.GetMaterial()));
+
+			const auto& indices = m.GetIndices();
+			const auto& vertices = m.GetVertices();
+
+			ME_RENDERER_ASSERT(m_CurrentVertexOffset + vertices.size() <= sizeof(Vertex) * MAX_VERTICES);
+			ME_RENDERER_ASSERT(m_CurrentIndexOffset + indices.size() <= sizeof(uint32_t) * MAX_INDICES);
+
+			MeshData data{};
+			data.vertexOffset = static_cast<int32_t>(m_CurrentVertexOffset);
+			data.firstIndex = m_CurrentIndexOffset;
+			data.indexCount = static_cast<uint32_t>(indices.size());
+			data.flags = 0;
+			data.defaultMatID = m.GetMaterialID();
+			data.meshID = m_NextID;
+
+			m_LoadedMeshes[m_NextID] = static_cast<uint32_t>(m_MeshData.size());
+			m_LoadedMeshes_Path[path] = static_cast<uint32_t>(m_MeshData.size());
+
+			MeshInstance i;
+
+			i.m_MaterialID = data.defaultMatID;
+			i.m_MeshID = m_NextID;
+
+			m_MeshData.emplace_back(data);
+
+			// may want to store a copy of the buffers on the CPU  side to support compacting and be more "optimal" as its less copies.
 			{
-				mesh.SetMeshID(m_NextID);
-
-				const auto& indices = mesh.GetIndices();
-				const auto& vertices = mesh.GetVertices();
-
-				ME_RENDERER_ASSERT(m_CurrentVertexOffset + vertices.size() <= sizeof(Vertex) * MAX_VERTICES);
-				ME_RENDERER_ASSERT(m_CurrentIndexOffset + indices.size() <= sizeof(uint32_t) * MAX_INDICES);
-
-				MeshData data{};
-				data.vertexOffset = static_cast<int32_t>(m_CurrentVertexOffset);
-				data.firstIndex = m_CurrentIndexOffset;
-				data.indexCount = static_cast<uint32_t>(mesh.GetIndices().size());
-				data.flags = 0;
-
-				m_LoadedMeshes[m_NextID] = static_cast<uint32_t>(m_MeshData.size());
-				m_MeshData.emplace_back(data);
-
-				// may want to store a copy of the buffers on the CPU  side to support compacting and be more "optimal" as its less copies.
-				{
-					uint8_t* basePtr = static_cast<uint8_t*>(m_VertexBuffer.mapped);
-					std::memcpy(basePtr + m_CurrentVertexOffset * sizeof(Vertex), vertices.data(), vertices.size() * sizeof(Vertex));
-				}
-
-				{
-					uint8_t* basePtr = static_cast<uint8_t*>(m_IndexBuffer.mapped);
-					std::memcpy(basePtr + m_CurrentIndexOffset * sizeof(uint32_t), indices.data(), indices.size() * sizeof(uint32_t));
-				}
-
-				m_CurrentVertexOffset += static_cast<uint32_t>(mesh.GetVertices().size());
-				m_CurrentIndexOffset += static_cast<uint32_t>(mesh.GetIndices().size());
-
-
-				++m_NextID;
+				uint8_t* basePtr = static_cast<uint8_t*>(m_VertexBuffer.mapped);
+				std::memcpy(basePtr + m_CurrentVertexOffset * sizeof(Vertex), vertices.data(), vertices.size() * sizeof(Vertex));
 			}
+
+			{
+				uint8_t* basePtr = static_cast<uint8_t*>(m_IndexBuffer.mapped);
+				std::memcpy(basePtr + m_CurrentIndexOffset * sizeof(uint32_t), indices.data(), indices.size() * sizeof(uint32_t));
+			}
+
+			m_CurrentVertexOffset += static_cast<uint32_t>(vertices.size());
+			m_CurrentIndexOffset += static_cast<uint32_t>(indices.size());
+
+			++m_NextID;
+
+			return i;
+		}
+		else
+		{
+			auto const& data{ m_MeshData[it->second] };
+
+			MeshInstance i{};
+			i.m_MeshID = data.meshID;
+			i.m_MaterialID = data.defaultMatID;
+
+			return i;
 		}
 	}
 

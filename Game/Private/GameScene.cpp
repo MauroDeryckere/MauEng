@@ -21,57 +21,57 @@ namespace MauGam
 
 		using namespace MauRen;
 		// init meshes
-		Mesh m1{ "Resources/Models/Gun.obj" };
-		Mesh m2{ "Resources/Models/Skull.obj" };
+		//Mesh m1{ "Resources/Models/Gun.obj" };
+		//Mesh m2{ "Resources/Models/Skull.obj" };
 
-		RENDERER.UpLoadModel(m1);
-		RENDERER.UpLoadModel(m2);
+		//RENDERER.UpLoadModel(m1);
+		//RENDERER.UpLoadModel(m2);
 
 		// Skulls
-		MeshInstance mi1{ m2 };
-		mi1.Translate({ 5, 5,  -20 });
-		mi1.Scale({ .3f, .3f, .3f });
-		mi1.Rotate({ 270, 0, 0 });
+		//MeshInstance mi1{ m2 };
+		//mi1.Translate({ 5, 5,  -20 });
+		//mi1.Scale({ .3f, .3f, .3f });
+		//mi1.Rotate({ 270, 0, 0 });
 
-		MeshInstance mi2{ m2 };
-		mi2.Translate({ -5, 5,  -20 });
-		mi2.Scale({ .3f, .3f, .3f });
-		mi2.Rotate({ 270, 0, 0 });
+		//MeshInstance mi2{ m2 };
+		//mi2.Translate({ -5, 5,  -20 });
+		//mi2.Scale({ .3f, .3f, .3f });
+		//mi2.Rotate({ 270, 0, 0 });
 
-		// Gun
-		MeshInstance mi3{ m1 };
-		mi3.Translate({ 0, 2,  0 });
-		mi3.Scale({ 5.f, 5.f, 5.f });
+		//// Gun
+		//MeshInstance mi3{ m1 };
+		//mi3.Translate({ 0, 2,  0 });
+		//mi3.Scale({ 5.f, 5.f, 5.f });
 
-		std::random_device rd;  // Random device for seed
-		std::mt19937 gen(rd()); // Mersenne Twister generator
-		std::uniform_real_distribution<float> dis(-20.0f, 20.0f); // Random translation range
+		//std::random_device rd;  // Random device for seed
+		//std::mt19937 gen(rd()); // Mersenne Twister generator
+		//std::uniform_real_distribution<float> dis(-20.0f, 20.0f); // Random translation range
 
-		m_Mehses.emplace_back(mi1);
-		m_Mehses.emplace_back(mi2);
-		for (size_t i = 0; i < 99'000; i++)
-		{
-			m_Mehses.emplace_back(mi3);
+		//m_Mehses.emplace_back(mi1);
+		//m_Mehses.emplace_back(mi2);
+		//for (size_t i = 0; i < 99'000; i++)
+		//{
+		//	m_Mehses.emplace_back(mi3);
 
-			m_Mehses.back().Translate({ dis(gen), dis(gen), dis(gen) });
-		}
-		m_Mehses.emplace_back(mi3);
-
-
-		// Setup input
-		auto& input{ INPUT_MANAGER };
-		input.BindAction("MoveUp", MauEng::KeyInfo{SDLK_UP, MauEng::KeyInfo::ActionType::Held });
-		input.BindAction("MoveLeft", MauEng::KeyInfo{ SDLK_LEFT, MauEng::KeyInfo::ActionType::Held });
-		input.BindAction("MoveRight", MauEng::KeyInfo{ SDLK_RIGHT, MauEng::KeyInfo::ActionType::Held });
-		input.BindAction("MoveDown", MauEng::KeyInfo{ SDLK_DOWN, MauEng::KeyInfo::ActionType::Held });
-
-		input.BindAction("RotUp", MauEng::KeyInfo{ SDLK_I, MauEng::KeyInfo::ActionType::Held });
-		input.BindAction("RotLeft", MauEng::KeyInfo{ SDLK_J, MauEng::KeyInfo::ActionType::Held });
-		input.BindAction("RotRight", MauEng::KeyInfo{ SDLK_L, MauEng::KeyInfo::ActionType::Held });
-		input.BindAction("RotDown", MauEng::KeyInfo{ SDLK_K, MauEng::KeyInfo::ActionType::Held });
+		//	m_Mehses.back().Translate({ dis(gen), dis(gen), dis(gen) });
+		//}
+		//m_Mehses.emplace_back(mi3);
 
 
-		input.BindAction("Rotate", MauEng::MouseInfo{ {},   MauEng::MouseInfo::ActionType::Moved });
+		//// Setup input
+		//auto& input{ INPUT_MANAGER };
+		//input.BindAction("MoveUp", MauEng::KeyInfo{SDLK_UP, MauEng::KeyInfo::ActionType::Held });
+		//input.BindAction("MoveLeft", MauEng::KeyInfo{ SDLK_LEFT, MauEng::KeyInfo::ActionType::Held });
+		//input.BindAction("MoveRight", MauEng::KeyInfo{ SDLK_RIGHT, MauEng::KeyInfo::ActionType::Held });
+		//input.BindAction("MoveDown", MauEng::KeyInfo{ SDLK_DOWN, MauEng::KeyInfo::ActionType::Held });
+
+		//input.BindAction("RotUp", MauEng::KeyInfo{ SDLK_I, MauEng::KeyInfo::ActionType::Held });
+		//input.BindAction("RotLeft", MauEng::KeyInfo{ SDLK_J, MauEng::KeyInfo::ActionType::Held });
+		//input.BindAction("RotRight", MauEng::KeyInfo{ SDLK_L, MauEng::KeyInfo::ActionType::Held });
+		//input.BindAction("RotDown", MauEng::KeyInfo{ SDLK_K, MauEng::KeyInfo::ActionType::Held });
+
+
+		//input.BindAction("Rotate", MauEng::MouseInfo{ {},   MauEng::MouseInfo::ActionType::Moved });
 	}
 
 	void GameScene::OnLoad()

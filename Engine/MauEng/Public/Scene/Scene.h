@@ -29,7 +29,7 @@ namespace MauEng
 		}
 
 		// Called to render the scene
-		virtual void OnRender() const {}
+		virtual void OnRender() const;
 
 		// Called when the scene is unloaded
 		virtual void OnUnload(){}

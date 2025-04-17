@@ -14,7 +14,6 @@ namespace MauRen
 
 	void MeshInstance::Draw() const
 	{
-		VulkanMeshManager::GetInstance().QueueDraw(this);
 	}
 
 	void MeshInstance::Translate(glm::vec3 const& translation) noexcept
