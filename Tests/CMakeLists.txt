@@ -1,4 +1,3 @@
-add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/Libs/Doctest")
 
 add_executable(MauEngTests
     "${CMAKE_CURRENT_SOURCE_DIR}/src/TestMain.cpp"
@@ -7,9 +6,9 @@ add_executable(MauEngTests
 
 target_link_libraries(MauEngTests 
     PRIVATE
-    doctest
     Engine
 )
+target_include_directories(MauEngTests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/Libs/Doctest")
 
 enable_testing()
 add_test(NAME MauEngTests COMMAND MauEngTests)
