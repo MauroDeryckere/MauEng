@@ -79,7 +79,7 @@ add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/Libs/glm")
 
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/Libs/fmt")
 
- add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/Libs/Optick")
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/Libs/Optick")
 
 target_link_libraries(MauEngCore
     PUBLIC
