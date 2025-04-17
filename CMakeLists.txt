@@ -22,6 +22,13 @@ message(STATUS "Engine dir created! ")
 add_subdirectory ("Game")
 message(STATUS "Game dir created! \n")
 
+if(${MAUENG_ENABLE_TESTS})
+    add_subdirectory("Tests")
+    message(STATUS "Tests dir created! \n")
+else()
+     message(STATUS "Tests are disabled!")
+endif()
+
 # @ENDREGION SOURCE FILES & LIBRARIES
 
 

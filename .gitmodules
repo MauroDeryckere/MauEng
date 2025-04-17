@@ -19,3 +19,6 @@
 [submodule "Engine/ECS/Libs/Entt"]
 	path = Engine/ECS/Libs/Entt
 	url = https://github.com/skypjack/entt.git
+[submodule "Tests/Libs/Doctest"]
+	path = Tests/Libs/Doctest
+	url = https://github.com/doctest/doctest.git
