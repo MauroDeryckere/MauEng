@@ -13,9 +13,6 @@
 [submodule "Engine/Core/Libs/fmt"]
 	path = Engine/Core/Libs/fmt
 	url = https://github.com/fmtlib/fmt.git
-[submodule "Engine/Core/Libs/Optick"]
-	path = Engine/Core/Libs/Optick
-	url = https://github.com/MauroDeryckere/optick.git
 [submodule "Engine/ECS/Libs/Entt"]
 	path = Engine/ECS/Libs/Entt
 	url = https://github.com/skypjack/entt.git
