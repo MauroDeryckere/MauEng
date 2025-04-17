@@ -143,6 +143,7 @@ namespace MauGam
 
 		// 90 degrees per second
 		float constexpr rotationSpeed{ 90.0f };
+
 		m_Mehses[0].Rotate({ 0, 0, rotationSpeed * TIME.ElapsedSec() });
 		m_Mehses[1].Rotate({ 0, 0, -rotationSpeed * TIME.ElapsedSec() });
 

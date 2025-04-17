@@ -13,7 +13,6 @@ namespace MauGam
 		virtual ~ECSTestScene() override = default;
 		virtual void OnLoad() override;
 		virtual void Tick() override;
-		virtual void OnRender() const override;
 	private:
 	};
 }

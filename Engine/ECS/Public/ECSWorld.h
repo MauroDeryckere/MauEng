@@ -126,13 +126,13 @@ namespace MauEng::ECS
 		*/
 		template<typename... ComponentTypes, typename Func>
 			requires std::is_invocable_v<Func, EntityID, ComponentTypes&...>
-		void ForEach(Func&& func) & noexcept
+		void ForEach(Func const&& func) & noexcept
 		{
 			auto&& view{ m_pImpl->View<ComponentTypes...>() };
 			
 			view.each([&](entt::entity ID, ComponentTypes&... comps)
 				{
-					std::forward<Func>(func)(static_cast<EntityID>(ID), comps...);
+					func(static_cast<EntityID>(ID), comps...);
 				});
 		}
 
@@ -143,15 +143,27 @@ namespace MauEng::ECS
 		*/
 		template<typename... ComponentTypes, typename Func>
 			requires std::is_invocable_v<Func, EntityID, ComponentTypes const&...>
-		void ForEach(Func&& func)const & noexcept
+		void ForEach(Func const&& func)const & noexcept
 		{
 			auto&& view{ m_pImpl->View<ComponentTypes...>() };
 
 			view.each([&](entt::entity ID, ComponentTypes const&... comps)
 				{
-					std::forward<Func>(func)(static_cast<EntityID>(ID), comps...);
+					func(static_cast<EntityID>(ID), comps...);
 				});
 		}
+
+		template<typename... ComponentTypes>
+		auto View() noexcept
+		{
+			return m_pImpl->View<ComponentTypes...>();
+		}
+
+		auto& Reg() noexcept
+		{
+			return m_pImpl->registry;
+		}
+
 
 #pragma endregion
 

@@ -1,47 +1,146 @@
 #include "ECSTestScene.h"
 
+#include <random>
+
 namespace MauGam
 {
 	ECSTestScene::ECSTestScene()
 	{
-		using namespace MauEng;
-
 		ME_PROFILE_FUNCTION()
+
+		using namespace MauEng;
 
 		m_CameraManager.GetActiveCamera().SetPosition(glm::vec3{ 0.f, 2, 4 });
 		m_CameraManager.GetActiveCamera().SetFOV(60.f);
 
 		m_CameraManager.GetActiveCamera().Focus({ 0,0,1 });
 
-		Entity ent{ CreateEntity() };
+		{
+			Entity entGUN{ CreateEntity() };
 
-		auto& transform = ent.GetComponent<CTransform>();
+			auto& transform = entGUN.GetComponent<CTransform>();
 
-		transform.Translate({ 0, 2,  0 });
-		transform.Scale({ 5.f, 5.f, 5.f });
+			transform.Translate({ 0, 2,  0 });
+			transform.Scale({ 5.f, 5.f, 5.f });
 
-		auto& mesh = ent.AddComponent<CStaticMesh>("Resources/Models/Gun.obj");
+			entGUN.AddComponent<CStaticMesh>("Resources/Models/Gun.obj");
+		}
+
+		{
+			Entity entSKULL{ CreateEntity() };
+			auto& transform = entSKULL.GetComponent<CTransform>();
+
+			transform.Translate({ 5, 5,  -20 });
+			transform.Scale({ .3f, .3f, .3f });
+			transform.Rotate({ 270, 0, 0 });
+
+			entSKULL.AddComponent<CStaticMesh>("Resources/Models/Skull.obj");
+		}
+
+		bool constexpr ENABLE_HIGH_INSTANCE_TEST{ true };
+
+		if constexpr (ENABLE_HIGH_INSTANCE_TEST)
+		{
+			std::random_device rd;  // Random device for seed 
+			std::mt19937 gen(rd()); // Mersenne Twister generator
+			std::uniform_real_distribution<float> dis(-20.0f, 20.0f); // Random translation range
+
+			for (size_t i = 0; i < 99'000; i++)
+			{
+				Entity entGUN{ CreateEntity() };
+				auto& transform = entGUN.GetComponent<CTransform>();
+				transform.Translate({ dis(gen), dis(gen), dis(gen) });
+
+				entGUN.AddComponent<CStaticMesh>("Resources/Models/Gun.obj");
+			}
+		}
+
+
+		auto& input{ INPUT_MANAGER };
+		input.BindAction("MoveUp", MauEng::KeyInfo{SDLK_UP, MauEng::KeyInfo::ActionType::Held });
+		input.BindAction("MoveLeft", MauEng::KeyInfo{ SDLK_LEFT, MauEng::KeyInfo::ActionType::Held });
+		input.BindAction("MoveRight", MauEng::KeyInfo{ SDLK_RIGHT, MauEng::KeyInfo::ActionType::Held });
+		input.BindAction("MoveDown", MauEng::KeyInfo{ SDLK_DOWN, MauEng::KeyInfo::ActionType::Held });
+
+		input.BindAction("RotUp", MauEng::KeyInfo{ SDLK_I, MauEng::KeyInfo::ActionType::Held });
+		input.BindAction("RotLeft", MauEng::KeyInfo{ SDLK_J, MauEng::KeyInfo::ActionType::Held });
+		input.BindAction("RotRight", MauEng::KeyInfo{ SDLK_L, MauEng::KeyInfo::ActionType::Held });
+		input.BindAction("RotDown", MauEng::KeyInfo{ SDLK_K, MauEng::KeyInfo::ActionType::Held });
+
+
+		input.BindAction("Rotate", MauEng::MouseInfo{ {},   MauEng::MouseInfo::ActionType::Moved });
 	}
 
 	void ECSTestScene::OnLoad()
 	{
+		ME_PROFILE_FUNCTION()
+
 		Scene::OnLoad();
 	}
 
 	void ECSTestScene::Tick()
 	{
+		ME_PROFILE_FUNCTION()
+
 		Scene::Tick();
 
-		GetECSWorld().ForEach<MauEng::CTransform>(
-			[] (MauEng::ECS::EntityID id, MauEng::CTransform& t)
+		auto const& input{ INPUT_MANAGER };
+
+		auto constexpr movementSpeed{ 20.f };
+		if (input.IsActionExecuted("MoveUp"))
+		{
+			m_CameraManager.GetActiveCamera().Translate({ 0.f, 0.f, movementSpeed * TIME.ElapsedSec() });
+		}
+		if (input.IsActionExecuted("MoveDown"))
+		{
+			m_CameraManager.GetActiveCamera().Translate({ 0.f, 0.f, -movementSpeed * TIME.ElapsedSec() });
+		}
+		if (input.IsActionExecuted("MoveLeft"))
+		{
+			m_CameraManager.GetActiveCamera().Translate({ -movementSpeed * TIME.ElapsedSec(), 0.f, 0.f });
+		}
+		if (input.IsActionExecuted("MoveRight"))
+		{
+			m_CameraManager.GetActiveCamera().Translate({ movementSpeed * TIME.ElapsedSec(), 0.f, 0.f });
+		}
+
+		float constexpr keyboardRotSpeed{ 10 };
+		if (input.IsActionExecuted("RotLeft"))
+		{
+			float const rot{ -keyboardRotSpeed * TIME.ElapsedSec() * 3 };
+			m_CameraManager.GetActiveCamera().RotateX(rot);
+		}
+		if (input.IsActionExecuted("RotRight"))
+		{
+			float const rot{ keyboardRotSpeed * TIME.ElapsedSec() * 3 };
+			m_CameraManager.GetActiveCamera().RotateX(rot);
+		}
+		if (input.IsActionExecuted("RotUp"))
+		{
+			float const rot{ keyboardRotSpeed * TIME.ElapsedSec() };
+			m_CameraManager.GetActiveCamera().RotateY(rot);
+		}
+		if (input.IsActionExecuted("RotDown"))
+		{
+			float const rot{ -keyboardRotSpeed * TIME.ElapsedSec() };
+			m_CameraManager.GetActiveCamera().RotateY(rot);
+		}
+
+		float constexpr mouseRotSpeed{ 60 };
+		if (input.IsActionExecuted("Rotate"))
+		{
+			auto const mouseMovement{ input.GetDeltaMouseMovement() };
+			float const rot{ mouseRotSpeed * TIME.ElapsedSec() };
+
+			m_CameraManager.GetActiveCamera().RotateX(mouseMovement.first * rot);
+			m_CameraManager.GetActiveCamera().RotateY(-mouseMovement.second * rot);
+		}
+
+
+		float constexpr rotationSpeed{ 90.0f };
+		GetECSWorld().ForEach<MauEng::CStaticMesh, MauEng::CTransform>([&](MauEng::ECS::EntityID id, MauEng::CStaticMesh const& mesh, MauEng::CTransform& t)
 			{
-				std::cout << id << " " << t.position.x << "\n";
+				t.Rotate({ 0, rotationSpeed * TIME.ElapsedSec() });
 			});
-	}
-
-	void ECSTestScene::OnRender() const
-	{
-		Scene::OnRender();
-
 	}
 }

@@ -54,7 +54,7 @@ namespace MauEng
 		CameraManager m_CameraManager{ };
 
 	private:
-		ECS::ECSWorld m_ECSWorld{ };
+		mutable ECS::ECSWorld m_ECSWorld{ };
 
 	};
 }

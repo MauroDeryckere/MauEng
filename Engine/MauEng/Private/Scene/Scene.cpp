@@ -4,12 +4,45 @@ namespace MauEng
 {
 	void Scene::OnRender() const
 	{
-		m_ECSWorld.ForEach<CStaticMesh>(
-			[&](ECS::EntityID id, CStaticMesh const& m)
+		ME_PROFILE_FUNCTION()
+
+			//m_ECSWorld.ForEach<CStaticMesh, CTransform>(
+			//	[&](ECS::EntityID id, CStaticMesh const& m, CTransform& t)
+			//	{
+			//		RENDERER.QueueDraw(t.GetTransformMatrix(), m);
+			//	}
+			//);
+			//{
+			//	ME_PROFILE_SCOPE("VIEW")
+
+			//	auto&& view = m_ECSWorld.View<CStaticMesh, CTransform>();
+			//	view.each([](auto it, CStaticMesh const& m, CTransform& t)
+			//		{
+			//			RENDERER.QueueDraw(t.GetTransformMatrix(), m);
+
+			//		});
+			//}
+
 			{
-				RENDERER.QueueDraw(m_ECSWorld.GetComponent<CTransform>(id).GetTransformMatrix(), m);
+				auto& reg = m_ECSWorld.Reg();
+				auto group = reg.group<CStaticMesh, CTransform>();
+
+				{
+					ME_PROFILE_SCOPE("QUEUE DRAWS")
+
+					// Iterate over the group to render each entity
+					for (auto entity : group)
+					{
+						auto& mesh = group.get<CStaticMesh>(entity);
+						auto& transform = group.get<CTransform>(entity);
+
+						RENDERER.QueueDraw(transform.mat, mesh);
+					}
+				}
+
+
 			}
-		);
+
 	}
 
 	Entity Scene::CreateEntity()
