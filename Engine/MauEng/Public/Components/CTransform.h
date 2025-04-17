@@ -11,7 +11,7 @@ namespace MauEng
         MauCor::Rotator rotation{ };
         glm::vec3 scale{ 1.f };
 
-        glm::mat4 GetModelMatrix() const
+        glm::mat4 GetTransformMatrix() const
         {
             return glm::translate(glm::mat4{ 1.0f }, position) * glm::mat4_cast(rotation.rotation) * glm::scale(glm::mat4{ 1.0f }, scale);
         }

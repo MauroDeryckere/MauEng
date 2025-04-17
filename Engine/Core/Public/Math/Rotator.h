@@ -23,7 +23,7 @@ namespace MauCor
 			rotation = glm::normalize(rollRotation * yawRotation * pitchRotation);
 		}
 
-		explicit Rotator(glm::quat const& quat) : rotation { quat } { }
+		Rotator(glm::quat const& quat) : rotation { quat } { }
 	};
 
 	inline Rotator operator*(MauCor::Rotator const& lhs, MauCor::Rotator const& rhs) noexcept
