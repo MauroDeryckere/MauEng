@@ -1,7 +1,7 @@
 # Engine CMake file
 
-set(ENGINE_PUBLIC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/public")
-set(ENGINE_PRIVATE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/private")
+set(ENGINE_PUBLIC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Public")
+set(ENGINE_PRIVATE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Private")
 
 # Define directories for public and private headers
 # Gather all source files
