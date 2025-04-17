@@ -4,7 +4,11 @@ namespace MauEng
 {
 	Entity Scene::CreateEntity()
 	{
-		return m_ECSWorld.CreateEntity();
+		Entity ent{ m_ECSWorld.CreateEntity() };
+
+		ent.AddComponent<CTransform>();
+
+		return ent;
 	}
 
 	void Scene::DestroyEntity(Entity entity)

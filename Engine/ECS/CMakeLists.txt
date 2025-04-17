@@ -30,9 +30,9 @@ target_link_libraries(ECS
 target_include_directories(ECS
     PUBLIC
         ${ECS_PUBLIC_DIR}        # Public headers for ECS
-    PRIVATE  
-        ${ECS_PRIVATE_DIR}       # Private headers for ECS
         ${CMAKE_CURRENT_SOURCE_DIR}/Libs/Entt/single_include
+        ${ECS_PRIVATE_DIR}       # Private headers for ECS
+    PRIVATE  
 )
 
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/Public" PREFIX "Public" FILES ${ECS_PUBLIC_HEADERS})

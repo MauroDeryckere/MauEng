@@ -5,6 +5,10 @@
 #include <memory>
 #include <concepts>
 
+#include "Asserts/Asserts.h"
+
+#include "EnttImpl.h"
+
 namespace MauEng
 {
 	class Entity;
@@ -12,8 +16,6 @@ namespace MauEng
 
 namespace MauEng::ECS
 {
-	struct ECSImpl;
-
 	class ECSWorld final
 	{
 	public:
@@ -25,6 +27,22 @@ namespace MauEng::ECS
 		ECSWorld& operator=(ECSWorld const&) = delete;
 		ECSWorld& operator=(ECSWorld&&) = delete;
 
+#pragma region Entities
+		// Create an entity and add it to the ECS
+		[[nodiscard]] Entity CreateEntity() & noexcept;
+
+		// Destroy an Entity & remove it from the ECS
+		void DestroyEntity(Entity entity) & noexcept;
+		// Destroy an Entity & remove it from the ECS
+		void DestroyEntity(EntityID id) & noexcept;
+
+		// Checks if the entity is valid
+		[[nodiscard]] bool IsValid(Entity entity) const& noexcept;
+		// Checks if the entity is valid
+		[[nodiscard]] bool IsValid(EntityID id) const& noexcept;
+#pragma endregion
+
+#pragma region Components
 		/**
 		 * @brief Add a component to the ECS.
 		 * @tparam ComponentType Type of component to construct.
@@ -34,19 +52,13 @@ namespace MauEng::ECS
 		 * @return Added component by reference.
 		 */
 		template<typename ComponentType, typename... Args>
-		requires std::is_constructible_v<ComponentType, Args...>
-		ComponentType& AddComponent(EntityID id, Args&&... args)& noexcept;
-		/**
-		 * @brief Add a component to the ECS.
-		 * @tparam ComponentType Type of component to construct.
-		 * @tparam Args Argument types to construct component.
-		 * @param entity entity to add the component to.
-		 * @param args args to construct the component.
-		 * @return Added component by reference.
-		*/
-		template<typename ComponentType, typename... Args>
-		requires std::is_constructible_v<ComponentType, Args...>
-		ComponentType& AddComponent(Entity const entity, Args&&... args)& noexcept;
+			requires std::is_constructible_v<ComponentType, Args...>
+		ComponentType& AddComponent(EntityID id, Args&&... args) & noexcept
+		{
+			ME_ASSERT(IsValid(id));
+			ME_ASSERT(not HasComponent<ComponentType>(id));
+			return m_pImpl->AddComponent<ComponentType>(id, std::forward<Args>(args)...);
+		}
 
 		/**
 		 * @brief Get a component from the ECS.
@@ -56,16 +68,13 @@ namespace MauEng::ECS
 		 * @note component must be added before it is safe to call this.
 		*/
 		template <typename ComponentType>
-		[[nodiscard]] ComponentType const& GetComponent(EntityID id) const& noexcept;
-		/**
-		 * @brief Get a component from the ECS.
-		 * @tparam ComponentType Type of component to get.
-		 * @param entity entity to get the component from.
-		 * @return Component.
-		 * @note component must be added before it is safe to call this.
-		*/
-		template <typename ComponentType>
-		[[nodiscard]] ComponentType const& GetComponent(Entity const entity) const& noexcept;
+		[[nodiscard]] ComponentType const& GetComponent(EntityID id) const& noexcept
+		{
+			ME_ASSERT(IsValid(id));
+			ME_ASSERT(HasComponent<ComponentType>(id));
+			return m_pImpl->GetComponent<ComponentType>(id);
+		}
+
 		/**
 		 * @brief Get a component from the ECS.
 		 * @tparam ComponentType Type of component to get.
@@ -74,16 +83,12 @@ namespace MauEng::ECS
 		 * @note component must be added before it is safe to call this.
 		*/
 		template <typename ComponentType>
-		[[nodiscard]] ComponentType& GetComponent(EntityID id)& noexcept;
-		/**
-		 * @brief Get a component from the ECS.
-		 * @tparam ComponentType Type of component to get.
-		 * @param entity entity to get the component from.
-		 * @return Component.
-		 * @note component must be added before it is safe to call this.
-		*/
-		template <typename ComponentType>
-		[[nodiscard]] ComponentType& GetComponent(Entity const entity)& noexcept;
+		[[nodiscard]] ComponentType& GetComponent(EntityID id) & noexcept
+		{
+			ME_ASSERT(IsValid(id));
+			ME_ASSERT(HasComponent<ComponentType>(id));
+			return m_pImpl->GetComponent<ComponentType>(id);
+		}
 
 		/**
 		 * @brief Remove a component from an entity.
@@ -92,24 +97,13 @@ namespace MauEng::ECS
 		 * @return If the component was removed.
 		*/
 		template <typename ComponentType>
-		bool RemoveComponent(EntityID id)& noexcept;
-		/**
-		 * @brief Remove a component from an entity.
-		 * @tparam ComponentType Type of component to remove.
-		 * @param entity entity to remove the component from.
-		 * @return If the component was removed.
-		*/
-		template <typename ComponentType>
-		bool RemoveComponent(Entity const entity)& noexcept;
+		bool RemoveComponent(EntityID id) & noexcept
+		{
+			ME_ASSERT(IsValid(id));
+			ME_ASSERT(HasComponent<ComponentType>(id));
+			return m_pImpl->RemoveComponent<ComponentType>(id);
+		}
 
-		/**
-		 * @brief Check if an entity has a specific component.
-		 * @tparam ComponentType Type of component to construct.
-		 * @param entity entity to check.
-		 * @return If the entity has the component.
-		*/
-		template<typename ComponentType>
-		[[nodiscard]] bool HasComponent(Entity const entity) const& noexcept;
 		/**
 		 * @brief Check if an entity has a specific component.
 		 * @tparam ComponentType Type of component to construct.
@@ -117,20 +111,27 @@ namespace MauEng::ECS
 		 * @return If the entity has the component.
 		*/
 		template<typename ComponentType>
-		[[nodiscard]] bool HasComponent(EntityID id) const& noexcept;
+		[[nodiscard]] bool HasComponent(EntityID id) const& noexcept
+		{
+			ME_ASSERT(IsValid(id));
+			return m_pImpl->HasComponent<ComponentType>(id);
+		}
+#pragma endregion
 
-		// Create an entity and add it to the ECS
-		[[nodiscard]] Entity CreateEntity()& noexcept;
+#pragma region ViewsAndGroups
+		template<typename... ComponentTypes, typename Func>
+		void ForEach(Func&& func) & noexcept
+		{
+			auto&& view{ m_pImpl->View<ComponentTypes...>() };
 
-		// Destroy an Entity & remove it from the ECS
-		void DestroyEntity(Entity entity)& noexcept;
-		// Destroy an Entity & remove it from the ECS
-		void DestroyEntity(EntityID id)& noexcept;
+			view.each([&](entt::entity ID, ComponentTypes&... comps)
+				{
+					func(static_cast<EntityID>(ID), comps...);
+				});
+		}
 
-		// Checks if the entity is valid
-		[[nodiscard]] bool IsValid(Entity entity) const& noexcept;
-		// Checks if the entity is valid
-		[[nodiscard]] bool IsValid(EntityID id) const& noexcept;
+#pragma endregion
+
 	private:
 		std::unique_ptr<ECSImpl> m_pImpl;
 	};

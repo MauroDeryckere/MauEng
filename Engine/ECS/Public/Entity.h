@@ -6,11 +6,6 @@
 
 namespace MauEng
 {
-	namespace ECS
-	{
-		class ECSWorld;
-	}
-
 	class Entity final
 	{
 	public:
@@ -31,6 +26,7 @@ namespace MauEng
 		// Returns the underlying entity ID
 		[[nodiscard]] ECS::EntityID ID() const noexcept { return m_ID; }
 
+#pragma region Components
 		/**
 		 * @brief Add a component to the entity.
 		 * @tparam ComponentType Type of component to construct.
@@ -39,7 +35,10 @@ namespace MauEng
 		 * @return Added component by reference.
 		*/
 		template<typename ComponentType, typename... Args>
-		ComponentType& AddComponent(Args&&... args) noexcept;
+		ComponentType& AddComponent(Args&&... args) noexcept
+		{
+			return m_pECSWorld->AddComponent<ComponentType>(m_ID, std::forward<Args>(args)...);
+		}
 
 		/**
 		 * @brief Remove a component from the entity.
@@ -47,7 +46,10 @@ namespace MauEng
 		 * @return If the component was removed.
 		*/
 		template<typename ComponentType>
-		bool RemoveComponent() noexcept;
+		bool RemoveComponent() noexcept
+		{
+			return m_pECSWorld->RemoveComponent<ComponentType>(m_ID);
+		}
 
 		/**
 		 * @brief Get a component from the entity.
@@ -56,7 +58,11 @@ namespace MauEng
 		 * @note component must be added before it is safe to call this.
 		*/
 		template<typename ComponentType>
-		[[nodiscard]] ComponentType const& GetComponent() const noexcept;
+		[[nodiscard]] ComponentType const& GetComponent() const noexcept
+		{
+			return m_pECSWorld->GetComponent<ComponentType>(m_ID);
+		}
+
 		/**
 		 * @brief Get a component from the entity.
 		 * @tparam ComponentType Type of component to get.
@@ -64,7 +70,10 @@ namespace MauEng
 		 * @note component must be added before it is safe to call this.
 		*/
 		template<typename ComponentType>
-		[[nodiscard]] ComponentType& GetComponent() noexcept;
+		[[nodiscard]] ComponentType& GetComponent() noexcept
+		{
+			return m_pECSWorld->GetComponent<ComponentType>(m_ID);
+		}
 
 		/**
 		 * @brief Check if the entity has a specific component.
@@ -72,7 +81,11 @@ namespace MauEng
 		 * @return If the entity has the component.
 		*/
 		template<typename ComponentType>
-		[[nodiscard]] bool HasComponent() const noexcept;
+		[[nodiscard]] bool HasComponent() const noexcept
+		{
+			return m_pECSWorld->HasComponent<ComponentType>(m_ID);
+		}
+#pragma endregion
 
 #pragma region operators
 		operator bool() const noexcept;

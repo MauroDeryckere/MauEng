@@ -1,7 +1,8 @@
 #ifndef MAUENG_ENTTIMPL_H
 #define MAUENG_ENTTIMPL_H
 
-#include <entt/entt.hpp>
+//TODO fix include
+#include "../Libs/Entt/single_include/entt/entt.hpp"
 #include "EntityID.h"
 
 namespace MauEng::ECS
@@ -10,6 +11,7 @@ namespace MauEng::ECS
 	{
 		entt::registry registry{};
 
+#pragma region Entities
 		[[nodiscard]] EntityID CreateEntity() noexcept
 		{
 			return static_cast<EntityID>(registry.create());
@@ -20,6 +22,13 @@ namespace MauEng::ECS
 			registry.destroy(static_cast<entt::entity>(id));
 		}
 
+		[[nodiscard]] bool IsValid(EntityID id) const noexcept
+		{
+			return registry.valid(static_cast<entt::entity>(id));
+		}
+#pragma endregion
+
+#pragma region Components
 		template <typename ComponentType, typename ... Args>
 		ComponentType& AddComponent(EntityID id, Args&&... args) noexcept
 		{
@@ -48,11 +57,15 @@ namespace MauEng::ECS
 		{
 			return registry.any_of<ComponentType>(static_cast<entt::entity>(id));
 		}
+#pragma endregion
 
-		[[nodiscard]] bool IsValid(EntityID id) const noexcept
+#pragma region ViewsAndGroups
+		template<typename... ComponentTypes>
+		[[nodiscard]] auto View() noexcept ->decltype(registry.view<ComponentTypes...> ())
 		{
-			return registry.valid(static_cast<entt::entity>(id));
+			return registry.view<ComponentTypes...>();
 		}
+#pragma endregion
 	};
 }
 

@@ -19,33 +19,4 @@ namespace MauEng
 	{
 		return m_pECSWorld && m_pECSWorld->IsValid(m_ID);
 	}
-
-	template<typename ComponentType, typename... Args>
-	ComponentType& Entity::AddComponent(Args&&... args) noexcept
-	{
-		return m_pECSWorld->AddComponent<ComponentType>(m_ID, std::forward<Args>(args)...);
-	}
-
-	template <typename ComponentType>
-	bool Entity::RemoveComponent() noexcept
-	{
-		return m_pECSWorld->RemoveComponent<ComponentType>(m_ID);
-	}
-
-	template <typename ComponentType>
-	ComponentType const& Entity::GetComponent() const noexcept
-	{
-		return m_pECSWorld->GetComponent<ComponentType>(m_ID);
-	}
-	template <typename ComponentType>
-	ComponentType& Entity::GetComponent() noexcept
-	{
-		return m_pECSWorld->GetComponent<ComponentType>(m_ID);
-	}
-
-	template <typename ComponentType>
-	bool Entity::HasComponent() const noexcept
-	{
-		return m_pECSWorld->HasComponent<ComponentType>(m_ID);
-	}
 }
