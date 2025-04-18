@@ -140,17 +140,18 @@ namespace MauEng::ECS
 		}
 #pragma endregion
 #pragma region Groups
-		template<typename... ComponentTypes, typename... ExcludeTypes>
-		[[nodiscard]] auto Group(ExcludeType<ExcludeTypes...> exclude = ExcludeType{}) & noexcept
+		template<typename... Owned, typename... Get, typename... ExcludeTypes>
+		[[nodiscard]] auto Group(GetType<Get...> get = GetType{}, ExcludeType<ExcludeTypes...> exclude = ExcludeType{}) & noexcept
 		{
-			auto group{ m_pImpl->Group<ComponentTypes...>(exclude) };
-			return GroupWrapper<decltype(group), ComponentTypes...>(group);
+			auto group{ m_pImpl->Group<Owned...>(get, exclude) };
+			return GroupWrapper<decltype(group), Owned..., Get...>(group);
 		}
-		template<typename... ComponentTypes, typename... ExcludeTypes>
-		[[nodiscard]] auto Group(ExcludeType<ExcludeTypes...> exclude = ExcludeType{})const& noexcept
+
+		template<typename... Owned, typename... Get, typename... ExcludeTypes>
+		[[nodiscard]] auto Group(GetType<Get...> get = GetType{}, ExcludeType<ExcludeTypes...> exclude = ExcludeType{})const& noexcept
 		{
-			auto group{ m_pImpl->Group<ComponentTypes...>(exclude) };
-			return GroupWrapper<decltype(group), ComponentTypes...>(group);
+			auto group{ m_pImpl->Group<Owned...>(get, exclude) };
+			return GroupWrapper<decltype(group), Owned..., Get...>(group);
 		}
 #pragma endregion
 #pragma endregion

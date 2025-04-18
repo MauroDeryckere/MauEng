@@ -11,6 +11,10 @@
 
 namespace MauEng::ECS
 {
+	template<typename... GetTypes>
+	using GetType = entt::get_t<GetTypes...>;
+
+
 	template<typename GroupT, typename... ComponentTypes>
 	class GroupWrapper final
 	{

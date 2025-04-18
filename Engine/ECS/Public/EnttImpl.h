@@ -66,11 +66,12 @@ namespace MauEng::ECS
 			return registry.view<ComponentTypes...>(exclude);
 		}
 
-		//TOOD get support
-		template<typename... ComponentTypes, typename... ExcludeTypes>
-		[[nodiscard]] auto Group(entt::exclude_t<ExcludeTypes...> exclude = entt::exclude_t{}) noexcept
+		template<typename... Owned, typename... Get, typename... ExcludeTypes>
+		[[nodiscard]] auto Group(
+			entt::get_t<Get...> get = entt::get_t{},
+			entt::exclude_t<ExcludeTypes...> exclude = entt::exclude_t{}) noexcept
 		{
-			return registry.group<ComponentTypes...>(entt::get_t{}, exclude);
+			return registry.group<Owned...>(get, exclude);
 		}
 #pragma endregion
 	};
