@@ -147,6 +147,13 @@ namespace MauGam
 				{
 					t.Rotate({ 0, rotationSpeed * TIME.ElapsedSec() });
 				});
+
+				auto group{ GetECSWorld().Group<CStaticMesh, CTransform>() };
+				group.Each([](CStaticMesh const& m, CTransform& t)
+					{
+						t.Rotate({ 0, rotationSpeed * TIME.ElapsedSec() });
+					});
+
 			}
 
 			//auto view = GetECSWorld().View<CTransform, CStaticMesh>();

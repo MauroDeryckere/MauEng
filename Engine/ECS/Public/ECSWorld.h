@@ -10,6 +10,7 @@
 #include "EnttImpl.h"
 
 #include "View.h"
+#include "Group.h"
 
 namespace MauEng
 {
@@ -137,13 +138,20 @@ namespace MauEng::ECS
 			auto view{ m_pImpl->View<ComponentTypes...>(exclude) };
 			return ViewWrapper<ComponentTypes...>(view);
 		}
-
 #pragma endregion
 #pragma region Groups
-
-		//TODO
-		//template<typename... ComponentTypes, typename Func>
-		//void ForEachInGroup(Func&& func) & noexcept
+		template<typename... ComponentTypes, typename... ExcludeTypes>
+		[[nodiscard]] auto Group(ExcludeType<ExcludeTypes...> exclude = ExcludeType{}) & noexcept
+		{
+			auto group{ m_pImpl->Group<ComponentTypes...>(exclude) };
+			return GroupWrapper<ComponentTypes...>(group);
+		}
+		template<typename... ComponentTypes, typename... ExcludeTypes>
+		[[nodiscard]] auto Group(ExcludeType<ExcludeTypes...> exclude = ExcludeType{})const& noexcept
+		{
+			auto group{ m_pImpl->Group<ComponentTypes...>(exclude) };
+			return GroupWrapper<ComponentTypes...>(group);
+		}
 #pragma endregion
 #pragma endregion
 
