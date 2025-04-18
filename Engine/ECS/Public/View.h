@@ -24,7 +24,7 @@ namespace MauEng::ECS
 		using ViewType = entt::view<entt::get_t<ComponentTypes...>>;
 
 
-		explicit ViewWrapper(ViewType view)
+		explicit ViewWrapper(ViewType& view)
 			: m_View{ view } {
 			ME_ASSERT(m_View);
 		}
@@ -46,31 +46,50 @@ namespace MauEng::ECS
 			// If we are caling the functon unsequential, use std::foreach
 			if constexpr (!std::is_same_v<ExecPolicy, std::execution::sequenced_policy>)
 			{
-				static_assert(std::is_same_v<
-					decltype(m_View.template get<ComponentTypes...>(InternalEntityType{})),
-					std::tuple<ComponentTypes&...>
-				> , "Group::get<ComponentTypes...> must return a tuple of references");
-
 				auto const parallelFuncCall{ [&](InternalEntityType entity)
 					{
-						std::apply(
-							[&](ComponentTypes&... comps)
+						if constexpr(sizeof...(ComponentTypes) > 1)
+						{
+							static_assert(std::is_same_v<
+								decltype(m_View.template get<ComponentTypes...>(InternalEntityType{})),
+								std::tuple<ComponentTypes&...>
+							> , "View::get<ComponentTypes...> must return a tuple of references");
+
+							std::apply(
+								[&](ComponentTypes&... comps)
+								{
+									if constexpr (std::is_invocable_v<Func, EntityID, ComponentTypes&...>)
+									{
+										func(static_cast<EntityID>(entity), comps...);
+									}
+									else if constexpr (std::is_invocable_v<Func, ComponentTypes&...>)
+									{
+										func(comps...);
+									}
+									else if constexpr (std::is_invocable_v<Func>)
+									{
+										func();
+									}
+								},
+								m_View.template get<ComponentTypes...>(entity)
+							);
+						}
+						else
+						{
+							if constexpr (std::is_invocable_v<Func, EntityID, ComponentTypes&...>)
 							{
-								if constexpr (std::is_invocable_v<Func, EntityID, ComponentTypes&...>)
-								{
-									func(static_cast<EntityID>(entity), comps...);
-								}
-								else if constexpr (std::is_invocable_v<Func, ComponentTypes&...>)
-								{
-									func(comps...);
-								}
-								else if constexpr (std::is_invocable_v<Func>)
-								{
-									func();
-								}
-							},
-							m_View.template get<ComponentTypes...>(entity)
-						);
+								func(static_cast<EntityID>(entity), m_View.template get<ComponentTypes...>(entity));
+							}
+							else if constexpr (std::is_invocable_v<Func, ComponentTypes&...>)
+							{
+								func(m_View.template get<ComponentTypes...>(entity));
+							}
+							else if constexpr (std::is_invocable_v<Func>)
+							{
+								func();
+							}
+						}
+
 					} };
 
 				std::for_each(policy, m_View.begin(), m_View.end(), parallelFuncCall);

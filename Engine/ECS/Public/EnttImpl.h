@@ -11,6 +11,22 @@ namespace MauEng::ECS
 	{
 		entt::registry registry{};
 
+		//TODO:
+		// REGISTRY
+		// Clear
+		// Sort
+
+		// VIEW
+		// front
+		// back
+		// Const its
+
+		// GROUP
+		// front
+		// back
+		// Const its
+
+		
 #pragma region Entities
 		[[nodiscard]] EntityID CreateEntity() noexcept
 		{
@@ -58,6 +74,11 @@ namespace MauEng::ECS
 			return registry.any_of<ComponentType>(static_cast<entt::entity>(id));
 		}
 
+		template<typename ComponentType>
+		[[nodiscard]] ComponentType const* TryGetComponent(EntityID id) const noexcept
+		{
+			return registry.try_get<ComponentType>(static_cast<entt::entity>(id));
+		}
 		template<typename ComponentType>
 		[[nodiscard]] ComponentType* TryGetComponent(EntityID id) noexcept
 		{

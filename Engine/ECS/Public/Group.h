@@ -22,7 +22,7 @@ namespace MauEng::ECS
 	public:
 		using GroupType = GroupT;
 
-		explicit GroupWrapper(GroupType group)
+		explicit GroupWrapper(GroupType& group)
 			: m_Group{ group } {
 			ME_ASSERT(m_Group);
 		}
@@ -50,31 +50,50 @@ namespace MauEng::ECS
 			// If we are caling the functon unsequential, use std::foreach
 			if constexpr (!std::is_same_v<ExecPolicy, std::execution::sequenced_policy>)
 			{
-				static_assert(std::is_same_v<
-					decltype(m_Group.template get<ComponentTypes...>(InternalEntityType{})),
-					std::tuple<ComponentTypes&...>
-				> , "Group::get<ComponentTypes...> must return a tuple of references");
-
 				auto const parallelFuncCall{ [&](InternalEntityType entity)
 					{
-						std::apply(
-							[&](ComponentTypes&... comps)
+						if constexpr (sizeof...(ComponentTypes) > 1)
+						{
+							static_assert(std::is_same_v<
+								decltype(m_Group.template get<ComponentTypes...>(InternalEntityType{})),
+								std::tuple<ComponentTypes&...>
+							> , "Group::get<ComponentTypes...> must return a tuple of references");
+
+							std::apply(
+								[&](ComponentTypes&... comps)
+								{
+									if constexpr (std::is_invocable_v<Func, EntityID, ComponentTypes&...>)
+									{
+										func(static_cast<EntityID>(entity), comps...);
+									}
+									else if constexpr (std::is_invocable_v<Func, ComponentTypes&...>)
+									{
+										func(comps...);
+									}
+									else if constexpr (std::is_invocable_v<Func>)
+									{
+										func();
+									}
+								},
+								m_Group.template get<ComponentTypes...>(entity)
+							);
+						}
+						else
+						{
+							if constexpr (std::is_invocable_v<Func, EntityID, ComponentTypes&...>)
 							{
-								if constexpr (std::is_invocable_v<Func, EntityID, ComponentTypes&...>)
-								{
-									func(static_cast<EntityID>(entity), comps...);
-								}
-								else if constexpr (std::is_invocable_v<Func, ComponentTypes&...>)
-								{
-									func(comps...);
-								}
-								else if constexpr (std::is_invocable_v<Func>)
-								{
-									func();
-								}
-							},
-							m_Group.template get<ComponentTypes...>(entity)
-						);
+								func(static_cast<EntityID>(entity), m_Group.template get<ComponentTypes...>(entity));
+							}
+							else if constexpr (std::is_invocable_v<Func, ComponentTypes&...>)
+							{
+								func(m_Group.template get<ComponentTypes...>(entity));
+							}
+							else if constexpr (std::is_invocable_v<Func>)
+							{
+								func();
+							}
+						}
+
 					} };
 
 				std::for_each(policy, m_Group.begin(), m_Group.end(), parallelFuncCall);
