@@ -169,11 +169,18 @@ namespace MauEng::ECS
 			m_Group.template emplace<ComponentType>(static_cast<InternalEntityType>(id), std::forward<Args>(args)...);
 		}
 
-		template<typename ComponentType>
-		void Remove(EntityID id) noexcept
+		/**
+		 * @brief Remove components from the entity.
+		 * @tparam FirstComponentType Type of component to remove.
+		 * @tparam OtherComponentTypes Other types to remove.
+		 * @param id to remove the component from.
+		 * @return If all of the listed components were removed.
+		*/
+		template <typename FirstComponentType, typename... OtherComponentTypes>
+		bool Remove(EntityID id) & noexcept
 		{
-			ME_ASSERT(HasComponent<ComponentType>(id));
-			m_Group.template remove<ComponentType>(static_cast<InternalEntityType>(id));
+			ME_ASSERT(Contains(id));
+			return m_Group.template remove<FirstComponentType, OtherComponentTypes...>(static_cast<InternalEntityType>(id)) == (sizeof...(OtherComponentTypes) + 1);
 		}
 
 		[[nodiscard]] EntityID Front() const noexcept

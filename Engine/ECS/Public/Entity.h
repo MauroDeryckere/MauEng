@@ -62,14 +62,15 @@ namespace MauEng
 		}
 
 		/**
-		 * @brief Remove a component from the entity.
-		 * @tparam ComponentType Type of component to construct.
-		 * @return If the component was removed.
+		 * @brief Remove components from the entity.
+		 * @tparam FirstComponentType Type of component to remove.
+		 * @tparam OtherComponentTypes Other types of component to remove.
+		 * @return If all listed component were removed.
 		*/
-		template<typename ComponentType>
+		template <typename FirstComponentType, typename... OtherComponentTypes>
 		bool RemoveComponent() noexcept
 		{
-			return m_pECSWorld->RemoveComponent<ComponentType>(m_ID);
+			return m_pECSWorld->RemoveComponent<FirstComponentType, OtherComponentTypes...>(m_ID);
 		}
 
 		/**

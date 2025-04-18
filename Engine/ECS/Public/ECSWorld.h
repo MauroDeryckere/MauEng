@@ -131,17 +131,17 @@ namespace MauEng::ECS
 		}
 
 		/**
-		 * @brief Remove a component from an entity.
-		 * @tparam ComponentType Type of component to construct.
+		 * @brief Remove components from the entity.
+		 * @tparam FirstComponentType Type of component to remove.
+		 * @tparam OtherComponentTypes Other types to remove.
 		 * @param id to remove the component from.
-		 * @return If the component was removed.
+		 * @return If all of the listed components were removed.
 		*/
-		template <typename ComponentType>
+		template <typename FirstComponentType, typename... OtherComponentTypes>
 		bool RemoveComponent(EntityID id) & noexcept
 		{
 			ME_ASSERT(IsValid(id));
-			ME_ASSERT(HasComponent<ComponentType>(id));
-			return m_pImpl->RemoveComponent<ComponentType>(id);
+			return m_pImpl->RemoveComponent<FirstComponentType, OtherComponentTypes... >(id);
 		}
 
 		/**

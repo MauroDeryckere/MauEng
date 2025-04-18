@@ -72,10 +72,10 @@ namespace MauEng::ECS
 			return registry.get<ComponentType>(static_cast<entt::entity>(id));
 		}
 
-		template <typename ComponentType>
-		bool RemoveComponent(EntityID id) noexcept
+		template <typename... ComponentTypes>
+		[[nodiscard]] bool RemoveComponent(EntityID id) noexcept
 		{
-			return registry.remove<ComponentType>(static_cast<entt::entity>(id)) == 1;
+			return registry.remove<ComponentTypes...>(static_cast<entt::entity>(id)) == sizeof...(ComponentTypes);
 		}
 
 		template<typename ComponentType>
