@@ -170,13 +170,30 @@ namespace MauEng::ECS
 			m_Group.template remove<ComponentType>(static_cast<InternalEntityType>(id));
 		}
 
+		[[nodiscard]] EntityID Front() const noexcept
+		{
+			ME_ASSERT(!Empty());
+			return static_cast<EntityID>(*begin());
+		}
+
+		[[nodiscard]] EntityID Back() const noexcept
+		{
+			ME_ASSERT(!Empty());
+			return static_cast<EntityID>(*rbegin());
+		}
+
 		[[nodiscard]] bool Empty() const noexcept { return m_Group.empty(); }
 		[[nodiscard]] std::size_t Size() const noexcept { return m_Group.size(); }
 
 		[[nodiscard]] auto begin() const noexcept { return m_Group.begin(); }
+		[[nodiscard]] auto cbegin() const noexcept { return m_Group.cbegin(); }
 		[[nodiscard]] auto rbegin() const noexcept { return m_Group.rbegin(); }
+		[[nodiscard]] auto crbegin() const noexcept { return m_Group.crbegin(); }
+
 		[[nodiscard]] auto end() const noexcept { return m_Group.end(); }
+		[[nodiscard]] auto cend() const noexcept { return m_Group.cend(); }
 		[[nodiscard]] auto rend() const noexcept { return m_Group.rend(); }
+		[[nodiscard]] auto crend() const noexcept { return m_Group.crend(); }
 
 	private:
 		GroupType m_Group;

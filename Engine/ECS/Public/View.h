@@ -123,6 +123,8 @@ namespace MauEng::ECS
 		template<typename ComponentType>
 		[[nodiscard]] ComponentType& Get(EntityID id) const noexcept
 		{
+			ME_ASSERT(Contains(id));
+			//ME_ASSERT((id));
 			return m_View.template get<ComponentType>(static_cast<InternalEntityType>(id));
 		}
 		template<typename ComponentType>
@@ -142,13 +144,30 @@ namespace MauEng::ECS
 			m_View.where(std::forward<Func>(func));
 		}
 
+		[[nodiscard]] EntityID Front() const noexcept
+		{
+			ME_ASSERT(!Empty());
+			return static_cast<EntityID>(m_View.front());
+		}
+		[[nodiscard]] EntityID Back() const noexcept
+		{
+			ME_ASSERT(!Empty());
+			return static_cast<EntityID>(m_View.back());
+		}
+
+
 		[[nodiscard]] bool Empty() const noexcept { return m_View.empty(); }
 		[[nodiscard]] std::size_t Size() const noexcept { return m_View.size(); }
 
 		[[nodiscard]] auto begin() const noexcept { return m_View.begin(); }
+		[[nodiscard]] auto cbegin() const noexcept { return m_View.cbegin(); }
 		[[nodiscard]] auto rbegin() const noexcept { return m_View.rbegin(); }
+		[[nodiscard]] auto crbegin() const noexcept { return m_View.crbegin(); }
+
 		[[nodiscard]] auto end() const noexcept { return m_View.end(); }
+		[[nodiscard]] auto cend() const noexcept { return m_View.cend(); }
 		[[nodiscard]] auto rend() const noexcept { return m_View.rend(); }
+		[[nodiscard]] auto crend() const noexcept { return m_View.crend(); }
 
 	private:
 		ViewType m_View;

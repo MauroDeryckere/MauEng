@@ -16,15 +16,8 @@ namespace MauEng::ECS
 		// Clear
 		// Sort
 
-		// VIEW
-		// front
-		// back
-		// Const its
-
 		// GROUP
-		// front
-		// back
-		// Const its
+		// Sort
 
 		
 #pragma region Entities
