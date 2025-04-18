@@ -85,6 +85,28 @@ namespace MauEng
 		{
 			return m_pECSWorld->HasComponent<ComponentType>(m_ID);
 		}
+
+		/**
+		*@brief
+		* @tparam ComponentType Type of component to construct.
+		* @return Component or nullptr if entity does not have the component
+		*/
+		template<typename ComponentType>
+		[[nodiscard]] ComponentType* TryGetComponent() noexcept
+		{
+			return m_pECSWorld->TryGetComponent<ComponentType>(m_ID);
+		}
+
+		/**
+		*@brief
+		* @tparam ComponentType Type of component to construct.
+		* @return Component or nullptr if entity does not have the component
+		*/
+		template<typename ComponentType>
+		[[nodiscard]] ComponentType const* TryGetComponent() const noexcept
+		{
+			return m_pECSWorld->TryGetComponent<ComponentType>(m_ID);
+		}
 #pragma endregion
 
 #pragma region operators

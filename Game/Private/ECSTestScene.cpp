@@ -142,15 +142,15 @@ namespace MauGam
 			float constexpr rotationSpeed{ 90.0f };
 			ME_PROFILE_SCOPE("UPDATES")
 			{
-				//{
-				//	ME_PROFILE_SCOPE("VIEW")
+				{
+					ME_PROFILE_SCOPE("VIEW")
 
-				//	auto view{ GetECSWorld().View<CStaticMesh, CTransform>() };
-				//	view.Each([](CStaticMesh const& m, CTransform& t)
-				//		{
-				//			t.Rotate({ 0, rotationSpeed * TIME.ElapsedSec() });
-				//		});
-				//}
+					auto view{ GetECSWorld().View<CStaticMesh, CTransform>() };
+					view.Each([](CStaticMesh const& m, CTransform& t)
+						{
+							t.Rotate({ 0, rotationSpeed * TIME.ElapsedSec() });
+						}, std::execution::par_unseq);
+				}
 
 				{
 					// Group is faster.
@@ -162,18 +162,7 @@ namespace MauGam
 							t.Rotate({ 0, rotationSpeed * TIME.ElapsedSec() });
 						}, std::execution::par_unseq);
 				}
-
-
 			}
-
-			//auto view = GetECSWorld().View<CTransform, CStaticMesh>();
-			//// Using execution policy with std::for_each
-			//std::for_each(std::execution::par_unseq, view.begin(), view.end(), [&reg](auto entity) {
-			//	auto& transform = reg.get<CTransform>(entity);
-			//	auto& staticMesh = reg.get<CStaticMesh>(entity); 
-			//	transform.Rotate({ 0, rotationSpeed * TIME.ElapsedSec() });
-
-			//	});
 		}
 	}
 }

@@ -57,6 +57,12 @@ namespace MauEng::ECS
 		{
 			return registry.any_of<ComponentType>(static_cast<entt::entity>(id));
 		}
+
+		template<typename ComponentType>
+		[[nodiscard]] ComponentType* TryGetComponent(EntityID id) noexcept
+		{
+			return registry.try_get<ComponentType>(static_cast<entt::entity>(id));
+		}
 #pragma endregion
 
 #pragma region ViewsAndGroups

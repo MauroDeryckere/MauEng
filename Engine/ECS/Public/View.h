@@ -106,6 +106,11 @@ namespace MauEng::ECS
 		{
 			return m_View.template get<ComponentType>(static_cast<InternalEntityType>(id));
 		}
+		template<typename ComponentType>
+		[[nodiscard]] ComponentType* TryGet(EntityID id) const noexcept
+		{
+			return m_View.template try_get<ComponentType>(static_cast<InternalEntityType>(id));
+		}
 
 		[[nodiscard]] bool Contains(EntityID id) const noexcept
 		{

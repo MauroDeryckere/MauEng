@@ -119,6 +119,30 @@ namespace MauEng::ECS
 			ME_ASSERT(IsValid(id));
 			return m_pImpl->HasComponent<ComponentType>(id);
 		}
+
+		/**
+		 * @brief
+		 * @tparam ComponentType Type of component to construct.
+		 * @param id entity to check.
+		 * @return Component or nullptr if entity does not have the component
+		*/
+		template<typename ComponentType>
+		[[nodiscard]] ComponentType* TryGetComponent(EntityID id)& noexcept
+		{
+			return m_pImpl->TryGetComponent<ComponentType>(id);
+		}
+
+		/**
+		 * @brief
+		 * @tparam ComponentType Type of component to construct.
+		 * @param id entity to check.
+		 * @return Component or nullptr if entity does not have the component
+		*/
+		template<typename ComponentType>
+		[[nodiscard]] ComponentType const* TryGetComponent(EntityID id)const & noexcept
+		{
+			return m_pImpl->TryGetComponent<ComponentType>(id);
+		}
 #pragma endregion
 
 #pragma region ViewsAndGroups
