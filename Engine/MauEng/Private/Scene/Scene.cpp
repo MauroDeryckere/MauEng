@@ -7,13 +7,12 @@ namespace MauEng
 		ME_PROFILE_FUNCTION()
 		{
 			ME_PROFILE_SCOPE("QUEUE DRAWS")
-			auto view{ GetECSWorld().View<CStaticMesh, CTransform>() };
-			view.Each([](CStaticMesh const& m, CTransform const& t)
+			auto group{ GetECSWorld().Group<CStaticMesh, CTransform>() };
+			group.Each([](CStaticMesh const& m, CTransform const& t)
 						{
 							RENDERER.QueueDraw(t.mat, m);
 						});
 		}
-
 	}
 
 	Entity Scene::CreateEntity()

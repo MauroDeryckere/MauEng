@@ -19,9 +19,6 @@ namespace MauEng
 
 namespace MauEng::ECS
 {
-	template<typename... ExcludeTypes>
-	constexpr entt::exclude_t<ExcludeTypes...> Exclude = entt::exclude_t{};
-
 	class ECSWorld final
 	{
 	public:
@@ -145,7 +142,7 @@ namespace MauEng::ECS
 		{
 			auto group{ m_pImpl->Group<Owned...>(get, exclude) };
 			return GroupWrapper<decltype(group), Owned..., Get...>(group);
-		}
+		} 
 
 		template<typename... Owned, typename... Get, typename... ExcludeTypes>
 		[[nodiscard]] auto Group(GetType<Get...> get = GetType{}, ExcludeType<ExcludeTypes...> exclude = ExcludeType{})const& noexcept
