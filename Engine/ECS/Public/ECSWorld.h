@@ -43,6 +43,43 @@ namespace MauEng::ECS
 		[[nodiscard]] bool IsValid(Entity entity) const& noexcept;
 		// Checks if the entity is valid
 		[[nodiscard]] bool IsValid(EntityID id) const& noexcept;
+
+		/**
+		 * @brief Remove all components in the registry of a given type.
+		 * @tparam ComponentType Component type to clear.
+		 * @tparam ComponentTypes Additional Component types to clear.
+		 */
+		template <typename ComponentType, typename... ComponentTypes>
+		void Clear()& noexcept
+		{
+			m_pImpl->Clear<ComponentType, ComponentTypes...>();
+		}
+
+		/**
+		 * @brief Check if an entity has all the listed components.
+		 * @tparam ComponentTypes Component types to check.
+		 * @param id to check.
+		 * @return If the entity has all the components.
+		 */
+		template <typename... ComponentTypes>
+		[[nodiscard]] bool HasAllOfComponents(EntityID id) const& noexcept
+		{
+			ME_ASSERT(IsValid(id));
+			return m_pImpl->HasAllOfComponents<ComponentTypes...>(id);
+		}
+		/**
+		 * @brief Check if an entity has any of the listed components.
+		 * @tparam ComponentTypes Component types to check.
+		 * @param id to check.
+		 * @return If the entity has any of the components.
+		 */
+		template <typename... ComponentTypes>
+		[[nodiscard]] bool HasAnyOfComponents(EntityID id) const& noexcept
+		{
+			ME_ASSERT(IsValid(id));
+			return m_pImpl->HasAnyOfComponents<ComponentTypes...>(id);
+		}
+
 #pragma endregion
 
 #pragma region Components
@@ -121,7 +158,7 @@ namespace MauEng::ECS
 		}
 
 		/**
-		 * @brief
+		 * @brief try to get a component from the ECS.
 		 * @tparam ComponentType Type of component to construct.
 		 * @param id entity to check.
 		 * @return Component or nullptr if entity does not have the component
@@ -133,7 +170,7 @@ namespace MauEng::ECS
 		}
 
 		/**
-		 * @brief
+		 * @brief try to get a component from the ECS.
 		 * @tparam ComponentType Type of component to construct.
 		 * @param id entity to check.
 		 * @return Component or nullptr if entity does not have the component
@@ -142,6 +179,19 @@ namespace MauEng::ECS
 		[[nodiscard]] ComponentType const* TryGetComponent(EntityID id)const & noexcept
 		{
 			return m_pImpl->TryGetComponent<ComponentType>(id);
+		}
+
+		/**
+		 * @brief Sort a specific component type in the ECS.
+		 * @tparam ComponentType Type of component to sort.
+		 * @tparam Compare Type of comparison object.
+		 * @param compare comparison object.
+		*/
+		template<typename ComponentType, typename Compare>
+			requires std::invocable<Compare, ComponentType const&, ComponentType const&>
+		void Sort(Compare&& compare) & noexcept
+		{
+			m_pImpl->Sort<ComponentType>(std::forward<Compare>(compare));
 		}
 #pragma endregion
 

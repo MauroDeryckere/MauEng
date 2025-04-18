@@ -127,6 +127,7 @@ namespace MauEng::ECS
 			//ME_ASSERT((id));
 			return m_View.template get<ComponentType>(static_cast<InternalEntityType>(id));
 		}
+
 		template<typename ComponentType>
 		[[nodiscard]] ComponentType* TryGet(EntityID id) const noexcept
 		{

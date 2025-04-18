@@ -15,7 +15,6 @@ namespace MauEng::ECS
 	template<typename... GetTypes>
 	using GetType = entt::get_t<GetTypes...>;
 
-
 	template<typename GroupT, typename... ComponentTypes>
 	class GroupWrapper final
 	{
@@ -124,11 +123,16 @@ namespace MauEng::ECS
 			}
 		}
 
-		template<typename ComponentType>
-		[[nodiscard]] ComponentType& Get(EntityID id) const noexcept
+		template<typename... ComponentTs>
+		[[nodiscard]] auto Get(EntityID id) const noexcept
 		{
-			return m_Group.template get<ComponentType>(static_cast<InternalEntityType>(id));
+			return m_Group.template get<ComponentTs...>(static_cast<InternalEntityType>(id));
 		}
+		[[nodiscard]] auto Get(EntityID id) const noexcept
+		{
+			return m_Group.get(static_cast<InternalEntityType>(id));
+		}
+
 		template<typename ComponentType>
 		[[nodiscard]] ComponentType* TryGet(EntityID id) const noexcept
 		{
@@ -144,6 +148,8 @@ namespace MauEng::ECS
 		{
 			return m_Group.template contains<ComponentType>(static_cast<InternalEntityType>(id));
 		}
+
+		//TODO
 
 		// add a else if constexpr for a func() with comps
 		template<typename Func>

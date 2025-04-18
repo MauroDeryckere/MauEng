@@ -26,6 +26,27 @@ namespace MauEng
 		// Returns the underlying entity ID
 		[[nodiscard]] ECS::EntityID ID() const noexcept { return m_ID; }
 
+		/**
+		 * @brief Check if the entity has all the listed components.
+		 * @tparam ComponentTypes Component types to check.
+		 * @return If the entity has all the components.
+		 */
+		template <typename... ComponentTypes>
+		[[nodiscard]] bool HasAllOfComponents() const& noexcept
+		{
+			return m_pECSWorld->HasAllOfComponents<ComponentTypes...>(m_ID);
+		}
+		/**
+		 * @brief Check if the entity has any of the listed components.
+		 * @tparam ComponentTypes Component types to check.
+		 * @return If the entity has any of the components.
+		 */
+		template <typename... ComponentTypes>
+		[[nodiscard]] bool HasAnyOfComponents() const& noexcept
+		{
+			return m_pECSWorld->HasAnyOfComponents<ComponentTypes...>(m_ID);
+		}
+
 #pragma region Components
 		/**
 		 * @brief Add a component to the entity.

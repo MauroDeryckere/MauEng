@@ -13,8 +13,8 @@ namespace MauEng::ECS
 
 		//TODO:
 		// REGISTRY
-		// Clear
-		// Sort
+		// erasing
+		// erase if
 
 		// GROUP
 		// Sort
@@ -34,6 +34,23 @@ namespace MauEng::ECS
 		[[nodiscard]] bool IsValid(EntityID id) const noexcept
 		{
 			return registry.valid(static_cast<entt::entity>(id));
+		}
+
+		template <typename... ComponentTypes>
+		void Clear() noexcept
+		{
+			registry.clear<ComponentTypes...>();
+		}
+
+		template <typename... ComponentTypes>
+		[[nodiscard]] bool HasAllOfComponents(EntityID id) const noexcept
+		{
+			return registry.all_of<ComponentTypes...>(static_cast<entt::entity>(id));
+		}
+		template <typename... ComponentTypes>
+		[[nodiscard]] bool HasAnyOfComponents(EntityID id) const noexcept
+		{
+			return registry.any_of<ComponentTypes...>(static_cast<entt::entity>(id));
 		}
 #pragma endregion
 
@@ -76,6 +93,12 @@ namespace MauEng::ECS
 		[[nodiscard]] ComponentType* TryGetComponent(EntityID id) noexcept
 		{
 			return registry.try_get<ComponentType>(static_cast<entt::entity>(id));
+		}
+
+		template<typename ComponentType, typename Comparator>
+		void Sort(Comparator comp) noexcept
+		{
+			registry.sort<ComponentType>(comp);
 		}
 #pragma endregion
 
