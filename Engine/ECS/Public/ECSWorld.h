@@ -144,13 +144,13 @@ namespace MauEng::ECS
 		[[nodiscard]] auto Group(ExcludeType<ExcludeTypes...> exclude = ExcludeType{}) & noexcept
 		{
 			auto group{ m_pImpl->Group<ComponentTypes...>(exclude) };
-			return GroupWrapper<ComponentTypes...>(group);
+			return GroupWrapper<decltype(group), ComponentTypes...>(group);
 		}
 		template<typename... ComponentTypes, typename... ExcludeTypes>
 		[[nodiscard]] auto Group(ExcludeType<ExcludeTypes...> exclude = ExcludeType{})const& noexcept
 		{
 			auto group{ m_pImpl->Group<ComponentTypes...>(exclude) };
-			return GroupWrapper<ComponentTypes...>(group);
+			return GroupWrapper<decltype(group), ComponentTypes...>(group);
 		}
 #pragma endregion
 #pragma endregion

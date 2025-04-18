@@ -11,11 +11,12 @@
 
 namespace MauEng::ECS
 {
-	template<typename... ComponentTypes>
+	template<typename GroupT, typename... ComponentTypes>
 	class GroupWrapper final
 	{
 	public:
-		using GroupType = decltype(std::declval<entt::registry>().group<ComponentTypes...>(entt::get_t{}, entt::exclude_t{}));
+		using GroupType = GroupT;
+
 		explicit GroupWrapper(GroupType group)
 			: m_Group{ group } {
 		}
@@ -77,6 +78,14 @@ namespace MauEng::ECS
 		{
 			return m_Group.template get<ComponentType>(static_cast<InternalEntityType>(id));
 		}
+
+		[[nodiscard]] bool Contains(EntityID id) const noexcept
+		{
+			return m_Group.contains(static_cast<InternalEntityType>(id));
+		}
+
+		[[nodiscard]] bool Empty() const noexcept { return m_Group.empty(); }
+		[[nodiscard]] std::size_t Size() const noexcept { return m_Group.size(); }
 
 		[[nodiscard]] auto begin() const noexcept { return m_Group.begin(); }
 		[[nodiscard]] auto rbegin() const noexcept { return m_Group.rbegin(); }
