@@ -60,10 +60,10 @@ namespace MauEng::ECS
 #pragma endregion
 
 #pragma region ViewsAndGroups
-		template<typename... ComponentTypes>
-		[[nodiscard]] auto View() noexcept ->decltype(registry.view<ComponentTypes...> ())
+		template<typename... ComponentTypes, typename... ExcludeTypes>
+		[[nodiscard]] auto View(entt::exclude_t<ExcludeTypes...> exclude = entt::exclude_t{}) noexcept
 		{
-			return registry.view<ComponentTypes...>();
+			return registry.view<ComponentTypes...>(exclude);
 		}
 #pragma endregion
 	};

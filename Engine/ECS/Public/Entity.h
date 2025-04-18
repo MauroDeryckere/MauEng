@@ -88,7 +88,10 @@ namespace MauEng
 #pragma endregion
 
 #pragma region operators
-		operator bool() const noexcept;
+		operator bool() const noexcept
+		{
+			return m_pECSWorld && m_pECSWorld->IsValid(m_ID);
+		}
 
 		[[nodiscard]] bool operator==(Entity const& other) const noexcept
 		{

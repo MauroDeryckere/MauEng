@@ -9,6 +9,8 @@
 
 #include "EnttImpl.h"
 
+#include "View.h"
+
 namespace MauEng
 {
 	class Entity;
@@ -16,6 +18,9 @@ namespace MauEng
 
 namespace MauEng::ECS
 {
+	template<typename... ExcludeTypes>
+	constexpr entt::exclude_t<ExcludeTypes...> Exclude = entt::exclude_t{};
+
 	class ECSWorld final
 	{
 	public:
@@ -119,52 +124,27 @@ namespace MauEng::ECS
 #pragma endregion
 
 #pragma region ViewsAndGroups
-		/**
-		 * @brief iterate over all entities with the given components
-		 * @tparam ComponentTypes Types of componennts to iterate over
-		 * @param func function to execute for each entitys
-		*/
-		template<typename... ComponentTypes, typename Func>
-			requires std::is_invocable_v<Func, EntityID, ComponentTypes&...>
-		void ForEach(Func const&& func) & noexcept
+#pragma region Views
+		template<typename... ComponentTypes, typename... ExcludeTypes>
+		[[nodiscard]] auto View(ExcludeType<ExcludeTypes...> exclude = ExcludeType{})& noexcept
 		{
-			auto&& view{ m_pImpl->View<ComponentTypes...>() };
-			
-			view.each([&](entt::entity ID, ComponentTypes&... comps)
-				{
-					func(static_cast<EntityID>(ID), comps...);
-				});
+			auto view{ m_pImpl->View<ComponentTypes...>(exclude) };
+			return ViewWrapper<ComponentTypes...>(view);
+		}
+		template<typename... ComponentTypes, typename... ExcludeTypes>
+		[[nodiscard]] auto View(ExcludeType<ExcludeTypes...> exclude = ExcludeType{})const& noexcept
+		{
+			auto view{ m_pImpl->View<ComponentTypes...>(exclude) };
+			return ViewWrapper<ComponentTypes...>(view);
 		}
 
-		/**
-		 * @brief iterate over all entities with the given components
-		 * @tparam ComponentTypes Types of componennts to iterate over
-		 * @param func function to execute for each entitys
-		*/
-		template<typename... ComponentTypes, typename Func>
-			requires std::is_invocable_v<Func, EntityID, ComponentTypes const&...>
-		void ForEach(Func const&& func)const & noexcept
-		{
-			auto&& view{ m_pImpl->View<ComponentTypes...>() };
+#pragma endregion
+#pragma region Groups
 
-			view.each([&](entt::entity ID, ComponentTypes const&... comps)
-				{
-					func(static_cast<EntityID>(ID), comps...);
-				});
-		}
-
-		template<typename... ComponentTypes>
-		auto View() noexcept
-		{
-			return m_pImpl->View<ComponentTypes...>();
-		}
-
-		auto& Reg() noexcept
-		{
-			return m_pImpl->registry;
-		}
-
-
+		//TODO
+		//template<typename... ComponentTypes, typename Func>
+		//void ForEachInGroup(Func&& func) & noexcept
+#pragma endregion
 #pragma endregion
 
 	private:

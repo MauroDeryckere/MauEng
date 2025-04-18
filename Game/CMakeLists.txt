@@ -6,7 +6,6 @@ set(GAME_PRIVATE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/private")
 target_sources(${EXECUTABLE_NAME} PRIVATE
     ${GAME_PRIVATE_DIR}/main.cpp
     ${GAME_PRIVATE_DIR}/DebugDrawingDemo.cpp
-    ${GAME_PRIVATE_DIR}/GameScene.cpp
     ${GAME_PRIVATE_DIR}/ECSTestScene.cpp
 )
 
