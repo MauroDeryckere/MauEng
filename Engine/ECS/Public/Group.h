@@ -127,6 +127,7 @@ namespace MauEng::ECS
 
 		template<typename FirstComponentType, typename... OtherComponentTypes, typename Compare, typename SortAlgo = entt::std_sort, typename... Args>
 		void Sort(Compare&& compare, SortAlgo&& algo = SortAlgo{}, Args&&... args) noexcept
+			requires std::invocable<Compare, FirstComponentType const&, FirstComponentType const&, OtherComponentTypes const&..., OtherComponentTypes const&...>
 		{
 			m_Group.template sort<FirstComponentType, OtherComponentTypes...>
 			(
@@ -134,6 +135,22 @@ namespace MauEng::ECS
 				std::forward<SortAlgo>(algo),
 				std::forward<Args>(args)...
 			);
+		}
+		template<typename FirstComponentType, typename... OtherComponentTypes, typename SortAlgo = entt::std_sort, typename... Args>
+		void Sort(SortAlgo&& algo = SortAlgo{}, Args&&... args) noexcept
+			requires (std::totally_ordered<FirstComponentType> && std::totally_ordered<OtherComponentTypes...>)
+		{
+			m_Group.template sort<FirstComponentType, OtherComponentTypes...>
+				(
+					std::forward<SortAlgo>(algo),
+					std::forward<Args>(args)...
+				);
+		}
+		template<typename FirstComponentType, typename... OtherComponentTypes>
+			requires (std::totally_ordered<FirstComponentType>&& std::totally_ordered<OtherComponentTypes...>)
+		void Sort() noexcept
+		{
+			m_Group.template sort<FirstComponentType, OtherComponentTypes...>();
 		}
 
 		template<typename... ComponentTs>
