@@ -8,6 +8,10 @@ namespace MauEng
 		uint32_t meshID{ UINT32_MAX };
 		uint32_t materialID{ UINT32_MAX };
 
+		//TODO
+		std::vector<uint32_t> meshIDs;
+		std::vector<uint32_t> materialIDs;
+
 		CStaticMesh() = default;
 		CStaticMesh(char const* path);
 	};

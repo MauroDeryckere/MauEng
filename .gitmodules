@@ -22,3 +22,6 @@
 [submodule "Engine/Core/Libs/Optick"]
 	path = Engine/Core/Libs/Optick
 	url = https://github.com/MauroDeryckere/optick.git
+[submodule "Engine/Renderer/Libs/Assimp"]
+	path = Engine/Renderer/Libs/Assimp
+	url = https://github.com/assimp/assimp.git
