@@ -162,11 +162,6 @@ namespace MauGam
 							t.Rotate({ 0, rotationSpeed * TIME.ElapsedSec() });
 						}, std::execution::par_unseq);
 				}
-
-				GetECSWorld().Sort<CTransform>([](ECS::EntityID a, ECS::EntityID b)
-				{
-						return a < b;
-				});
 			}
 		}
 	}

@@ -10,10 +10,10 @@
 #include "EnttImpl.h"
 #include "View.h"
 
+#include <algorithm>
+
 namespace MauEng::ECS
 {
-	//TODO group sorting
-
 	template<typename... GetTypes>
 	using GetType = entt::get_t<GetTypes...>;
 
@@ -125,6 +125,17 @@ namespace MauEng::ECS
 			}
 		}
 
+		template<typename FirstComponentType, typename... OtherComponentTypes, typename Compare, typename SortAlgo = entt::std_sort, typename... Args>
+		void Sort(Compare&& compare, SortAlgo&& algo = SortAlgo{}, Args&&... args) noexcept
+		{
+			m_Group.template sort<FirstComponentType, OtherComponentTypes...>
+			(
+				std::forward<Compare>(compare),
+				std::forward<SortAlgo>(algo),
+				std::forward<Args>(args)...
+			);
+		}
+
 		template<typename... ComponentTs>
 		[[nodiscard]] auto Get(EntityID id) const noexcept
 		{
@@ -140,12 +151,6 @@ namespace MauEng::ECS
 		[[nodiscard]] bool Contains(EntityID id) const noexcept
 		{
 			return m_Group.contains(static_cast<InternalEntityType>(id));
-		}
-		template<typename ComponentType>
-		[[nodiscard]] bool HasComponent(EntityID id) const noexcept
-		{
-			ME_ASSERT(Contains(id));
-			return m_Group.template contains<ComponentType>(static_cast<InternalEntityType>(id));
 		}
 
 		[[nodiscard]] EntityID Front() const noexcept

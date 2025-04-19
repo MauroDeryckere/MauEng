@@ -24,7 +24,7 @@ namespace MauEng::ECS
 		using ViewType = entt::view<entt::get_t<ComponentTypes...>>;
 
 
-		explicit ViewWrapper(ViewType& view)
+		explicit ViewWrapper(ViewType const& view)
 			: m_View{ view } {
 			ME_ASSERT(m_View);
 		}
@@ -132,6 +132,21 @@ namespace MauEng::ECS
 			return m_View.get(static_cast<InternalEntityType>(id));
 		}
 
+		template<typename ComponentType>
+		[[nodiscard]] bool HasComponent(EntityID id) const noexcept
+		{
+			return m_View.template any_of<ComponentType>(static_cast<InternalEntityType>(id));
+		}
+		template<typename... ComponentTs>
+		[[nodiscard]] bool HasAllComponents(EntityID id) const noexcept
+		{
+			return (m_View.template all_of<ComponentTs...>(static_cast<InternalEntityType>(id)));
+		}
+		template<typename... ComponentTs>
+		[[nodiscard]] bool HasAnyComponent(EntityID id) const noexcept
+		{
+			return (m_View.template any_of<ComponentTs...>(static_cast<InternalEntityType>(id)));
+		}
 
 		template<typename ComponentType>
 		[[nodiscard]] ComponentType* TryGet(EntityID id) const noexcept
