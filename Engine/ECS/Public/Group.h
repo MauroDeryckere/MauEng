@@ -125,10 +125,26 @@ namespace MauEng::ECS
 			}
 		}
 
-		// @warn group must own the components you sort
+		/**
+		 * @brief Sorts the group by the given component types.
+		 * @tparam FirstComponentType First component type to sort.
+		 * @tparam OtherComponentTypes Optional other component types to sort.
+		 * @tparam Compare Type of callable comparison object.
+		 * @tparam SortAlgo Type of callable sorting object.
+		 * @tparam Args Additional args to pass to sorting obj
+		 * @param compare comparison object.
+		 * @param algo sorting algorithm object.
+		 * @param args Additional args to pass to sorting obj.
+		 * @warning group must own the components you sort
+		*/
 		template<typename FirstComponentType, typename... OtherComponentTypes, typename Compare, typename SortAlgo = entt::std_sort, typename... Args>
 		void Sort(Compare&& compare, SortAlgo&& algo = SortAlgo{}, Args&&... args) noexcept
-			requires std::invocable<Compare, FirstComponentType const&, FirstComponentType const&, OtherComponentTypes const&..., OtherComponentTypes const&...>
+			requires
+			(  sizeof...(OtherComponentTypes) == 0 && 
+			   std::is_invocable_v<Compare, FirstComponentType const&, FirstComponentType const&> )
+			|| std::is_invocable_v<Compare,
+									std::tuple<FirstComponentType const&, OtherComponentTypes const&...> const&,
+									std::tuple<FirstComponentType const&, OtherComponentTypes const&...> const&>
 		{
 			m_Group.template sort<FirstComponentType, OtherComponentTypes...>
 			(
@@ -138,10 +154,20 @@ namespace MauEng::ECS
 			);
 		}
 
-		// @warn group must own the components you sort
+		/**
+		 * @brief Sorts the group by the given component types.
+		 * @tparam FirstComponentType First component type to sort.
+		 * @tparam OtherComponentTypes Optional other component types to sort.
+		 * @tparam SortAlgo Type of callable sorting object.
+		 * @tparam Args Additional args to pass to sorting obj
+		 * @param algo sorting algorithm object.
+		 * @param args Additional args to pass to sorting obj.
+		 * @warning group must own the components you sort
+		*/
 		template<typename FirstComponentType, typename... OtherComponentTypes, typename SortAlgo = entt::std_sort, typename... Args>
 		void Sort(SortAlgo&& algo = SortAlgo{}, Args&&... args) noexcept
-			requires (std::totally_ordered<FirstComponentType> && std::totally_ordered<OtherComponentTypes...>)
+			requires (requires(FirstComponentType const& a, FirstComponentType const& b) { a < b; }) &&
+					 (requires(OtherComponentTypes const&... rest) { (... && (rest < rest)); })
 		{
 			m_Group.template sort<FirstComponentType, OtherComponentTypes...>
 				(
@@ -150,37 +176,44 @@ namespace MauEng::ECS
 				);
 		}
 
-		// @warn group must own the components you sort
-		template<typename FirstComponentType, typename... OtherComponentTypes>
-			requires (std::totally_ordered<FirstComponentType>&& std::totally_ordered<OtherComponentTypes...>)
-		void Sort() noexcept
-		{
-			m_Group.template sort<FirstComponentType, OtherComponentTypes...>();
-		}
-
+		/**
+		  * @brief Get component(s) from an entity in the group
+		  * @tparam ComponentTs Function type (usually automatically deduced)
+		  * @param id entity to get the components from
+		  * @return the component or a tuple with returned components
+		  * @warning An entity should own the component before using a get.
+		*/
 		template<typename... ComponentTs>
 		[[nodiscard]] auto Get(EntityID id) const noexcept
 		{
 			ME_ASSERT(Contains(id));
 			return m_Group.template get<ComponentTs...>(static_cast<InternalEntityType>(id));
 		}
+		/**
+		  * @brief Get all components from an entity in the group, that are owned or observed by the group
+s		  * @param id entity to get the components from
+		  * @return the component or a tuple with returned components
+		*/
 		[[nodiscard]] auto Get(EntityID id) const noexcept
 		{
 			ME_ASSERT(Contains(id));
 			return m_Group.get(static_cast<InternalEntityType>(id));
 		}
 
+		// Does the group contain this entity?
 		[[nodiscard]] bool Contains(EntityID id) const noexcept
 		{
 			return m_Group.contains(static_cast<InternalEntityType>(id));
 		}
 
+		// First entity in the group
 		[[nodiscard]] EntityID Front() const noexcept
 		{
 			ME_ASSERT(!Empty());
 			return static_cast<EntityID>(*begin());
 		}
 
+		// Last entity in the group
 		[[nodiscard]] EntityID Back() const noexcept
 		{
 			ME_ASSERT(!Empty());

@@ -342,6 +342,7 @@ namespace MauEng::ECS
 			}
 		}
 
+		// @brief Sort 2 component types to be more cache efficient in the registry (e.g Transform, Mesh, Transform, Mesh and so on).
 		template<typename ComponentType1, typename ComponentType2>
 		void Sort() & noexcept
 		{
@@ -359,12 +360,27 @@ namespace MauEng::ECS
 
 #pragma region ViewsAndGroups
 #pragma region Views
+		/**
+		 * @brief Create a view to iterate over entities with the specified components.
+		 * @tparam ComponentTypes Type of component to view.
+		 * @tparam ExcludeTypes Type of component to exclude from theview.
+		 * @param exclude components to exclude from the view.
+		 * @return the view.
+		*/
 		template<typename... ComponentTypes, typename... ExcludeTypes>
 		[[nodiscard]] auto View(ExcludeType<ExcludeTypes...> exclude = ExcludeType{})& noexcept
 		{
 			auto view{ m_pImpl->View<ComponentTypes...>(exclude) };
 			return ViewWrapper<ComponentTypes...>(view);
 		}
+
+		/**
+		 * @brief Create a view to iterate over entities with the specified components.
+		 * @tparam ComponentTypes Type of component to view.
+		 * @tparam ExcludeTypes Type of component to exclude from theview.
+		 * @param exclude components to exclude from the view.
+		 * @return the view.
+		*/
 		template<typename... ComponentTypes, typename... ExcludeTypes>
 		[[nodiscard]] auto View(ExcludeType<ExcludeTypes...> exclude = ExcludeType{})const& noexcept
 		{
@@ -373,6 +389,15 @@ namespace MauEng::ECS
 		}
 #pragma endregion
 #pragma region Groups
+		/**
+		 * @brief Create a group to iterate over entities with the specified components.
+		 * @tparam Owned Type of component to group (owned).
+		 * @tparam Get Type of component to group (non-owned, just for viewin).
+		 * @tparam ExcludeTypes Type of component to exclude from the group.
+		 * @param get components to get in group.
+		 * @param exclude components to exclude from group.
+		 * @return the group.
+		*/
 		template<typename... Owned, typename... Get, typename... ExcludeTypes>
 		[[nodiscard]] auto Group(GetType<Get...> get = GetType{}, ExcludeType<ExcludeTypes...> exclude = ExcludeType{}) & noexcept
 		{
@@ -380,6 +405,15 @@ namespace MauEng::ECS
 			return GroupWrapper<decltype(group), Owned..., Get...>(group);
 		} 
 
+		/**
+		 * @brief Create a group to iterate over entities with the specified components.
+		 * @tparam Owned Type of component to group (owned).
+		 * @tparam Get Type of component to group (non-owned, just for viewin).
+		 * @tparam ExcludeTypes Type of component to exclude from the group.
+		 * @param get components to get in group.
+		 * @param exclude components to exclude from group.
+		 * @return the group.
+		*/
 		template<typename... Owned, typename... Get, typename... ExcludeTypes>
 		[[nodiscard]] auto Group(GetType<Get...> get = GetType{}, ExcludeType<ExcludeTypes...> exclude = ExcludeType{})const& noexcept
 		{

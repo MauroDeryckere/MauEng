@@ -120,12 +120,24 @@ namespace MauEng::ECS
 			}
 		}
 
+		/**
+		  * @brief Get component(s) from an entity in the view
+		  * @tparam ComponentTs Function type (usually automatically deduced)
+		  * @param id entity to get the components from
+		  * @return the component or a tuple with returned components
+		  * @warning An entity should own the component before using a get.
+		*/
 		template<typename... ComponentTs>
 		[[nodiscard]] auto Get(EntityID id) const noexcept
 		{
 			ME_ASSERT(Contains(id));
 			return m_View.template get<ComponentTs...>(static_cast<InternalEntityType>(id));
 		}
+		/**
+		  * @brief Get all components from an entity in the view, that are observed by the view
+		  * @param id entity to get the components from
+		  * @return the component or a tuple with returned components
+		*/
 		[[nodiscard]] auto Get(EntityID id) const noexcept
 		{
 			ME_ASSERT(Contains(id));
@@ -148,6 +160,7 @@ namespace MauEng::ECS
 			return (m_View.template any_of<ComponentTs...>(static_cast<InternalEntityType>(id)));
 		}
 
+		// Try get the comp
 		template<typename ComponentType>
 		[[nodiscard]] ComponentType* TryGet(EntityID id) const noexcept
 		{
@@ -155,28 +168,32 @@ namespace MauEng::ECS
 			return m_View.template try_get<ComponentType>(static_cast<InternalEntityType>(id));
 		}
 
+		// Does the view contain this entity?
 		[[nodiscard]] bool Contains(EntityID id) const noexcept
 		{
 			return m_View.contains(static_cast<InternalEntityType>(id));
 		}
 
+		// Filter the view
 		template<typename Func>
 		void Where(Func&& func) noexcept
 		{
 			m_View.where(std::forward<Func>(func));
 		}
 
+		// Firt entity of the view
 		[[nodiscard]] EntityID Front() const noexcept
 		{
 			ME_ASSERT(!Empty());
 			return static_cast<EntityID>(m_View.front());
 		}
+
+		// Last entity of the view
 		[[nodiscard]] EntityID Back() const noexcept
 		{
 			ME_ASSERT(!Empty());
 			return static_cast<EntityID>(m_View.back());
 		}
-
 
 		[[nodiscard]] bool Empty() const noexcept { return m_View.empty(); }
 		[[nodiscard]] std::size_t Size() const noexcept { return m_View.size(); }
