@@ -202,8 +202,6 @@ namespace MauEng::ECS
 
 	private:
 		GroupType m_Group;
-
-		OwnedWrapper<> m_OwnedWrapper;  // Instance of OwnedWrapper
 	};
 }
 
