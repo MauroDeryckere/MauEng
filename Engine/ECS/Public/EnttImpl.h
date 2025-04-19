@@ -11,14 +11,31 @@ namespace MauEng::ECS
 	{
 		entt::registry registry{};
 
-		//TODO:
-		// REGISTRY
-		// erasing
-		// erase if
+#pragma region Registry
+		template<typename... ComponentTypes>
+		void Compact() noexcept
+		{
+			registry.compact<ComponentTypes...>();
+		}
 
-		// GROUP
-		// Sort
+		template<typename ComponentType>
+		[[nodiscard]] std::size_t ComponentCount() const noexcept
+		{
+			return registry.view<ComponentType>().size();
+		}
 
+		template <typename... ComponentTypes>
+		void Clear() noexcept
+		{
+			registry.clear<ComponentTypes...>();
+		}
+
+		template<typename ComponentType, typename It>
+		void Insert(It first, It last, ComponentType const& component)
+		{
+			registry.insert<ComponentType>(first, last, component);
+		}
+#pragma endregion
 		
 #pragma region Entities
 		[[nodiscard]] EntityID CreateEntity() noexcept
@@ -37,12 +54,6 @@ namespace MauEng::ECS
 		}
 
 		template <typename... ComponentTypes>
-		void Clear() noexcept
-		{
-			registry.clear<ComponentTypes...>();
-		}
-
-		template <typename... ComponentTypes>
 		[[nodiscard]] bool HasAllOfComponents(EntityID id) const noexcept
 		{
 			return registry.all_of<ComponentTypes...>(static_cast<entt::entity>(id));
@@ -51,6 +62,18 @@ namespace MauEng::ECS
 		[[nodiscard]] bool HasAnyOfComponents(EntityID id) const noexcept
 		{
 			return registry.any_of<ComponentTypes...>(static_cast<entt::entity>(id));
+		}
+
+		template<typename FirstComponentType, typename... OtherComponentTypes>
+		void Erase(EntityID id) noexcept
+		{
+			registry.erase<FirstComponentType, OtherComponentTypes...>(static_cast<entt::entity>(id));
+		}
+
+		template<typename FirstComponentType, typename... OtherComponentTypes, typename Iterator>
+		void Erase(Iterator begin, Iterator end) noexcept
+		{
+			registry.erase<FirstComponentType, OtherComponentTypes...>(begin, end);
 		}
 #pragma endregion
 
@@ -77,6 +100,11 @@ namespace MauEng::ECS
 		{
 			return registry.remove<ComponentTypes...>(static_cast<entt::entity>(id)) == sizeof...(ComponentTypes);
 		}
+		template <typename... ComponentTypes, typename Iterator>
+		[[nodiscard]] bool RemoveComponent(Iterator begin, Iterator end) noexcept
+		{
+			return registry.remove<ComponentTypes...>(begin, end) == sizeof...(ComponentTypes);
+		}
 
 		template<typename ComponentType>
 		[[nodiscard]] bool HasComponent(EntityID id) const noexcept
@@ -93,6 +121,24 @@ namespace MauEng::ECS
 		[[nodiscard]] ComponentType* TryGetComponent(EntityID id) noexcept
 		{
 			return registry.try_get<ComponentType>(static_cast<entt::entity>(id));
+		}
+
+		template<typename ComponentType, typename... Args>
+		[[nodiscard]] ComponentType& ReplaceComponent(EntityID id, Args&&... args) noexcept
+		{
+			return registry.replace<ComponentType>(static_cast<entt::entity>(id), std::forward<Args>(args)...);
+		}
+
+		template<typename ComponentType, typename... Args>
+		[[nodiscard]] ComponentType& AddOrReplaceComponent(EntityID id, Args&&... args) noexcept
+		{
+			return registry.emplace_or_replace<ComponentType>(static_cast<entt::entity>(id), std::forward<Args>(args)...);
+		}
+
+		template<typename ComponentType, typename... Args>
+		[[nodiscard]] ComponentType& GetOrEmplaceComponent(EntityID id, Args&&... args) noexcept
+		{
+			return registry.get_or_emplace<ComponentType>(static_cast<entt::entity>(id), std::forward<Args>(args)...);
 		}
 
 		template<typename ComponentType, typename Comparator>

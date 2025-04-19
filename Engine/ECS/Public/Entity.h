@@ -66,11 +66,24 @@ namespace MauEng
 		 * @tparam FirstComponentType Type of component to remove.
 		 * @tparam OtherComponentTypes Other types of component to remove.
 		 * @return If all listed component were removed.
+		 * @note Remove checks if the comp exists first, erase does not.
 		*/
 		template <typename FirstComponentType, typename... OtherComponentTypes>
 		bool RemoveComponent() noexcept
 		{
 			return m_pECSWorld->RemoveComponent<FirstComponentType, OtherComponentTypes...>(m_ID);
+		}
+
+		/**
+		 * @brief Remove components from the entity.
+		 * @tparam FirstComponentType Type of component to remove.
+		 * @tparam OtherComponentTypes Other types of component to remove.
+		 * @note Remove checks if the comp exists first, erase does not.
+		*/
+		template<typename FirstComponentType, typename... OtherComponentTypes>
+		void EraseComponent() noexcept
+		{
+			return m_pECSWorld->Erase<FirstComponentType, OtherComponentTypes...>(m_ID);
 		}
 
 		/**
@@ -129,6 +142,45 @@ namespace MauEng
 		{
 			return m_pECSWorld->TryGetComponent<ComponentType>(m_ID);
 		}
+
+		/**
+		 * @brief Replace a component form the entity.
+		 * @tparam ComponentType Type of component to construct.
+		 * @tparam Args Argument types to construct component.
+		 * @param args to construct the component.
+		 * @return Added component by reference.
+		*/
+		template<typename ComponentType, typename... Args>
+		ComponentType& ReplaceComponent(Args&&... args) noexcept
+		{
+			return m_pECSWorld->ReplaceComponent<ComponentType>(m_ID, std::forward<Args>(args)...);
+		}
+
+		/**
+		 * @brief Get or emplace a component in the ECS.
+		 * @tparam ComponentType Type of component to construct.
+		 * @tparam Args Argument types to construct component.
+		 * @param args to construct the component.
+		 * @return Added component by reference.
+		*/
+		template<typename ComponentType, typename... Args>
+		ComponentType& GetOrEmplaceComponent(Args&&... args) noexcept
+		{
+			return m_pECSWorld->GetOrEmplaceComponent<ComponentType>(m_ID, std::forward<Args>(args)...);
+		}
+		/**
+		 * @brief Add or replace a component in the ECS.
+		 * @tparam ComponentType Type of component to construct.
+		 * @tparam Args Argument types to construct component.
+		 * @param args to construct the component.
+		 * @return Added component by reference.
+		*/
+		template<typename ComponentType, typename... Args>
+		ComponentType& AddOrReplaceComponent(Args&&... args) noexcept
+		{
+			return m_pECSWorld->AddOrReplaceComponent<ComponentType>(m_ID, std::forward<Args>(args)...);
+		}
+
 #pragma endregion
 
 #pragma region operators

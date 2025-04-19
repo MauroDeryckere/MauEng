@@ -120,17 +120,23 @@ namespace MauEng::ECS
 			}
 		}
 
-		template<typename ComponentType>
-		[[nodiscard]] ComponentType& Get(EntityID id) const noexcept
+		template<typename... ComponentTs>
+		[[nodiscard]] auto Get(EntityID id) const noexcept
 		{
 			ME_ASSERT(Contains(id));
-			//ME_ASSERT((id));
-			return m_View.template get<ComponentType>(static_cast<InternalEntityType>(id));
+			return m_View.template get<ComponentTs...>(static_cast<InternalEntityType>(id));
 		}
+		[[nodiscard]] auto Get(EntityID id) const noexcept
+		{
+			ME_ASSERT(Contains(id));
+			return m_View.get(static_cast<InternalEntityType>(id));
+		}
+
 
 		template<typename ComponentType>
 		[[nodiscard]] ComponentType* TryGet(EntityID id) const noexcept
 		{
+			ME_ASSERT(Contains(id));
 			return m_View.template try_get<ComponentType>(static_cast<InternalEntityType>(id));
 		}
 

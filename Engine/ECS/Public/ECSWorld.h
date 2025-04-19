@@ -30,6 +30,12 @@ namespace MauEng::ECS
 		ECSWorld& operator=(ECSWorld const&) = delete;
 		ECSWorld& operator=(ECSWorld&&) = delete;
 
+		template<typename... ComponentTypes>
+		void Compact() noexcept
+		{
+			m_pImpl->Compact<ComponentTypes...>();
+		}
+
 #pragma region Entities
 		// Create an entity and add it to the ECS
 		[[nodiscard]] Entity CreateEntity() & noexcept;
@@ -80,9 +86,62 @@ namespace MauEng::ECS
 			return m_pImpl->HasAnyOfComponents<ComponentTypes...>(id);
 		}
 
+		/**
+		 * @brief Remove components from the entity.
+		 * @tparam FirstType Type of component to remove.
+		 * @tparam ComponentTypes Other types of component to remove.
+		 * @param id id to remove the component from.
+		 * @note Remove checks if the comp exists first, erase does not.
+		*/
+		template<typename FirstType, typename... ComponentTypes>
+		void Erase(EntityID id) noexcept
+		{
+			ME_ASSERT(IsValid(id));
+			ME_ASSERT(HasComponent<FirstType>(id));
+			ME_ASSERT(HasAllOfComponents<ComponentTypes...>(id));
+
+			m_pImpl->Erase<FirstType, ComponentTypes...>(id);
+		}
+
+		/**
+		 * @brief Remove components from the entity.
+		 * @tparam FirstType Type of component to remove.
+		 * @tparam ComponentTypes Other types of component to remove.
+		 * @tparam Iterator iterator type.
+		 * @param begin start of the range to remove components from.
+		 * @param end end of the range to remove components from.
+		 * @note Remove checks if the comp exists first, erase does not.
+		 * @warning There are no asserts here to check if the componennt exists when asserts are enabled
+		*/
+		template<typename FirstType, typename... ComponentTypes, typename Iterator>
+		void Erase(Iterator begin, Iterator end) noexcept
+		{
+			m_pImpl->Erase<FirstType, ComponentTypes...>(begin, end);
+		}
+
+		/**
+		 * @brief Add component to the entity.
+		 * @tparam ComponentType Type of component to insert.
+		 * @tparam It iterator type.
+		 * @param begin start of the range to add component to.
+		 * @param end end of the range to add component to.
+		 * @param component component to add
+		*/
+		template<typename ComponentType, typename It>
+		void Insert(It begin, It end, ComponentType const& component)
+		{
+			m_pImpl->Insert(begin, end, component);
+		}
+
 #pragma endregion
 
 #pragma region Components
+		template<typename ComponentType>
+		[[nodiscard]] std::size_t ComponentCount() const& noexcept
+		{
+			return m_pImpl->ComponentCount<ComponentType>();
+		}
+
 		/**
 		 * @brief Add a component to the ECS.
 		 * @tparam ComponentType Type of component to construct.
@@ -134,14 +193,31 @@ namespace MauEng::ECS
 		 * @brief Remove components from the entity.
 		 * @tparam FirstComponentType Type of component to remove.
 		 * @tparam OtherComponentTypes Other types to remove.
-		 * @param id to remove the component from.
-		 * @return If all of the listed components were removed.
+		 * @param id to remove the components from.
+		 * @return If all listed components were removed.
+		 * @note Remove checks if the comp exists first, erase does not.
 		*/
 		template <typename FirstComponentType, typename... OtherComponentTypes>
 		bool RemoveComponent(EntityID id) & noexcept
 		{
 			ME_ASSERT(IsValid(id));
 			return m_pImpl->RemoveComponent<FirstComponentType, OtherComponentTypes... >(id);
+		}
+
+		/**
+		 * @brief Remove components from the entity.
+		 * @tparam FirstComponentType Type of component to remove.
+		 * @tparam OtherComponentTypes Other types to remove.
+		 * @tparam Iterator iterator type.
+		 * @param begin begin of the range to remove.
+		 * @param end end of the range to remove.
+		 * @return If all listed components were removed.
+		 * @note Remove checks if the comp exists first, erase does not.
+		*/
+		template <typename FirstComponentType, typename... OtherComponentTypes, typename Iterator>
+		[[nodiscard]] bool RemoveComponent(Iterator begin, Iterator end) noexcept
+		{
+			return m_pImpl->RemoveComponent<FirstComponentType, OtherComponentTypes...>(begin, end);
 		}
 
 		/**
@@ -181,6 +257,56 @@ namespace MauEng::ECS
 			return m_pImpl->TryGetComponent<ComponentType>(id);
 		}
 
+		/**
+		 * @brief Replace a component in the ECS.
+		 * @tparam ComponentType Type of component to construct.
+		 * @tparam Args Argument types to construct component.
+		 * @param id to add the component to.
+		 * @param args to construct the component.
+		 * @return Added component by reference.
+		*/
+		template<typename ComponentType, typename... Args>
+			requires std::is_constructible_v<ComponentType, Args...>
+		ComponentType& ReplaceComponent(EntityID id, Args&&... args) noexcept
+		{
+			ME_ASSERT(IsValid(id));
+			ME_ASSERT(HasComponent<ComponentType>(id));
+
+			return m_pImpl->ReplaceComponent<ComponentType>(id, std::forward<Args>(args)...);
+		}
+
+		/**
+		 * @brief Add or replace a component in the ECS.
+		 * @tparam ComponentType Type of component to construct.
+		 * @tparam Args Argument types to construct component.
+		 * @param id to add the component to.
+		 * @param args to construct the component.
+		 * @return Added component by reference.
+		*/
+		template<typename ComponentType, typename... Args>
+			requires std::is_constructible_v<ComponentType, Args...>
+		ComponentType& AddOrReplaceComponent(EntityID id, Args&&... args) & noexcept
+		{
+			ME_ASSERT(IsValid(id));
+			return m_pImpl->AddOrReplaceComponent<ComponentType>(id, std::forward<Args>(args)...);
+		}
+
+		/**
+		 * @brief Get or emplace a component in the ECS.
+		 * @tparam ComponentType Type of component to construct.
+		 * @tparam Args Argument types to construct component.
+		 * @param id to add the component to.
+		 * @param args to construct the component.
+		 * @return Added component by reference.
+		*/
+		template<typename ComponentType, typename... Args>
+			requires std::is_constructible_v<ComponentType, Args...>
+		ComponentType& GetOrEmplaceComponent(EntityID id, Args&&... args) & noexcept
+		{
+			ME_ASSERT(IsValid(id));
+			return m_pImpl->GetOrEmplaceComponent<ComponentType>(id, std::forward<Args>(args)...);
+		}
+		
 		/**
 		 * @brief Sort a specific component type in the ECS.
 		 * @tparam ComponentType Type of component to sort.

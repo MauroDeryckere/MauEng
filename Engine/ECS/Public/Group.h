@@ -12,6 +12,8 @@
 
 namespace MauEng::ECS
 {
+	//TODO group sorting
+
 	template<typename... GetTypes>
 	using GetType = entt::get_t<GetTypes...>;
 
@@ -126,17 +128,13 @@ namespace MauEng::ECS
 		template<typename... ComponentTs>
 		[[nodiscard]] auto Get(EntityID id) const noexcept
 		{
+			ME_ASSERT(Contains(id));
 			return m_Group.template get<ComponentTs...>(static_cast<InternalEntityType>(id));
 		}
 		[[nodiscard]] auto Get(EntityID id) const noexcept
 		{
+			ME_ASSERT(Contains(id));
 			return m_Group.get(static_cast<InternalEntityType>(id));
-		}
-
-		template<typename ComponentType>
-		[[nodiscard]] ComponentType* TryGet(EntityID id) const noexcept
-		{
-			return m_Group.template try_get<ComponentType>(static_cast<InternalEntityType>(id));
 		}
 
 		[[nodiscard]] bool Contains(EntityID id) const noexcept
@@ -146,41 +144,8 @@ namespace MauEng::ECS
 		template<typename ComponentType>
 		[[nodiscard]] bool HasComponent(EntityID id) const noexcept
 		{
-			return m_Group.template contains<ComponentType>(static_cast<InternalEntityType>(id));
-		}
-
-		//TODO
-
-		// add a else if constexpr for a func() with comps
-		template<typename Func>
-			requires (std::is_invocable_v<Func, EntityID, EntityID>)
-		void Sort(Func&& func) noexcept
-		{
-			m_Group.sort([&](EntityID lhs, EntityID rhs) 
-				{
-					return func(lhs, rhs);
-				});
-		}
-
-		template<typename ComponentType, typename... Args>
-		void Emplace(EntityID id, Args&&... args) noexcept
-			requires std::constructible_from<ComponentType, Args...>
-		{
-			m_Group.template emplace<ComponentType>(static_cast<InternalEntityType>(id), std::forward<Args>(args)...);
-		}
-
-		/**
-		 * @brief Remove components from the entity.
-		 * @tparam FirstComponentType Type of component to remove.
-		 * @tparam OtherComponentTypes Other types to remove.
-		 * @param id to remove the component from.
-		 * @return If all of the listed components were removed.
-		*/
-		template <typename FirstComponentType, typename... OtherComponentTypes>
-		bool Remove(EntityID id) & noexcept
-		{
 			ME_ASSERT(Contains(id));
-			return m_Group.template remove<FirstComponentType, OtherComponentTypes...>(static_cast<InternalEntityType>(id)) == (sizeof...(OtherComponentTypes) + 1);
+			return m_Group.template contains<ComponentType>(static_cast<InternalEntityType>(id));
 		}
 
 		[[nodiscard]] EntityID Front() const noexcept
