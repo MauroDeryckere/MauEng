@@ -77,10 +77,7 @@ namespace MauRen
 			m_LoadedMeshes[m_NextID] = static_cast<uint32_t>(m_MeshData.size());
 			m_LoadedMeshes_Path[path] = static_cast<uint32_t>(m_MeshData.size());
 
-			MeshInstance i;
-
-			i.m_MaterialID = data.defaultMatID;
-			i.m_MeshID = m_NextID;
+			MeshInstance const meshInstance{ m_NextID, data.defaultMatID };
 
 			m_MeshData.emplace_back(data);
 
@@ -100,18 +97,16 @@ namespace MauRen
 
 			++m_NextID;
 
-			return i;
+			return meshInstance;
 		}
 		else
 		{
 			auto const& data{ m_MeshData[it->second] };
-
-			MeshInstance i{};
-			i.m_MeshID = data.meshID;
-			i.m_MaterialID = data.defaultMatID;
-
+			MeshInstance const i{ data.meshID , data.defaultMatID };
 			return i;
 		}
+
+		return MeshInstance{};
 	}
 
 	MeshData const& VulkanMeshManager::GetMesh(uint32_t meshID) const
