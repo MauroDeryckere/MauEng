@@ -7,23 +7,55 @@ namespace MauEng
 {
 	struct CTransform final
 	{
+        glm::vec3 translation{ };
+        MauCor::Rotator rotation{ };
+        glm::vec3 scale{ 1.0f };
+
 		glm::mat4 mat{ 1.0f };
 
-        void Translate(glm::vec3 const& translation) noexcept
+        bool isDirty{ false };
+
+        void Translate(glm::vec3 const& t) noexcept
         {
-            mat = glm::translate(mat, translation);
+            translation += t;
+            isDirty = true;
         }
+
         void ResetTransformation() noexcept
         {
-            mat = glm::mat4{ 1.0f };
+            translation = glm::vec3{ 0.0f };
+            rotation = MauCor::Rotator{};
+            scale = glm::vec3{ 1.0f };
+            isDirty = true;
         }
+
         void Rotate(MauCor::Rotator const& rotator) noexcept
         {
-            mat *= glm::toMat4(rotator.rotation);
+            rotation = rotation * rotator;
+            isDirty = true;
         }
+
         void Scale(glm::vec3 const& s) noexcept
         {
-            mat = glm::scale(mat, s);
+            scale *= s;
+            isDirty = true;
+        }
+
+        void UpdateMatrix() noexcept
+        {
+            if (isDirty)
+            {
+                mat = glm::translate(glm::mat4(1.0f), translation);
+                mat *= glm::toMat4(rotation.rotation);
+                mat = glm::scale(mat, scale);
+                isDirty = false; 
+            }
+        }
+
+        [[nodiscard]] glm::mat4 GetMatrix() noexcept
+        {
+            UpdateMatrix();
+            return mat;
         }
     };
 }

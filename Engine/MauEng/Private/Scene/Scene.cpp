@@ -6,12 +6,23 @@ namespace MauEng
 	{
 		ME_PROFILE_FUNCTION()
 		{
-			ME_PROFILE_SCOPE("QUEUE DRAWS")
 			auto group{ GetECSWorld().Group<CStaticMesh, CTransform>() };
-			group.Each([](CStaticMesh const& m, CTransform const& t)
-						{
-							RENDERER.QueueDraw(t.mat, m);
-						});
+
+			{
+				ME_PROFILE_SCOPE("UPDATE MATS")
+				group.Each([](CStaticMesh const& m, CTransform& t)
+					{
+						t.UpdateMatrix();
+					}, std::execution::par_unseq);
+			}
+
+			{
+				ME_PROFILE_SCOPE("QUEUE DRAWS")
+				group.Each([](CStaticMesh const& m, CTransform const& t)
+							{
+								RENDERER.QueueDraw(t.mat, m);
+							});
+			}
 		}
 	}
 
