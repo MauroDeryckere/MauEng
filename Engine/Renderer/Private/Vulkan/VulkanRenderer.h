@@ -25,6 +25,11 @@
 // https://blog.traverseresearch.nl/bindless-rendering-setup-afeb678d77fc
 // DAE course - Graphics Programming 2
 
+namespace MauEng
+{
+	struct CStaticMesh;
+}
+
 namespace MauRen
 {
 	class VulkanRenderer final : public Renderer
@@ -39,7 +44,8 @@ namespace MauRen
 		virtual void Render(glm::mat4 const& view, glm::mat4 const& proj) override;
 		virtual void ResizeWindow() override;
 
-		virtual void UpLoadModel(Mesh& mesh) override;
+		virtual void QueueDraw(glm::mat4 const& transformMat, MauEng::CStaticMesh const& mesh) override;
+		virtual MeshInstance LoadOrGetMeshData(char const* path) override;
 
 		VulkanRenderer(VulkanRenderer const&) = delete;
 		VulkanRenderer(VulkanRenderer&&) = delete;

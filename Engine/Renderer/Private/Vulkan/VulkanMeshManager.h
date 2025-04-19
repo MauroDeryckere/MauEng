@@ -9,6 +9,7 @@
 
 namespace MauRen
 {
+	class VulkanDescriptorContext;
 	class VulkanCommandPoolManager;
 
 	class VulkanMeshManager final : public MauCor::Singleton<VulkanMeshManager>
@@ -17,14 +18,13 @@ namespace MauRen
 		bool Initialize(VulkanCommandPoolManager const * CmdPoolManager);
 		bool Destroy();
 
-		void LoadMesh(Mesh& mesh);
+		MeshInstance LoadMesh(char const* path, VulkanCommandPoolManager& cmdPoolManager, VulkanDescriptorContext& descriptorContext);
 
 		[[nodiscard]] MeshData const& GetMesh(uint32_t meshID) const;
 
-		__forceinline void QueueDraw(MeshInstance const* instance)
+		__forceinline void QueueDraw(glm::mat4 const& transformMat, uint32_t meshID, uint32_t materialID)
 		{
-			uint32_t const meshID{ instance->GetMeshID() };
-			m_MeshInstanceData.emplace_back(instance->GetModelMatrix(), meshID, instance->GetMaterialID(), 0, 0);
+			m_MeshInstanceData.emplace_back(transformMat, meshID, materialID, 0, 0);
 
 			if (m_BatchedDrawCommands[meshID] != UINT32_MAX)
 			{
@@ -78,6 +78,8 @@ namespace MauRen
 
 		// maps mesh ID -> index into m_MeshData
 		std::unordered_map<uint32_t, uint32_t> m_LoadedMeshes;
+		// map path into m_MeshData
+		std::unordered_map<char const*, uint32_t> m_LoadedMeshes_Path;
 
 
 		uint32_t m_CurrentVertexOffset{ 0 };

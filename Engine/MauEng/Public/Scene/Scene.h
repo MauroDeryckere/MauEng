@@ -2,6 +2,13 @@
 #define MAUENG_SCENE_H
 
 #include "CameraManager.h"
+//TODO fix
+//#include "ECSWorld.h"
+
+#include "../../ECS/Public/ECSWorld.h"
+#include "../../ECS/Public/Entity.h"
+
+#include "Components/CTransform.h"
 
 namespace MauEng
 {
@@ -22,10 +29,18 @@ namespace MauEng
 		}
 
 		// Called to render the scene
-		virtual void OnRender() const {}
+		virtual void OnRender() const;
 
 		// Called when the scene is unloaded
 		virtual void OnUnload(){}
+
+#pragma region ECS
+		[[nodiscard]] Entity CreateEntity();
+		void DestroyEntity(Entity entity);
+
+		[[nodiscard]] ECS::ECSWorld& GetECSWorld() noexcept { return m_ECSWorld; }
+		[[nodiscard]] ECS::ECSWorld const& GetECSWorld() const noexcept { return m_ECSWorld; }
+#pragma endregion
 
 		[[nodiscard]] CameraManager const& GetCameraManager() const noexcept { return m_CameraManager; }
 		[[nodiscard]] CameraManager& GetCameraManager() noexcept { return m_CameraManager; }
@@ -39,6 +54,7 @@ namespace MauEng
 		CameraManager m_CameraManager{ };
 
 	private:
+		mutable ECS::ECSWorld m_ECSWorld{ };
 
 	};
 }

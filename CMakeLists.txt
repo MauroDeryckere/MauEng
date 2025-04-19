@@ -10,6 +10,11 @@ project ("VulkanEngine")
 
 # Set the name of the executable
 set(EXECUTABLE_NAME "VulkanEngine")
+add_executable(${EXECUTABLE_NAME})
+set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${EXECUTABLE_NAME})
+set_target_properties(${EXECUTABLE_NAME} PROPERTIES
+    VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}"
+)
 
 # @ENDREGION PROJECT SETUP
 
@@ -21,6 +26,13 @@ message(STATUS "Engine dir created! ")
 
 add_subdirectory ("Game")
 message(STATUS "Game dir created! \n")
+
+if(${MAUENG_ENABLE_TESTS})
+    add_subdirectory("Tests")
+    message(STATUS "Tests dir created! \n")
+else()
+     message(STATUS "Tests are disabled!")
+endif()
 
 # @ENDREGION SOURCE FILES & LIBRARIES
 
@@ -107,6 +119,3 @@ add_custom_target(
 add_dependencies(${EXECUTABLE_NAME} shaders)
 
 # @ENDREGION PLATFORMS AND RESOURCES
-
-# on Visual Studio, set our app as the default project
-set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${EXECUTABLE_NAME})

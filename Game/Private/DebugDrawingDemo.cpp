@@ -1,16 +1,14 @@
 #include "PCH.h"
 
-#include "GameScene.h"
+#include "DebugDrawingDemo.h"
 #include <iostream>
 
 #include "GameTime.h"
 #include <glm/glm.hpp>
 
-#include <random>  // For random number generation
-
 namespace MauGam
 {
-	GameScene::GameScene()
+	DebugDrawingScene::DebugDrawingScene()
 	{
 		ME_PROFILE_FUNCTION()
 
@@ -19,48 +17,9 @@ namespace MauGam
 
 		m_CameraManager.GetActiveCamera().Focus({ 0,0,1 });
 
-		using namespace MauRen;
-		// init meshes
-		Mesh m1{ "Resources/Models/Gun.obj" };
-		Mesh m2{ "Resources/Models/Skull.obj" };
-
-		RENDERER.UpLoadModel(m1);
-		RENDERER.UpLoadModel(m2);
-
-		// Skulls
-		MeshInstance mi1{ m2 };
-		mi1.Translate({ 5, 5,  -20 });
-		mi1.Scale({ .3f, .3f, .3f });
-		mi1.Rotate({ 270, 0, 0 });
-
-		MeshInstance mi2{ m2 };
-		mi2.Translate({ -5, 5,  -20 });
-		mi2.Scale({ .3f, .3f, .3f });
-		mi2.Rotate({ 270, 0, 0 });
-
-		// Gun
-		MeshInstance mi3{ m1 };
-		mi3.Translate({ 0, 2,  0 });
-		mi3.Scale({ 5.f, 5.f, 5.f });
-
-		std::random_device rd;  // Random device for seed
-		std::mt19937 gen(rd()); // Mersenne Twister generator
-		std::uniform_real_distribution<float> dis(-20.0f, 20.0f); // Random translation range
-
-		m_Mehses.emplace_back(mi1);
-		m_Mehses.emplace_back(mi2);
-		for (size_t i = 0; i < 99'000; i++)
-		{
-			m_Mehses.emplace_back(mi3);
-
-			m_Mehses.back().Translate({ dis(gen), dis(gen), dis(gen) });
-		}
-		m_Mehses.emplace_back(mi3);
-
-
 		// Setup input
 		auto& input{ INPUT_MANAGER };
-		input.BindAction("MoveUp", MauEng::KeyInfo{SDLK_UP, MauEng::KeyInfo::ActionType::Held });
+		input.BindAction("MoveUp", MauEng::KeyInfo{ SDLK_UP, MauEng::KeyInfo::ActionType::Held });
 		input.BindAction("MoveLeft", MauEng::KeyInfo{ SDLK_LEFT, MauEng::KeyInfo::ActionType::Held });
 		input.BindAction("MoveRight", MauEng::KeyInfo{ SDLK_RIGHT, MauEng::KeyInfo::ActionType::Held });
 		input.BindAction("MoveDown", MauEng::KeyInfo{ SDLK_DOWN, MauEng::KeyInfo::ActionType::Held });
@@ -74,23 +33,20 @@ namespace MauGam
 		input.BindAction("Rotate", MauEng::MouseInfo{ {},   MauEng::MouseInfo::ActionType::Moved });
 	}
 
-	void GameScene::OnLoad()
+	void DebugDrawingScene::OnLoad()
 	{
 		ME_PROFILE_FUNCTION()
 
-		Scene::OnLoad();
-		
+			Scene::OnLoad();
+
 		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "Demo Scene Loaded! ");
 	}
 
-	void GameScene::Tick()
+	void DebugDrawingScene::Tick()
 	{
 		ME_PROFILE_FUNCTION()
 
 		Scene::Tick();
-		// Demo logging tests
-		//LOGGER.Log(MauCor::LogPriority::Error, MauCor::LogCategory::Game,"test {}", 1000);
-		//ME_LOG_ERROR(MauCor::LogCategory::Game, "TEST");
 
 		auto const& input{ INPUT_MANAGER };
 
@@ -143,30 +99,16 @@ namespace MauGam
 			m_CameraManager.GetActiveCamera().RotateX(mouseMovement.first * rot);
 			m_CameraManager.GetActiveCamera().RotateY(-mouseMovement.second * rot);
 		}
-
-		// 90 degrees per second
-		float constexpr rotationSpeed{ 90.0f };
-		m_Mehses[0].Rotate({ 0, 0, rotationSpeed * TIME.ElapsedSec() });
-		m_Mehses[1].Rotate({ 0, 0, -rotationSpeed * TIME.ElapsedSec() });
-		m_Mehses[2].Rotate({ 0, rotationSpeed * TIME.ElapsedSec() });
-
-		DemoDebugDrawing();
 	}
 
-	void GameScene::OnRender() const
+	void DebugDrawingScene::OnRender() const
 	{
 		Scene::OnRender();
-		{
-			ME_PROFILE_SCOPE("Queue draws");
-			for (auto const& m : m_Mehses)
-			{
-				m.Draw();
-			}
-		}
 
+		DrawDebug();
 	}
 
-	void GameScene::DemoDebugDrawing()
+	void DebugDrawingScene::DrawDebug() const
 	{
 		ME_PROFILE_FUNCTION()
 
@@ -176,7 +118,7 @@ namespace MauGam
 		bool constexpr DRAW_TRIANGLES{ false };
 		bool constexpr DRAW_ARROWS{ false };
 		bool constexpr DRAW_CIRCLES{ false };
-		bool constexpr DRAW_SPHERES{ false };
+		bool constexpr DRAW_SPHERES{ true };
 		bool constexpr DRAW_CYL{ false };
 		bool constexpr DRAW_POLY{ false };
 
@@ -196,7 +138,7 @@ namespace MauGam
 			DEBUG_RENDERER.DrawLine({ 0, 0,0 }, { 100, 0, 0 }, { lineRot, lineRot, lineRot }, { 1, 1, 1 });
 
 			DEBUG_RENDERER.DrawLine({ 0, 0,0 }, { 10, 0, 0 }, { 0, lineRot, 0 }, { 1, 1, 0 });
-			DEBUG_RENDERER.DrawLine({ 0, 0,0 }, { 10, 0, 0 }, { 0, lineRot, 0 }, { 1, 1, 1 }, true, {100, 100, 100});
+			DEBUG_RENDERER.DrawLine({ 0, 0,0 }, { 10, 0, 0 }, { 0, lineRot, 0 }, { 1, 1, 1 }, true, { 100, 100, 100 });
 			DEBUG_RENDERER.DrawLine({ 0, 0,0 }, { 10, 0, 0 }, { 0, 0, lineRot }, { 1, 1, 0 });
 
 			lineRot += ROT_SPEED * TIME.ElapsedSec();
@@ -213,7 +155,7 @@ namespace MauGam
 			DEBUG_RENDERER.DrawCube({ 20, 20, 20 }, { 69, 20, 20 }, { 0, cubeRot, 0 });
 
 			DEBUG_RENDERER.DrawRect({ 0, 0, 0 }, { 20, 30 }, { 0, 0, cubeRot }, { 0, 1, 1 }, true, { 20, 20, 20 });
-			DEBUG_RENDERER.DrawCube({ 20, 20, 20 }, { 69, 20, 20 }, { 0, cubeRot, 0 }, {1, 1,0},true, { 0, 0, 0 });
+			DEBUG_RENDERER.DrawCube({ 20, 20, 20 }, { 69, 20, 20 }, { 0, cubeRot, 0 }, { 1, 1,0 }, true, { 0, 0, 0 });
 
 
 			cubeRot += CUBE_ROT_SPEED * TIME.ElapsedSec();
@@ -225,9 +167,9 @@ namespace MauGam
 			static float triRot{};
 
 			DEBUG_RENDERER.DrawTriangle({ 0,0,0 }, { 10, 10, 10 }, { 20, 10, 16 });
-			DEBUG_RENDERER.DrawTriangle({0,0,0}, {10, 10, 10}, {20, 10, 16}, {0, triRot, triRot }, {1, 1, 1});
+			DEBUG_RENDERER.DrawTriangle({ 0,0,0 }, { 10, 10, 10 }, { 20, 10, 16 }, { 0, triRot, triRot }, { 1, 1, 1 });
 
-			DEBUG_RENDERER.DrawTriangle({ 0,0,0 }, { 10, 10, 10 }, { 20, 10, 16 }, { 0, triRot, triRot }, { 1, 1, 1 }, true, {25,25, 0});
+			DEBUG_RENDERER.DrawTriangle({ 0,0,0 }, { 10, 10, 10 }, { 20, 10, 16 }, { 0, triRot, triRot }, { 1, 1, 1 }, true, { 25,25, 0 });
 
 
 			triRot += TRIANGLE_ROT_SPEED * TIME.ElapsedSec();
@@ -239,33 +181,33 @@ namespace MauGam
 			static float arrRot{};
 
 			DEBUG_RENDERER.DrawArrow({}, { 2, 3, 3 });
-			DEBUG_RENDERER.DrawArrow({}, { 2, 3, 3}, {0, arrRot, 0}, {1, 1, 1});
+			DEBUG_RENDERER.DrawArrow({}, { 2, 3, 3 }, { 0, arrRot, 0 }, { 1, 1, 1 });
 
 			DEBUG_RENDERER.DrawArrow({}, { 0, 0, 3 });
 			DEBUG_RENDERER.DrawArrow({}, { 0, 0, 3 }, { arrRot,0 , 0 }, { 1, 1, 1 });
 
-			DEBUG_RENDERER.DrawArrow({}, { 0, 0, 3 }, { arrRot,0 , 0 }, { 1, 1, 1 }, 1, true, {20, 20, 0});
+			DEBUG_RENDERER.DrawArrow({}, { 0, 0, 3 }, { arrRot,0 , 0 }, { 1, 1, 1 }, 1, true, { 20, 20, 0 });
 
 			arrRot += ARROW_ROT_SPEED * TIME.ElapsedSec();
 		}
 
-		if constexpr(DRAW_CIRCLES)
+		if constexpr (DRAW_CIRCLES)
 		{
 			static float constexpr CIRCLE_ROT_SPEED{ 10.f };
 			static float circleRot{};
 
 			DEBUG_RENDERER.DrawCircle({}, 20);
-			DEBUG_RENDERER.DrawCircle({}, 20, { circleRot, 0, 0 }, {1, 1, 1 });
+			DEBUG_RENDERER.DrawCircle({}, 20, { circleRot, 0, 0 }, { 1, 1, 1 });
 
 			DEBUG_RENDERER.DrawEllipse({}, { 100, 10 }, {}, { 0, 1, 0 });
-			DEBUG_RENDERER.DrawEllipse({}, {100, 10}, {circleRot}, { 1, 1, 1 });
+			DEBUG_RENDERER.DrawEllipse({}, { 100, 10 }, { circleRot }, { 1, 1, 1 });
 
-			DEBUG_RENDERER.DrawEllipse({}, { 100, 10 }, { circleRot }, { 1, 1, 1 }, 24, true, {20, 20, 0});
+			DEBUG_RENDERER.DrawEllipse({}, { 100, 10 }, { circleRot }, { 1, 1, 1 }, 24, true, { 20, 20, 0 });
 
 			circleRot += CIRCLE_ROT_SPEED * TIME.ElapsedSec();
 		}
 
-		if constexpr(DRAW_SPHERES)
+		if constexpr (DRAW_SPHERES)
 		{
 			static float constexpr SPHERE_ROT_SPEED{ 10.f };
 			static float sphereRot{};
@@ -274,29 +216,29 @@ namespace MauGam
 			DEBUG_RENDERER.DrawSphere({}, 20.f, sphereRot, { 0, 0,1 });
 
 			DEBUG_RENDERER.DrawSphere({ -10, -10, -10 }, 20.f, {}, { 1, 1, 0 });
-			DEBUG_RENDERER.DrawSphere({-10, -10, -10}, 20.f, sphereRot, {1,1,1});
+			DEBUG_RENDERER.DrawSphere({ -10, -10, -10 }, 20.f, sphereRot, { 1,1,1 });
 
 			DEBUG_RENDERER.DrawSphereComplex({ 20,20,20 }, 20.f, { }, { 1, 0, 0 }, 24, 6);
-			DEBUG_RENDERER.DrawSphereComplex({ 20,20,20 }, 20.f, { sphereRot }, {1, 1, 1}, 24, 6);
+			DEBUG_RENDERER.DrawSphereComplex({ 20,20,20 }, 20.f, { sphereRot }, { 1, 1, 1 }, 24, 6);
 
 			DEBUG_RENDERER.DrawEllipsoid({ -30, -30, 0 }, { 10, 20, 20 }, {});
-			DEBUG_RENDERER.DrawEllipsoid({ -30, -30, 0 }, { 10, 20, 20 }, { sphereRot }, {1, 1, 1} );
+			DEBUG_RENDERER.DrawEllipsoid({ -30, -30, 0 }, { 10, 20, 20 }, { sphereRot }, { 1, 1, 1 });
 
 			DEBUG_RENDERER.DrawEllipsoidComplex({ 0, 0, 50 }, { 20, 50, 20 }, {}, { 1, 0, 0 }, 100, 30);
 			DEBUG_RENDERER.DrawEllipsoidComplex({ 0, 0, 50 }, { 20, 50, 20 }, { sphereRot }, { 1, 1, 1 }, 100, 30);
 
-			DEBUG_RENDERER.DrawSphere({ 20, 20, 20 }, 1, {},  { .5, .5, 1 });
+			DEBUG_RENDERER.DrawSphere({ 20, 20, 20 }, 1, {}, { .5, .5, 1 });
 
 			DEBUG_RENDERER.DrawEllipsoidComplex({ 0, 0, -50 }, { 20, 50, 20 }, {}, { 1, 0, 1 }, 100, 30, false);
 			DEBUG_RENDERER.DrawEllipsoidComplex({ 0, 0, -50 }, { 20, 50, 20 }, {}, { 1, 1, 1 }, 100, 30, true);
-			DEBUG_RENDERER.DrawEllipsoidComplex({ 0, 0, -50 }, { 20, 50, 20 }, {}, { 1, 1, 1 }, 100, 30, true, {20, 20, 20});
-			DEBUG_RENDERER.DrawEllipsoidComplex({ 0, 0, -50 }, { 20, 50, 20 }, { 0, sphereRot }, { 1, 1, 0 }, 100, 30, true, {20, 20, 20});
+			DEBUG_RENDERER.DrawEllipsoidComplex({ 0, 0, -50 }, { 20, 50, 20 }, {}, { 1, 1, 1 }, 100, 30, true, { 20, 20, 20 });
+			DEBUG_RENDERER.DrawEllipsoidComplex({ 0, 0, -50 }, { 20, 50, 20 }, { 0, sphereRot }, { 1, 1, 0 }, 100, 30, true, { 20, 20, 20 });
 
 
 			sphereRot += SPHERE_ROT_SPEED * TIME.ElapsedSec();
 		}
 
-		if constexpr(DRAW_CYL)
+		if constexpr (DRAW_CYL)
 		{
 			static float constexpr CYL_ROT_SPEED{ 10.f };
 			static float cylRot{};
@@ -304,12 +246,12 @@ namespace MauGam
 			DEBUG_RENDERER.DrawCylinder({ -10, 0, -10 }, { 20, 100, 20 });
 			DEBUG_RENDERER.DrawCylinder({ -10, 0, -10 }, { 20, 100, 20 }, { cylRot, cylRot, cylRot }, { 1, 1, 1 });
 			DEBUG_RENDERER.DrawCylinder({ -10, 0, -10 }, { 20, 100, 20 }, { cylRot, cylRot, cylRot }, { 0, 1, 0 }, 24, true, { 20, 20, 20 });
-			DEBUG_RENDERER.DrawCylinder({ -10, 0, -10 }, {20, 100, 20}, {}, {0, 1, 1}, 24, true,{20, 20, 20});
+			DEBUG_RENDERER.DrawCylinder({ -10, 0, -10 }, { 20, 100, 20 }, {}, { 0, 1, 1 }, 24, true, { 20, 20, 20 });
 
 			cylRot += CYL_ROT_SPEED * TIME.ElapsedSec();
 		}
 
-		if constexpr(DRAW_POLY)
+		if constexpr (DRAW_POLY)
 		{
 			static float constexpr POL_ROT_SPEED{ 10.f };
 			static float polRot{};
@@ -317,13 +259,12 @@ namespace MauGam
 			DEBUG_RENDERER.DrawSphere({}, 1);
 
 			DEBUG_RENDERER.DrawPolygon({ {20, 0, 0}, { 30, 0, 0 }, {30, 10, 0}, {20, 10, 0} });
-			DEBUG_RENDERER.DrawPolygon({ {20, 0, 0}, { 30, 0,0 }, {30, 10, 0}, {20, 10, 0} }, { 0, polRot }, {1, 1, 1});
+			DEBUG_RENDERER.DrawPolygon({ {20, 0, 0}, { 30, 0,0 }, {30, 10, 0}, {20, 10, 0} }, { 0, polRot }, { 1, 1, 1 });
 
 			DEBUG_RENDERER.DrawPolygon({ {20, 0, 0}, { 30, 0, 0  }, {30, 10, 0 }, {20, 10, 0} }, { 0, polRot }, { 1, 1, 1 }, true);
 
 
 			polRot += POL_ROT_SPEED * TIME.ElapsedSec();
 		}
-
 	}
 }

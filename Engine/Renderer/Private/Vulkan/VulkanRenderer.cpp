@@ -14,6 +14,8 @@
 #include "DebugRenderer/InternalDebugRenderer.h"
 #include "DebugRenderer/NullDebugRenderer.h"
 
+#include "../../MauEng/Public/Components/CStaticMesh.h"
+
 namespace MauRen
 {
 	VulkanRenderer::VulkanRenderer(SDL_Window* pWindow, DebugRenderer& debugRenderer) :
@@ -150,10 +152,14 @@ namespace MauRen
 		m_FramebufferResized = true;
 	}
 
-	void VulkanRenderer::UpLoadModel(Mesh& mesh)
+	void VulkanRenderer::QueueDraw(glm::mat4 const& transformMat, MauEng::CStaticMesh const& mesh)
 	{
-		VulkanMeshManager::GetInstance().LoadMesh(mesh);
-		mesh.SetMaterialID(VulkanMaterialManager::GetInstance().LoadOrGetMaterial(m_CommandPoolManager, m_DescriptorContext, mesh.GetMaterial()));
+		VulkanMeshManager::GetInstance().QueueDraw(transformMat, mesh.meshID, mesh.materialID);
+	}
+
+	MeshInstance VulkanRenderer::LoadOrGetMeshData(char const* path)
+	{
+		return VulkanMeshManager::GetInstance().LoadMesh(path, m_CommandPoolManager, m_DescriptorContext);
 	}
 
 	void VulkanRenderer::CreateUniformBuffers()

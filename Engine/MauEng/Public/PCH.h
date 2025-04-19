@@ -7,4 +7,7 @@
 
 #include "CorePCH.h"
 
+#include "Components/CStaticMesh.h"
+#include "Components/CTransform.h"
+
 #endif

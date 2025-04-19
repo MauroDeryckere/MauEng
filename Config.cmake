@@ -23,6 +23,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
+option(MAUENG_ENABLE_TESTS "Enable Tests" ON)
 
 option(MAUENG_ENABLE_DEBUG_RENDERING "Enable debug rendering" ON)
 option(MAUENG_LOG_TO_FILE "Log to file" OFF)
@@ -37,6 +38,9 @@ option(MAUENG_USE_OPTICK "Use Optick instead of custom profiler" ON)
 
 # set(MAUENG_ENABLE_PROFILER ${MAUENG_ENABLE_PROFILER} CACHE BOOL "Enable profiling")
 # set(MAUENG_USE_OPTICK ${MAUENG_USE_OPTICK} CACHE BOOL "Use Optick instead of custom profiler")
+
+message(STATUS "Test: ")
+message(STATUS "ENABLE TESTS: ${MAUENG_ENABLE_TESTS}")
 
 message(STATUS "Debug config: ")
 message(STATUS "MAUENG_ENABLE_DEBUG_RENDERING: ${MAUENG_ENABLE_DEBUG_RENDERING}")

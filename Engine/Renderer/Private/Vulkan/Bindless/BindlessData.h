@@ -23,6 +23,10 @@ struct alignas(16) MeshData final
     uint32_t firstIndex;   // First index in global index buffer
     uint32_t indexCount;    // Indices to draw
     int32_t vertexOffset;  // Offset into big VBO, added to indices
+
+    uint32_t defaultMatID; // could be moved to sep buffer if necssary in future
+    uint32_t meshID;
+
     uint32_t flags;         // Flags for deletion or active status (E.g 0 = active, 1 = marked for deletion)
 };
 

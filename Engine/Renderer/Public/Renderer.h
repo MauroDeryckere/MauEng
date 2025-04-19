@@ -4,6 +4,11 @@
 #include "Mesh.h"
 #include "MeshInstance.h"
 
+namespace MauEng
+{
+	struct CStaticMesh;
+}
+
 struct SDL_Window;
 
 namespace MauRen
@@ -20,8 +25,8 @@ namespace MauRen
 
 		virtual void ResizeWindow() = 0;
 
-		// Upload model to the GPU
-		virtual void UpLoadModel(Mesh& mesh) = 0;
+		virtual void QueueDraw(glm::mat4 const& transformMat, MauEng::CStaticMesh const& mesh) = 0;
+		virtual MeshInstance LoadOrGetMeshData(char const* path) = 0;
 
 		Renderer(Renderer const&) = delete;
 		Renderer(Renderer&&) = delete;
