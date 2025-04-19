@@ -6,7 +6,7 @@
 
 namespace MauRen
 {
-    // Fo now we will only work with the diffuse texture, later support can be added for all other variables
+    // For now we will only work with the diffuse texture, later support can be added for all other variables
 	struct Material final
 	{
         std::string name;

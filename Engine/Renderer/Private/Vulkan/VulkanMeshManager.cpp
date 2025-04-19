@@ -11,7 +11,6 @@ namespace MauRen
 		m_CmdPoolManager = CmdPoolManager;
 
 		m_MeshData.reserve(MAX_MESHES);
-		InitializeMeshDataBuffers();
 
 		m_MeshInstanceDataBuffers.reserve(MAX_MESH_INSTANCES);
 		InitializeMeshInstanceDataBuffers();
@@ -37,11 +36,6 @@ namespace MauRen
 		}
 
 		for(auto& m : m_MeshInstanceDataBuffers)
-		{
-			m.buffer.Destroy();
-		}
-
-		for (auto& m : m_MeshDataBuffers)
 		{
 			m.buffer.Destroy();
 		}
@@ -200,25 +194,6 @@ namespace MauRen
 
 			// Persistent mapping
 			vkMapMemory(deviceContext->GetLogicalDevice(), m_MeshInstanceDataBuffers[i].buffer.bufferMemory, 0, BUFFER_SIZE, 0, &m_MeshInstanceDataBuffers[i].mapped);
-		}
-	}
-
-	void VulkanMeshManager::InitializeMeshDataBuffers()
-	{
-		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
-
-		VkDeviceSize constexpr BUFFER_SIZE{ sizeof(MeshData) * MAX_MESHES };
-
-		for (size_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; ++i)
-		{
-			m_MeshDataBuffers.emplace_back(VulkanMappedBuffer{
-												VulkanBuffer{BUFFER_SIZE,
-																	VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-																	VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT },
-												nullptr });
-
-			// Persistent mapping
-			vkMapMemory(deviceContext->GetLogicalDevice(), m_MeshDataBuffers[i].buffer.bufferMemory, 0, BUFFER_SIZE, 0, &m_MeshDataBuffers[i].mapped);
 		}
 	}
 

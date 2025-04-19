@@ -16,9 +16,8 @@ struct alignas(16) MeshInstanceData final
 };
 
 // NOT USED IN SHADER CURRENTLY
-//
 // Per mesh data
-struct alignas(16) MeshData final
+struct MeshData final
 {
     uint32_t firstIndex;   // First index in global index buffer
     uint32_t indexCount;    // Indices to draw

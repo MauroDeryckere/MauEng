@@ -58,10 +58,9 @@ namespace MauRen
 
 		// 1:1 copy w/ GPU buffers
 		std::vector<MeshInstanceData> m_MeshInstanceData;
-		std::vector<MeshData> m_MeshData;
-
 		std::vector<VulkanMappedBuffer> m_MeshInstanceDataBuffers;
-		std::vector<VulkanMappedBuffer> m_MeshDataBuffers;
+
+		std::vector<MeshData> m_MeshData;
 
 		// 1:1 copy w/ GPU buffers
 		std::vector<DrawCommand> m_DrawCommands;
@@ -81,13 +80,11 @@ namespace MauRen
 		// map path into m_MeshData
 		std::unordered_map<char const*, uint32_t> m_LoadedMeshes_Path;
 
-
 		uint32_t m_CurrentVertexOffset{ 0 };
 		uint32_t m_CurrentIndexOffset{ 0 };
 		uint32_t m_NextID{ 0 };
 
 		void InitializeMeshInstanceDataBuffers();
-		void InitializeMeshDataBuffers();
 		void InitializeDrawCommandBuffers();
 
 		void CreateVertexAndIndexBuffers();
