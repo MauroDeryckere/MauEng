@@ -5,7 +5,7 @@
 
 namespace MauEng
 {
-	struct CTransform final
+	struct alignas(16) CTransform final
 	{
         glm::vec3 translation{ };
         MauCor::Rotator rotation{ };
@@ -31,7 +31,7 @@ namespace MauEng
 
         void Rotate(MauCor::Rotator const& rotator) noexcept
         {
-            rotation = rotation * rotator;
+            rotation *= rotator;
             isDirty = true;
         }
 
@@ -43,13 +43,13 @@ namespace MauEng
 
         void UpdateMatrix() noexcept
         {
-            if (isDirty)
-            {
-                mat = glm::translate(glm::mat4(1.0f), translation);
-                mat *= glm::toMat4(rotation.rotation);
-                mat = glm::scale(mat, scale);
-                isDirty = false; 
-            }
+            if (!isDirty) return;
+            
+                mat = glm::translate(glm::mat4(1.0f), translation)
+                    * glm::toMat4(rotation.rotation)
+					* glm::scale(glm::mat4(1.0f), scale);
+
+				isDirty = false;
         }
 
         [[nodiscard]] glm::mat4 GetMatrix() noexcept

@@ -14,6 +14,7 @@ namespace MauGam
 		virtual void OnLoad() override;
 		virtual void Tick() override;
 	private:
+
 	};
 }
 

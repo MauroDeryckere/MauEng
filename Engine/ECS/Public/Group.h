@@ -184,17 +184,43 @@ namespace MauEng::ECS
 		  * @warning An entity should own the component before using a get.
 		*/
 		template<typename... ComponentTs>
-		[[nodiscard]] auto Get(EntityID id) const noexcept
+		[[nodiscard]] auto const& Get(EntityID id) const noexcept
 		{
 			ME_ASSERT(Contains(id));
 			return m_Group.template get<ComponentTs...>(static_cast<InternalEntityType>(id));
 		}
+
+		/**
+		  * @brief Get component(s) from an entity in the group
+		  * @tparam ComponentTs Function type (usually automatically deduced)
+		  * @param id entity to get the components from
+		  * @return the component or a tuple with returned components
+		  * @warning An entity should own the component before using a get.
+		*/
+		template<typename... ComponentTs>
+		[[nodiscard]] auto& Get(EntityID id) noexcept
+		{
+			ME_ASSERT(Contains(id));
+			return m_Group.template get<ComponentTs...>(static_cast<InternalEntityType>(id));
+		}
+
 		/**
 		  * @brief Get all components from an entity in the group, that are owned or observed by the group
-s		  * @param id entity to get the components from
+		  * @param id entity to get the components from
 		  * @return the component or a tuple with returned components
 		*/
-		[[nodiscard]] auto Get(EntityID id) const noexcept
+		[[nodiscard]] auto const& Get(EntityID id) const noexcept
+		{
+			ME_ASSERT(Contains(id));
+			return m_Group.get(static_cast<InternalEntityType>(id));
+		}
+
+		/**
+		  * @brief Get all components from an entity in the group, that are owned or observed by the group
+		  * @param id entity to get the components from
+		  * @return the component or a tuple with returned components
+		*/
+		[[nodiscard]] auto& Get(EntityID id) noexcept
 		{
 			ME_ASSERT(Contains(id));
 			return m_Group.get(static_cast<InternalEntityType>(id));

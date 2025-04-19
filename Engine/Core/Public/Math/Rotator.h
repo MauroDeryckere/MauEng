@@ -24,7 +24,14 @@ namespace MauCor
 		}
 
 		Rotator(glm::quat const& quat) : rotation { quat } { }
+
+		Rotator& operator*=(Rotator const& other) noexcept
+		{
+			rotation *= other.rotation;
+			return *this;
+		}
 	};
+
 
 	inline Rotator operator*(MauCor::Rotator const& lhs, MauCor::Rotator const& rhs) noexcept
 	{

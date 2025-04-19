@@ -139,6 +139,12 @@ namespace MauGam
 
 		using namespace MauEng;
 		{
+			std::random_device rd;  // Random device for seed 
+			std::mt19937 gen(rd()); // Mersenne Twister generator
+			std::uniform_real_distribution<float> dis(0,2); // Random translation range
+
+			int r = dis(gen);
+
 			float constexpr rotationSpeed{ 90.0f };
 			ME_PROFILE_SCOPE("UPDATES")
 			{
@@ -156,10 +162,15 @@ namespace MauGam
 					// Group is faster.
 					//ME_PROFILE_SCOPE("GROUP")
 
+					MauCor::Rotator const rot{ 0, rotationSpeed * TIME.ElapsedSec() };
 					auto group{ GetECSWorld().Group<CStaticMesh, CTransform>() };
-					group.Each([](CStaticMesh const& m, CTransform& t)
+					group.Each([&rot, &r, this](ECS::EntityID id, CStaticMesh const& m, CTransform& t)
 						{
-							t.Rotate({ 0, rotationSpeed * TIME.ElapsedSec() });
+							if (r++ % 2)
+							{
+								t.Rotate(rot);
+							}
+
 						}, std::execution::par_unseq);
 				}
 

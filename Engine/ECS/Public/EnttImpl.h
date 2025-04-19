@@ -88,7 +88,18 @@ namespace MauEng::ECS
 		template <typename ComponentType, typename ... Args>
 		ComponentType& AddComponent(EntityID id, Args&&... args) noexcept
 		{
-			return registry.emplace<ComponentType>(static_cast<entt::entity>(id), std::forward<Args>(args)...);
+			if constexpr (std::is_empty<ComponentType>::value)
+			{
+				// For tag components, just add the component without returning anything
+				registry.emplace<ComponentType>(static_cast<entt::entity>(id));
+				// We return a reference to a dummy static object to satisfy the return type
+				static ComponentType dummy;
+				return dummy;
+			}
+			else
+			{
+				return registry.emplace<ComponentType>(static_cast<entt::entity>(id), std::forward<Args>(args)...);
+			}
 		}
 
 		template <typename ComponentType>
