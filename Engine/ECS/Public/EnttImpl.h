@@ -141,6 +141,11 @@ namespace MauEng::ECS
 			return registry.get_or_emplace<ComponentType>(static_cast<entt::entity>(id), std::forward<Args>(args)...);
 		}
 
+		template<typename ComponentType1, typename ComponentType2>
+		void Sort() noexcept
+		{
+			registry.sort<ComponentType1, ComponentType2>();
+		}
 		template<typename ComponentType, typename Comparator>
 		void Sort(Comparator comp) noexcept
 		{

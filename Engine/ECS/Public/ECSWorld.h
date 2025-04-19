@@ -315,10 +315,30 @@ namespace MauEng::ECS
 		*/
 		template<typename ComponentType, typename Compare>
 			requires std::invocable<Compare, ComponentType const&, ComponentType const&>
+				  || std::invocable<Compare, EntityID, EntityID>
 		void Sort(Compare&& compare) & noexcept
 		{
-			m_pImpl->Sort<ComponentType>(std::forward<Compare>(compare));
+			m_pImpl->Sort<ComponentType>(
+				[compare = std::forward<Compare>(compare)]
+						(auto lhs, auto rhs) {
+						  // Cast from entt::entity to EntityID before passing to compare
+						  if constexpr (std::invocable<Compare, EntityID, EntityID>) 
+						  {
+							  return compare(static_cast<EntityID>(lhs), static_cast<EntityID>(rhs));
+						  }
+						  else 
+						  {
+							  return compare(lhs, rhs);
+						  }
+			  });
 		}
+
+		template<typename ComponentType1, typename ComponentType2>
+		void Sort() & noexcept
+		{
+			m_pImpl->Sort<ComponentType1, ComponentType2>();
+		}
+
 #pragma endregion
 
 #pragma region ViewsAndGroups
