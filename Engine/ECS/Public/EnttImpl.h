@@ -35,6 +35,13 @@ namespace MauEng::ECS
 		{
 			registry.insert<ComponentType>(first, last, component);
 		}
+
+		template<typename... ComponentTypes>
+		[[nodiscard]] bool IsOwned() const noexcept
+		{
+			return registry.owned<ComponentTypes...>();
+		}	
+
 #pragma endregion
 		
 #pragma region Entities

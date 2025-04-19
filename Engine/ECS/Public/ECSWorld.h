@@ -5,6 +5,7 @@
 #include <memory>
 #include <concepts>
 
+#include "CoreServiceLocator.h"
 #include "Asserts/Asserts.h"
 
 #include "EnttImpl.h"
@@ -31,9 +32,15 @@ namespace MauEng::ECS
 		ECSWorld& operator=(ECSWorld&&) = delete;
 
 		template<typename... ComponentTypes>
-		void Compact() noexcept
+		void Compact()& noexcept
 		{
 			m_pImpl->Compact<ComponentTypes...>();
+		}
+
+		template<typename... ComponentTypes>
+		[[nodiscard]] bool IsOwned() const& noexcept
+		{
+			return m_pImpl->IsOwned<ComponentTypes...>();
 		}
 
 #pragma region Entities
@@ -318,24 +325,33 @@ namespace MauEng::ECS
 				  || std::invocable<Compare, EntityID, EntityID>
 		void Sort(Compare&& compare) & noexcept
 		{
-			m_pImpl->Sort<ComponentType>(
-				[compare = std::forward<Compare>(compare)]
-						(auto lhs, auto rhs) {
-						  // Cast from entt::entity to EntityID before passing to compare
-						  if constexpr (std::invocable<Compare, EntityID, EntityID>) 
-						  {
-							  return compare(static_cast<EntityID>(lhs), static_cast<EntityID>(rhs));
-						  }
-						  else 
-						  {
-							  return compare(lhs, rhs);
-						  }
-			  });
+			if (IsOwned<ComponentType>())
+			{
+				// Could get the group and do the sort there automatically too
+				ME_LOG(MauCor::LogPriority::Error, MauCor::LogCategory::Engine, "Can not sort, trying to sort owned components (use group sort)");
+				return;
+			}
+
+			if constexpr (std::invocable<Compare, EntityID, EntityID>)
+			{
+				m_pImpl->Sort<ComponentType>([&](InternalEntityType lhs, InternalEntityType rhs) { return compare(static_cast<EntityID>(lhs), static_cast<EntityID>(rhs)); });
+			}
+			else if constexpr (std::invocable<Compare, ComponentType const&, ComponentType const&>)
+			{
+				m_pImpl->Sort<ComponentType>(std::forward<Compare>(compare));
+			}
 		}
 
 		template<typename ComponentType1, typename ComponentType2>
 		void Sort() & noexcept
 		{
+			if (IsOwned<ComponentType1, ComponentType2>())
+			{
+				// Could get the group and do the sort there automatically too
+				ME_LOG(MauCor::LogPriority::Error, MauCor::LogCategory::Engine, "Can not sort, trying to sort owned components (use group sort)");
+				return;
+			}
+
 			m_pImpl->Sort<ComponentType1, ComponentType2>();
 		}
 
