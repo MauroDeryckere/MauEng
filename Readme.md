@@ -1,5 +1,21 @@
 # 3D Game Engine Project
 
+## Table of Contents
+- [3D Game Engine Project](#3d-game-engine-project)
+  - [Table of Contents](#table-of-contents)
+  - [Introduction](#introduction)
+  - [Core](#core)
+	- [Logging](#logging)
+	- [Debugging - Asserts](#debugging---asserts)
+	- [Profiling](#profiling)
+  - [Engine](#engine)
+	- [Component System](#component-system)
+	- [Renderer](#renderer)
+	  - [Coordinate System](#coordinate-system)
+	  - [Features](#features)
+	  - [Features I want to add inn the near future](#features-i-want-to-add-inn-the-near-future)
+	  - [Debug Rendering](#debug-rendering)
+
 ## Core
 
 ### Logging
@@ -65,11 +81,12 @@ void Render(){
 Profiling only happens when it is enabled in the Config.cmake file.
 
 
-
 ## Engine
 
-## Renderer
+## Component System
+The engine currently uses a wrapper around entts component system, it supports almost all functions entt offers.
 
+## Renderer
 ### Coordinate System
 In this project, we use a right-handed 3D coordinate system with the following conventions:
 **X-axis:** Represents the horizontal direction.
@@ -83,6 +100,24 @@ In this project, we use a right-handed 3D coordinate system with the following c
 **Z-axis**: Represents the depth direction.
 - Positive Z moves forward (towards the camera's view).
 - Negative Z moves backward (away from the camera's view).
+
+### Features
+- Instanced Rendering
+As a test I loaded a mesh with 100 000 instances. The mesh is a simple gun and has 1425 indices and 311 vertices.
+![Screenshot](docs/ZoomedOutInstances.png)
+![Screenshot](docs/ZoomedInInstances.png)
+
+- Bindless (indirect) Rendering
+The renderer uses a global index and vertex buffer, draw commands are batched and issued using vkCmdDrawIndexedIndirect. Textures are in a descriptor array.
+
+- Material support (loading a material from a file)
+.mtl are loaded based on the .obj fil, and the diffuse texture is loaded from this.
+
+### Features I want to add inn the near future
+- Full material support (currently only supports diffuse textures)
+- Lighting
+- Deleting / hiding meshes
+- GPU frustrum culling
 
 ### Debug Rendering
 Easy to use API for debug rendering.
