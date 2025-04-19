@@ -3,6 +3,8 @@
 
 #include <memory>
 
+struct SDL_Window;
+
 namespace MauRen
 {
 	class Renderer;

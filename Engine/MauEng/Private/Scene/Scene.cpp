@@ -1,16 +1,18 @@
 #include "Scene/Scene.h"
 
+#include "InternalServiceLocator.h"
+
 namespace MauEng
 {
 	void Scene::OnRender() const
 	{
 		ME_PROFILE_FUNCTION()
 		{
+			//GetECSWorld(). ;
 			{
 				auto const view = GetECSWorld().View<CTransform>();
 				ME_PROFILE_SCOPE("UPDATE MATRICES")
-					view.Each([](CTransform& t)
-					{
+					view.Each([](CTransform& t){
 						t.UpdateMatrix();
 					}, std::execution::par_unseq);
 			}

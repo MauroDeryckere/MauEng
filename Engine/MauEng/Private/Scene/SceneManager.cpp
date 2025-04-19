@@ -1,5 +1,6 @@
 #include "Scene/SceneManager.h"
 
+#include "InternalServiceLocator.h"
 #include "ServiceLocator.h"
 
 namespace MauEng

@@ -1,8 +1,6 @@
 #ifndef MAUREN_MESHINSTANCE_H
 #define MAUREN_MESHINSTANCE_H
 
-#include "Mesh.h"
-
 #include "Math/Rotator.h"
 
 #include <glm/mat4x4.hpp>
@@ -14,7 +12,6 @@ namespace MauRen
 	{
 	public:
 		MeshInstance() = default;
-		MeshInstance(Mesh const& mesh);
 		~MeshInstance() = default;
 
 		void Draw() const;

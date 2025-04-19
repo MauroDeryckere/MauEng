@@ -1,9 +1,7 @@
 #ifndef MAUENG_SERVICELOCATOR_H
 #define MAUENG_SERVICELOCATOR_H
 
-#include "Renderer.h"
 #include "DebugRenderer.h"
-
 #include "GameTime.h"
 #include "Scene/SceneManager.h"
 #include "Input/InputManager.h"
@@ -18,9 +16,6 @@ namespace MauEng
 	class ServiceLocator final
 	{
 	public:
-		[[nodiscard]] static MauRen::Renderer& GetRenderer() { return (*m_pRenderer); }
-		static void RegisterRenderer(std::unique_ptr<MauRen::Renderer>&& pRenderer);
-
 		[[nodiscard]] static MauRen::DebugRenderer& GetDebugRenderer() { return (*m_pDebugRenderer); }
 		static void RegisterDebugRenderer(std::unique_ptr<MauRen::DebugRenderer>&& pRenderer);
 
@@ -29,13 +24,11 @@ namespace MauEng
 		[[nodiscard]] static MauEng::InputManager& GetInputManager() { return MauEng::InputManager::GetInstance(); }
 
 	private:
-		static std::unique_ptr<MauRen::Renderer> m_pRenderer;
 		static std::unique_ptr<MauRen::DebugRenderer> m_pDebugRenderer;
 	};
 
 #pragma region EasyAccessHelper
 	// Macros
-	#define RENDERER MauEng::ServiceLocator::GetRenderer()
 	#define DEBUG_RENDERER MauEng::ServiceLocator::GetDebugRenderer()
 
 	#define TIME MauEng::ServiceLocator::GetTime()

@@ -31,11 +31,11 @@ namespace MauRen
 	static_assert(MAX_FRAMES_IN_FLIGHT > 0);
 
 	// These are ust arbitrary numbers for now, they have to actally be calculated in the futrue
-	uint32_t constexpr MAX_TEXTURES{ 1024 };			// For texture array
+	uint32_t constexpr MAX_TEXTURES{ 4'048 };			// For texture array
 	uint32_t constexpr MAX_MATERIALS{ 512 };			// Matches MaterialData[] buffer
 
-	uint32_t constexpr MAX_MESH_INSTANCES{ 100'000 };	// Matches MeshInstanceData[] buffer
-	uint32_t constexpr MAX_MESHES{ 512 };				// Matches MeshData[] buffer
+	uint32_t constexpr MAX_MESH_INSTANCES{ 5'000'000 };	// Matches MeshInstanceData[] buffer
+	uint32_t constexpr MAX_MESHES{ 4'048 };				// Matches MeshData[] buffer
 
 	uint32_t constexpr MAX_DRAW_COMMANDS{ 20'000 };		// Matches DrawCommand[] buffer
 

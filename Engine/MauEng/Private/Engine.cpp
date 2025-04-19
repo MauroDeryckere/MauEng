@@ -16,6 +16,7 @@
 #include "glm/glm.hpp"
 #include <SDL3/SDL.h>
 
+#include "InternalServiceLocator.h"
 #include "Logger/logger.h"
 
 #include "Input/KeyInfo.h"
@@ -42,8 +43,8 @@ namespace MauEng
 			ServiceLocator::RegisterDebugRenderer(MauRen::CreateDebugRenderer(false));
 		}
 
-		ServiceLocator::RegisterRenderer(MauRen::CreateVulkanRenderer(m_Window->window, DEBUG_RENDERER));
-		ServiceLocator::GetRenderer().Init();
+		InternalServiceLocator::RegisterRenderer(MauRen::CreateVulkanRenderer(m_Window->window, DEBUG_RENDERER));
+		InternalServiceLocator::GetRenderer().Init();
 
 		m_Window->Initialize();
 
@@ -60,7 +61,7 @@ namespace MauEng
 	Engine::~Engine()
 	{
 		// Cleanup all core dependences & singletons
-		ServiceLocator::GetRenderer().Destroy();
+		InternalServiceLocator::GetRenderer().Destroy();
 	}
 
 	void Engine::Run(std::function<void()> const& load)

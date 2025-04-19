@@ -1,7 +1,6 @@
 #ifndef MAUGAM_DEBUGDRAWINGSCENE_H
 #define MAUGAM_DEBUGDRAWINGSCENE_H
 
-#include "MeshInstance.h"
 #include "Scene/Scene.h"
 
 namespace MauGam

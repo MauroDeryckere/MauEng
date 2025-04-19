@@ -1,5 +1,7 @@
 #include "Components/CStaticMesh.h"
 
+#include "InternalServiceLocator.h"
+#include "MeshInstance.h"
 namespace MauEng
 {
 	CStaticMesh::CStaticMesh(char const* path)

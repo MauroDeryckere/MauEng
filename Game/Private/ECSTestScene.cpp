@@ -44,9 +44,9 @@ namespace MauGam
 		{
 			std::random_device rd;  // Random device for seed 
 			std::mt19937 gen(rd()); // Mersenne Twister generator
-			std::uniform_real_distribution<float> dis(-20.0f, 20.0f); // Random translation range
+			std::uniform_real_distribution<float> dis(-30.0f, 30.0f); // Random translation range
 
-			for (size_t i = 0; i < 99'000; i++)
+			for (size_t i { 0 }; i < 100'000; i++)
 			{
 				Entity entGUN{ CreateEntity() };
 				auto& transform = entGUN.GetComponent<CTransform>();
@@ -145,7 +145,7 @@ namespace MauGam
 
 			int r = dis(gen);
 
-			float constexpr rotationSpeed{ 90.0f };
+			float constexpr rotationSpeed{ 90.0f * 2 };
 			ME_PROFILE_SCOPE("UPDATES")
 			{
 				//{
@@ -164,7 +164,7 @@ namespace MauGam
 
 					MauCor::Rotator const rot{ 0, rotationSpeed * TIME.ElapsedSec() };
 					auto group{ GetECSWorld().Group<CStaticMesh, CTransform>() };
-					group.Each([&rot, &r, this](ECS::EntityID id, CStaticMesh const& m, CTransform& t)
+					group.Each([&rot, &r](CStaticMesh const& m, CTransform& t)
 						{
 							if (r++ % 2)
 							{

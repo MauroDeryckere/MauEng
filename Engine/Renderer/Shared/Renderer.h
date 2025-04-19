@@ -1,7 +1,6 @@
 #ifndef MAUREN_RENDERER_H
 #define MAUREN_RENDERER_H
 
-#include "Mesh.h"
 #include "MeshInstance.h"
 
 namespace MauEng

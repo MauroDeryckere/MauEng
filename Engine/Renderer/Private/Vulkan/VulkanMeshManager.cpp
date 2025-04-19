@@ -132,22 +132,16 @@ namespace MauRen
 	{
 		ME_PROFILE_FUNCTION()
 
-		int frameToUpdate{ static_cast<int>(frame - 1)};
-		if (frameToUpdate < 0)
-		{
-			frameToUpdate = MAX_FRAMES_IN_FLIGHT - 1;
-		}
-
 		{
 			ME_PROFILE_SCOPE("Mesh instance data update - buffer")
 
-			memcpy(m_MeshInstanceDataBuffers[frameToUpdate].mapped, m_MeshInstanceData.data(), m_MeshInstanceData.size() * sizeof(MeshInstanceData));
+			memcpy(m_MeshInstanceDataBuffers[frame].mapped, m_MeshInstanceData.data(), m_MeshInstanceData.size() * sizeof(MeshInstanceData));
 		}
 
 		{
 			ME_PROFILE_SCOPE("Draw commands data update - buffer")
 
-			memcpy(m_DrawCommandBuffers[frameToUpdate].mapped, m_DrawCommands.data(), m_DrawCommands.size() * sizeof(DrawCommand));
+			memcpy(m_DrawCommandBuffers[frame].mapped, m_DrawCommands.data(), m_DrawCommands.size() * sizeof(DrawCommand));
 		}
 
 		{
@@ -155,7 +149,7 @@ namespace MauRen
 
 			auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 			VkDescriptorBufferInfo bufferInfo = {};
-			bufferInfo.buffer = m_MeshInstanceDataBuffers[frameToUpdate].buffer.buffer;
+			bufferInfo.buffer = m_MeshInstanceDataBuffers[frame].buffer.buffer;
 			bufferInfo.offset = 0;
 			bufferInfo.range = m_MeshInstanceData.size() * sizeof(MeshInstanceData);
 

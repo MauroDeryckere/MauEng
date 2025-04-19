@@ -1,6 +1,8 @@
 #ifndef MAUREN_NULLRENDERER
 #define MAUREN_NULLRENDERER
 
+#include "MeshInstance.h"
+
 namespace MauEng
 {
 	struct CStaticMesh;
