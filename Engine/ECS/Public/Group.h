@@ -125,6 +125,7 @@ namespace MauEng::ECS
 			}
 		}
 
+		// @warn group must own the components you sort
 		template<typename FirstComponentType, typename... OtherComponentTypes, typename Compare, typename SortAlgo = entt::std_sort, typename... Args>
 		void Sort(Compare&& compare, SortAlgo&& algo = SortAlgo{}, Args&&... args) noexcept
 			requires std::invocable<Compare, FirstComponentType const&, FirstComponentType const&, OtherComponentTypes const&..., OtherComponentTypes const&...>
@@ -136,6 +137,8 @@ namespace MauEng::ECS
 				std::forward<Args>(args)...
 			);
 		}
+
+		// @warn group must own the components you sort
 		template<typename FirstComponentType, typename... OtherComponentTypes, typename SortAlgo = entt::std_sort, typename... Args>
 		void Sort(SortAlgo&& algo = SortAlgo{}, Args&&... args) noexcept
 			requires (std::totally_ordered<FirstComponentType> && std::totally_ordered<OtherComponentTypes...>)
@@ -146,6 +149,8 @@ namespace MauEng::ECS
 					std::forward<Args>(args)...
 				);
 		}
+
+		// @warn group must own the components you sort
 		template<typename FirstComponentType, typename... OtherComponentTypes>
 			requires (std::totally_ordered<FirstComponentType>&& std::totally_ordered<OtherComponentTypes...>)
 		void Sort() noexcept
@@ -197,6 +202,8 @@ namespace MauEng::ECS
 
 	private:
 		GroupType m_Group;
+
+		OwnedWrapper<> m_OwnedWrapper;  // Instance of OwnedWrapper
 	};
 }
 
