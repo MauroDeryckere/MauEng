@@ -20,12 +20,13 @@ namespace MauGam
 			Entity entSpider{ CreateEntity() };
 
 			auto& transform = entSpider.GetComponent<CTransform>();
+			//  car is exported a lil bad so need to do some rotating
 			MauCor::Rotator const rot{ 90, 0, 180 };
 			transform.Rotate(rot);
+
 			//transform.Translate({ 0, 2,  0 });
 			//transform.Scale({ 5.f, 5.f, 5.f });
 
-			//entSpider.AddComponent<CStaticMesh>("Resources/Models/old_rusty_car/old_rusty_car.glb");
 			entSpider.AddComponent<CStaticMesh>("Resources/Models/old_rusty_car/scene.gltf");
 			//entSpider.AddComponent<CStaticMesh>("Resources/Models/Spider/spider.obj");
 		}
@@ -52,23 +53,22 @@ namespace MauGam
 		//	entSKULL.AddComponent<CStaticMesh>("Resources/Models/Skull.obj");
 		//}
 
-		//bool constexpr ENABLE_HIGH_INSTANCE_TEST{ true };
+		bool constexpr ENABLE_HIGH_INSTANCE_TEST{ true };
+		if constexpr (ENABLE_HIGH_INSTANCE_TEST)
+		{
+			std::random_device rd;  // Random device for seed 
+			std::mt19937 gen(rd()); // Mersenne Twister generator
+			std::uniform_real_distribution<float> dis(-300.0f, 300); // Random translation range
 
-		//if constexpr (ENABLE_HIGH_INSTANCE_TEST)
-		//{
-		//	std::random_device rd;  // Random device for seed 
-		//	std::mt19937 gen(rd()); // Mersenne Twister generator
-		//	std::uniform_real_distribution<float> dis(-30.0f, 30.0f); // Random translation range
-
-		//	for (size_t i { 0 }; i < 100'000; i++)
-		//	{
-		//		Entity entGUN{ CreateEntity() };
-		//		auto& transform = entGUN.GetComponent<CTransform>();
-		//		transform.Translate({ dis(gen), dis(gen), dis(gen) });
-
-		//		entGUN.AddComponent<CStaticMesh>("Resources/Models/Gun.obj");
-		//	}
-		//}
+			for (size_t i { 0 }; i < 20'000; i++)
+			{
+				Entity entGUN{ CreateEntity() };
+				auto& transform = entGUN.GetComponent<CTransform>();
+				transform.Translate({ dis(gen), dis(gen), dis(gen) });
+				transform.Scale({ .05f, .05f, .05f });
+				entGUN.AddComponent<CStaticMesh>("Resources/Models/Spider/spider.obj");
+			}
+		}
 
 
 		auto& input{ INPUT_MANAGER };
