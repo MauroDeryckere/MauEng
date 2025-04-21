@@ -110,4 +110,16 @@ namespace MauEng
 		m_AspectRatio = newAspect;
 		m_IsDirty = true;
 	}
+
+	void Camera::SetNear(float newNear) noexcept
+	{
+		m_NearPlane = newNear;
+		m_IsDirty = true;
+	}
+
+	void Camera::SetFar(float newFar) noexcept
+	{
+		m_FarPlane = newFar;
+		m_IsDirty = true;
+	}
 }

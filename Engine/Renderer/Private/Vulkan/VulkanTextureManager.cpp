@@ -63,7 +63,31 @@ namespace MauRen
 		VulkanImage textureImage{ CreateTextureImage(cmdPoolManager, textureName)};
 		descriptorContext.BindTexture(m_Textures.size(), textureImage.imageViews[0], VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
-		m_Textures.emplace_back(textureImage);
+		m_Textures.emplace_back(std::move(textureImage));
+		m_TextureIDMap[textureName] = m_Textures.size() - 1;
+
+		return m_Textures.size() - 1;
+	}
+
+	uint32_t VulkanTextureManager::LoadOrGetTexture(VulkanCommandPoolManager& cmdPoolManager, VulkanDescriptorContext& descriptorContext, std::string const& textureName, EmbeddedTexture const& embTex) noexcept
+	{
+		ME_PROFILE_FUNCTION()
+
+		if (m_Textures.size() == MAX_TEXTURES)
+		{
+			return INVALID_TEXTURE_ID;
+		}
+
+		auto const it = m_TextureIDMap.find(textureName);
+		if (it != m_TextureIDMap.end())
+		{
+			return it->second;
+		}
+
+		VulkanImage textureImage{ CreateTextureImage(cmdPoolManager, embTex) };
+		descriptorContext.BindTexture(m_Textures.size(), textureImage.imageViews[0], VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+		m_Textures.emplace_back(std::move(textureImage));
 		m_TextureIDMap[textureName] = m_Textures.size() - 1;
 
 		return m_Textures.size() - 1;
@@ -112,6 +136,8 @@ namespace MauRen
 	{
 		ME_PROFILE_FUNCTION()
 
+		ME_ASSERT(std::filesystem::exists(path));
+
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 
 		int texWidth{};
@@ -136,6 +162,85 @@ namespace MauRen
 		vkUnmapMemory(deviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory);
 
 		stbi_image_free(pixels);
+
+		VulkanImage texImage
+		{
+			VK_FORMAT_R8G8B8A8_SRGB,
+			VK_IMAGE_TILING_OPTIMAL,
+			VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+			VK_SAMPLE_COUNT_1_BIT,
+			static_cast<uint32_t>(texWidth),
+			static_cast<uint32_t>(texHeight),
+			static_cast<uint32_t>(std::floor(std::log2(std::max(texWidth, texHeight)))) + 1
+		};
+
+		texImage.TransitionImageLayout(cmdPoolManager, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+		VulkanBuffer::CopyBufferToImage(cmdPoolManager, stagingBuffer.buffer, texImage.image, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
+		// is transitioned to VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL while generating mipmaps
+
+		texImage.GenerateMipmaps(cmdPoolManager);
+
+		stagingBuffer.Destroy();
+
+		texImage.CreateImageView(VK_IMAGE_ASPECT_COLOR_BIT);
+
+		return texImage;
+	}
+
+	VulkanImage VulkanTextureManager::CreateTextureImage(VulkanCommandPoolManager& cmdPoolManager, EmbeddedTexture const& embTex)
+	{
+		ME_PROFILE_FUNCTION()
+
+		ME_ASSERT(embTex.hash != std::string{ "INVALID" });
+
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+
+		int texWidth{};
+		int texHeight{};
+		int texChannels{};
+
+		stbi_uc* pixels{ nullptr };
+
+		if (embTex.isCompressed)
+		{
+			// Load from memory like PNG/JPG
+			pixels = stbi_load_from_memory(embTex.data.data(), static_cast<int>(embTex.data.size()), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+		}
+		else
+		{
+			// Already raw RGBA data, assume 4 channels
+			texWidth = embTex.width;
+			texHeight = embTex.height;
+			texChannels = 4;
+			pixels = new stbi_uc[embTex.data.size()];
+			std::memcpy(pixels, embTex.data.data(), embTex.data.size());
+		}
+
+		if (!pixels or texWidth == 0 or texHeight == 0)
+		{
+			throw std::runtime_error("Failed to load embedded texture image!");
+		}
+
+		VkDeviceSize const imageSize{ static_cast<uint32_t>(texWidth * texHeight * 4) };
+
+		VulkanBuffer stagingBuffer{ imageSize,
+									 VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+									 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT };
+
+		void* data;
+		vkMapMemory(deviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory, 0, imageSize, 0, &data);
+		memcpy(data, pixels, static_cast<size_t>(imageSize));
+		vkUnmapMemory(deviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory);
+
+		if (embTex.isCompressed)
+		{
+			stbi_image_free(pixels);
+		}
+		else
+		{
+			delete[] pixels;
+		}
 
 		VulkanImage texImage
 		{

@@ -31,6 +31,9 @@ namespace MauEng
 		void SetFOV(float newFov) noexcept;
 		void SetAspectRatio(float newAspect) noexcept;
 
+		void SetNear(float newNear) noexcept;
+		void SetFar(float newFar) noexcept;
+
 		Camera(Camera const&) = default;
 		Camera(Camera&&) = default;
 		Camera& operator=(Camera const&) = default;

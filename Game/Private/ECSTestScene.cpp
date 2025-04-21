@@ -15,7 +15,7 @@ namespace MauGam
 		m_CameraManager.GetActiveCamera().SetFOV(60.f);
 
 		m_CameraManager.GetActiveCamera().Focus({ 0,0,1 });
-
+		m_CameraManager.GetActiveCamera().SetFar(300);
 		{
 			Entity entSpider{ CreateEntity() };
 
@@ -24,7 +24,8 @@ namespace MauGam
 			//transform.Translate({ 0, 2,  0 });
 			//transform.Scale({ 5.f, 5.f, 5.f });
 
-			entSpider.AddComponent<CStaticMesh>("Resources/Models/Spider/spider.obj");
+			entSpider.AddComponent<CStaticMesh>("Resources/Models/old_rusty_car/scene.gltf");
+			//entSpider.AddComponent<CStaticMesh>("Resources/Models/Spider/spider.obj");
 		}
 
 		//{

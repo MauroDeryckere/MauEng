@@ -3,6 +3,7 @@
 
 #include <unordered_map>
 
+#include "Material.h"
 #include "VulkanTexture.h"
 
 namespace MauRen
@@ -22,6 +23,7 @@ namespace MauRen
 		[[nodiscard]] uint32_t GetTextureID(std::string const& textureName) const noexcept;
 
 		[[nodiscard]] uint32_t LoadOrGetTexture(VulkanCommandPoolManager& cmdPoolManager, VulkanDescriptorContext& descriptorContext, std::string const& textureName) noexcept;
+		[[nodiscard]] uint32_t LoadOrGetTexture(VulkanCommandPoolManager& cmdPoolManager, VulkanDescriptorContext& descriptorContext, std::string const& textureName, EmbeddedTexture const& embTex) noexcept;
 
 		[[nodiscard]] VkSampler GetTextureSampler() const noexcept { return m_TextureSampler; }
 
@@ -42,7 +44,9 @@ namespace MauRen
 
 		void CreateTextureSampler();
 
-		VulkanImage CreateTextureImage(VulkanCommandPoolManager& cmdPoolManager, std::string const& path);
+		[[nodiscard]] VulkanImage CreateTextureImage(VulkanCommandPoolManager& cmdPoolManager, std::string const& path);
+		[[nodiscard]] VulkanImage CreateTextureImage(VulkanCommandPoolManager& cmdPoolManager, EmbeddedTexture const& embTex);
+
 	};
 }
 

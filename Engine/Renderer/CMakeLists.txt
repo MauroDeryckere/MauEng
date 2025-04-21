@@ -35,11 +35,11 @@ find_package(Vulkan REQUIRED)
 # Add the Libs/ directory to the include paths
 
 # for loading models, only used in the renderer.
+set(BUILD_SHARED_LIBS OFF)
+set(ASSIMP_BUILD_ASSIMP_TOOLS OFF)
+set(ASSIMP_BUILD_TESTS OFF)
+set(ASSIMP_INSTALL OFF)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/Libs/Assimp)
-set(ASSIMP_BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
-set(ASSIMP_BUILD_ASSIMP_TOOLS OFF CACHE BOOL "" FORCE)
-set(ASSIMP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-
 
 add_library(tinyobjloader INTERFACE)
 target_include_directories(tinyobjloader INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/Libs/tinyobjloader)

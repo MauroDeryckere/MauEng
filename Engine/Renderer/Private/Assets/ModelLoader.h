@@ -2,8 +2,12 @@
 #define MAUREN_MODELLOADER_H
 
 #include "LoadedModel.h"
+#include "Material.h"
 
-class aiMaterial;
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+
 
 namespace MauRen
 {
@@ -27,9 +31,14 @@ namespace MauRen
 		 * -> these submeshes combind == static mesh
 		 *		For rendering: the submesh is treated as a unique mesh
 		 */
-		static LoadedModel LoadModel(std::string const& path, VulkanCommandPoolManager& cmdPoolManager, VulkanDescriptorContext& descriptorContext) noexcept;
+		[[nodiscard]] static LoadedModel LoadModel(std::string const& path, VulkanCommandPoolManager& cmdPoolManager, VulkanDescriptorContext& descriptorContext) noexcept;
+
 	private:
-		static Material ExtractMaterial(std::string const& path, aiMaterial const* material);
+		[[nodiscard]] static Material ExtractMaterial(std::string const& path, aiMaterial const* material, aiScene const* scene);
+		[[nodiscard]] static EmbeddedTexture ExtractEmbeddedTexture(aiTexture const* texture);
+
+
+		[[nodiscard]] static std::string HashEmbeddedTexture(aiTexture const* texture) noexcept;
 
 	};
 }
