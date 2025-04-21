@@ -71,7 +71,10 @@ namespace MauRen
 				Vertex const vert
 				{
 					.position = glm::vec3{ vertex.x, vertex.y, vertex.z },
-					.color = color,
+					.normal = glm::vec3{ mesh->mNormals[j].x, mesh->mNormals[j].y, mesh->mNormals[j].z },
+					.tangent = mesh->HasTangentsAndBitangents()
+								? glm::vec4{ mesh->mTangents[j].x, mesh->mTangents[j].y, mesh->mTangents[j].z, 1.0f }
+								: glm::vec4{ 0.0f },
 					.texCoord = texCoord
 		        };
 
@@ -176,7 +179,6 @@ namespace MauRen
 
 		// Texture paths
 		aiString texPath;
-
 		if (material->GetTextureCount(aiTextureType_DIFFUSE) > 0) 
 		{
 			if (material->GetTexture(aiTextureType_DIFFUSE, 0, &texPath) == AI_SUCCESS)
@@ -198,8 +200,22 @@ namespace MauRen
 		if (material->GetTexture(aiTextureType_SPECULAR, 0, &texPath) == AI_SUCCESS)
 			mat.specularTexture = texPath.C_Str();
 
-		if (material->GetTexture(aiTextureType_NORMALS, 0, &texPath) == AI_SUCCESS)
-			mat.normalMap = texPath.C_Str();
+		if (material->GetTextureCount(aiTextureType_NORMALS) > 0)
+		{
+			if (material->GetTexture(aiTextureType_NORMALS, 0, &texPath) == AI_SUCCESS)
+			{
+				if (texPath.C_Str()[0] == '*')
+				{
+					int const texIndex{ atoi(texPath.C_Str() + 1) };
+					const aiTexture* tex{ scene->mTextures[texIndex] };
+					mat.embNormal = ExtractEmbeddedTexture(tex);
+				}
+				else
+				{
+					mat.normalMap = (modelDir / texPath.C_Str()).string();
+				}
+			}
+		}
 
 		if (material->GetTexture(aiTextureType_AMBIENT, 0, &texPath) == AI_SUCCESS)
 			mat.ambientTexture = texPath.C_Str();

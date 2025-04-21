@@ -7,6 +7,8 @@
 #include "Vertex.h"
 #include "Material.h"
 
+
+//TODO remove
 namespace MauRen
 {
     std::string Utils::GetAbsoluteMaterialPath() noexcept
@@ -160,7 +162,7 @@ namespace MauRen
                     1.0f - attrib.texcoords[2 * index.texcoord_index + 1]
                 };
 
-                vertex.color = { 1.0f, 1.0f, 1.0f };
+                //vertex.color = { 1.0f, 1.0f, 1.0f };
 
                 if (not uniqueVertices.contains(vertex)) 
                 {

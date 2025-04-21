@@ -74,6 +74,15 @@ namespace MauRen
 			vkMat.albedoTextureID = m_TextureManager->LoadOrGetTexture(cmdPoolManager, descriptorContext, material.diffuseTexture);
 		}
 
+		if (material.embNormal)
+		{
+			vkMat.normalTextureID = m_TextureManager->LoadOrGetTexture(cmdPoolManager, descriptorContext, material.embNormal.hash, material.embNormal);
+		}
+		else
+		{
+			vkMat.normalTextureID = m_TextureManager->LoadOrGetTexture(cmdPoolManager, descriptorContext, material.normalMap);
+		}
+
 		m_Materials.emplace_back(vkMat);
 
 		// Upload the material id if new

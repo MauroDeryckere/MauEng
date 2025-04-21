@@ -19,13 +19,15 @@ namespace MauGam
 		{
 			Entity entSpider{ CreateEntity() };
 
-			//auto& transform = entGUN.GetComponent<CTransform>();
-
+			auto& transform = entSpider.GetComponent<CTransform>();
+			MauCor::Rotator const rot{ 0, 45 };
+			transform.Rotate(rot);
 			//transform.Translate({ 0, 2,  0 });
 			//transform.Scale({ 5.f, 5.f, 5.f });
 
-			entSpider.AddComponent<CStaticMesh>("Resources/Models/old_rusty_car/scene.gltf");
-			//entSpider.AddComponent<CStaticMesh>("Resources/Models/Spider/spider.obj");
+			//entSpider.AddComponent<CStaticMesh>("Resources/Models/old_rusty_car/old_rusty_car.glb");
+			//entSpider.AddComponent<CStaticMesh>("Resources/Models/old_rusty_car/scene.gltf");
+			entSpider.AddComponent<CStaticMesh>("Resources/Models/Spider/spider.obj");
 		}
 
 		//{
@@ -80,6 +82,8 @@ namespace MauGam
 		input.BindAction("RotRight", MauEng::KeyInfo{ SDLK_L, MauEng::KeyInfo::ActionType::Held });
 		input.BindAction("RotDown", MauEng::KeyInfo{ SDLK_K, MauEng::KeyInfo::ActionType::Held });
 
+		input.BindAction("Sprint", MauEng::KeyInfo{ SDLK_A, MauEng::KeyInfo::ActionType::Held });
+
 
 		input.BindAction("Rotate", MauEng::MouseInfo{ {},   MauEng::MouseInfo::ActionType::Moved });
 	}
@@ -99,22 +103,30 @@ namespace MauGam
 
 		auto const& input{ INPUT_MANAGER };
 
+		bool isSprinting{ false };
+		auto constexpr sprintModifier{ 6.f };
 		auto constexpr movementSpeed{ 20.f };
+
+		if (input.IsActionExecuted("Sprint"))
+		{
+			isSprinting = true;
+		}
+
 		if (input.IsActionExecuted("MoveUp"))
 		{
-			m_CameraManager.GetActiveCamera().Translate({ 0.f, 0.f, movementSpeed * TIME.ElapsedSec() });
+			m_CameraManager.GetActiveCamera().Translate({ 0.f, 0.f, movementSpeed * TIME.ElapsedSec() * (isSprinting ? sprintModifier : 1) });
 		}
 		if (input.IsActionExecuted("MoveDown"))
 		{
-			m_CameraManager.GetActiveCamera().Translate({ 0.f, 0.f, -movementSpeed * TIME.ElapsedSec() });
+			m_CameraManager.GetActiveCamera().Translate({ 0.f, 0.f, -movementSpeed * TIME.ElapsedSec() * (isSprinting ? sprintModifier : 1) });
 		}
 		if (input.IsActionExecuted("MoveLeft"))
 		{
-			m_CameraManager.GetActiveCamera().Translate({ -movementSpeed * TIME.ElapsedSec(), 0.f, 0.f });
+			m_CameraManager.GetActiveCamera().Translate({ -movementSpeed * TIME.ElapsedSec() * (isSprinting ? sprintModifier : 1), 0.f, 0.f });
 		}
 		if (input.IsActionExecuted("MoveRight"))
 		{
-			m_CameraManager.GetActiveCamera().Translate({ movementSpeed * TIME.ElapsedSec(), 0.f, 0.f });
+			m_CameraManager.GetActiveCamera().Translate({ movementSpeed * TIME.ElapsedSec() * (isSprinting ? sprintModifier : 1), 0.f, 0.f });
 		}
 
 		float constexpr keyboardRotSpeed{ 10 };
@@ -174,16 +186,16 @@ namespace MauGam
 					// Group is faster.
 					//ME_PROFILE_SCOPE("GROUP")
 
-					MauCor::Rotator const rot{ 0, rotationSpeed * TIME.ElapsedSec() };
-					auto group{ GetECSWorld().Group<CStaticMesh, CTransform>() };
-					group.Each([&rot, &r](CStaticMesh const& m, CTransform& t)
-						{
-							if (r++ % 2)
-							{
-								t.Rotate(rot);
-							}
+					//MauCor::Rotator const rot{ 0, rotationSpeed * TIME.ElapsedSec() };
+					//auto group{ GetECSWorld().Group<CStaticMesh, CTransform>() };
+					//group.Each([&rot, &r](CStaticMesh const& m, CTransform& t)
+					//	{
+					//		if (r++ % 2)
+					//		{
+					//			t.Rotate(rot);
+					//		}
 
-						}, std::execution::par_unseq);
+					//	}, std::execution::par_unseq);
 				}
 
 			}

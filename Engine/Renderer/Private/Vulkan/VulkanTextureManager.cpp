@@ -49,7 +49,7 @@ namespace MauRen
 	{
 		ME_PROFILE_FUNCTION()
 
-		if (m_Textures.size() == MAX_TEXTURES)
+		if (m_Textures.size() == MAX_TEXTURES || textureName.empty())
 		{
 			return INVALID_TEXTURE_ID;
 		}
