@@ -65,7 +65,11 @@ namespace MauRen
 				if (mesh->HasTextureCoords(0))
 				{
 					aiVector3D const& tex{ mesh->mTextureCoords[0][j] };
-					texCoord = glm::vec2{ tex.x, tex.y };
+					texCoord = glm::vec2{ tex.x, 1 - tex.y };
+				}
+				else
+				{
+					ME_LOG_ERROR(MauCor::LogCategory::Renderer, "No textcoords");
 				}
 
 				Vertex const vert

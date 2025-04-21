@@ -15,19 +15,19 @@ namespace MauGam
 		m_CameraManager.GetActiveCamera().SetFOV(60.f);
 
 		m_CameraManager.GetActiveCamera().Focus({ 0,0,1 });
-		m_CameraManager.GetActiveCamera().SetFar(300);
+		m_CameraManager.GetActiveCamera().SetFar(1000);
 		{
 			Entity entSpider{ CreateEntity() };
 
 			auto& transform = entSpider.GetComponent<CTransform>();
-			MauCor::Rotator const rot{ 0, 45 };
+			MauCor::Rotator const rot{ 90, 0, 180 };
 			transform.Rotate(rot);
 			//transform.Translate({ 0, 2,  0 });
 			//transform.Scale({ 5.f, 5.f, 5.f });
 
 			//entSpider.AddComponent<CStaticMesh>("Resources/Models/old_rusty_car/old_rusty_car.glb");
-			//entSpider.AddComponent<CStaticMesh>("Resources/Models/old_rusty_car/scene.gltf");
-			entSpider.AddComponent<CStaticMesh>("Resources/Models/Spider/spider.obj");
+			entSpider.AddComponent<CStaticMesh>("Resources/Models/old_rusty_car/scene.gltf");
+			//entSpider.AddComponent<CStaticMesh>("Resources/Models/Spider/spider.obj");
 		}
 
 		//{
