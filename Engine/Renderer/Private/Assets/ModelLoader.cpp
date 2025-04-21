@@ -4,9 +4,12 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
+#include "Vulkan/VulkanMaterialManager.h"
+#include "Material.h"
+
 namespace MauRen
 {
-	LoadedModel ModelLoader::LoadModel(std::string const& path) noexcept
+	LoadedModel ModelLoader::LoadModel(std::string const& path, VulkanCommandPoolManager& cmdPoolManager, VulkanDescriptorContext& descriptorContext) noexcept
 	{
 		Assimp::Importer importer;
 
@@ -83,32 +86,111 @@ namespace MauRen
 				indexCount += face.mNumIndices;
 		    }
 
+			uint32_t matID{ INVALID_MATERIAL_ID };
+
+			// Material loading (done via material manager)
+			aiMaterial const* const material{ scene->mMaterials[mesh->mMaterialIndex] };
+			aiString matName;
+			auto result{ material->Get(AI_MATKEY_NAME, matName) };
+			ME_ASSERT(result == AI_SUCCESS);
+
+			auto& matManager{ VulkanMaterialManager::GetInstance() };
+
+			std::string const matStr{ matName.C_Str() };
+			auto const getMat{ matManager.GetMaterial(matStr) };
+			if (getMat.first)
+			{
+				matID = getMat.second;
+			}
+			else
+			{
+				Material const extractedMat{ ExtractMaterial(path, material) };
+				matID = matManager.LoadOrGetMaterial(cmdPoolManager, descriptorContext, extractedMat);
+			}
+
 			model.subMeshes.emplace_back(
 				SubMeshData
 				{
 					.indexCount = indexCount,
 					.firstIndex = indexOffset,
 					.vertexOffset = static_cast<int32_t>(vertexOffset),
-					.materialID = 0  // placeholder, material integration can come later
+					.materialID = matID
 				});
-
-		    // Optionally handle materials or textures for the mesh here.
-			aiMaterial const* const material{ scene->mMaterials[mesh->mMaterialIndex] };
-			aiString matName;
-			material->Get(AI_MATKEY_NAME, matName);
-
-			aiString baseColorPath;
-			if (material->GetTexture(aiTextureType_BASE_COLOR, 0, &baseColorPath))
-			{
-				std::string const texturePath{ baseColorPath.C_Str() };
-				// Load as base color
-			}
-
-		    // LoadMaterial in manager
-			// emplace matID if not existing
-			//loadedMesh.emplace_back(MeshInstance{ i, vertices, indices, matName.C_Str() });
 		}
 
 		return model;
+	}
+
+	Material ModelLoader::ExtractMaterial(std::string const&path, aiMaterial const* material)
+	{
+		std::filesystem::path modelPath = path;
+		std::filesystem::path modelDir = modelPath.parent_path();
+
+		Material mat{};
+
+		aiString name;
+		if (material->Get(AI_MATKEY_NAME, name) == AI_SUCCESS)
+			mat.name = name.C_Str();
+
+		aiColor3D color(0.f, 0.f, 0.f);
+
+		// Diffuse color
+		if (material->Get(AI_MATKEY_COLOR_DIFFUSE, color) == AI_SUCCESS)
+			mat.diffuseColor = { color.r, color.g, color.b };
+
+		// Specular color
+		if (material->Get(AI_MATKEY_COLOR_SPECULAR, color) == AI_SUCCESS)
+			mat.specularColor = { color.r, color.g, color.b };
+
+		// Ambient color
+		if (material->Get(AI_MATKEY_COLOR_AMBIENT, color) == AI_SUCCESS)
+			mat.ambientColor = { color.r, color.g, color.b };
+
+		// Emissive color
+		if (material->Get(AI_MATKEY_COLOR_EMISSIVE, color) == AI_SUCCESS)
+			mat.emissiveColor = { color.r, color.g, color.b };
+
+		// Transparency
+		float transparency = 1.0f;
+		if (material->Get(AI_MATKEY_OPACITY, transparency) == AI_SUCCESS)
+			mat.transparency = transparency;
+
+		// Shininess
+		float shininess = 0.0f;
+		if (material->Get(AI_MATKEY_SHININESS, shininess) == AI_SUCCESS)
+			mat.shininess = shininess;
+
+		// Refraction index
+		float ior = 1.0f;
+		if (material->Get(AI_MATKEY_REFRACTI, ior) == AI_SUCCESS)
+			mat.refractionIndex = ior;
+
+		// Illumination model
+		int illum = 0;
+		if (material->Get(AI_MATKEY_SHADING_MODEL, illum) == AI_SUCCESS)
+			mat.illuminationModel = illum;
+
+		// Texture paths
+		aiString texPath;
+
+		if (material->GetTexture(aiTextureType_DIFFUSE, 0, &texPath) == AI_SUCCESS)
+			mat.diffuseTexture = (modelDir / texPath.C_Str()).string();
+
+		if (material->GetTexture(aiTextureType_SPECULAR, 0, &texPath) == AI_SUCCESS)
+			mat.specularTexture = texPath.C_Str();
+
+		if (material->GetTexture(aiTextureType_NORMALS, 0, &texPath) == AI_SUCCESS)
+			mat.normalMap = texPath.C_Str();
+
+		if (material->GetTexture(aiTextureType_AMBIENT, 0, &texPath) == AI_SUCCESS)
+			mat.ambientTexture = texPath.C_Str();
+
+		if (material->GetTexture(aiTextureType_HEIGHT, 0, &texPath) == AI_SUCCESS)
+			mat.bumpMap = texPath.C_Str();
+
+		if (material->GetTexture(aiTextureType_DISPLACEMENT, 0, &texPath) == AI_SUCCESS)
+			mat.displacementMap = texPath.C_Str();
+
+		return mat;
 	}
 }

@@ -3,8 +3,13 @@
 
 #include "LoadedModel.h"
 
+class aiMaterial;
+
 namespace MauRen
 {
+	class VulkanDescriptorContext;
+	class VulkanCommandPoolManager;
+
 	class ModelLoader
 	{
 	public:
@@ -22,8 +27,10 @@ namespace MauRen
 		 * -> these submeshes combind == static mesh
 		 *		For rendering: the submesh is treated as a unique mesh
 		 */
-		static LoadedModel LoadModel(std::string const& path) noexcept;
+		static LoadedModel LoadModel(std::string const& path, VulkanCommandPoolManager& cmdPoolManager, VulkanDescriptorContext& descriptorContext) noexcept;
 	private:
+		static Material ExtractMaterial(std::string const& path, aiMaterial const* material);
+
 	};
 }
 

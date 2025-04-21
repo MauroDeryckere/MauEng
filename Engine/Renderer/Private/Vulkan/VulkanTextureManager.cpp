@@ -60,7 +60,7 @@ namespace MauRen
 			return it->second;
 		}
 
-		VulkanImage textureImage{ CreateTextureImage(cmdPoolManager, "Resources/Materials/" + textureName)};
+		VulkanImage textureImage{ CreateTextureImage(cmdPoolManager, textureName)};
 		descriptorContext.BindTexture(m_Textures.size(), textureImage.imageViews[0], VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 		m_Textures.emplace_back(textureImage);
@@ -121,11 +121,10 @@ namespace MauRen
 		stbi_uc* const pixels{ stbi_load(path.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha) };
 		VkDeviceSize const imageSize{ static_cast<uint32_t>(texWidth * texHeight * 4) };
 
-		if (!pixels)
+		if (!pixels or texWidth == 0 or texHeight == 0)
 		{
 			throw std::runtime_error("Failed to load texture image!");
 		}
-
 
 		VulkanBuffer stagingBuffer{ imageSize,
 									 VK_BUFFER_USAGE_TRANSFER_SRC_BIT,

@@ -27,9 +27,20 @@ namespace MauRen
 		m_TextureManager = nullptr;
 	}
 
+	std::pair<bool, uint32_t> VulkanMaterialManager::GetMaterial(std::string const& materialName) const noexcept
+	{
+		auto const it{ m_MaterialIDMap.find(materialName) };
+		if (it == end(m_MaterialIDMap))
+		{
+			return { false, INVALID_MATERIAL_ID };
+		}
+
+		return { true, it->second };
+	}
+
 	bool VulkanMaterialManager::Exists(uint32_t ID) const noexcept
 	{
-		if (ID == UINT32_MAX)
+		if (ID == INVALID_MATERIAL_ID)
 		{
 			return false;
 		}

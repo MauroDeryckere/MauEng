@@ -19,6 +19,8 @@ namespace MauRen
 		void Initialize();
 		void Destroy();
 
+		// Returns if it exists, and ID if it does
+		[[nodiscard]] std::pair<bool, uint32_t> GetMaterial(std::string const& materialName) const noexcept;
 		[[nodiscard]] bool Exists(uint32_t ID) const noexcept;
 
 		[[nodiscard]] uint32_t LoadOrGetMaterial(VulkanCommandPoolManager& cmdPoolManager, VulkanDescriptorContext& descriptorContext, Material const& material);
@@ -41,12 +43,11 @@ namespace MauRen
 
 		std::unique_ptr<VulkanTextureManager> m_TextureManager;
 
-		// Material name, ID
+		// Material name, ID in MaterialData[ ]
 		std::unordered_map<std::string, uint32_t> m_MaterialIDMap;
 
 		// All loaded materials - 1:1 copy of GPU buffer
 		std::vector<MaterialData> m_Materials;
-
 		std::vector<VulkanMappedBuffer> m_MaterialDataBuffers;
 
 		void InitMaterialBuffers();

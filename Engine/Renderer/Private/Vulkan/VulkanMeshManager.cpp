@@ -59,7 +59,7 @@ namespace MauRen
 			return data.meshID;
 		}
 
-		LoadedModel const loadedModel{ ModelLoader::LoadModel({ path }) };
+		LoadedModel const loadedModel{ ModelLoader::LoadModel({ path }, cmdPoolManager, descriptorContext) };
 		ME_RENDERER_ASSERT(m_CurrentVertexOffset + loadedModel.vertices.size() <= MAX_VERTICES);
 		ME_RENDERER_ASSERT(m_CurrentIndexOffset + loadedModel.indices.size() <= MAX_INDICES);
 
