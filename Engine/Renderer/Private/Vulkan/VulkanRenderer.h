@@ -45,7 +45,7 @@ namespace MauRen
 		virtual void ResizeWindow() override;
 
 		virtual void QueueDraw(glm::mat4 const& transformMat, MauEng::CStaticMesh const& mesh) override;
-		virtual MeshInstance LoadOrGetMeshData(char const* path) override;
+		virtual [[nodiscard]] uint32_t LoadOrGetMeshID(char const* path) override;
 
 		VulkanRenderer(VulkanRenderer const&) = delete;
 		VulkanRenderer(VulkanRenderer&&) = delete;

@@ -1,0 +1,13 @@
+#ifndef MAUREN_RENDERERIDENTIFIERS_H
+#define MAUREN_RENDERERIDENTIFIERS_H
+
+namespace MauRen
+{
+	uint32_t constexpr INVALID_MESH_ID{ UINT32_MAX };
+	uint32_t constexpr INVALID_TEXTURE_ID{ UINT32_MAX };
+	uint32_t constexpr INVALID_MATERIAL_ID{ UINT32_MAX };
+
+	uint32_t constexpr INVALID_DRAW_COMMAND{ UINT32_MAX };
+}
+
+#endif

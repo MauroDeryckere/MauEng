@@ -6,80 +6,109 @@
 
 namespace MauRen
 {
-	void ModelLoader::LoadModel(const std::string& path)
+	LoadedModel ModelLoader::LoadModel(std::string const& path) noexcept
 	{
 		Assimp::Importer importer;
+
+		LoadedModel model;
 
 		// And have it read the given file with some example postprocessing
 		// Usually - if speed is not the most important aspect for you - you'll
 		// probably to request more postprocessing than we do in this example.
-		 aiScene const* scene{ importer.ReadFile(path,
-												aiProcess_CalcTangentSpace |
+		aiScene const* scene{ importer.ReadFile(path,
 												aiProcess_Triangulate |
+												aiProcess_GenNormals |
 												aiProcess_JoinIdenticalVertices |
-												aiProcess_SortByPType | 
+												aiProcess_ImproveCacheLocality |
+												aiProcess_CalcTangentSpace |
+												aiProcess_LimitBoneWeights |
+												aiProcess_ValidateDataStructure |
+												aiProcess_RemoveRedundantMaterials |
+												aiProcess_OptimizeGraph |
 												aiProcess_OptimizeMeshes) };
+												// AI_SCENE_FLAGS_NON_VERBOSE_FORMAT
 
-		 if (nullptr == scene) 
-         {
-            //TODO
-			 //DoTheErrorLogging(importer.GetErrorString());
-			 return;
-		 }
+		if (!scene || !scene->HasMeshes()) 
+		{
+			ME_LOG_ERROR(MauCor::LogCategory::Renderer, "Error loading model! {}", importer.GetErrorString());
+			return model;
+		}
 
-		 if (!scene || !scene->HasMeshes()) 
-		 {
-            //TODO
-			 std::cerr << "Error loading model!" << std::endl;
-			 return;
-		 }
+        for (unsigned i{ 0 }; i < scene->mNumMeshes; ++i)
+		{
+			aiMesh const* const mesh{ scene->mMeshes[i] };
 
-         for (unsigned int i{ 0 }; i < scene->mNumMeshes; ++i)
-         {
-             aiMesh* mesh = scene->mMeshes[i];
+			uint32_t const vertexOffset{ static_cast<uint32_t>(model.vertices.size()) };
+			uint32_t const indexOffset{ static_cast<uint32_t>(model.indices.size()) };
 
-             // Process the mesh
-             std::vector<Vertex> vertices{};
-             std::vector<uint32_t> indices{};
+		    for (unsigned j{ 0 }; j < mesh->mNumVertices; ++j) 
+		    {
+				aiVector3D const vertex{ mesh->mVertices[j] };
 
-             // Vertices
-             for (unsigned int j{ 0 }; j < mesh->mNumVertices; ++j) 
-             {
-                 aiVector3D vertex = mesh->mVertices[j];
-                // aiVector3D normal = mesh->mNormals[j];
-                 aiColor4D* color = mesh->mColors[j];
-                 aiVector3D* texcoord = mesh->mTextureCoords[j];
-             	// Assuming you have a custom Vertex struct
-                 Vertex const vert
-                 {
-                    .position = glm::vec3(vertex.x, vertex.y, vertex.z),
-					.color = color ? glm::vec3(color->r, color->g, color->b) : glm::vec3(1.0f),
-					.texCoord = texcoord ? glm::vec2(texcoord->x, texcoord->y) : glm::vec2(0.0f)
-                 };
+				//For now just support channel 0
+				glm::vec3 color{ 1.0f };
+				if (mesh->HasVertexColors(0))
+				{
+					aiColor4D const& col { mesh->mColors[0][j] };
+					color = glm::vec3(col.r, col.g, col.b);
+				}
 
-                 vertices.emplace_back(vert);
-             }
+				//For now just support channel 0
+				glm::vec2 texCoord{ 0.0f };
+				if (mesh->HasTextureCoords(0))
+				{
+					aiVector3D const& tex{ mesh->mTextureCoords[0][j] };
+					texCoord = glm::vec2{ tex.x, tex.y };
+				}
 
-             // Indices
-             for (unsigned int j = 0; j < mesh->mNumFaces; j++) 
-             {
-                 aiFace face = mesh->mFaces[j];
-                 for (unsigned int k = 0; k < face.mNumIndices; k++) 
-                 {
-                     indices.emplace_back(face.mIndices[k]);
-                 }
-             }
+				Vertex const vert
+				{
+					.position = glm::vec3{ vertex.x, vertex.y, vertex.z },
+					.color = color,
+					.texCoord = texCoord
+		        };
 
-             // Optionally handle materials or textures for the mesh here.
-             aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
-             auto const matNamem = material->GetName();
-             aiTexture diffuse;
-			 material->Get(AI_MATKEY_COLOR_DIFFUSE,diffuse);
+				model.vertices.emplace_back(vert);
+		    }
 
-             // LoadMaterial in manager
+			uint32_t indexCount{ 0 };
+			for (unsigned j{ 0 }; j < mesh->mNumFaces; ++j)
+		    {
+		        aiFace const& face{ mesh->mFaces[j] };
+				for (unsigned k{ 0 }; k < face.mNumIndices; ++k)
+		        {
+					model.indices.emplace_back(face.mIndices[k]);
+		        }
 
-             // static mesh mat IDs -> add material ID
-			 // static mesh mesh IDS -> add mesh ID
-         }
+				indexCount += face.mNumIndices;
+		    }
+
+			model.subMeshes.emplace_back(
+				SubMeshData
+				{
+					.indexCount = indexCount,
+					.firstIndex = indexOffset,
+					.vertexOffset = static_cast<int32_t>(vertexOffset),
+					.materialID = 0  // placeholder, material integration can come later
+				});
+
+		    // Optionally handle materials or textures for the mesh here.
+			aiMaterial const* const material{ scene->mMaterials[mesh->mMaterialIndex] };
+			aiString matName;
+			material->Get(AI_MATKEY_NAME, matName);
+
+			aiString baseColorPath;
+			if (material->GetTexture(aiTextureType_BASE_COLOR, 0, &baseColorPath))
+			{
+				std::string const texturePath{ baseColorPath.C_Str() };
+				// Load as base color
+			}
+
+		    // LoadMaterial in manager
+			// emplace matID if not existing
+			//loadedMesh.emplace_back(MeshInstance{ i, vertices, indices, matName.C_Str() });
+		}
+
+		return model;
 	}
 }

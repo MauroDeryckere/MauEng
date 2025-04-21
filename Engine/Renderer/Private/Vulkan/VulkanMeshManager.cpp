@@ -1,8 +1,11 @@
 #include "VulkanMeshManager.h"
 
 #include "MeshInstance.h"
+#include "RendererIdentifiers.h"
 #include "VulkanDeviceContextManager.h"
 #include "VulkanMaterialManager.h"
+
+#include "Assets/ModelLoader.h"
 
 namespace MauRen
 {
@@ -11,6 +14,7 @@ namespace MauRen
 		m_CmdPoolManager = CmdPoolManager;
 
 		m_MeshData.reserve(MAX_MESHES);
+		m_SubMeshes.reserve(MAX_MESHES);
 
 		m_MeshInstanceDataBuffers.reserve(MAX_MESH_INSTANCES);
 		InitializeMeshInstanceDataBuffers();
@@ -20,7 +24,8 @@ namespace MauRen
 
 		CreateVertexAndIndexBuffers();
 
-		m_BatchedDrawCommands.assign(MAX_MESHES + 1, UINT32_MAX);
+		m_BatchedDrawCommands.reserve(MAX_MESHES + 1);
+		m_BatchedDrawCommands.assign(MAX_MESHES + 1, INVALID_DRAW_COMMAND);
 
 		return true;
 	}
@@ -44,66 +49,61 @@ namespace MauRen
 	}
 
 	//NOT THREAD SAFE CURRENTLY, but okay to call at start program
-	MeshInstance VulkanMeshManager::LoadMesh(char const* path, VulkanCommandPoolManager& cmdPoolManager, VulkanDescriptorContext& descriptorContext)
+	uint32_t VulkanMeshManager::LoadMesh(char const* path, VulkanCommandPoolManager& cmdPoolManager, VulkanDescriptorContext& descriptorContext) noexcept
 	{
 		ME_PROFILE_FUNCTION()
 
-		auto const it{ m_LoadedMeshes_Path.find(path) };
-		if (it == end(m_LoadedMeshes_Path))
+		if (auto it{ m_LoadedMeshes_Path.find(path) }; it != m_LoadedMeshes_Path.end())
 		{
-			Mesh m{ path };
-			m.SetMaterialID(VulkanMaterialManager::GetInstance().LoadOrGetMaterial(cmdPoolManager, descriptorContext, m.GetMaterial()));
-
-			const auto& indices = m.GetIndices();
-			const auto& vertices = m.GetVertices();
-
-			ME_RENDERER_ASSERT(m_CurrentVertexOffset + vertices.size() <= sizeof(Vertex) * MAX_VERTICES);
-			ME_RENDERER_ASSERT(m_CurrentIndexOffset + indices.size() <= sizeof(uint32_t) * MAX_INDICES);
-
-			MeshData data{};
-			data.vertexOffset = static_cast<int32_t>(m_CurrentVertexOffset);
-			data.firstIndex = m_CurrentIndexOffset;
-			data.indexCount = static_cast<uint32_t>(indices.size());
-			data.flags = 0;
-			data.defaultMatID = m.GetMaterialID();
-			data.meshID = m_NextID;
-
-			m_LoadedMeshes[m_NextID] = static_cast<uint32_t>(m_MeshData.size());
-			m_LoadedMeshes_Path[path] = static_cast<uint32_t>(m_MeshData.size());
-
-			MeshInstance const meshInstance{ m_NextID, data.defaultMatID };
-
-			m_MeshData.emplace_back(data);
-
-			// may want to store a copy of the buffers on the CPU  side to support compacting and be more "optimal" as its less copies.
-			{
-				uint8_t* basePtr = static_cast<uint8_t*>(m_VertexBuffer.mapped);
-				std::memcpy(basePtr + m_CurrentVertexOffset * sizeof(Vertex), vertices.data(), vertices.size() * sizeof(Vertex));
-			}
-
-			{
-				uint8_t* basePtr = static_cast<uint8_t*>(m_IndexBuffer.mapped);
-				std::memcpy(basePtr + m_CurrentIndexOffset * sizeof(uint32_t), indices.data(), indices.size() * sizeof(uint32_t));
-			}
-
-			m_CurrentVertexOffset += static_cast<uint32_t>(vertices.size());
-			m_CurrentIndexOffset += static_cast<uint32_t>(indices.size());
-
-			++m_NextID;
-
-			return meshInstance;
-		}
-		else
-		{
-			auto const& data{ m_MeshData[it->second] };
-			MeshInstance const i{ data.meshID , data.defaultMatID };
-			return i;
+			const auto& data{ m_MeshData[it->second] };
+			return data.meshID;
 		}
 
-		return MeshInstance{};
+		LoadedModel const loadedModel{ ModelLoader::LoadModel({ path }) };
+		ME_RENDERER_ASSERT(m_CurrentVertexOffset + loadedModel.vertices.size() <= MAX_VERTICES);
+		ME_RENDERER_ASSERT(m_CurrentIndexOffset + loadedModel.indices.size() <= MAX_INDICES);
+
+		MeshData meshData;
+		meshData.meshID = m_NextID;
+
+		// Offset each submesh
+		for (auto& sub : loadedModel.subMeshes)
+		{
+			SubMeshData entry{ sub };
+			entry.vertexOffset += m_CurrentVertexOffset;
+			entry.firstIndex += m_CurrentIndexOffset;
+
+			m_SubMeshes.emplace_back(entry);
+		}
+
+		// may want to store a copy of the buffers on the CPU  side to support compacting and be more "optimal" as its less copies.
+		{
+			uint8_t* basePtr{ static_cast<uint8_t*>(m_VertexBuffer.mapped) };
+
+			std::memcpy(basePtr + m_CurrentVertexOffset * sizeof(Vertex), 
+						loadedModel.vertices.data(), 
+						loadedModel.vertices.size() * sizeof(Vertex));
+		}
+		{
+			uint8_t* basePtr{ static_cast<uint8_t*>(m_IndexBuffer.mapped) };
+
+			std::memcpy(basePtr + m_CurrentIndexOffset * sizeof(uint32_t), 
+						loadedModel.indices.data(), 
+						loadedModel.indices.size() * sizeof(uint32_t));
+		}
+
+		m_CurrentVertexOffset += static_cast<uint32_t>(loadedModel.vertices.size());
+		m_CurrentIndexOffset += static_cast<uint32_t>(loadedModel.indices.size());
+
+		m_LoadedMeshes[m_NextID] = static_cast<uint32_t>(m_MeshData.size());
+		m_LoadedMeshes_Path[path] = static_cast<uint32_t>(m_MeshData.size());
+
+		m_MeshData.emplace_back(std::move(meshData));
+
+		return m_NextID++;
 	}
 
-	MeshData const& VulkanMeshManager::GetMesh(uint32_t meshID) const
+	MeshData const& VulkanMeshManager::GetMeshData(uint32_t meshID) const
 	{
 		auto const it{ m_LoadedMeshes.find(meshID) };
 
@@ -174,11 +174,11 @@ namespace MauRen
 			m_DrawCommands.resize(0);
 			m_MeshInstanceData.resize(0);
 
-			m_BatchedDrawCommands.assign(MAX_MESHES + 1, UINT32_MAX);
+			m_BatchedDrawCommands.assign(MAX_MESHES + 1, INVALID_MESH_ID);
 		}
 	}
 
-	void VulkanMeshManager::InitializeMeshInstanceDataBuffers()
+	void VulkanMeshManager::InitializeMeshInstanceDataBuffers() noexcept
 	{
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 
@@ -197,7 +197,7 @@ namespace MauRen
 		}
 	}
 
-	void VulkanMeshManager::InitializeDrawCommandBuffers()
+	void VulkanMeshManager::InitializeDrawCommandBuffers() noexcept
 	{
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 
@@ -216,7 +216,7 @@ namespace MauRen
 		}
 	}
 
-	void VulkanMeshManager::CreateVertexAndIndexBuffers()
+	void VulkanMeshManager::CreateVertexAndIndexBuffers() noexcept
 	{
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 

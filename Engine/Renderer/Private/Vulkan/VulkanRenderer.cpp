@@ -154,10 +154,10 @@ namespace MauRen
 
 	void VulkanRenderer::QueueDraw(glm::mat4 const& transformMat, MauEng::CStaticMesh const& mesh)
 	{
-		VulkanMeshManager::GetInstance().QueueDraw(transformMat, mesh.meshID, mesh.materialID);
+		VulkanMeshManager::GetInstance().QueueDraw(transformMat, mesh.meshID);
 	}
 
-	MeshInstance VulkanRenderer::LoadOrGetMeshData(char const* path)
+	uint32_t VulkanRenderer::LoadOrGetMeshID(char const* path)
 	{
 		return VulkanMeshManager::GetInstance().LoadMesh(path, m_CommandPoolManager, m_DescriptorContext);
 	}

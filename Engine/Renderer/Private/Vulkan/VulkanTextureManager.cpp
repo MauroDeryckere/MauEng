@@ -110,7 +110,7 @@ namespace MauRen
 
 	VulkanImage VulkanTextureManager::CreateTextureImage(VulkanCommandPoolManager& cmdPoolManager, std::string const& path)
 	{
-		ME_PROFILE_FUNCTION();
+		ME_PROFILE_FUNCTION()
 
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 

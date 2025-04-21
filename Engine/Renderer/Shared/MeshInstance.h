@@ -23,7 +23,6 @@ namespace MauRen
 
 		uint32_t m_MeshID{ UINT32_MAX };
 		uint32_t m_MaterialID { UINT32_MAX };
-
 	};
 }
 

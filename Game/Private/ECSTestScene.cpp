@@ -17,44 +17,55 @@ namespace MauGam
 		m_CameraManager.GetActiveCamera().Focus({ 0,0,1 });
 
 		{
-			Entity entGUN{ CreateEntity() };
+			Entity entSpider{ CreateEntity() };
 
-			auto& transform = entGUN.GetComponent<CTransform>();
+			//auto& transform = entGUN.GetComponent<CTransform>();
 
-			transform.Translate({ 0, 2,  0 });
-			transform.Scale({ 5.f, 5.f, 5.f });
+			//transform.Translate({ 0, 2,  0 });
+			//transform.Scale({ 5.f, 5.f, 5.f });
 
-			entGUN.AddComponent<CStaticMesh>("Resources/Models/Gun.obj");
+			entSpider.AddComponent<CStaticMesh>("Resources/Models/Spider/spider.obj");
 		}
 
-		{
-			Entity entSKULL{ CreateEntity() };
-			auto& transform = entSKULL.GetComponent<CTransform>();
+		//{
+		//	Entity entGUN{ CreateEntity() };
 
-			transform.Translate({ 5, 5,  -20 });
-			transform.Scale({ .3f, .3f, .3f });
-			transform.Rotate({ 270, 0, 0 });
+		//	auto& transform = entGUN.GetComponent<CTransform>();
 
-			entSKULL.AddComponent<CStaticMesh>("Resources/Models/Skull.obj");
-		}
+		//	transform.Translate({ 0, 2,  0 });
+		//	transform.Scale({ 5.f, 5.f, 5.f });
 
-		bool constexpr ENABLE_HIGH_INSTANCE_TEST{ true };
+		//	entGUN.AddComponent<CStaticMesh>("Resources/Models/Gun.obj");
+		//}
 
-		if constexpr (ENABLE_HIGH_INSTANCE_TEST)
-		{
-			std::random_device rd;  // Random device for seed 
-			std::mt19937 gen(rd()); // Mersenne Twister generator
-			std::uniform_real_distribution<float> dis(-30.0f, 30.0f); // Random translation range
+		//{
+		//	Entity entSKULL{ CreateEntity() };
+		//	auto& transform = entSKULL.GetComponent<CTransform>();
 
-			for (size_t i { 0 }; i < 100'000; i++)
-			{
-				Entity entGUN{ CreateEntity() };
-				auto& transform = entGUN.GetComponent<CTransform>();
-				transform.Translate({ dis(gen), dis(gen), dis(gen) });
+		//	transform.Translate({ 5, 5,  -20 });
+		//	transform.Scale({ .3f, .3f, .3f });
+		//	transform.Rotate({ 270, 0, 0 });
 
-				entGUN.AddComponent<CStaticMesh>("Resources/Models/Gun.obj");
-			}
-		}
+		//	entSKULL.AddComponent<CStaticMesh>("Resources/Models/Skull.obj");
+		//}
+
+		//bool constexpr ENABLE_HIGH_INSTANCE_TEST{ true };
+
+		//if constexpr (ENABLE_HIGH_INSTANCE_TEST)
+		//{
+		//	std::random_device rd;  // Random device for seed 
+		//	std::mt19937 gen(rd()); // Mersenne Twister generator
+		//	std::uniform_real_distribution<float> dis(-30.0f, 30.0f); // Random translation range
+
+		//	for (size_t i { 0 }; i < 100'000; i++)
+		//	{
+		//		Entity entGUN{ CreateEntity() };
+		//		auto& transform = entGUN.GetComponent<CTransform>();
+		//		transform.Translate({ dis(gen), dis(gen), dis(gen) });
+
+		//		entGUN.AddComponent<CStaticMesh>("Resources/Models/Gun.obj");
+		//	}
+		//}
 
 
 		auto& input{ INPUT_MANAGER };

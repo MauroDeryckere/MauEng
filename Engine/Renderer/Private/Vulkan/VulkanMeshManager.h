@@ -18,27 +18,37 @@ namespace MauRen
 		bool Initialize(VulkanCommandPoolManager const * CmdPoolManager);
 		bool Destroy();
 
-		MeshInstance LoadMesh(char const* path, VulkanCommandPoolManager& cmdPoolManager, VulkanDescriptorContext& descriptorContext);
+		[[nodiscard]] uint32_t LoadMesh(char const* path, VulkanCommandPoolManager& cmdPoolManager, VulkanDescriptorContext& descriptorContext) noexcept;
 
-		[[nodiscard]] MeshData const& GetMesh(uint32_t meshID) const;
+		[[nodiscard]] MeshData const& GetMeshData(uint32_t meshID) const;
 
-		__forceinline void QueueDraw(glm::mat4 const& transformMat, uint32_t meshID, uint32_t materialID)
+		void QueueDraw(glm::mat4 const& transformMat, uint32_t meshID) noexcept
 		{
-			m_MeshInstanceData.emplace_back(transformMat, meshID, materialID, 0, 0);
+			auto const it{ m_LoadedMeshes.find(meshID) };
+			ME_ASSERT(it != end(m_LoadedMeshes));
 
-			if (m_BatchedDrawCommands[meshID] != UINT32_MAX)
-			{
-				// Already added this mesh this frame; just increment instance count
-				m_DrawCommands[m_BatchedDrawCommands[meshID]].instanceCount++;
-			}
-			else
-			{
-				// First time seeing this mesh this frame; create a new draw command
-				const MeshData& mesh{ m_MeshData[m_LoadedMeshes.at(meshID)] };
-				uint32_t const instanceOffset{ static_cast<uint32_t>(m_MeshInstanceData.size() - 1) };
+			auto const& meshData{ m_MeshData[it->second] };
 
-				m_BatchedDrawCommands[meshID] = static_cast<uint32_t>(m_DrawCommands.size());
-				m_DrawCommands.emplace_back(mesh.indexCount, 1, mesh.firstIndex, mesh.vertexOffset, instanceOffset);
+			for (uint32_t sub{ meshData.firstSubMesh }; sub < meshData.firstSubMesh + meshData.subMeshCount; ++ sub)
+			{
+				auto const& subMesh{ m_SubMeshes[sub] };
+
+				m_MeshInstanceData.emplace_back(transformMat, sub, subMesh.materialID, meshData.flags);
+
+				if (m_BatchedDrawCommands[sub] != INVALID_DRAW_COMMAND)
+				{
+					// Already added this mesh this frame; just increment instance count
+					m_DrawCommands[m_BatchedDrawCommands[sub]].instanceCount++;
+				}
+				else
+				{
+					// First time seeing this mesh this frame; create a new draw command
+					MeshData const& mesh{ m_MeshData[m_LoadedMeshes.at(sub)] };
+					uint32_t const instanceOffset{ static_cast<uint32_t>(m_MeshInstanceData.size() - 1) };
+
+					m_BatchedDrawCommands[sub] = static_cast<uint32_t>(m_DrawCommands.size());
+					m_DrawCommands.emplace_back(subMesh.indexCount, 1, subMesh.firstIndex, subMesh.vertexOffset, instanceOffset);
+				}
 			}
 		}
 
@@ -60,7 +70,9 @@ namespace MauRen
 		std::vector<MeshInstanceData> m_MeshInstanceData;
 		std::vector<VulkanMappedBuffer> m_MeshInstanceDataBuffers;
 
+		// Data for each mesh
 		std::vector<MeshData> m_MeshData;
+		std::vector<SubMeshData> m_SubMeshes;
 
 		// 1:1 copy w/ GPU buffers
 		std::vector<DrawCommand> m_DrawCommands;
@@ -71,23 +83,23 @@ namespace MauRen
 		// All indices in one big buffer
 		VulkanMappedBuffer m_IndexBuffer;
 
-		// maps mesh ID -> index into m_DrawCommands
-		// DrawCommands[MeshId] == uint max -> no batch yet; else it's the idx into the vec
+		// Maps SubMeshID -> index into m_DrawCommands
+		// DrawCommands[SubMeshID] == uint max -> no batch yet; else it's the idx into the vec
 		std::vector<uint32_t> m_BatchedDrawCommands;
 
 		// maps mesh ID -> index into m_MeshData
 		std::unordered_map<uint32_t, uint32_t> m_LoadedMeshes;
-		// map path into m_MeshData
+		// map model/mesh path into m_MeshData
 		std::unordered_map<char const*, uint32_t> m_LoadedMeshes_Path;
 
-		uint32_t m_CurrentVertexOffset{ 0 };
-		uint32_t m_CurrentIndexOffset{ 0 };
-		uint32_t m_NextID{ 0 };
+		uint32_t m_CurrentVertexOffset{ 0 }; // current vertex offset in the "global" vertex buffer
+		uint32_t m_CurrentIndexOffset{ 0 }; // current index offset in the "global" index buffer
+		uint32_t m_NextID{ 0 }; // next available mesh ID
 
-		void InitializeMeshInstanceDataBuffers();
-		void InitializeDrawCommandBuffers();
+		void InitializeMeshInstanceDataBuffers() noexcept;
+		void InitializeDrawCommandBuffers() noexcept;
 
-		void CreateVertexAndIndexBuffers();
+		void CreateVertexAndIndexBuffers() noexcept;
 	};
 }
 

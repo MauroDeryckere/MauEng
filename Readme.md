@@ -103,7 +103,7 @@ In this project, we use a right-handed 3D coordinate system with the following c
 
 ### Features
 - Instanced Rendering
-As a test I loaded a mesh with 100 000 instances. The mesh is a simple gun and has 1425 indices and 311 vertices.
+As a test I loaded a mesh with 100 000 instances. The mesh is a simple gun and has 1425 indices and 311 vertices. This runs very smoothly on my hardware (RTX 3060, 60 FPS cap but main thread was sleeping for +/-10ms and GPU had a lot of room left)
 ![Screenshot](docs/ZoomedOutInstances.png)
 ![Screenshot](docs/ZoomedInInstances.png)
 

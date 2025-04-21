@@ -36,6 +36,9 @@ void main()
 {
     mat4 model = instances[gl_InstanceIndex].modelMatrix;
     gl_Position = ubo.proj * ubo.view * model * vec4(inPosition, 1.0);
+    //sub id = instances[gl] 
+    // SubMeshData submesh = submeshes[gl_PrimitiveID];
+
 
     outFragColor = inColor;
     outFragTexCoord = inTexCoord;

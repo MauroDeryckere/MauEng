@@ -12,7 +12,7 @@ namespace MauRen
 	class Mesh final
 	{
 	public:
-		explicit Mesh(std::filesystem::path const& filepath);
+		explicit Mesh(std::string const& filepath);
 		~Mesh() = default;
 
 		[[nodiscard]] uint32_t GetMeshID() const noexcept { return m_MeshID; }

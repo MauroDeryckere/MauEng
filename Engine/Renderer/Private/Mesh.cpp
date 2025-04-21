@@ -1,11 +1,13 @@
 #include "Mesh.h"
 
 #include "Utils.h"
+#include "Assets/ModelLoader.h"
 
 namespace MauRen
 {
-	Mesh::Mesh(std::filesystem::path const& filepath)
+	Mesh::Mesh(std::string const& filepath)
 	{
-		Utils::LoadModel(filepath, m_Vertices, m_Indices, m_Material);
+		//MauRen::ModelLoader::LoadModel(filepath);
+		//Utils::LoadModel(filepath, m_Vertices, m_Indices, m_Material);
 	}
 }

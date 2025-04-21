@@ -1,15 +1,16 @@
 ﻿# Top level CMake file for the project
 
  cmake_minimum_required(VERSION 3.29)
+ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 # @REGION PROJECT SETUP
 include("${CMAKE_CURRENT_SOURCE_DIR}/Config.cmake")
 
 # Project name
-project ("VulkanEngine")
+project ("MauEng")
 
 # Set the name of the executable
-set(EXECUTABLE_NAME "VulkanEngine")
+set(EXECUTABLE_NAME "MauEng")
 add_executable(${EXECUTABLE_NAME})
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${EXECUTABLE_NAME})
 set_target_properties(${EXECUTABLE_NAME} PROPERTIES
