@@ -65,6 +65,8 @@ namespace MauRen
 
 		MeshData meshData;
 		meshData.meshID = m_NextID;
+		meshData.firstSubMesh = m_SubMeshes.size();
+		meshData.subMeshCount = loadedModel.subMeshes.size();
 
 		// Offset each submesh
 		for (auto& sub : loadedModel.subMeshes)

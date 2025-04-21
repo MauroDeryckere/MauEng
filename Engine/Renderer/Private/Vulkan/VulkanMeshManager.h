@@ -43,7 +43,6 @@ namespace MauRen
 				else
 				{
 					// First time seeing this mesh this frame; create a new draw command
-					MeshData const& mesh{ m_MeshData[m_LoadedMeshes.at(sub)] };
 					uint32_t const instanceOffset{ static_cast<uint32_t>(m_MeshInstanceData.size() - 1) };
 
 					m_BatchedDrawCommands[sub] = static_cast<uint32_t>(m_DrawCommands.size());
