@@ -3,7 +3,7 @@
 
 #include "RendererPCH.h"
 
-#include "VulkanImage.h"
+#include "Assets/VulkanImage.h"
 
 namespace MauRen
 {

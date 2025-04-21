@@ -9,8 +9,8 @@
 
 #include <chrono>
 
-#include "VulkanMeshManager.h"
-#include "VulkanMaterialManager.h"
+#include "Assets/VulkanMeshManager.h"
+#include "Assets/VulkanMaterialManager.h"
 #include "DebugRenderer/InternalDebugRenderer.h"
 #include "DebugRenderer/NullDebugRenderer.h"
 

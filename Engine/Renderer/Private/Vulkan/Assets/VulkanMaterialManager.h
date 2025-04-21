@@ -2,10 +2,10 @@
 #define MAUREN_VULKANMATERIALMANAGER_H
 
 #include "RendererPCH.h"
-#include "VulkanBuffer.h"
+#include "../VulkanBuffer.h"
 #include "VulkanTextureManager.h"
 
-#include "Bindless/BindlessData.h"
+#include "Assets/BindlessData.h"
 
 namespace MauRen
 {

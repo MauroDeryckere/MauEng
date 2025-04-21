@@ -2,8 +2,8 @@
 
 #include "VulkanTextureManager.h"
 
-#include "VulkanCommandPoolManager.h"
-#include "VulkanDescriptorContext.h"
+#include "../VulkanCommandPoolManager.h"
+#include "../VulkanDescriptorContext.h"
 
 
 #define STB_IMAGE_IMPLEMENTATION

@@ -2,7 +2,7 @@
 #define MAUREN_MODELLOADER_H
 
 #include "LoadedModel.h"
-#include "Material.h"
+#include "Assets/Material.h"
 
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>

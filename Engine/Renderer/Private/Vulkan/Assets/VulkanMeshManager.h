@@ -3,9 +3,8 @@
 
 #include "MeshInstance.h"
 #include "RendererPCH.h"
-#include "Mesh.h"
-#include "VulkanBuffer.h"
-#include "Bindless/BindlessData.h"
+#include "../VulkanBuffer.h"
+#include "Assets//BindlessData.h"
 
 namespace MauRen
 {

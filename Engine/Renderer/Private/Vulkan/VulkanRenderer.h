@@ -16,7 +16,7 @@
 
 #include "VulkanBuffer.h"
 
-#include "VulkanImage.h"
+#include "Assets/VulkanImage.h"
 
 #include "DebugRenderer/DebugVertex.h"
 

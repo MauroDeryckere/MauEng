@@ -1,7 +1,7 @@
 #include "ModelLoader.h"
 
 
-#include "Vulkan/VulkanMaterialManager.h"
+#include "Vulkan/Assets/VulkanMaterialManager.h"
 #include "Material.h"
 
 #include <string>

@@ -3,7 +3,7 @@
 
 #include <vector>
 
-#include "Vulkan/Bindless/BindlessData.h"
+#include "BindlessData.h"
 #include "Vertex.h"
 
 namespace MauRen

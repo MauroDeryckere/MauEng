@@ -3,8 +3,8 @@
 
 #include <unordered_map>
 
-#include "Material.h"
-#include "VulkanTexture.h"
+#include "VulkanImage.h"
+#include "Assets/Material.h"
 
 namespace MauRen
 {
@@ -37,7 +37,7 @@ namespace MauRen
 		std::unordered_map<std::string, uint32_t> m_TextureIDMap;
 
 		// Vector of all the texture images - this is a 1:1 with the buffer on the GPU
-		std::vector<VulkanTexture> m_Textures;
+		std::vector<VulkanImage> m_Textures;
 
 		// for now one global sampler is used.
 		VkSampler m_TextureSampler{ VK_NULL_HANDLE };

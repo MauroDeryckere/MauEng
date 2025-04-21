@@ -1,11 +1,11 @@
 #include "VulkanMaterialManager.h"
 
-#include "VulkanDescriptorContext.h"
+#include "../VulkanDescriptorContext.h"
 
 #include "VulkanTextureManager.h"
-#include "Material.h"
+#include "Assets/Material.h"
 
-#include "VulkanDeviceContextManager.h"
+#include "../VulkanDeviceContextManager.h"
 
 namespace MauRen
 {

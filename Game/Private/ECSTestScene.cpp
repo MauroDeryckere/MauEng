@@ -17,18 +17,15 @@ namespace MauGam
 		m_CameraManager.GetActiveCamera().Focus({ 0,0,1 });
 		m_CameraManager.GetActiveCamera().SetFar(1000);
 		{
-			Entity entSpider{ CreateEntity() };
+			Entity enttCar{ CreateEntity() };
 
-			auto& transform = entSpider.GetComponent<CTransform>();
+			auto& transform{ enttCar.GetComponent<CTransform>() };
 			//  car is exported a lil bad so need to do some rotating
 			MauCor::Rotator const rot{ 90, 0, 180 };
 			transform.Rotate(rot);
+			transform.Scale({ .5f, .5f, .5f });
 
-			//transform.Translate({ 0, 2,  0 });
-			//transform.Scale({ 5.f, 5.f, 5.f });
-
-			entSpider.AddComponent<CStaticMesh>("Resources/Models/old_rusty_car/scene.gltf");
-			//entSpider.AddComponent<CStaticMesh>("Resources/Models/Spider/spider.obj");
+			enttCar.AddComponent<CStaticMesh>("Resources/Models/old_rusty_car/scene.gltf");
 		}
 
 		//{
@@ -60,12 +57,12 @@ namespace MauGam
 			std::mt19937 gen(rd()); // Mersenne Twister generator
 			std::uniform_real_distribution<float> dis(-300.0f, 300); // Random translation range
 
-			for (size_t i { 0 }; i < 100'000; i++)
+			for (size_t i { 0 }; i < 1; i++)
 			{
 				Entity entGUN{ CreateEntity() };
-				auto& transform = entGUN.GetComponent<CTransform>();
-				transform.Translate({ dis(gen), dis(gen), dis(gen) });
-				transform.Scale({ .05f, .05f, .05f });
+				auto& transform{ entGUN.GetComponent<CTransform>() };
+				//transform.Translate({ dis(gen), dis(gen), dis(gen) });
+				//transform.Scale({ .05f, .05f, .05f });
 				entGUN.AddComponent<CStaticMesh>("Resources/Models/Spider/spider.obj");
 			}
 		}

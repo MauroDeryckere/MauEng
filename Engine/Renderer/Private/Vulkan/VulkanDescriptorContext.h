@@ -4,7 +4,7 @@
 #include "RendererPCH.h"
 #include "VulkanBuffer.h"
 
-#include "Bindless/BindlessData.h"
+#include "Assets/BindlessData.h"
 
 namespace MauRen
 {

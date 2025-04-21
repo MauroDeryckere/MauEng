@@ -2,7 +2,7 @@
 
 #include "MeshInstance.h"
 #include "RendererIdentifiers.h"
-#include "VulkanDeviceContextManager.h"
+#include "../VulkanDeviceContextManager.h"
 #include "VulkanMaterialManager.h"
 
 #include "Assets/ModelLoader.h"
