@@ -1,6 +1,5 @@
 #include "Mesh.h"
 
-#include "Utils.h"
 #include "Assets/ModelLoader.h"
 
 namespace MauRen

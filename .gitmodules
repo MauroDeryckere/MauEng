@@ -1,6 +1,3 @@
-[submodule "Engine/Renderer/Libs/Tinyobjloader"]
-	path = Engine/Renderer/Libs/Tinyobjloader
-	url = https://github.com/tinyobjloader/tinyobjloader.git
 [submodule "Engine/Renderer/Libs/stb"]
 	path = Engine/Renderer/Libs/stb
 	url = https://github.com/nothings/stb

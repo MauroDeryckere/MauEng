@@ -60,7 +60,7 @@ namespace MauGam
 			std::mt19937 gen(rd()); // Mersenne Twister generator
 			std::uniform_real_distribution<float> dis(-300.0f, 300); // Random translation range
 
-			for (size_t i { 0 }; i < 20'000; i++)
+			for (size_t i { 0 }; i < 100'000; i++)
 			{
 				Entity entGUN{ CreateEntity() };
 				auto& transform = entGUN.GetComponent<CTransform>();

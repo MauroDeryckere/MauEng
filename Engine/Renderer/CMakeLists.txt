@@ -41,15 +41,11 @@ set(ASSIMP_BUILD_TESTS OFF)
 set(ASSIMP_INSTALL OFF)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/Libs/Assimp)
 
-add_library(tinyobjloader INTERFACE)
-target_include_directories(tinyobjloader INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/Libs/tinyobjloader)
-
 add_library(stb INTERFACE)
 target_include_directories(stb INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/Libs/stb)
 
 target_link_libraries(Renderer
     PRIVATE
-        tinyobjloader # for loading models, only used in the renderer.
         stb
         assimp
         MauEngCore
