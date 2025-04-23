@@ -43,7 +43,7 @@ void main()
 
     vec3 bitangent = cross(inNormal, inTangent.xyz) * inTangent.w;
     vec3 sampledNormal = normalize(normalTex.xyz * 2.0 - 1.0);
-    mat3 TBN = mat3(normalize(inTangent.xyz), normalize(bitangent), normalize(inNormal));
+    mat3 TBN = mat3(normalize(inTangent.xyz), normalize(bitangent), inNormal);
     vec3 n = normalize(TBN * sampledNormal);
 
     //vec3 lightDir = normalize(vec3(
