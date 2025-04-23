@@ -13,7 +13,7 @@ namespace MauRen
 		Renderer{ pWindow, debugRenderer },
 		m_pWindow{ pWindow }
 	{
-		ME_PROFILE_FUNCTION();
+		ME_PROFILE_FUNCTION()
 
 		if (dynamic_cast<NullDebugRenderer*>(&debugRenderer))
 		{
@@ -367,7 +367,13 @@ namespace MauRen
 	void VulkanRenderer::UpdateUniformBuffer(uint32_t currentImage, glm::mat4 const& view, glm::mat4 const& proj)
 	{
 		ME_PROFILE_FUNCTION()
-		UniformBufferObject const ubo{ view, proj };
+
+		UniformBufferObject const ubo
+		{
+				.viewProj = proj * view,
+				.cameraPosition = glm::vec3{ glm::inverse(view)[3] }
+		};
+
 		memcpy(m_MappedUniformBuffers[currentImage].mapped, &ubo, sizeof(ubo));
 	}
 

@@ -3,8 +3,8 @@
 
 layout(set = 0, binding = 0) uniform UniformBufferObject 
 {
-    mat4 view;
-    mat4 proj;
+    mat4 viewProj;
+    vec3 cameraPos;
 } ubo;
 
 // 		glm::vec3 position;
@@ -12,6 +12,7 @@ layout(set = 0, binding = 0) uniform UniformBufferObject
 //      glm::vec4 tangent; // .xyz = tangent vector, .w = handedness
 //      glm::vec2 texCoord;
 
+// glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(modelMatrix)));
 struct MeshInstanceData
 {
     mat4 modelMatrix;
@@ -40,10 +41,10 @@ layout(location = 3) out vec3 outNormal;
 
 void main() 
 {
-    mat4 model = instances[gl_InstanceIndex].modelMatrix;
-    gl_Position = ubo.proj * ubo.view * model * vec4(inPosition, 1.0);
-    //sub id = instances[gl] 
-    // SubMeshData submesh = submeshes[gl_PrimitiveID];
+    MeshInstanceData instance = instances[gl_InstanceIndex];
+    mat4 model = instance.modelMatrix;
+
+    gl_Position = ubo.viewProj * model * vec4(inPosition, 1.0);
 
     mat3 normalMatrix = transpose(inverse(mat3(model)));
 
@@ -52,5 +53,5 @@ void main()
 
     outFragTexCoord = inTexCoord;
 
-    outMaterialIndex = instances[gl_InstanceIndex].materialIndex;
+    outMaterialIndex = instance.materialIndex;
 }
