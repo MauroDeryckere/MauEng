@@ -16,7 +16,7 @@
 
 #include "VulkanBuffer.h"
 
-#include "VulkanImage.h"
+#include "Assets/VulkanImage.h"
 
 #include "DebugRenderer/DebugVertex.h"
 
@@ -45,7 +45,7 @@ namespace MauRen
 		virtual void ResizeWindow() override;
 
 		virtual void QueueDraw(glm::mat4 const& transformMat, MauEng::CStaticMesh const& mesh) override;
-		virtual MeshInstance LoadOrGetMeshData(char const* path) override;
+		virtual [[nodiscard]] uint32_t LoadOrGetMeshID(char const* path) override;
 
 		VulkanRenderer(VulkanRenderer const&) = delete;
 		VulkanRenderer(VulkanRenderer&&) = delete;
@@ -81,10 +81,10 @@ namespace MauRen
 
 		bool m_FramebufferResized{ false };
 
-		struct UniformBufferObject final
+		struct alignas(16) UniformBufferObject final
 		{
-			alignas(16) glm::mat4 view;
-			alignas(16) glm::mat4 proj;
+			glm::mat4 viewProj;
+			glm::vec3 cameraPosition;
 		};
 		std::vector<VulkanMappedBuffer> m_MappedUniformBuffers{};
 

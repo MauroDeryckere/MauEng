@@ -14,6 +14,7 @@
 	  - [Coordinate System](#coordinate-system)
 	  - [Features](#features)
 	  - [Features I want to add inn the near future](#features-i-want-to-add-inn-the-near-future)
+	  - [In the further future](#in-the-further-future)
 	  - [Debug Rendering](#debug-rendering)
 
 ## Core
@@ -103,21 +104,25 @@ In this project, we use a right-handed 3D coordinate system with the following c
 
 ### Features
 - Instanced Rendering
-As a test I loaded a mesh with 100 000 instances. The mesh is a simple gun and has 1425 indices and 311 vertices.
+As a test I loaded a mesh with 100 000 instances. The mesh is a simple gun and has 1425 indices and 311 vertices. This runs very smoothly on my hardware (RTX 3060, 60 FPS cap but main thread was sleeping for +/-10ms and GPU had a lot of room left)
 ![Screenshot](docs/ZoomedOutInstances.png)
 ![Screenshot](docs/ZoomedInInstances.png)
 
 - Bindless (indirect) Rendering
 The renderer uses a global index and vertex buffer, draw commands are batched and issued using vkCmdDrawIndexedIndirect. Textures are in a descriptor array.
 
-- Material support (loading a material from a file)
-.mtl are loaded based on the .obj fil, and the diffuse texture is loaded from this.
+- Mesh & material support (loading a material from a file)
+Assimp is integrated, and all formats supported by Assimp can be used to load meshes & materials. Meshes are split up in submeshes, these submeshes are then instanced.
+Default and invalid materials are used to prevent branching on the GPU.
 
 ### Features I want to add inn the near future
-- Full material support (currently only supports diffuse textures)
-- Lighting
+- Full material support (currently only supports diffuse & normal maps textures)
+- Lighting (currently very basic hard coded light dir is supported)
 - Deleting / hiding meshes
 - GPU frustrum culling
+
+### In the further future: 
+- 
 
 ### Debug Rendering
 Easy to use API for debug rendering.

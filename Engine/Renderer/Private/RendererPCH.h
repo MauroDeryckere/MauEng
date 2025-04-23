@@ -3,8 +3,6 @@
 
 #define USING_VULKAN_RENDERER 1
 
-#include "Utils.h"
-
 #include "CorePCH.h"
 
 #include "AssertsInternal.h"

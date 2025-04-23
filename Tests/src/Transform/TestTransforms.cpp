@@ -35,6 +35,7 @@ TEST_CASE("CTransform Combine Transformations")
     transform.translation = position;
     transform.rotation.rotation = rotation;
     transform.scale = scale;
+	transform.isDirty = true;
 
     glm::mat4 expectedMatrix = glm::translate(glm::mat4{ 1.0f }, position) * glm::mat4_cast(rotation) * glm::scale(glm::mat4{ 1.0f }, scale);
 

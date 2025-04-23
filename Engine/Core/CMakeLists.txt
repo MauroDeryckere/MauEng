@@ -43,7 +43,7 @@ set(DSDL_TESTS OFF)
 set(DSDL_TEST_LIBRARY OFF)
 set(DSDL_DISABLE_INSTALL_DOCS OFF)
 set(DSDL_INSTALL_TESTS OFF)
-
+set(SDL_TEST_LIBRARY OFF)
 set(SDL_TESTS OFF)
 set(SDL_TEST_LIBRARY OFF)
 set(SDL_DISABLE_INSTALL_DOCS OFF)
@@ -75,6 +75,11 @@ set(SDL_STATIC ON)
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/Libs/SDL" EXCLUDE_FROM_ALL)	
 set(SDL3_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/SDL/include/SDL3")
 
+get_property(all_targets DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/Libs/SDL" PROPERTY BUILDSYSTEM_TARGETS)
+foreach(target ${all_targets})
+    set_target_properties(${target} PROPERTIES FOLDER "Libs/SDL")
+endforeach()
+
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/Libs/glm")
 
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/Libs/fmt")
@@ -84,7 +89,6 @@ add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/Libs/Optick")
 target_link_libraries(MauEngCore
     PUBLIC
         SDL3::SDL3
-        glm
         fmt::fmt # While it is not necessary to link against this publicly, users could prefer using this so might as well keep it public 
         OptickCore
     PRIVATE

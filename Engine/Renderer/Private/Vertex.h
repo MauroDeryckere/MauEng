@@ -10,12 +10,16 @@ namespace MauRen
 	struct Vertex final
 	{
 		glm::vec3 position;
-		glm::vec3 color;
+		glm::vec3 normal;
+		glm::vec4 tangent; // .xyz = tangent vector, .w = handedness
 		glm::vec2 texCoord;
 
 		bool operator==(const Vertex& other) const
 		{
-			return position == other.position && color == other.color && texCoord == other.texCoord;
+			return position == other.position &&
+				normal == other.normal &&
+				tangent == other.tangent &&
+				texCoord == other.texCoord;
 		}
 
 	};
@@ -27,7 +31,7 @@ namespace std
 	{
 		size_t operator()(MauRen::Vertex const& vertex) const noexcept
 		{
-			return ((hash<glm::vec3>()(vertex.position) ^ (hash<glm::vec3>()(vertex.color) << 1)) >> 1) ^ (hash<glm::vec2>()(vertex.texCoord) << 1);
+			return ((hash<glm::vec3>()(vertex.position) ^ (hash<glm::vec2>()(vertex.texCoord) << 1)));
 		}
 	};
 }

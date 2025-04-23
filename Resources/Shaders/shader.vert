@@ -3,10 +3,16 @@
 
 layout(set = 0, binding = 0) uniform UniformBufferObject 
 {
-    mat4 view;
-    mat4 proj;
+    mat4 viewProj;
+    vec3 cameraPos;
 } ubo;
 
+// 		glm::vec3 position;
+//      glm::vec3 normal;
+//      glm::vec4 tangent; // .xyz = tangent vector, .w = handedness
+//      glm::vec2 texCoord;
+
+// glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(modelMatrix)));
 struct MeshInstanceData
 {
     mat4 modelMatrix;
@@ -24,21 +30,28 @@ layout(set = 0, binding = 5) buffer readonly MeshInstanceDataBuffer
 };
 
 layout(location = 0) in vec3 inPosition;
-layout(location = 1) in vec3 inColor;
-layout(location = 2) in vec2 inTexCoord;
+layout(location = 1) in vec3 inNormal;
+layout(location = 2) in vec4 inTangent;
+layout(location = 3) in vec2 inTexCoord;
 
-layout(location = 0) out vec3 outFragColor;
-layout(location = 1) out vec2 outFragTexCoord;
-
-layout(location = 2) out flat uint outMaterialIndex;
+layout(location = 0) out vec2 outFragTexCoord;
+layout(location = 1) out flat uint outMaterialIndex;
+layout(location = 2) out vec4 outTangent;
+layout(location = 3) out vec3 outNormal;
 
 void main() 
 {
-    mat4 model = instances[gl_InstanceIndex].modelMatrix;
-    gl_Position = ubo.proj * ubo.view * model * vec4(inPosition, 1.0);
+    MeshInstanceData instance = instances[gl_InstanceIndex];
+    mat4 model = instance.modelMatrix;
 
-    outFragColor = inColor;
+    gl_Position = ubo.viewProj * model * vec4(inPosition, 1.0);
+
+    mat3 normalMatrix = transpose(inverse(mat3(model)));
+
+    outTangent = vec4(normalMatrix * inTangent.xyz, inTangent.w);
+    outNormal = normalize(normalMatrix * inNormal);
+
     outFragTexCoord = inTexCoord;
 
-    outMaterialIndex = instances[gl_InstanceIndex].materialIndex;
+    outMaterialIndex = instance.materialIndex;
 }

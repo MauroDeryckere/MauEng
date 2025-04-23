@@ -1,7 +1,7 @@
 #ifndef MAUREN_NULLRENDERER
 #define MAUREN_NULLRENDERER
 
-#include "MeshInstance.h"
+#include "RendererIdentifiers.h"
 
 namespace MauEng
 {
@@ -25,8 +25,8 @@ namespace MauRen
 		virtual void Render(glm::mat4 const&, glm::mat4 const&) override {}
 		virtual void ResizeWindow() override {}
 
-		virtual void QueueDraw(glm::mat4 const&, MauEng::CStaticMesh const&) override {};
-		virtual MeshInstance LoadOrGetMeshData(char const*) override { return MeshInstance{}; }
+		virtual void QueueDraw(glm::mat4 const&, MauEng::CStaticMesh const&) override {}
+		virtual uint32_t LoadOrGetMeshID(char const*) override { return INVALID_MESH_ID; }
 
 		NullRenderer(NullRenderer const&) = delete;
 		NullRenderer(NullRenderer&&) = delete;

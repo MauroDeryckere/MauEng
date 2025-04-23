@@ -11,48 +11,38 @@ namespace MauGam
 
 		using namespace MauEng;
 
-		m_CameraManager.GetActiveCamera().SetPosition(glm::vec3{ 0.f, 2, 4 });
+		m_CameraManager.GetActiveCamera().SetPosition(glm::vec3{ -200.f, 40, -100 });
 		m_CameraManager.GetActiveCamera().SetFOV(60.f);
 
 		m_CameraManager.GetActiveCamera().Focus({ 0,0,1 });
-
+		m_CameraManager.GetActiveCamera().SetFar(1000);
 		{
-			Entity entGUN{ CreateEntity() };
+			Entity enttCar{ CreateEntity() };
 
-			auto& transform = entGUN.GetComponent<CTransform>();
+			auto& transform{ enttCar.GetComponent<CTransform>() };
+			//  car is exported a lil bad so need to do some rotating
+			MauCor::Rotator const rot{ 90, 0, 180 };
+			transform.Rotate(rot);
+			transform.Scale({ .5f, .5f, .5f });
 
-			transform.Translate({ 0, 2,  0 });
-			transform.Scale({ 5.f, 5.f, 5.f });
-
-			entGUN.AddComponent<CStaticMesh>("Resources/Models/Gun.obj");
-		}
-
-		{
-			Entity entSKULL{ CreateEntity() };
-			auto& transform = entSKULL.GetComponent<CTransform>();
-
-			transform.Translate({ 5, 5,  -20 });
-			transform.Scale({ .3f, .3f, .3f });
-			transform.Rotate({ 270, 0, 0 });
-
-			entSKULL.AddComponent<CStaticMesh>("Resources/Models/Skull.obj");
+			enttCar.AddComponent<CStaticMesh>("Resources/Models/old_rusty_car/scene.gltf");
 		}
 
 		bool constexpr ENABLE_HIGH_INSTANCE_TEST{ true };
-
+		uint32_t constexpr NUM_INSTANCES{ 75'000 };
 		if constexpr (ENABLE_HIGH_INSTANCE_TEST)
 		{
 			std::random_device rd;  // Random device for seed 
 			std::mt19937 gen(rd()); // Mersenne Twister generator
-			std::uniform_real_distribution<float> dis(-30.0f, 30.0f); // Random translation range
+			std::uniform_real_distribution<float> dis(-300.0f, 300); // Random translation range
 
-			for (size_t i { 0 }; i < 100'000; i++)
+			for (size_t i { 0 }; i < NUM_INSTANCES; i++)
 			{
 				Entity entGUN{ CreateEntity() };
-				auto& transform = entGUN.GetComponent<CTransform>();
+				auto& transform{ entGUN.GetComponent<CTransform>() };
 				transform.Translate({ dis(gen), dis(gen), dis(gen) });
-
-				entGUN.AddComponent<CStaticMesh>("Resources/Models/Gun.obj");
+				transform.Scale({ .05f, .05f, .05f });
+				entGUN.AddComponent<CStaticMesh>("Resources/Models/Spider/spider.obj");
 			}
 		}
 
@@ -67,6 +57,8 @@ namespace MauGam
 		input.BindAction("RotLeft", MauEng::KeyInfo{ SDLK_J, MauEng::KeyInfo::ActionType::Held });
 		input.BindAction("RotRight", MauEng::KeyInfo{ SDLK_L, MauEng::KeyInfo::ActionType::Held });
 		input.BindAction("RotDown", MauEng::KeyInfo{ SDLK_K, MauEng::KeyInfo::ActionType::Held });
+
+		input.BindAction("Sprint", MauEng::KeyInfo{ SDLK_A, MauEng::KeyInfo::ActionType::Held });
 
 
 		input.BindAction("Rotate", MauEng::MouseInfo{ {},   MauEng::MouseInfo::ActionType::Moved });
@@ -87,22 +79,30 @@ namespace MauGam
 
 		auto const& input{ INPUT_MANAGER };
 
+		bool isSprinting{ false };
+		auto constexpr sprintModifier{ 6.f };
 		auto constexpr movementSpeed{ 20.f };
+
+		if (input.IsActionExecuted("Sprint"))
+		{
+			isSprinting = true;
+		}
+
 		if (input.IsActionExecuted("MoveUp"))
 		{
-			m_CameraManager.GetActiveCamera().Translate({ 0.f, 0.f, movementSpeed * TIME.ElapsedSec() });
+			m_CameraManager.GetActiveCamera().Translate({ 0.f, 0.f, movementSpeed * TIME.ElapsedSec() * (isSprinting ? sprintModifier : 1) });
 		}
 		if (input.IsActionExecuted("MoveDown"))
 		{
-			m_CameraManager.GetActiveCamera().Translate({ 0.f, 0.f, -movementSpeed * TIME.ElapsedSec() });
+			m_CameraManager.GetActiveCamera().Translate({ 0.f, 0.f, -movementSpeed * TIME.ElapsedSec() * (isSprinting ? sprintModifier : 1) });
 		}
 		if (input.IsActionExecuted("MoveLeft"))
 		{
-			m_CameraManager.GetActiveCamera().Translate({ -movementSpeed * TIME.ElapsedSec(), 0.f, 0.f });
+			m_CameraManager.GetActiveCamera().Translate({ -movementSpeed * TIME.ElapsedSec() * (isSprinting ? sprintModifier : 1), 0.f, 0.f });
 		}
 		if (input.IsActionExecuted("MoveRight"))
 		{
-			m_CameraManager.GetActiveCamera().Translate({ movementSpeed * TIME.ElapsedSec(), 0.f, 0.f });
+			m_CameraManager.GetActiveCamera().Translate({ movementSpeed * TIME.ElapsedSec() * (isSprinting ? sprintModifier : 1), 0.f, 0.f });
 		}
 
 		float constexpr keyboardRotSpeed{ 10 };
@@ -162,16 +162,16 @@ namespace MauGam
 					// Group is faster.
 					//ME_PROFILE_SCOPE("GROUP")
 
-					MauCor::Rotator const rot{ 0, rotationSpeed * TIME.ElapsedSec() };
-					auto group{ GetECSWorld().Group<CStaticMesh, CTransform>() };
-					group.Each([&rot, &r](CStaticMesh const& m, CTransform& t)
-						{
-							if (r++ % 2)
-							{
-								t.Rotate(rot);
-							}
+					//MauCor::Rotator const rot{ 0, rotationSpeed * TIME.ElapsedSec() };
+					//auto group{ GetECSWorld().Group<CStaticMesh, CTransform>() };
+					//group.Each([&rot, &r](CStaticMesh const& m, CTransform& t)
+					//	{
+					//		if (r++ % 2)
+					//		{
+					//			t.Rotate(rot);
+					//		}
 
-						}, std::execution::par_unseq);
+					//	}, std::execution::par_unseq);
 				}
 
 			}

@@ -16,9 +16,6 @@ target_include_directories(${EXECUTABLE_NAME}
     PRIVATE
         ${GAME_PRIVATE_DIR}        # Private headers for Game
 )
-
-set_target_properties(${EXECUTABLE_NAME} PROPERTIES OUTPUT_NAME "VulkanEngine")
-
 target_link_libraries(${EXECUTABLE_NAME}
     PRIVATE
         Engine

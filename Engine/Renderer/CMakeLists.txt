@@ -35,16 +35,19 @@ find_package(Vulkan REQUIRED)
 # Add the Libs/ directory to the include paths
 
 # for loading models, only used in the renderer.
-add_library(tinyobjloader INTERFACE)
-target_include_directories(tinyobjloader INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/Libs/tinyobjloader)
+set(BUILD_SHARED_LIBS OFF)
+set(ASSIMP_BUILD_ASSIMP_TOOLS OFF)
+set(ASSIMP_BUILD_TESTS OFF)
+set(ASSIMP_INSTALL OFF)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/Libs/Assimp)
 
 add_library(stb INTERFACE)
 target_include_directories(stb INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/Libs/stb)
 
 target_link_libraries(Renderer
     PRIVATE
-        tinyobjloader # for loading models, only used in the renderer.
         stb
+        assimp
         MauEngCore
         Vulkan::Vulkan # Link Vulkan SDK
 )

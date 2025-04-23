@@ -1,16 +1,7 @@
 #include "VulkanRenderer.h"
 
-#include "VulkanUtils.h"
-
-#define GLM_FORCE_RADIANS
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-
-#include <chrono>
-
-#include "VulkanMeshManager.h"
-#include "VulkanMaterialManager.h"
+#include "Assets/VulkanMeshManager.h"
+#include "Assets/VulkanMaterialManager.h"
 #include "DebugRenderer/InternalDebugRenderer.h"
 #include "DebugRenderer/NullDebugRenderer.h"
 
@@ -22,7 +13,7 @@ namespace MauRen
 		Renderer{ pWindow, debugRenderer },
 		m_pWindow{ pWindow }
 	{
-		ME_PROFILE_FUNCTION();
+		ME_PROFILE_FUNCTION()
 
 		if (dynamic_cast<NullDebugRenderer*>(&debugRenderer))
 		{
@@ -55,12 +46,10 @@ namespace MauRen
 
 		m_SwapChainContext.InitializeResourcesAndCreateFrames(&m_GraphicsPipeline);
 
+		CreateUniformBuffers();
 		VulkanMaterialManager::GetInstance().Initialize();
 
-		CreateUniformBuffers();
-
 		m_DescriptorContext.CreateDescriptorPool();
-
 		std::vector<VulkanBuffer> tempUniformBuffers;
 		for (auto const& b : m_MappedUniformBuffers)
 		{
@@ -75,6 +64,7 @@ namespace MauRen
 		m_CommandPoolManager.CreateCommandBuffers();
 		CreateSyncObjects();
 
+		VulkanMaterialManager::GetInstance().InitializeTextureManager(m_CommandPoolManager, m_DescriptorContext);
 		VulkanMeshManager::GetInstance().Initialize(&m_CommandPoolManager);
 
 		if (m_DebugRenderer)
@@ -154,10 +144,10 @@ namespace MauRen
 
 	void VulkanRenderer::QueueDraw(glm::mat4 const& transformMat, MauEng::CStaticMesh const& mesh)
 	{
-		VulkanMeshManager::GetInstance().QueueDraw(transformMat, mesh.meshID, mesh.materialID);
+		VulkanMeshManager::GetInstance().QueueDraw(transformMat, mesh.meshID);
 	}
 
-	MeshInstance VulkanRenderer::LoadOrGetMeshData(char const* path)
+	uint32_t VulkanRenderer::LoadOrGetMeshID(char const* path)
 	{
 		return VulkanMeshManager::GetInstance().LoadMesh(path, m_CommandPoolManager, m_DescriptorContext);
 	}
@@ -377,7 +367,13 @@ namespace MauRen
 	void VulkanRenderer::UpdateUniformBuffer(uint32_t currentImage, glm::mat4 const& view, glm::mat4 const& proj)
 	{
 		ME_PROFILE_FUNCTION()
-		UniformBufferObject const ubo{ view, proj };
+
+		UniformBufferObject const ubo
+		{
+				.viewProj = proj * view,
+				.cameraPosition = glm::vec3{ glm::inverse(view)[3] }
+		};
+
 		memcpy(m_MappedUniformBuffers[currentImage].mapped, &ubo, sizeof(ubo));
 	}
 
