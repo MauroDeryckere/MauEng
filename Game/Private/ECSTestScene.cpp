@@ -29,18 +29,19 @@ namespace MauGam
 		}
 
 		bool constexpr ENABLE_HIGH_INSTANCE_TEST{ true };
+		uint32_t constexpr NUM_INSTANCES{ 50'000 };
 		if constexpr (ENABLE_HIGH_INSTANCE_TEST)
 		{
 			std::random_device rd;  // Random device for seed 
 			std::mt19937 gen(rd()); // Mersenne Twister generator
 			std::uniform_real_distribution<float> dis(-300.0f, 300); // Random translation range
 
-			for (size_t i { 0 }; i < 1; i++)
+			for (size_t i { 0 }; i < NUM_INSTANCES; i++)
 			{
 				Entity entGUN{ CreateEntity() };
 				auto& transform{ entGUN.GetComponent<CTransform>() };
-				//transform.Translate({ dis(gen), dis(gen), dis(gen) });
-				//transform.Scale({ .05f, .05f, .05f });
+				transform.Translate({ dis(gen), dis(gen), dis(gen) });
+				transform.Scale({ .05f, .05f, .05f });
 				entGUN.AddComponent<CStaticMesh>("Resources/Models/Spider/spider.obj");
 			}
 		}
