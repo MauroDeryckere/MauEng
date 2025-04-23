@@ -17,6 +17,7 @@ namespace MauRen
 	{
 	public:
 		void Initialize();
+		void InitializeTextureManager(VulkanCommandPoolManager& cmdPoolManager, VulkanDescriptorContext& descContext);
 		void Destroy();
 
 		// Returns if it exists, and ID if it does
@@ -51,6 +52,9 @@ namespace MauRen
 		std::vector<VulkanMappedBuffer> m_MaterialDataBuffers;
 
 		void InitMaterialBuffers();
+
+		void CreateDefaultMaterial(VulkanCommandPoolManager& cmdPoolManager,
+			VulkanDescriptorContext& descContext);
 	};
 }
 

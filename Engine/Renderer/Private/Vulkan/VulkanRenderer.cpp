@@ -1,14 +1,5 @@
 #include "VulkanRenderer.h"
 
-#include "VulkanUtils.h"
-
-#define GLM_FORCE_RADIANS
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-
-#include <chrono>
-
 #include "Assets/VulkanMeshManager.h"
 #include "Assets/VulkanMaterialManager.h"
 #include "DebugRenderer/InternalDebugRenderer.h"
@@ -55,12 +46,10 @@ namespace MauRen
 
 		m_SwapChainContext.InitializeResourcesAndCreateFrames(&m_GraphicsPipeline);
 
+		CreateUniformBuffers();
 		VulkanMaterialManager::GetInstance().Initialize();
 
-		CreateUniformBuffers();
-
 		m_DescriptorContext.CreateDescriptorPool();
-
 		std::vector<VulkanBuffer> tempUniformBuffers;
 		for (auto const& b : m_MappedUniformBuffers)
 		{
@@ -75,6 +64,7 @@ namespace MauRen
 		m_CommandPoolManager.CreateCommandBuffers();
 		CreateSyncObjects();
 
+		VulkanMaterialManager::GetInstance().InitializeTextureManager(m_CommandPoolManager, m_DescriptorContext);
 		VulkanMeshManager::GetInstance().Initialize(&m_CommandPoolManager);
 
 		if (m_DebugRenderer)

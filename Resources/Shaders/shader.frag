@@ -35,21 +35,11 @@ void main()
     MaterialData material = materials[inMaterialIndex];
 
     // When the ID is 0xFFFFFFFF, we treat it as missing or invalid and return a zero vector.
-    vec4 albedo = (material.albedoTextureID == 0xFFFFFFFF)
-        ? material.baseColor
-        : texture(sampler2D(TextureBuffer[material.albedoTextureID], globalSampler), fragTexCoord);
-
-    vec4 normalTex = (material.normalTextureID == 0xFFFFFFFF)
-        ? vec4(0.5, 0.5, 1.0, 1.0)
-        : texture(sampler2D(TextureBuffer[material.normalTextureID], globalSampler), fragTexCoord);
+    vec4 albedo = texture(sampler2D(TextureBuffer[material.albedoTextureID], globalSampler), fragTexCoord);
+    vec4 normalTex = texture(sampler2D(TextureBuffer[material.normalTextureID], globalSampler), fragTexCoord);
         
-    //vec4 roughness = (material.roughnessTextureID == 0xFFFFFFFF)
-    //    ? vec4(0.0)
-    //    : texture(sampler2D(TextureBuffer[material.roughnessTextureID], globalSampler), fragTexCoord);
-    //    
-    //vec4 metallic = (material.metallicTextureID == 0xFFFFFFFF)
-    //    ? vec4(0.0)
-    //    : texture(sampler2D(TextureBuffer[material.metallicTextureID], globalSampler), fragTexCoord);
+    //vec4 roughness = texture(sampler2D(TextureBuffer[material.roughnessTextureID], globalSampler), fragTexCoord);
+    //vec4 metallic = texture(sampler2D(TextureBuffer[material.metallicTextureID], globalSampler), fragTexCoord);
 
     vec3 bitangent = cross(inNormal, inTangent.xyz) * inTangent.w;
     vec3 sampledNormal = normalize(normalTex.xyz * 2.0 - 1.0);

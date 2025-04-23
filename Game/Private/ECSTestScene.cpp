@@ -11,7 +11,7 @@ namespace MauGam
 
 		using namespace MauEng;
 
-		m_CameraManager.GetActiveCamera().SetPosition(glm::vec3{ 0.f, 2, 4 });
+		m_CameraManager.GetActiveCamera().SetPosition(glm::vec3{ -200.f, 40, -100 });
 		m_CameraManager.GetActiveCamera().SetFOV(60.f);
 
 		m_CameraManager.GetActiveCamera().Focus({ 0,0,1 });
@@ -27,28 +27,6 @@ namespace MauGam
 
 			enttCar.AddComponent<CStaticMesh>("Resources/Models/old_rusty_car/scene.gltf");
 		}
-
-		//{
-		//	Entity entGUN{ CreateEntity() };
-
-		//	auto& transform = entGUN.GetComponent<CTransform>();
-
-		//	transform.Translate({ 0, 2,  0 });
-		//	transform.Scale({ 5.f, 5.f, 5.f });
-
-		//	entGUN.AddComponent<CStaticMesh>("Resources/Models/Gun.obj");
-		//}
-
-		//{
-		//	Entity entSKULL{ CreateEntity() };
-		//	auto& transform = entSKULL.GetComponent<CTransform>();
-
-		//	transform.Translate({ 5, 5,  -20 });
-		//	transform.Scale({ .3f, .3f, .3f });
-		//	transform.Rotate({ 270, 0, 0 });
-
-		//	entSKULL.AddComponent<CStaticMesh>("Resources/Models/Skull.obj");
-		//}
 
 		bool constexpr ENABLE_HIGH_INSTANCE_TEST{ true };
 		if constexpr (ENABLE_HIGH_INSTANCE_TEST)

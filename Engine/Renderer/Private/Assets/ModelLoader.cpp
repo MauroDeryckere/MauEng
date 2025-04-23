@@ -224,9 +224,6 @@ namespace MauRen
 		if (material->GetTexture(aiTextureType_AMBIENT, 0, &texPath) == AI_SUCCESS)
 			mat.ambientTexture = texPath.C_Str();
 
-		if (material->GetTexture(aiTextureType_HEIGHT, 0, &texPath) == AI_SUCCESS)
-			mat.bumpMap = texPath.C_Str();
-
 		if (material->GetTexture(aiTextureType_DISPLACEMENT, 0, &texPath) == AI_SUCCESS)
 			mat.displacementMap = texPath.C_Str();
 

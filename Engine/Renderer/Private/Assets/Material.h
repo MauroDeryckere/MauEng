@@ -21,32 +21,30 @@ namespace MauRen
         operator bool() const noexcept { return !data.empty(); }
     };
 
-    // For now we will only work with the diffuse texture, later support can be added for all other variables
 	struct Material final
 	{
-        std::string name;
+        std::string name {"DefaultMaterial"};
 
-        glm::vec3 diffuseColor;
-        glm::vec3 specularColor;
-        glm::vec3 ambientColor;
-        glm::vec3 emissiveColor;
+        glm::vec3 diffuseColor { 1.0f };
+        glm::vec3 specularColor { 0.0f };
+        glm::vec3 ambientColor {0.f };
+        glm::vec3 emissiveColor {0.f};
 
-        float transparency;
-        float shininess;
-        float refractionIndex;
-        int illuminationModel;
+        float transparency {0.f};
+        float shininess {0.f};
+        float refractionIndex {1.f};
+        int illuminationModel{1};
 
-        std::string diffuseTexture;
-        EmbeddedTexture embDiffuse;
-        std::string specularTexture;
-        EmbeddedTexture embSpecular;
-        std::string normalMap;
-        EmbeddedTexture embNormal;
-        std::string ambientTexture;
-        EmbeddedTexture embAmbient;
+        std::string diffuseTexture{ "__DefaultWhite" };
+        EmbeddedTexture embDiffuse{};
+        std::string specularTexture{ "__DefaultGray" };
+        EmbeddedTexture embSpecular{};
+        std::string normalMap{ "__DefaultNormal" };
+        EmbeddedTexture embNormal{};
+        std::string ambientTexture{ "__DefaultGray" };
+        EmbeddedTexture embAmbient{};
 
-        std::string bumpMap;
-        std::string displacementMap;
+        std::string displacementMap{"NONE"};
 	};
 }
 

@@ -17,6 +17,17 @@ namespace MauRen
 		InitMaterialBuffers();
 	}
 
+
+	void VulkanMaterialManager::InitializeTextureManager(VulkanCommandPoolManager& cmdPoolManager,
+		VulkanDescriptorContext& descContext)
+	{
+		ME_PROFILE_FUNCTION()
+
+		m_TextureManager->InitializeTextures(cmdPoolManager, descContext);
+
+		CreateDefaultMaterial(cmdPoolManager, descContext);
+	}
+
 	void VulkanMaterialManager::Destroy()
 	{
 		for (auto & m : m_MaterialDataBuffers)
@@ -56,6 +67,13 @@ namespace MauRen
 	uint32_t VulkanMaterialManager::LoadOrGetMaterial(VulkanCommandPoolManager& cmdPoolManager, VulkanDescriptorContext& descriptorContext, Material const& material)
 	{
 		ME_PROFILE_FUNCTION()
+
+		// Test code to assign default mat
+		//static bool firstRun{ false };
+		//if (firstRun)
+		//{
+		//	return INVALID_MATERIAL_ID;
+		//}
 
 		auto const it{ m_MaterialIDMap.find(material.name) };
 		if (it != end(m_MaterialIDMap))
@@ -105,6 +123,7 @@ namespace MauRen
 			}
 		}
 
+		//firstRun = true;
 		return static_cast<uint32_t>(m_Materials.size() - 1);
 	}
 
@@ -130,5 +149,14 @@ namespace MauRen
 			// Persistent mapping
 			vkMapMemory(deviceContext->GetLogicalDevice(), m_MaterialDataBuffers[i].buffer.bufferMemory, 0, BUFFER_SIZE, 0, &m_MaterialDataBuffers[i].mapped);
 		}
+	}
+
+	void VulkanMaterialManager::CreateDefaultMaterial(VulkanCommandPoolManager& cmdPoolManager,
+		VulkanDescriptorContext& descContext)
+	{
+		Material const defaultMat{};
+		auto const id{ LoadOrGetMaterial(cmdPoolManager, descContext, defaultMat) };
+
+		ME_ASSERT(id == INVALID_MATERIAL_ID);
 	}
 }

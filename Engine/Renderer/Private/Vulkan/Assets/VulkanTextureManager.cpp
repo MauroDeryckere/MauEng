@@ -16,6 +16,13 @@ namespace MauRen
 		CreateTextureSampler();
 	}
 
+
+	void VulkanTextureManager::InitializeTextures(VulkanCommandPoolManager& cmdPoolManager,
+		VulkanDescriptorContext& descriptorContext)
+	{
+		CreateDefaultTextures(cmdPoolManager, descriptorContext);
+	}
+
 	VulkanTextureManager::~VulkanTextureManager()
 	{
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
@@ -49,7 +56,7 @@ namespace MauRen
 	{
 		ME_PROFILE_FUNCTION()
 
-		if (m_Textures.size() == MAX_TEXTURES || textureName.empty())
+		if (m_Textures.size() >= MAX_TEXTURES || textureName.empty())
 		{
 			return INVALID_TEXTURE_ID;
 		}
@@ -73,7 +80,7 @@ namespace MauRen
 	{
 		ME_PROFILE_FUNCTION()
 
-		if (m_Textures.size() == MAX_TEXTURES)
+		if (m_Textures.size() >= MAX_TEXTURES || textureName.empty())
 		{
 			return INVALID_TEXTURE_ID;
 		}
@@ -130,6 +137,43 @@ namespace MauRen
 		{
 			throw std::runtime_error("Failed to create texture sampler!");
 		}
+	}
+
+	void VulkanTextureManager::CreateDefaultTextures(VulkanCommandPoolManager& cmdPoolManager, VulkanDescriptorContext& descriptorContext)
+	{
+		// 0
+		auto defaultWhiteTexture{ Create1x1Texture(cmdPoolManager, glm::vec4(1.0f)) };
+		descriptorContext.BindTexture(m_Textures.size(), defaultWhiteTexture.imageViews[0], VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+		m_Textures.emplace_back(std::move(defaultWhiteTexture));
+		m_TextureIDMap["__DefaultWhite"] = m_Textures.size() - 1;
+
+		// 1
+		auto defaultGrayTexture{ Create1x1Texture(cmdPoolManager, glm::vec4(.5f)) };
+		descriptorContext.BindTexture(m_Textures.size(), defaultGrayTexture.imageViews[0], VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		m_Textures.emplace_back(std::move(defaultGrayTexture));
+		m_TextureIDMap["__DefaultGray"] = m_Textures.size() - 1;
+
+		// 2
+		auto defaultNormalTexture{ Create1x1Texture(cmdPoolManager, glm::vec4(0.5f, 0.5f, 1.0f, 1.0f)) };
+		descriptorContext.BindTexture(m_Textures.size(), defaultNormalTexture.imageViews[0], VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+		m_Textures.emplace_back(std::move(defaultNormalTexture));
+		m_TextureIDMap["__DefaultNormal"] = m_Textures.size() - 1;
+
+		// 3
+		auto defaultBlackTexture{ Create1x1Texture(cmdPoolManager, glm::vec4(0.0f)) };
+		descriptorContext.BindTexture(m_Textures.size(), defaultBlackTexture.imageViews[0], VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+		m_Textures.emplace_back(std::move(defaultBlackTexture));
+		m_TextureIDMap["__DefaultBlack"] = m_Textures.size() - 1;
+
+		// 4
+		auto invalidTexture{ Create1x1Texture(cmdPoolManager, glm::vec4(1.0f, 0.0f, 1.0f, 1.0f)) };
+		descriptorContext.BindTexture(m_Textures.size(), invalidTexture.imageViews[0], VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+		m_Textures.emplace_back(std::move(invalidTexture));
+		m_TextureIDMap["__DefaultInvalid"] = m_Textures.size() - 1;
 	}
 
 	VulkanImage VulkanTextureManager::CreateTextureImage(VulkanCommandPoolManager& cmdPoolManager, std::string const& path)
@@ -256,6 +300,54 @@ namespace MauRen
 
 		texImage.TransitionImageLayout(cmdPoolManager, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 		VulkanBuffer::CopyBufferToImage(cmdPoolManager, stagingBuffer.buffer, texImage.image, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
+		// is transitioned to VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL while generating mipmaps
+
+		texImage.GenerateMipmaps(cmdPoolManager);
+
+		stagingBuffer.Destroy();
+
+		texImage.CreateImageView(VK_IMAGE_ASPECT_COLOR_BIT);
+
+		return texImage;
+	}
+
+	VulkanImage VulkanTextureManager::Create1x1Texture(VulkanCommandPoolManager& cmdPoolManager, glm::vec4 const& color)
+	{
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+
+		uint32_t pixel =
+		(static_cast<uint8_t>(color.r * 255.0f) << 0)  |
+		(static_cast<uint8_t>(color.g * 255.0f) << 8)  |
+		(static_cast<uint8_t>(color.b * 255.0f) << 16) |
+		(static_cast<uint8_t>(color.a * 255.0f) << 24);
+
+		VkDeviceSize imageSize{ sizeof(uint32_t) };
+
+		VulkanBuffer stagingBuffer{ imageSize,
+									 VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+									 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT };
+
+		void* data;
+		vkMapMemory(deviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory, 0, imageSize, 0, &data);
+		memcpy(data, &pixel, static_cast<size_t>(imageSize));
+		vkUnmapMemory(deviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory);
+
+
+		VulkanImage texImage
+		{
+			VK_FORMAT_R8G8B8A8_SRGB,
+			VK_IMAGE_TILING_OPTIMAL,
+			VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+			VK_SAMPLE_COUNT_1_BIT,
+			static_cast<uint32_t>(1),
+			static_cast<uint32_t>(1),
+			static_cast<uint32_t>(std::floor(std::log2(std::max(1, 1)))) + 1
+		};
+
+
+		texImage.TransitionImageLayout(cmdPoolManager, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+		VulkanBuffer::CopyBufferToImage(cmdPoolManager, stagingBuffer.buffer, texImage.image, static_cast<uint32_t>(1), static_cast<uint32_t>(1));
 		// is transitioned to VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL while generating mipmaps
 
 		texImage.GenerateMipmaps(cmdPoolManager);

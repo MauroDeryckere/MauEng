@@ -14,9 +14,9 @@ namespace MauRen
 	class VulkanTextureManager final
 	{
 	public:
-		uint32_t const INVALID_TEXTURE_ID{ UINT32_MAX };
-
 		VulkanTextureManager();
+		void InitializeTextures(VulkanCommandPoolManager& cmdPoolManager, VulkanDescriptorContext& descriptorContext);
+
 		~VulkanTextureManager();
 
 		[[nodiscard]] bool IsTextureLoaded(std::string const& textureName) const noexcept;
@@ -44,8 +44,12 @@ namespace MauRen
 
 		void CreateTextureSampler();
 
+		void CreateDefaultTextures(VulkanCommandPoolManager& cmdPoolManager, VulkanDescriptorContext& descriptorContext);
+
 		[[nodiscard]] VulkanImage CreateTextureImage(VulkanCommandPoolManager& cmdPoolManager, std::string const& path);
 		[[nodiscard]] VulkanImage CreateTextureImage(VulkanCommandPoolManager& cmdPoolManager, EmbeddedTexture const& embTex);
+
+		[[nodiscard]] VulkanImage Create1x1Texture(VulkanCommandPoolManager& cmdPoolManager, glm::vec4 const& color);
 
 	};
 }
