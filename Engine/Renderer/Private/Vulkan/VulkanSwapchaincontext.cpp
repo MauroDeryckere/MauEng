@@ -11,13 +11,8 @@ namespace MauRen
 	{
 		CreateSwapchain(pWindow, pVulkanSurfaceContext);
 		CreateImageViews();
-	}
-
-	void VulkanSwapchainContext::InitializeResourcesAndCreateFrames(VulkanGraphicsPipeline const* pGraphicsPipeline)
-	{
 		CreateColorResources();
 		CreateDepthResources();
-		CreateFrameBuffers(pGraphicsPipeline);
 	}
 
 	void VulkanSwapchainContext::ReCreate(SDL_Window* pWindow, VulkanGraphicsPipeline const* pGraphicsPipeline, VulkanSurfaceContext const* pVulkanSurfaceContext)
@@ -28,17 +23,11 @@ namespace MauRen
 		CreateImageViews();
 		CreateColorResources();
 		CreateDepthResources();
-		CreateFrameBuffers(pGraphicsPipeline);
 	}
 
 	void VulkanSwapchainContext::Destroy()
 	{
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
-
-		for (auto& framebuffer : m_SwapChainFrameBuffers)
-		{
-			VulkanUtils::SafeDestroy(deviceContext->GetLogicalDevice(), framebuffer, nullptr);
-		}
 
 		m_DepthImage.Destroy();
 		m_ColorImage.Destroy();
@@ -82,12 +71,6 @@ namespace MauRen
 		return details;
 	}
 
-	VkFramebuffer VulkanSwapchainContext::GetSwapchainFrameBuffer(uint32_t imageIndex) const noexcept
-	{
-		assert(imageIndex < m_SwapChainFrameBuffers.size());
-		return m_SwapChainFrameBuffers[imageIndex];
-	}
-
 	void VulkanSwapchainContext::CreateSwapchain(SDL_Window* pWindow, VulkanSurfaceContext const * pVulkanSurfaceContext)
 	{
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
@@ -121,7 +104,7 @@ namespace MauRen
 		createInfo.imageColorSpace = surfaceFormat.colorSpace;
 		createInfo.imageExtent = extent;
 		createInfo.imageArrayLayers = 1;
-		createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+		createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 
 		QueueFamilyIndices indices = deviceContext->FindQueueFamilies();
 		uint32_t queueFamilyIndices[]{ indices.graphicsFamily.value(), indices.presentFamily.value() };
@@ -220,7 +203,6 @@ namespace MauRen
 		}
 
 		int width, height;
-	//	glfwGetFramebufferSize(pWindow, &width, &height);
 		SDL_GetWindowSize(pWindow, &width, &height);
 		VkExtent2D actualExtent
 		{
@@ -244,7 +226,7 @@ namespace MauRen
 		{
 			colorFormat,
 			VK_IMAGE_TILING_OPTIMAL,
-			VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+			VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT ,
 			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
 			deviceContext->GetSampleCount(),
 			GetExtent().width,
@@ -272,34 +254,5 @@ namespace MauRen
 		};
 
 		m_DepthImage.CreateImageView(VK_IMAGE_ASPECT_DEPTH_BIT);
-		// No need to transition since we will do this in the render pass.
-	}
-
-	void VulkanSwapchainContext::CreateFrameBuffers(VulkanGraphicsPipeline const* pGraphicsPipeline)
-	{
-		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
-
-		auto const& imageViews{ GetImageViews() };
-
-		m_SwapChainFrameBuffers.resize(imageViews.size());
-
-		for (size_t i{ 0 }; i < imageViews.size(); ++i)
-		{
-			std::array<VkImageView, 3> const attachments{ m_ColorImage.imageViews[0], m_DepthImage.imageViews[0],  imageViews[i].imageViews[0] };
-
-			VkFramebufferCreateInfo framebufferInfo{};
-			framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-			framebufferInfo.renderPass = pGraphicsPipeline->GetRenderPass();
-			framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
-			framebufferInfo.pAttachments = attachments.data();
-			framebufferInfo.width = GetExtent().width;
-			framebufferInfo.height = GetExtent().height;
-			framebufferInfo.layers = 1;
-
-			if (vkCreateFramebuffer(deviceContext->GetLogicalDevice(), &framebufferInfo, nullptr, &m_SwapChainFrameBuffers[i]) != VK_SUCCESS)
-			{
-				throw std::runtime_error("Failed to create framebuffer!");
-			}
-		}
 	}
 }

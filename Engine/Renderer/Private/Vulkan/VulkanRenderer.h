@@ -64,7 +64,7 @@ namespace MauRen
 
 		VulkanDescriptorContext m_DescriptorContext{};
 		VulkanSwapchainContext m_SwapChainContext{};
-		VulkanGraphicsPipeline m_GraphicsPipeline{};
+		VulkanGraphicsPipeline* m_GraphicsPipeline{};
 
 		VulkanCommandPoolManager m_CommandPoolManager{};
 
@@ -105,6 +105,7 @@ namespace MauRen
 		// Update the buffer for debug drawing
 		void UpdateDebugVertexBuffer();
 
+		void RenderStaticMeshes(VkCommandBuffer commandBuffer);
 		void RenderDebug(VkCommandBuffer commandBuffer);
 	};
 }

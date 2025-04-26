@@ -6,7 +6,7 @@ namespace MauRen
 {
 	void VulkanGraphicsPipeline::Initialize(VulkanSwapchainContext* pSwapChainContext, VkDescriptorSetLayout descriptorSetLayout, uint32_t descriptorSetLayoutCount)
 	{
-		CreateRenderPass(pSwapChainContext);
+		//CreateRenderPass(pSwapChainContext);
 
 		CreateGraphicsPipeline(pSwapChainContext, descriptorSetLayout, descriptorSetLayoutCount);
 		CreateDebugGraphicsPipeline(pSwapChainContext, descriptorSetLayout, descriptorSetLayoutCount);
@@ -261,6 +261,16 @@ namespace MauRen
 			throw std::runtime_error("Failed to create pipeline layout!");
 		}
 
+		VkFormat colorFormat = pSwapChainContext->GetColorImage().format;
+		std::vector<VkFormat> formats;
+		formats.emplace_back(colorFormat);
+
+		VkPipelineRenderingCreateInfo renderingCreate{};
+		renderingCreate.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
+		renderingCreate.colorAttachmentCount = 1;
+		renderingCreate.pColorAttachmentFormats = formats.data();
+		renderingCreate.depthAttachmentFormat = pSwapChainContext->GetDepthImage().format;
+
 		VkGraphicsPipelineCreateInfo pipelineInfo{};
 		pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
 		pipelineInfo.stageCount = 2;
@@ -277,8 +287,9 @@ namespace MauRen
 		pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 		pipelineInfo.layout = m_PipelineLayout;
 
-		pipelineInfo.renderPass = m_RenderPass;
+		pipelineInfo.renderPass = VK_NULL_HANDLE;
 		pipelineInfo.subpass = 0;
+		pipelineInfo.pNext =  &renderingCreate;
 
 		// Note: These values are only used if the VK_PIPELINE_CREATE_DERIVATIVE_BIT flag is also specified in the flags field of VkGraphicsPipelineCreateInfo.
 		pipelineInfo.basePipelineHandle = VK_NULL_HANDLE; // Optional
@@ -288,6 +299,7 @@ namespace MauRen
 		{
 			throw std::runtime_error("Failed to create graphics pipeline!");
 		}
+		ME_ASSERT(m_GraphicsPipeline != VK_NULL_HANDLE);
 
 		VulkanUtils::SafeDestroy(deviceContext->GetLogicalDevice(), fragShaderModule, nullptr);
 		VulkanUtils::SafeDestroy(deviceContext->GetLogicalDevice(), vertShaderModule, nullptr);
@@ -335,6 +347,17 @@ namespace MauRen
 			throw std::runtime_error("Failed to create debug pipeline layout!");
 		}
 
+
+		VkFormat colorFormat = pSwapChainContext->GetColorImage().format;
+		std::vector<VkFormat> formats;
+		formats.emplace_back(colorFormat);
+
+		VkPipelineRenderingCreateInfo renderingCreate{};
+		renderingCreate.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
+		renderingCreate.colorAttachmentCount = 1;
+		renderingCreate.pColorAttachmentFormats = formats.data();
+		renderingCreate.depthAttachmentFormat = pSwapChainContext->GetDepthImage().format;
+		
 		VkPipelineRasterizationStateCreateInfo debugRasterizer{};
 		debugRasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
 		debugRasterizer.polygonMode = VK_POLYGON_MODE_FILL;
@@ -438,13 +461,16 @@ namespace MauRen
 		debugPipelineInfo.pRasterizationState = &debugRasterizer;
 		debugPipelineInfo.layout = m_DebugPipelineLayout;
 		debugPipelineInfo.pViewportState = &viewportState;
-		// Same render pass for now, may use a separate one if necessary
-		debugPipelineInfo.renderPass = m_RenderPass;
+
+		debugPipelineInfo.renderPass = VK_NULL_HANDLE;
+
 		debugPipelineInfo.pDepthStencilState = &depthStencil;
 		debugPipelineInfo.pColorBlendState = &colorBlendState;
 		debugPipelineInfo.pDynamicState = &dynamicState;
 		debugPipelineInfo.pInputAssemblyState = &inputAssemblyState;
 		debugPipelineInfo.pMultisampleState = &multisampling;
+
+		debugPipelineInfo.pNext = &renderingCreate;
 
 		if (vkCreateGraphicsPipelines(deviceContext->GetLogicalDevice(), VK_NULL_HANDLE, 1, &debugPipelineInfo, nullptr, &m_DebugPipeline) != VK_SUCCESS)
 		{
