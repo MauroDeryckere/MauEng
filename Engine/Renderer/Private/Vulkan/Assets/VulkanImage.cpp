@@ -157,12 +157,10 @@ namespace MauRen
 		dependencyInfo.imageMemoryBarrierCount = 1;
 		dependencyInfo.pImageMemoryBarriers = &barrier;
 
-		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
-		auto test = (PFN_vkCmdPipelineBarrier2)vkGetDeviceProcAddr(deviceContext->GetLogicalDevice(), "vkCmdPipelineBarrier2");
-		ME_ASSERT(test != nullptr);
-
-		auto test2 = (PFN_vkCmdPipelineBarrier)vkGetDeviceProcAddr(deviceContext->GetLogicalDevice(), "vkCmdPipelineBarrier");
-		ME_ASSERT(test2 != nullptr);
+		// Check if cmd pipeline barrier 2 is setup correctly
+		//auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+		//auto test = (PFN_vkCmdPipelineBarrier2)vkGetDeviceProcAddr(deviceContext->GetLogicalDevice(), "vkCmdPipelineBarrier2");
+		//ME_ASSERT(test != nullptr);
 
 
 		vkCmdPipelineBarrier2(cmdBuffer, &dependencyInfo);

@@ -38,6 +38,7 @@ namespace MauRen
 
 		[[nodiscard]] VkSwapchainKHR GetSwapchain() const noexcept { return m_SwapChain; }
 		[[nodiscard]] std::vector<VulkanImage> const& GetSwapchainImages() const noexcept { return m_SwapChainImages; }
+		[[nodiscard]] std::vector<VulkanImage>& GetSwapchainImages()noexcept { return m_SwapChainImages; }
 
 		[[nodiscard]] VkExtent2D GetExtent() const noexcept { return m_SwapChainExtent; }
 		[[nodiscard]] VkFormat GetImageFormat() const noexcept { return m_SwapChainImageFormat; }

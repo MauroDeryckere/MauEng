@@ -262,11 +262,13 @@ namespace MauRen
 		}
 
 		VkFormat colorFormat = pSwapChainContext->GetColorImage().format;
+		std::vector<VkFormat> formats;
+		formats.emplace_back(colorFormat);
 
 		VkPipelineRenderingCreateInfo renderingCreate{};
 		renderingCreate.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
 		renderingCreate.colorAttachmentCount = 1;
-		renderingCreate.pColorAttachmentFormats = &colorFormat;
+		renderingCreate.pColorAttachmentFormats = formats.data();
 		renderingCreate.depthAttachmentFormat = pSwapChainContext->GetDepthImage().format;
 
 		VkGraphicsPipelineCreateInfo pipelineInfo{};
@@ -285,7 +287,7 @@ namespace MauRen
 		pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 		pipelineInfo.layout = m_PipelineLayout;
 
-		//pipelineInfo.renderPass = VK_NULL_HANDLE;
+		pipelineInfo.renderPass = VK_NULL_HANDLE;
 		pipelineInfo.subpass = 0;
 		pipelineInfo.pNext =  &renderingCreate;
 
@@ -345,14 +347,17 @@ namespace MauRen
 			throw std::runtime_error("Failed to create debug pipeline layout!");
 		}
 
+
 		VkFormat colorFormat = pSwapChainContext->GetColorImage().format;
+		std::vector<VkFormat> formats;
+		formats.emplace_back(colorFormat);
 
 		VkPipelineRenderingCreateInfo renderingCreate{};
 		renderingCreate.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
 		renderingCreate.colorAttachmentCount = 1;
-		renderingCreate.pColorAttachmentFormats = &colorFormat;
+		renderingCreate.pColorAttachmentFormats = formats.data();
 		renderingCreate.depthAttachmentFormat = pSwapChainContext->GetDepthImage().format;
-
+		
 		VkPipelineRasterizationStateCreateInfo debugRasterizer{};
 		debugRasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
 		debugRasterizer.polygonMode = VK_POLYGON_MODE_FILL;

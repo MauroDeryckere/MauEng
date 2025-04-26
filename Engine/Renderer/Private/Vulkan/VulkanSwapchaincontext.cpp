@@ -35,10 +35,10 @@ namespace MauRen
 	{
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 
-		for (auto& framebuffer : m_SwapChainFrameBuffers)
-		{
-			VulkanUtils::SafeDestroy(deviceContext->GetLogicalDevice(), framebuffer, nullptr);
-		}
+		//for (auto& framebuffer : m_SwapChainFrameBuffers)
+		//{
+		//	VulkanUtils::SafeDestroy(deviceContext->GetLogicalDevice(), framebuffer, nullptr);
+		//}
 
 		m_DepthImage.Destroy();
 		m_ColorImage.Destroy();
@@ -121,7 +121,7 @@ namespace MauRen
 		createInfo.imageColorSpace = surfaceFormat.colorSpace;
 		createInfo.imageExtent = extent;
 		createInfo.imageArrayLayers = 1;
-		createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+		createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 
 		QueueFamilyIndices indices = deviceContext->FindQueueFamilies();
 		uint32_t queueFamilyIndices[]{ indices.graphicsFamily.value(), indices.presentFamily.value() };
@@ -244,7 +244,7 @@ namespace MauRen
 		{
 			colorFormat,
 			VK_IMAGE_TILING_OPTIMAL,
-			VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+			VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT ,
 			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
 			deviceContext->GetSampleCount(),
 			GetExtent().width,

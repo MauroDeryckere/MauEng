@@ -196,16 +196,23 @@ namespace MauRen
 		// Image memory barriers
 		// Depth
 		auto& depth{ m_SwapChainContext.GetDepthImage() };
-		depth.TransitionImageLayout(commandBuffer,
-									VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, 
-									VK_PIPELINE_STAGE_2_NONE, VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT, 
-									VK_ACCESS_2_NONE, VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT);
+		if (depth.layout != VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL)
+		{
+			depth.TransitionImageLayout(commandBuffer,
+										VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, 
+										VK_PIPELINE_STAGE_2_NONE, VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT, 
+										VK_ACCESS_2_NONE, VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT);
+		}
 		// Colour
 		auto& colour{ m_SwapChainContext.GetColorImage() };
-		colour.TransitionImageLayout(commandBuffer, 
-									VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 
-									VK_PIPELINE_STAGE_2_NONE, VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT, 
-									VK_ACCESS_2_NONE, VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT);
+		if (colour.layout != VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
+		{
+			colour.TransitionImageLayout(commandBuffer,
+				VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+				VK_PIPELINE_STAGE_2_NONE, VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
+				VK_ACCESS_2_NONE, VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT);
+		}
+		
 
 		std::array<VkClearValue, 2> clearValues{};
 		clearValues[0].color = { 0.0f, 0.0f, 0.0f, 1.f };
@@ -214,8 +221,8 @@ namespace MauRen
 		// Dynamic rendering attachments
 		VkRenderingAttachmentInfo colorAttachment{};
 		colorAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
-		colorAttachment.imageView = m_SwapChainContext.GetColorImage().imageViews[0];
-		colorAttachment.imageLayout = m_SwapChainContext.GetColorImage().layout;
+		colorAttachment.imageView = colour.imageViews[0];
+		colorAttachment.imageLayout = colour.layout;
 		colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 		colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
 		colorAttachment.clearValue = clearValues[0];
@@ -258,16 +265,58 @@ namespace MauRen
 			RenderDebug(commandBuffer);
 		vkCmdEndRendering(commandBuffer);
 
-		// transitions?
-		//colour.TransitionImageLayout(m_CommandPoolManager, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-		//depth.TransitionImageLayout(m_CommandPoolManager, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
+		depth.TransitionImageLayout(commandBuffer,
+			VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL,
+			VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT,
+			VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT,
+			VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+			VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT);
+
+
+		// Transition color layout to transfer optimal before resolving
+		if (colour.layout != VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL)
+		{
+			colour.TransitionImageLayout(commandBuffer,
+				VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+				VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
+				VK_PIPELINE_STAGE_2_TRANSFER_BIT,
+				VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT,
+				VK_ACCESS_2_TRANSFER_READ_BIT);
+		}
+
+		VkImageResolve resolveRegion = {};
+		resolveRegion.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		resolveRegion.srcSubresource.mipLevel = 0;
+		resolveRegion.srcSubresource.baseArrayLayer = 0;
+		resolveRegion.srcSubresource.layerCount = 1;
+		resolveRegion.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		resolveRegion.dstSubresource.mipLevel = 0;
+		resolveRegion.dstSubresource.baseArrayLayer = 0;
+		resolveRegion.dstSubresource.layerCount = 1;
+		resolveRegion.extent = { m_SwapChainContext.GetExtent().width, m_SwapChainContext.GetExtent().height, 1 };
+
+		if (m_SwapChainContext.GetSwapchainImages()[imageIndex].layout != VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL) 
+		{
+			m_SwapChainContext.GetSwapchainImages()[imageIndex].TransitionImageLayout(commandBuffer,
+				VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+				VK_PIPELINE_STAGE_2_NONE, VK_PIPELINE_STAGE_2_TRANSFER_BIT,
+				VK_ACCESS_2_NONE, VK_ACCESS_2_TRANSFER_WRITE_BIT);
+		}
+
+		vkCmdResolveImage(commandBuffer,
+			colour.image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+			m_SwapChainContext.GetSwapchainImages()[imageIndex].image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+			1, &resolveRegion);
+
+		m_SwapChainContext.GetSwapchainImages()[imageIndex].TransitionImageLayout(commandBuffer,
+			VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+			VK_PIPELINE_STAGE_2_TRANSFER_BIT, VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT,
+			VK_ACCESS_2_TRANSFER_WRITE_BIT, VK_ACCESS_2_MEMORY_READ_BIT);
 
 		if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) 
 		{
 			throw std::runtime_error("Failed to record command buffer!");
 		}
-
-		// SubmitWork()?
 	}
 
 	void VulkanRenderer::CreateSyncObjects()
@@ -352,7 +401,7 @@ namespace MauRen
 		VkSemaphore const signalSemaphores[] { m_RenderFinishedSemaphores[m_CurrentFrame] };
 		submitInfo.signalSemaphoreCount = 1;
 		submitInfo.pSignalSemaphores = signalSemaphores;
-
+		//vkQueueSubmit2();
 		// m_InFlightFences here effectively means, this submit must be finished before our next render may start
 		if (vkQueueSubmit(deviceContext->GetGraphicsQueue(), 1, &submitInfo, m_InFlightFences[m_CurrentFrame]) != VK_SUCCESS)
 		{
