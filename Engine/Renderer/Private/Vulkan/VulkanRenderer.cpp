@@ -193,14 +193,19 @@ namespace MauRen
 			throw std::runtime_error("Failed to begin recording command buffer!");
 		}
 
-		// TODO
 		// Image memory barriers
 		// Depth
 		auto& depth{ m_SwapChainContext.GetDepthImage() };
-		depth.TransitionImageLayout(m_CommandPoolManager, depth.layout, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+		depth.TransitionImageLayout(commandBuffer,
+									VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, 
+									VK_PIPELINE_STAGE_2_NONE, VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT, 
+									VK_ACCESS_2_NONE, VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT);
 		// Colour
 		auto& colour{ m_SwapChainContext.GetColorImage() };
-		colour.TransitionImageLayout(m_CommandPoolManager, colour.layout, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+		colour.TransitionImageLayout(commandBuffer, 
+									VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 
+									VK_PIPELINE_STAGE_2_NONE, VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT, 
+									VK_ACCESS_2_NONE, VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT);
 
 		std::array<VkClearValue, 2> clearValues{};
 		clearValues[0].color = { 0.0f, 0.0f, 0.0f, 1.f };
@@ -250,6 +255,8 @@ namespace MauRen
 		//vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
 		vkCmdBeginRendering(commandBuffer, &renderInfo);
+
+		std::cout << "TEST\n\n";
 			++test;
 
 			vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipeline->GetPipeline() );
@@ -274,8 +281,8 @@ namespace MauRen
 		//vkCmdEndRenderPass(commandBuffer);
 
 		// transitions?
-		colour.TransitionImageLayout(m_CommandPoolManager, colour.layout, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-		depth.TransitionImageLayout(m_CommandPoolManager, depth.layout, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
+		//colour.TransitionImageLayout(m_CommandPoolManager, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		//depth.TransitionImageLayout(m_CommandPoolManager, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
 
 		if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) 
 		{

@@ -272,7 +272,6 @@ namespace MauRen
 		};
 
 		m_DepthImage.CreateImageView(VK_IMAGE_ASPECT_DEPTH_BIT);
-		// No need to transition since we will do this in the render pass.
 	}
 
 	void VulkanSwapchainContext::CreateFrameBuffers(VulkanGraphicsPipeline const* pGraphicsPipeline)

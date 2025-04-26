@@ -264,11 +264,11 @@ namespace MauRen
 		VkPipelineRenderingCreateInfo renderingCreate{};
 		renderingCreate.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
 
-		// static_cast<uint32_t>(pSwapChainContext->GetSwapchainImages().size())
+		std::vector<VkFormat> imgFormats;
+		imgFormats.emplace_back(pSwapChainContext->GetColorImage().format);
 		renderingCreate.colorAttachmentCount = 1;
-		renderingCreate.pColorAttachmentFormats = &pSwapChainContext->GetColorImage().format;
+		renderingCreate.pColorAttachmentFormats = imgFormats.data();
 		renderingCreate.depthAttachmentFormat = pSwapChainContext->GetDepthImage().format;
-		renderingCreate.pNext = nullptr;
 
 		VkGraphicsPipelineCreateInfo pipelineInfo{};
 		pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -349,10 +349,10 @@ namespace MauRen
 		VkPipelineRenderingCreateInfo renderingCreate{};
 		renderingCreate.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
 
-		// static_cast<uint32_t>(pSwapChainContext->GetSwapchainImages().size())
+		std::vector<VkFormat> imgFormats;
+		imgFormats.emplace_back(pSwapChainContext->GetColorImage().format);
 		renderingCreate.colorAttachmentCount = 1;
-		renderingCreate.pColorAttachmentFormats = &pSwapChainContext->GetColorImage().format;
-
+		renderingCreate.pColorAttachmentFormats = imgFormats.data();
 		renderingCreate.depthAttachmentFormat = pSwapChainContext->GetDepthImage().format;
 
 		VkPipelineRasterizationStateCreateInfo debugRasterizer{};

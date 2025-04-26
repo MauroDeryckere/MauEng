@@ -23,7 +23,17 @@ namespace MauRen
 		uint32_t mipLevels{ 1 };
 
 		void Destroy();
-		void TransitionImageLayout(VulkanCommandPoolManager const& CmdPoolManager, VkImageLayout oldLayout, VkImageLayout newLayout);
+
+		// Transition image layout using single time commands 
+		void TransitionImageLayout(VulkanCommandPoolManager const& CmdPoolManager, VkImageLayout newLayout);
+		// Transition image layout using pre-existing command buffer & memeory bariers.
+		void TransitionImageLayout( VkCommandBuffer cmdBuffer, 
+									VkImageLayout newLayout, 
+									VkPipelineStageFlags2 srcStageMask,
+									VkPipelineStageFlags2 dstStageMask,
+									VkAccessFlags2 srcAccessMask,
+									VkAccessFlags2 dstAccessMask);
+
 		void GenerateMipmaps(VulkanCommandPoolManager const& CmdPoolManager);
 		uint32_t CreateImageView(VkImageAspectFlags aspectFlags);
 

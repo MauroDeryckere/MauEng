@@ -14,18 +14,19 @@ namespace MauRen
 		VulkanUtils::SafeDestroy(deviceContext->GetLogicalDevice(), imageMemory, nullptr);
 	}
 
-	void VulkanImage::TransitionImageLayout(VulkanCommandPoolManager const& CmdPoolManager, VkImageLayout oldLayout, VkImageLayout newLayout)
+	void VulkanImage::TransitionImageLayout(VulkanCommandPoolManager const& CmdPoolManager, VkImageLayout newLayout)
 	{
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 
-		ME_ASSERT(layout == oldLayout);
+		ME_ASSERT(layout != newLayout);
+		ME_ASSERT(image != VK_NULL_HANDLE);
 
 		VkCommandBuffer const commandBuffer{ CmdPoolManager.BeginSingleTimeCommands() };
 
 		VkImageMemoryBarrier barrier{};
 
 		barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-		barrier.oldLayout = oldLayout;
+		barrier.oldLayout = layout;
 		barrier.newLayout = newLayout;
 
 		barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
@@ -38,12 +39,12 @@ namespace MauRen
 		barrier.subresourceRange.layerCount = 1;
 
 
-		if (format == VK_FORMAT_D32_SFLOAT) 
+		if (format == VK_FORMAT_D32_SFLOAT)
 		{
 			// For depth-only formats
 			barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
 		}
-		else 
+		else
 		{
 			// For color formats
 			barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -52,7 +53,7 @@ namespace MauRen
 		VkPipelineStageFlags sourceStage;
 		VkPipelineStageFlags destinationStage;
 
-		if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
+		if (layout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
 		{
 			barrier.srcAccessMask = 0;
 			barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
@@ -60,7 +61,7 @@ namespace MauRen
 			sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
 			destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
 		}
-		else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+		else if (layout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
 		{
 			barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
 			barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
@@ -68,7 +69,7 @@ namespace MauRen
 			sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
 			destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
 		}
-		else if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
+		else if (layout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
 		{
 			barrier.srcAccessMask = 0;
 			barrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
@@ -76,7 +77,7 @@ namespace MauRen
 			sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
 			destinationStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 		}
-		else if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
+		else if (layout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
 		{
 			barrier.srcAccessMask = 0;
 			barrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
@@ -84,7 +85,7 @@ namespace MauRen
 			sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
 			destinationStage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
 		}
-		else if (oldLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
+		else if (layout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
 		{
 			barrier.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
 			barrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
@@ -99,15 +100,6 @@ namespace MauRen
 
 		layout = newLayout;
 
-		// TODO
-		//  In the tutorial, the transition is done using a transient command
-		//	buffer.These are used for one time usage(e.g.generating
-		//		data).So, this is obviously not necessary if the transition is part
-		//	of the command buffer you are already recording for every
-		//	frame(which is not the case when loading textures).
-		//	You can, and should, also track the current layout of an image
-		//	yourself!
-
 		// https://docs.vulkan.org/spec/latest/chapters/synchronization.html#synchronization-access-types-supported
 		vkCmdPipelineBarrier(commandBuffer,
 			sourceStage, destinationStage,
@@ -117,6 +109,63 @@ namespace MauRen
 			1, &barrier);
 
 		CmdPoolManager.EndSingleTimeCommands(commandBuffer);
+	}
+
+	void VulkanImage::TransitionImageLayout(VkCommandBuffer cmdBuffer,
+		VkImageLayout newLayout,
+		VkPipelineStageFlags2 srcStageMask,
+		VkPipelineStageFlags2 dstStageMask,
+		VkAccessFlags2 srcAccessMask,
+		VkAccessFlags2 dstAccessMask)
+	{
+		ME_ASSERT(layout != newLayout);
+		ME_ASSERT(cmdBuffer != VK_NULL_HANDLE);
+		ME_ASSERT(image != VK_NULL_HANDLE);
+
+		VkImageMemoryBarrier2 barrier{};
+		barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2;
+		barrier.oldLayout = layout;
+		barrier.newLayout = newLayout;
+		barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		barrier.image = image;
+
+		barrier.subresourceRange.baseMipLevel = 0;
+		barrier.subresourceRange.levelCount = mipLevels;
+		barrier.subresourceRange.baseArrayLayer = 0;
+		barrier.subresourceRange.layerCount = 1;
+
+		if (format == VK_FORMAT_D32_SFLOAT)
+		{
+			barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+		}
+		else
+		{
+			barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		}
+
+		barrier.srcAccessMask = srcAccessMask;
+		barrier.dstAccessMask = dstAccessMask;
+
+		barrier.srcStageMask = srcStageMask;
+		barrier.dstStageMask = dstStageMask;
+
+		layout = newLayout;
+
+		VkDependencyInfo dependencyInfo{};
+		dependencyInfo.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO;
+		dependencyInfo.imageMemoryBarrierCount = 1;
+		dependencyInfo.pImageMemoryBarriers = &barrier;
+
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+		auto test = (PFN_vkCmdPipelineBarrier2)vkGetDeviceProcAddr(deviceContext->GetLogicalDevice(), "vkCmdPipelineBarrier2");
+		ME_ASSERT(test != nullptr);
+
+		auto test2 = (PFN_vkCmdPipelineBarrier)vkGetDeviceProcAddr(deviceContext->GetLogicalDevice(), "vkCmdPipelineBarrier");
+		ME_ASSERT(test2 != nullptr);
+
+
+		vkCmdPipelineBarrier2(cmdBuffer, &dependencyInfo);
 	}
 
 	void VulkanImage::GenerateMipmaps(VulkanCommandPoolManager const& CmdPoolManager)

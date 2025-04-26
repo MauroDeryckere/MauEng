@@ -219,7 +219,7 @@ namespace MauRen
 		deviceFeatures.samplerAnisotropy = VK_TRUE;
 		deviceFeatures.fillModeNonSolid = VK_TRUE;
 		deviceFeatures.multiDrawIndirect = VK_TRUE;
-
+		
 		VkPhysicalDeviceDescriptorIndexingFeatures indexingFeatures{};
 		indexingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
 		indexingFeatures.runtimeDescriptorArray = VK_TRUE;
@@ -227,12 +227,13 @@ namespace MauRen
 		indexingFeatures.descriptorBindingVariableDescriptorCount = VK_TRUE;
 		indexingFeatures.pNext = nullptr;
 
-		VkPhysicalDeviceVulkan13Features features13{
+		VkPhysicalDeviceVulkan13Features features13
+		{
 			.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES,
-			.pNext = &indexingFeatures,
-			.dynamicRendering = VK_TRUE,
+			.pNext = &indexingFeatures
 		};
-		//features13.synchronization2 = VK_TRUE;
+		features13.synchronization2 = VK_TRUE;
+		features13.dynamicRendering = VK_TRUE;
 
 		VkDeviceCreateInfo createInfo{};
 		createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
@@ -376,7 +377,7 @@ namespace MauRen
 							&& indexingFeatures.descriptorBindingVariableDescriptorCount
 
 							&& vulkan13Features.dynamicRendering
-							//&& vulkan13Features.synchronization2
+							&& vulkan13Features.synchronization2
 
 							&& deviceFeatures.multiDrawIndirect;
 		}
