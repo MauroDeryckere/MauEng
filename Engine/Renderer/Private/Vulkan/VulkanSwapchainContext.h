@@ -24,9 +24,7 @@ namespace MauRen
 		~VulkanSwapchainContext() = default;
 
 		// Initialize the swapchain
-		void Initialize(SDL_Window* pWindow, VulkanSurfaceContext const * pVulkanSurfaceContext);
-		// Intialize the depth image, colour image and create frames, this must be done after the graphics pipeline creation
-		void InitializeResourcesAndCreateFrames(VulkanGraphicsPipeline const* pGraphicsPipeline);
+		void Initialize(SDL_Window* pWindow, VulkanSurfaceContext const* pVulkanSurfaceContext);
 
 		// Reecreate the entire swapchain, this will destroy the previous swapchain first
 		void ReCreate(SDL_Window* pWindow, VulkanGraphicsPipeline const* pGraphicsPipeline, VulkanSurfaceContext const* pVulkanSurfaceContext);
@@ -39,16 +37,14 @@ namespace MauRen
 		[[nodiscard]] VkSwapchainKHR GetSwapchain() const noexcept { return m_SwapChain; }
 		[[nodiscard]] std::vector<VulkanImage> const& GetSwapchainImages() const noexcept { return m_SwapChainImages; }
 		[[nodiscard]] std::vector<VulkanImage>& GetSwapchainImages()noexcept { return m_SwapChainImages; }
-
-		[[nodiscard]] VkExtent2D GetExtent() const noexcept { return m_SwapChainExtent; }
 		[[nodiscard]] VkFormat GetImageFormat() const noexcept { return m_SwapChainImageFormat; }
-
-		[[nodiscard]] VkFramebuffer GetSwapchainFrameBuffer(uint32_t imageIndex) const noexcept;
 
 		[[nodiscard]] VulkanImage const& GetColorImage() const noexcept { return m_ColorImage; }
 		[[nodiscard]] VulkanImage const& GetDepthImage() const noexcept { return m_DepthImage; }
 		[[nodiscard]] VulkanImage& GetColorImage() noexcept { return m_ColorImage; }
 		[[nodiscard]] VulkanImage& GetDepthImage() noexcept { return m_DepthImage; }
+
+		[[nodiscard]] VkExtent2D GetExtent() const noexcept { return m_SwapChainExtent; }
 
 		VulkanSwapchainContext(VulkanSwapchainContext const&) = delete;
 		VulkanSwapchainContext(VulkanSwapchainContext&&) = delete;
@@ -66,8 +62,6 @@ namespace MauRen
 		VulkanImage m_DepthImage{};
 		VulkanImage m_ColorImage{};
 
-		std::vector<VkFramebuffer> m_SwapChainFrameBuffers{};
-
 		void CreateSwapchain(SDL_Window* pWindow, VulkanSurfaceContext const * pVulkanSurfaceContext);
 		void CreateImageViews();
 
@@ -77,8 +71,6 @@ namespace MauRen
 
 		void CreateColorResources();
 		void CreateDepthResources();
-
-		void CreateFrameBuffers(VulkanGraphicsPipeline const* pGraphicsPipeline);
 	};
 }
 

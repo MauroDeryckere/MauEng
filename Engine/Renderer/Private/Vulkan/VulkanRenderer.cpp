@@ -38,7 +38,6 @@ namespace MauRen
 
 		m_DescriptorContext.Initialize();
 		m_SwapChainContext.Initialize(m_pWindow, &m_SurfaceContext);
-		m_SwapChainContext.InitializeResourcesAndCreateFrames(m_GraphicsPipeline);
 
 		m_DescriptorContext.CreateDescriptorSetLayout();
 		m_GraphicsPipeline = new VulkanGraphicsPipeline{};
