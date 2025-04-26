@@ -56,7 +56,6 @@ namespace MauRen
 		// "reference" to the window
 		SDL_Window* m_pWindow{ nullptr };
 
-		int test = 0;
 		class InternalDebugRenderer* m_DebugRenderer = nullptr;
 
 		VulkanInstanceContext m_InstanceContext{};

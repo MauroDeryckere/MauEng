@@ -38,6 +38,7 @@ namespace MauRen
 
 		m_DescriptorContext.Initialize();
 		m_SwapChainContext.Initialize(m_pWindow, &m_SurfaceContext);
+		m_SwapChainContext.InitializeResourcesAndCreateFrames(m_GraphicsPipeline);
 
 		m_DescriptorContext.CreateDescriptorSetLayout();
 		m_GraphicsPipeline = new VulkanGraphicsPipeline{};
@@ -45,7 +46,6 @@ namespace MauRen
 
 		m_CommandPoolManager.Initialize();
 
-		m_SwapChainContext.InitializeResourcesAndCreateFrames(m_GraphicsPipeline);
 
 		CreateUniformBuffers();
 		VulkanMaterialManager::GetInstance().Initialize();
@@ -237,28 +237,7 @@ namespace MauRen
 		renderInfo.pDepthAttachment = &depthAttachment;
 		renderInfo.pStencilAttachment = nullptr;
 
-		//VkRenderPassBeginInfo renderPassInfo{};
-		//renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-		//renderPassInfo.renderPass = m_GraphicsPipeline.GetRenderPass();
-		//renderPassInfo.framebuffer = m_SwapChainContext.GetSwapchainFrameBuffer(imageIndex);
-
-		//renderPassInfo.renderArea.offset = { 0, 0 };
-		//renderPassInfo.renderArea.extent = m_SwapChainContext.GetExtent();
-
-
-
-		//renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
-		//renderPassInfo.pClearValues = clearValues.data();
-		++test;
-
-		ME_ASSERT(m_GraphicsPipeline->GetPipeline() != VK_NULL_HANDLE);
-		//vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-
 		vkCmdBeginRendering(commandBuffer, &renderInfo);
-
-		std::cout << "TEST\n\n";
-			++test;
-
 			vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipeline->GetPipeline() );
 
 			VkViewport viewport{};
@@ -278,7 +257,6 @@ namespace MauRen
 			VulkanMeshManager::GetInstance().Draw(commandBuffer, m_GraphicsPipeline->GetPipelineLayout(), 1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame], m_CurrentFrame);
 			RenderDebug(commandBuffer);
 		vkCmdEndRendering(commandBuffer);
-		//vkCmdEndRenderPass(commandBuffer);
 
 		// transitions?
 		//colour.TransitionImageLayout(m_CommandPoolManager, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
