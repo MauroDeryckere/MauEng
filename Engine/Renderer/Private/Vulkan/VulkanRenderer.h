@@ -105,6 +105,7 @@ namespace MauRen
 		// Update the buffer for debug drawing
 		void UpdateDebugVertexBuffer();
 
+		void RenderStaticMeshes(VkCommandBuffer commandBuffer);
 		void RenderDebug(VkCommandBuffer commandBuffer);
 	};
 }
