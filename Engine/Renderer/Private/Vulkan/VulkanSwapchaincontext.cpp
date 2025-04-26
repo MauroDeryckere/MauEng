@@ -17,7 +17,7 @@ namespace MauRen
 	{
 		CreateColorResources();
 		CreateDepthResources();
-		CreateFrameBuffers(pGraphicsPipeline);
+	//	CreateFrameBuffers(pGraphicsPipeline);
 	}
 
 	void VulkanSwapchainContext::ReCreate(SDL_Window* pWindow, VulkanGraphicsPipeline const* pGraphicsPipeline, VulkanSurfaceContext const* pVulkanSurfaceContext)
@@ -28,7 +28,7 @@ namespace MauRen
 		CreateImageViews();
 		CreateColorResources();
 		CreateDepthResources();
-		CreateFrameBuffers(pGraphicsPipeline);
+	//	CreateFrameBuffers(pGraphicsPipeline);
 	}
 
 	void VulkanSwapchainContext::Destroy()
@@ -279,7 +279,7 @@ namespace MauRen
 	{
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 
-		auto const& imageViews{ GetImageViews() };
+		auto const& imageViews{ GetSwapchainImages() };
 
 		m_SwapChainFrameBuffers.resize(imageViews.size());
 

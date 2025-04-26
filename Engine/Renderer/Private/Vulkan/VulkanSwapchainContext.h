@@ -37,12 +37,17 @@ namespace MauRen
 		static SwapChainSupportDetails QuerySwapchainSupport(VkPhysicalDevice device, VkSurfaceKHR windowSurface);
 
 		[[nodiscard]] VkSwapchainKHR GetSwapchain() const noexcept { return m_SwapChain; }
-		[[nodiscard]] std::vector<VulkanImage> const& GetImageViews() const noexcept { return m_SwapChainImages; }
+		[[nodiscard]] std::vector<VulkanImage> const& GetSwapchainImages() const noexcept { return m_SwapChainImages; }
 
 		[[nodiscard]] VkExtent2D GetExtent() const noexcept { return m_SwapChainExtent; }
 		[[nodiscard]] VkFormat GetImageFormat() const noexcept { return m_SwapChainImageFormat; }
 
 		[[nodiscard]] VkFramebuffer GetSwapchainFrameBuffer(uint32_t imageIndex) const noexcept;
+
+		[[nodiscard]] VulkanImage const& GetColorImage() const noexcept { return m_ColorImage; }
+		[[nodiscard]] VulkanImage const& GetDepthImage() const noexcept { return m_DepthImage; }
+		[[nodiscard]] VulkanImage& GetColorImage() noexcept { return m_ColorImage; }
+		[[nodiscard]] VulkanImage& GetDepthImage() noexcept { return m_DepthImage; }
 
 		VulkanSwapchainContext(VulkanSwapchainContext const&) = delete;
 		VulkanSwapchainContext(VulkanSwapchainContext&&) = delete;

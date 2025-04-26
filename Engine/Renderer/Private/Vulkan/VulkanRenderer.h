@@ -56,6 +56,7 @@ namespace MauRen
 		// "reference" to the window
 		SDL_Window* m_pWindow{ nullptr };
 
+		int test = 0;
 		class InternalDebugRenderer* m_DebugRenderer = nullptr;
 
 		VulkanInstanceContext m_InstanceContext{};
@@ -64,7 +65,7 @@ namespace MauRen
 
 		VulkanDescriptorContext m_DescriptorContext{};
 		VulkanSwapchainContext m_SwapChainContext{};
-		VulkanGraphicsPipeline m_GraphicsPipeline{};
+		VulkanGraphicsPipeline* m_GraphicsPipeline{};
 
 		VulkanCommandPoolManager m_CommandPoolManager{};
 

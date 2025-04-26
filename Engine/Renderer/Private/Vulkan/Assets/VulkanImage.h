@@ -13,6 +13,7 @@ namespace MauRen
 		VkImage image{ VK_NULL_HANDLE };
 		VkDeviceMemory imageMemory{ VK_NULL_HANDLE };
 		VkFormat format{ VK_FORMAT_UNDEFINED };
+		VkImageLayout layout{ VK_IMAGE_LAYOUT_UNDEFINED };
 
 		// Currently only work with one view but may support multiple later
 		std::vector<VkImageView> imageViews{ };

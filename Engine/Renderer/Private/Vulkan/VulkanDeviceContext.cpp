@@ -12,7 +12,7 @@ namespace MauRen
 		SelectPhysicalDevice();
 		CreateLogicalDevice();
 	}
-
+	
 	VulkanDeviceContext::~VulkanDeviceContext()
 	{
 		vkDestroyDevice(m_LogicalDevice, nullptr);
@@ -225,6 +225,14 @@ namespace MauRen
 		indexingFeatures.runtimeDescriptorArray = VK_TRUE;
 		indexingFeatures.descriptorBindingPartiallyBound = VK_TRUE;
 		indexingFeatures.descriptorBindingVariableDescriptorCount = VK_TRUE;
+		indexingFeatures.pNext = nullptr;
+
+		VkPhysicalDeviceVulkan13Features features13{
+			.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES,
+			.pNext = &indexingFeatures,
+			.dynamicRendering = VK_TRUE,
+		};
+		//features13.synchronization2 = VK_TRUE;
 
 		VkDeviceCreateInfo createInfo{};
 		createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
@@ -232,7 +240,7 @@ namespace MauRen
 		createInfo.pQueueCreateInfos = queueCreateInfos.data();
 		createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size()); // Since it's a set, only the unique amt of families are added.
 
-		createInfo.pNext = &indexingFeatures;
+		createInfo.pNext = &features13;
 		createInfo.pEnabledFeatures = &deviceFeatures;
 
 		createInfo.enabledExtensionCount = static_cast<uint32_t>(DEVICE_EXTENSIONS.size());
@@ -339,12 +347,16 @@ namespace MauRen
 		VkPhysicalDeviceFeatures deviceFeatures;
 		vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
 
+		VkPhysicalDeviceVulkan13Features vulkan13Features{};
+		vulkan13Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
+
 		VkPhysicalDeviceDescriptorIndexingFeatures indexingFeatures{};
 		indexingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
+		vulkan13Features.pNext = &indexingFeatures;
 
 		VkPhysicalDeviceFeatures2 deviceFeatures2{};
 		deviceFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
-		deviceFeatures2.pNext = &indexingFeatures;
+		deviceFeatures2.pNext = &vulkan13Features;
 
 		vkGetPhysicalDeviceFeatures2(device, &deviceFeatures2);
 
@@ -358,9 +370,13 @@ namespace MauRen
 							&& not swapChainSupport.presentModes.empty()
 							&& deviceFeatures.samplerAnisotropy	// Could also not enforce and set a bool that's reused here 
 							&& deviceFeatures.fillModeNonSolid
+
 							&& indexingFeatures.runtimeDescriptorArray
 							&& indexingFeatures.descriptorBindingPartiallyBound
 							&& indexingFeatures.descriptorBindingVariableDescriptorCount
+
+							&& vulkan13Features.dynamicRendering
+							//&& vulkan13Features.synchronization2
 
 							&& deviceFeatures.multiDrawIndirect;
 		}

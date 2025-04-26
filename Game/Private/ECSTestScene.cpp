@@ -28,7 +28,7 @@ namespace MauGam
 			enttCar.AddComponent<CStaticMesh>("Resources/Models/old_rusty_car/scene.gltf");
 		}
 
-		bool constexpr ENABLE_HIGH_INSTANCE_TEST{ true };
+		bool constexpr ENABLE_HIGH_INSTANCE_TEST{ false };
 		uint32_t constexpr NUM_INSTANCES{ 75'000 };
 		if constexpr (ENABLE_HIGH_INSTANCE_TEST)
 		{

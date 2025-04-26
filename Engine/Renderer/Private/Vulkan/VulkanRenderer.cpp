@@ -40,11 +40,12 @@ namespace MauRen
 		m_SwapChainContext.Initialize(m_pWindow, &m_SurfaceContext);
 
 		m_DescriptorContext.CreateDescriptorSetLayout();
-		m_GraphicsPipeline.Initialize(&m_SwapChainContext, m_DescriptorContext.GetDescriptorSetLayout(), 1u);
+		m_GraphicsPipeline = new VulkanGraphicsPipeline{};
+		m_GraphicsPipeline->Initialize(&m_SwapChainContext, m_DescriptorContext.GetDescriptorSetLayout(), 1u);
 
 		m_CommandPoolManager.Initialize();
 
-		m_SwapChainContext.InitializeResourcesAndCreateFrames(&m_GraphicsPipeline);
+		m_SwapChainContext.InitializeResourcesAndCreateFrames(m_GraphicsPipeline);
 
 		CreateUniformBuffers();
 		VulkanMaterialManager::GetInstance().Initialize();
@@ -114,7 +115,8 @@ namespace MauRen
 		}
 
 
-		m_GraphicsPipeline.Destroy();
+		m_GraphicsPipeline->Destroy();
+		delete m_GraphicsPipeline;
 
 		m_SwapChainContext.Destroy();
 		m_DescriptorContext.Destroy();
@@ -191,24 +193,66 @@ namespace MauRen
 			throw std::runtime_error("Failed to begin recording command buffer!");
 		}
 
-		VkRenderPassBeginInfo renderPassInfo{};
-		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-		renderPassInfo.renderPass = m_GraphicsPipeline.GetRenderPass();
-		renderPassInfo.framebuffer = m_SwapChainContext.GetSwapchainFrameBuffer(imageIndex);
+		// TODO
+		// Image memory barriers
+		// Depth
+		auto& depth{ m_SwapChainContext.GetDepthImage() };
+		depth.TransitionImageLayout(m_CommandPoolManager, depth.layout, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+		// Colour
+		auto& colour{ m_SwapChainContext.GetColorImage() };
+		colour.TransitionImageLayout(m_CommandPoolManager, colour.layout, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 
-		renderPassInfo.renderArea.offset = { 0, 0 };
-		renderPassInfo.renderArea.extent = m_SwapChainContext.GetExtent();
-
-		VkClearColorValue constexpr clearColor{ 0.0f, 0.0f, 0.0f, 1.f };
 		std::array<VkClearValue, 2> clearValues{};
-		clearValues[0].color = clearColor;
+		clearValues[0].color = { 0.0f, 0.0f, 0.0f, 1.f };
 		clearValues[1].depthStencil = { 1.0f, 0 };
 
-		renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
-		renderPassInfo.pClearValues = clearValues.data();
+		// Dynamic rendering attachments
+		VkRenderingAttachmentInfo colorAttachment{};
+		colorAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+		colorAttachment.imageView = m_SwapChainContext.GetColorImage().imageViews[0];
+		colorAttachment.imageLayout = m_SwapChainContext.GetColorImage().layout;
+		colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+		colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+		colorAttachment.clearValue = clearValues[0];
 
-		vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-			vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipeline.GetPipeline() );
+		VkRenderingAttachmentInfo depthAttachment{};
+		depthAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+		depthAttachment.imageView = m_SwapChainContext.GetDepthImage().imageViews[0];
+		depthAttachment.imageLayout = m_SwapChainContext.GetDepthImage().layout;
+		depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+		depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		depthAttachment.clearValue = clearValues[1];
+
+		VkRenderingInfo renderInfo{};
+		renderInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
+		renderInfo.renderArea = VkRect2D{ VkOffset2D{ 0, 0 }, m_SwapChainContext.GetExtent() };
+		renderInfo.layerCount = 1;
+		renderInfo.colorAttachmentCount = 1;
+		renderInfo.pColorAttachments = &colorAttachment;
+		renderInfo.pDepthAttachment = &depthAttachment;
+		renderInfo.pStencilAttachment = nullptr;
+
+		//VkRenderPassBeginInfo renderPassInfo{};
+		//renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+		//renderPassInfo.renderPass = m_GraphicsPipeline.GetRenderPass();
+		//renderPassInfo.framebuffer = m_SwapChainContext.GetSwapchainFrameBuffer(imageIndex);
+
+		//renderPassInfo.renderArea.offset = { 0, 0 };
+		//renderPassInfo.renderArea.extent = m_SwapChainContext.GetExtent();
+
+
+
+		//renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+		//renderPassInfo.pClearValues = clearValues.data();
+		++test;
+
+		ME_ASSERT(m_GraphicsPipeline->GetPipeline() != VK_NULL_HANDLE);
+		//vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+		vkCmdBeginRendering(commandBuffer, &renderInfo);
+			++test;
+
+			vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipeline->GetPipeline() );
 
 			VkViewport viewport{};
 			viewport.x = 0.0f;
@@ -224,23 +268,21 @@ namespace MauRen
 			scissor.extent = m_SwapChainContext.GetExtent();
 			vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-		VulkanMeshManager::GetInstance().Draw(commandBuffer, m_GraphicsPipeline.GetPipelineLayout(), 1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame], m_CurrentFrame);
-		RenderDebug(commandBuffer);
+			VulkanMeshManager::GetInstance().Draw(commandBuffer, m_GraphicsPipeline->GetPipelineLayout(), 1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame], m_CurrentFrame);
+			RenderDebug(commandBuffer);
+		vkCmdEndRendering(commandBuffer);
+		//vkCmdEndRenderPass(commandBuffer);
 
-		vkCmdEndRenderPass(commandBuffer);
+		// transitions?
+		colour.TransitionImageLayout(m_CommandPoolManager, colour.layout, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		depth.TransitionImageLayout(m_CommandPoolManager, depth.layout, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
 
 		if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) 
 		{
 			throw std::runtime_error("Failed to record command buffer!");
 		}
 
-		//TODO
-		/*Driver developers recommend that you also store multiple buffers, like the vertex and index buffer, into a single VkBuffer
-		 *and use offsets in commands like vkCmdBindVertexBuffers.
-		 *The advantage is that your data is more cache friendly in that case, because it's closer together.
-		 *It is even possible to reuse the same chunk of memory for multiple resources if they are not used during the same render operations,
-		 *provided that their data is refreshed, of course. This is known as aliasing and some Vulkan functions have explicit flags to specify that you want to do this.
-		 */
+		// SubmitWork()?
 	}
 
 	void VulkanRenderer::CreateSyncObjects()
@@ -407,7 +449,7 @@ namespace MauRen
 		m_FramebufferResized = false;
 
 		vkDeviceWaitIdle(deviceContext->GetLogicalDevice());
-		m_SwapChainContext.ReCreate(m_pWindow, &m_GraphicsPipeline, &m_SurfaceContext);
+		m_SwapChainContext.ReCreate(m_pWindow, m_GraphicsPipeline, &m_SurfaceContext);
 
 		return true;
 	}
@@ -488,7 +530,7 @@ namespace MauRen
 			return;
 		}
 
-		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipeline.GetDebugPipeline());
+		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipeline->GetDebugPipeline());
 
 		VkDeviceSize constexpr offset{ 0 };
 		vkCmdBindVertexBuffers(commandBuffer, 0, 1, &m_DebugVertexBuffer.buffer, &offset);
