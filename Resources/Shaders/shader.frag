@@ -58,7 +58,8 @@ void main()
     
     float NdotL = max(dot(n, -g_LightDir), 0.0);
 
-    outColor = albedo * vec4(vec3(NdotL), 1.0);
+    //outColor = albedo * vec4(vec3(NdotL), 1.0);
+    //outColor = vec4(n * 0.5 + 0.5, 1.0);
 
-    //outColor = vec4(fragTexCoord, 0.0, 1.0);
+    outColor = vec4(fragTexCoord, 0.0, 1.0);
 }

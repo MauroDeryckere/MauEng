@@ -25,11 +25,44 @@ namespace MauGam
 			transform.Rotate(rot);
 			transform.Scale({ .5f, .5f, .5f });
 
-			enttCar.AddComponent<CStaticMesh>("Resources/Models/old_rusty_car/scene.gltf");
+			//enttCar.AddComponent<CStaticMesh>("Resources/Models/old_rusty_car/scene.gltf");
 		}
 
-		bool constexpr ENABLE_HIGH_INSTANCE_TEST{ false };
-		uint32_t constexpr NUM_INSTANCES{ 75'000 };
+		{
+			Entity enttHelmet{ CreateEntity() };
+
+			auto& transform{ enttHelmet.GetComponent<CTransform>() };
+			//  car is exported a lil bad so need to do some rotating
+		//	MauCor::Rotator const rot{ 90, 0, 180 };
+			//transform.Rotate(rot);
+		//	transform.Scale({ .5f, .5f, .5f });
+
+		//	enttHelmet.AddComponent<CStaticMesh>("Resources/Models/FlightHelmet/glTF/FlightHelmet.gltf");
+		}
+
+		{
+			Entity enttSponza{ CreateEntity() };
+
+			auto& transform{ enttSponza.GetComponent<CTransform>() };
+			//  car is exported a lil bad so need to do some rotating
+		//	MauCor::Rotator const rot{ 90, 0, 180 };
+			//transform.Rotate(rot);
+		//	transform.Scale({ .5f, .5f, .5f });
+
+			enttSponza.AddComponent<CStaticMesh>("Resources/Models/Sponza/glTF/Sponza.gltf");
+		}
+
+		{
+			Entity entSp{ CreateEntity() };
+			auto& transform{ entSp.GetComponent<CTransform>() };
+			//transform.Scale({ .05f, .05f, .05f });
+		//	enttSponza.AddComponent<CStaticMesh>("Resources/Models/Spider/spider.obj");
+		}
+
+
+		bool constexpr ENABLE_HIGH_INSTANCE_TEST{ true };
+		//uint32_t constexpr NUM_INSTANCES{ 75'000 };
+		uint32_t constexpr NUM_INSTANCES{ 20'000 };
 		if constexpr (ENABLE_HIGH_INSTANCE_TEST)
 		{
 			std::random_device rd;  // Random device for seed 
@@ -42,7 +75,7 @@ namespace MauGam
 				auto& transform{ entGUN.GetComponent<CTransform>() };
 				transform.Translate({ dis(gen), dis(gen), dis(gen) });
 				transform.Scale({ .05f, .05f, .05f });
-				entGUN.AddComponent<CStaticMesh>("Resources/Models/Spider/spider.obj");
+			//	entGUN.AddComponent<CStaticMesh>("Resources/Models/Spider/spider.obj");
 			}
 		}
 

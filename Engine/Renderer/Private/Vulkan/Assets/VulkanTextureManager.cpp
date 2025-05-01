@@ -52,7 +52,7 @@ namespace MauRen
 		return it->second;
 	}
 
-	uint32_t VulkanTextureManager::LoadOrGetTexture(VulkanCommandPoolManager& cmdPoolManager, VulkanDescriptorContext& descriptorContext, std::string const& textureName) noexcept
+	uint32_t VulkanTextureManager::LoadOrGetTexture(VulkanCommandPoolManager& cmdPoolManager, VulkanDescriptorContext& descriptorContext, std::string const& textureName, bool isNorm) noexcept
 	{
 		ME_PROFILE_FUNCTION()
 
@@ -67,7 +67,7 @@ namespace MauRen
 			return it->second;
 		}
 
-		VulkanImage textureImage{ CreateTextureImage(cmdPoolManager, textureName)};
+		VulkanImage textureImage{ CreateTextureImage(cmdPoolManager, textureName, isNorm)};
 		descriptorContext.BindTexture(m_Textures.size(), textureImage.imageViews[0], VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 		m_Textures.emplace_back(std::move(textureImage));
@@ -76,7 +76,7 @@ namespace MauRen
 		return m_Textures.size() - 1;
 	}
 
-	uint32_t VulkanTextureManager::LoadOrGetTexture(VulkanCommandPoolManager& cmdPoolManager, VulkanDescriptorContext& descriptorContext, std::string const& textureName, EmbeddedTexture const& embTex) noexcept
+	uint32_t VulkanTextureManager::LoadOrGetTexture(VulkanCommandPoolManager& cmdPoolManager, VulkanDescriptorContext& descriptorContext, std::string const& textureName, EmbeddedTexture const& embTex, bool isNorm) noexcept
 	{
 		ME_PROFILE_FUNCTION()
 
@@ -91,7 +91,7 @@ namespace MauRen
 			return it->second;
 		}
 
-		VulkanImage textureImage{ CreateTextureImage(cmdPoolManager, embTex) };
+		VulkanImage textureImage{ CreateTextureImage(cmdPoolManager, embTex, isNorm) };
 		descriptorContext.BindTexture(m_Textures.size(), textureImage.imageViews[0], VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 		m_Textures.emplace_back(std::move(textureImage));
@@ -142,41 +142,41 @@ namespace MauRen
 	void VulkanTextureManager::CreateDefaultTextures(VulkanCommandPoolManager& cmdPoolManager, VulkanDescriptorContext& descriptorContext)
 	{
 		// 0
-		auto defaultWhiteTexture{ Create1x1Texture(cmdPoolManager, glm::vec4(1.0f)) };
+		auto defaultWhiteTexture{ Create1x1Texture(cmdPoolManager, glm::vec4(1.0f), false) };
 		descriptorContext.BindTexture(m_Textures.size(), defaultWhiteTexture.imageViews[0], VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 		m_Textures.emplace_back(std::move(defaultWhiteTexture));
 		m_TextureIDMap["__DefaultWhite"] = m_Textures.size() - 1;
 
 		// 1
-		auto defaultGrayTexture{ Create1x1Texture(cmdPoolManager, glm::vec4(.5f)) };
+		auto defaultGrayTexture{ Create1x1Texture(cmdPoolManager, glm::vec4(.5f), false) };
 		descriptorContext.BindTexture(m_Textures.size(), defaultGrayTexture.imageViews[0], VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 		m_Textures.emplace_back(std::move(defaultGrayTexture));
 		m_TextureIDMap["__DefaultGray"] = m_Textures.size() - 1;
 
 		// 2
-		auto defaultNormalTexture{ Create1x1Texture(cmdPoolManager, glm::vec4(0.5f, 0.5f, 1.0f, 1.0f)) };
+		auto defaultNormalTexture{ Create1x1Texture(cmdPoolManager, glm::vec4(0.5f, 0.5f, 1.0f, 1.0f), false) };
 		descriptorContext.BindTexture(m_Textures.size(), defaultNormalTexture.imageViews[0], VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 		m_Textures.emplace_back(std::move(defaultNormalTexture));
 		m_TextureIDMap["__DefaultNormal"] = m_Textures.size() - 1;
 
 		// 3
-		auto defaultBlackTexture{ Create1x1Texture(cmdPoolManager, glm::vec4(0.0f)) };
+		auto defaultBlackTexture{ Create1x1Texture(cmdPoolManager, glm::vec4(0.0f), false) };
 		descriptorContext.BindTexture(m_Textures.size(), defaultBlackTexture.imageViews[0], VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 		m_Textures.emplace_back(std::move(defaultBlackTexture));
 		m_TextureIDMap["__DefaultBlack"] = m_Textures.size() - 1;
 
 		// 4
-		auto invalidTexture{ Create1x1Texture(cmdPoolManager, glm::vec4(1.0f, 0.0f, 1.0f, 1.0f)) };
+		auto invalidTexture{ Create1x1Texture(cmdPoolManager, glm::vec4(1.0f, 0.0f, 1.0f, 1.0f), false) };
 		descriptorContext.BindTexture(m_Textures.size(), invalidTexture.imageViews[0], VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 		m_Textures.emplace_back(std::move(invalidTexture));
 		m_TextureIDMap["__DefaultInvalid"] = m_Textures.size() - 1;
 	}
 
-	VulkanImage VulkanTextureManager::CreateTextureImage(VulkanCommandPoolManager& cmdPoolManager, std::string const& path)
+	VulkanImage VulkanTextureManager::CreateTextureImage(VulkanCommandPoolManager& cmdPoolManager, std::string const& path, bool isNorm)
 	{
 		ME_PROFILE_FUNCTION()
 
@@ -209,7 +209,7 @@ namespace MauRen
 
 		VulkanImage texImage
 		{
-			VK_FORMAT_R8G8B8A8_SRGB,
+			isNorm ? VK_FORMAT_R8G8B8A8_UNORM : VK_FORMAT_R8G8B8A8_SRGB,
 			VK_IMAGE_TILING_OPTIMAL,
 			VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
 			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
@@ -232,7 +232,7 @@ namespace MauRen
 		return texImage;
 	}
 
-	VulkanImage VulkanTextureManager::CreateTextureImage(VulkanCommandPoolManager& cmdPoolManager, EmbeddedTexture const& embTex)
+	VulkanImage VulkanTextureManager::CreateTextureImage(VulkanCommandPoolManager& cmdPoolManager, EmbeddedTexture const& embTex, bool isNorm)
 	{
 		ME_PROFILE_FUNCTION()
 
@@ -288,7 +288,7 @@ namespace MauRen
 
 		VulkanImage texImage
 		{
-			VK_FORMAT_R8G8B8A8_SRGB,
+			isNorm ? VK_FORMAT_R8G8B8A8_UNORM : VK_FORMAT_R8G8B8A8_SRGB,
 			VK_IMAGE_TILING_OPTIMAL,
 			VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
 			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
@@ -311,7 +311,7 @@ namespace MauRen
 		return texImage;
 	}
 
-	VulkanImage VulkanTextureManager::Create1x1Texture(VulkanCommandPoolManager& cmdPoolManager, glm::vec4 const& color)
+	VulkanImage VulkanTextureManager::Create1x1Texture(VulkanCommandPoolManager& cmdPoolManager, glm::vec4 const& color, bool isNorm)
 	{
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 
@@ -335,7 +335,7 @@ namespace MauRen
 
 		VulkanImage texImage
 		{
-			VK_FORMAT_R8G8B8A8_SRGB,
+			isNorm ? VK_FORMAT_R8G8B8A8_UNORM : VK_FORMAT_R8G8B8A8_SRGB,
 			VK_IMAGE_TILING_OPTIMAL,
 			VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
 			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
