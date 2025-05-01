@@ -32,19 +32,19 @@ vec3 g_LightDir = vec3(0.577f, -0.577f, 0.577f);
 void main() 
 {
     // Access the material data based on the materialID from PushConstants
-    MaterialData material = materials[inMaterialIndex];
+    const MaterialData material = materials[inMaterialIndex];
 
     // When the ID is 0xFFFFFFFF, we treat it as missing or invalid and return a zero vector.
-    vec4 albedo = texture(sampler2D(TextureBuffer[material.albedoTextureID], globalSampler), fragTexCoord);
-    vec4 normalTex = texture(sampler2D(TextureBuffer[material.normalTextureID], globalSampler), fragTexCoord);
+    const vec4 albedo = texture(sampler2D(TextureBuffer[nonuniformEXT(material.albedoTextureID)], globalSampler), fragTexCoord);
+    const vec4 normalTex = texture(sampler2D(TextureBuffer[nonuniformEXT(material.normalTextureID)], globalSampler), fragTexCoord);
         
     //vec4 roughness = texture(sampler2D(TextureBuffer[material.roughnessTextureID], globalSampler), fragTexCoord);
     //vec4 metallic = texture(sampler2D(TextureBuffer[material.metallicTextureID], globalSampler), fragTexCoord);
 
-    vec3 bitangent = cross(inNormal, inTangent.xyz) * inTangent.w;
-    vec3 sampledNormal = normalize(normalTex.xyz * 2.0 - 1.0);
-    mat3 TBN = mat3(normalize(inTangent.xyz), normalize(bitangent), inNormal);
-    vec3 n = normalize(TBN * sampledNormal);
+    const vec3 bitangent = cross(inNormal, inTangent.xyz) * inTangent.w;
+    const vec3 sampledNormal = normalize(normalTex.xyz * 2.0 - 1.0);
+    const mat3 TBN = mat3(normalize(inTangent.xyz), normalize(bitangent), inNormal);
+    const vec3 n = normalize(TBN * sampledNormal);
 
     //vec3 lightDir = normalize(vec3(
     //    2.0 * fract(sin(gl_FragCoord.x * 12.9898 + gl_FragCoord.y * 78.233) * 43758.5453) - 1.0,

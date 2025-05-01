@@ -105,11 +105,14 @@ namespace MauRen
 			meshInstanceDataBinding
 		};
 
+		// Variable coutn adds more complexity and we do not need it currentl
 		// Flags for the binding - only use valid flags for image samplers
 		VkDescriptorBindingFlagsEXT bindingFlags[bindings.size()] {
 			0,
 			0,
-			VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT_EXT, // Flags for bindless textures
+			VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT |
+			//VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT |
+			VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT, // Flags for bindless textures
 			0,
 			0,
 			0
@@ -119,9 +122,13 @@ namespace MauRen
 		bindingFlagsInfo.bindingCount = static_cast<uint32_t>(bindings.size());
 		bindingFlagsInfo.pBindingFlags = bindingFlags;
 
+		VkDescriptorSetLayoutCreateFlags descLayoutFlags{};
+		descLayoutFlags |= VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT;
+		
 		VkDescriptorSetLayoutCreateInfo layoutInfo{};
 		layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
 		layoutInfo.pNext = &bindingFlagsInfo;
+		layoutInfo.flags = descLayoutFlags;
 		layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
 		layoutInfo.pBindings = bindings.data();
 

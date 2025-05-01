@@ -225,6 +225,8 @@ namespace MauRen
 		indexingFeatures.runtimeDescriptorArray = VK_TRUE;
 		indexingFeatures.descriptorBindingPartiallyBound = VK_TRUE;
 		indexingFeatures.descriptorBindingVariableDescriptorCount = VK_TRUE;
+		indexingFeatures.descriptorBindingSampledImageUpdateAfterBind = VK_TRUE;
+		indexingFeatures.shaderSampledImageArrayNonUniformIndexing = VK_TRUE;
 		indexingFeatures.pNext = nullptr;
 
 		VkPhysicalDeviceVulkan13Features features13
@@ -374,6 +376,7 @@ namespace MauRen
 
 							&& indexingFeatures.runtimeDescriptorArray
 							&& indexingFeatures.descriptorBindingPartiallyBound
+							&& indexingFeatures.descriptorBindingVariableDescriptorCount
 							&& indexingFeatures.descriptorBindingVariableDescriptorCount
 
 							&& vulkan13Features.dynamicRendering
