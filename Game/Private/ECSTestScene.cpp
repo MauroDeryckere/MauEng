@@ -20,9 +20,6 @@ namespace MauGam
 			Entity enttCar{ CreateEntity() };
 
 			auto& transform{ enttCar.GetComponent<CTransform>() };
-			//  car is exported a lil bad so need to do some rotating
-			MauCor::Rotator const rot{ 90, 0, 180 };
-			transform.Rotate(rot);
 			transform.Scale({ .5f, .5f, .5f });
 
 			enttCar.AddComponent<CStaticMesh>("Resources/Models/old_rusty_car/scene.gltf");
@@ -32,35 +29,32 @@ namespace MauGam
 			Entity enttHelmet{ CreateEntity() };
 
 			auto& transform{ enttHelmet.GetComponent<CTransform>() };
-			//  car is exported a lil bad so need to do some rotating
-		//	MauCor::Rotator const rot{ 90, 0, 180 };
-			//transform.Rotate(rot);
-		//	transform.Scale({ .5f, .5f, .5f });
-
-		//nttHelmet.AddComponent<CStaticMesh>("Resources/Models/FlightHelmet/glTF/FlightHelmet.gltf");
+			transform.Scale({ 100.f, 100.f, 100.f });
+			//enttHelmet.AddComponent<CStaticMesh>("Resources/Models/FlightHelmet/glTF/FlightHelmet.gltf");
 		}
 
 		{
+			//TODO does not work
 			Entity enttSponza{ CreateEntity() };
 
 			auto& transform{ enttSponza.GetComponent<CTransform>() };
-			//  car is exported a lil bad so need to do some rotating
 		//	MauCor::Rotator const rot{ 90, 0, 180 };
 			//transform.Rotate(rot);
 		//	transform.Scale({ .5f, .5f, .5f });
 
-		//	enttSponza.AddComponent<CStaticMesh>("Resources/Models/Sponza/glTF/Sponza.gltf");
+			//enttSponza.AddComponent<CStaticMesh>("Resources/Models/Sponza/glTF/Sponza.gltf");
 		}
 
 		{
-			Entity entSp{ CreateEntity() };
-			auto& transform{ entSp.GetComponent<CTransform>() };
+			// Note: spider has no normal map
+			Entity entSpider{ CreateEntity() };
+			auto& transform{ entSpider.GetComponent<CTransform>() };
 			//transform.Scale({ .05f, .05f, .05f });
-		//	enttSponza.AddComponent<CStaticMesh>("Resources/Models/Spider/spider.obj");
+			//entSpider.AddComponent<CStaticMesh>("Resources/Models/Spider/spider.obj");
 		}
 
 
-		bool constexpr ENABLE_HIGH_INSTANCE_TEST{ true };
+		bool constexpr ENABLE_HIGH_INSTANCE_TEST{ false };
 		//uint32_t constexpr NUM_INSTANCES{ 75'000 };
 		uint32_t constexpr NUM_INSTANCES{ 20'000 };
 		if constexpr (ENABLE_HIGH_INSTANCE_TEST)
@@ -71,11 +65,12 @@ namespace MauGam
 
 			for (size_t i { 0 }; i < NUM_INSTANCES; i++)
 			{
-				Entity entGUN{ CreateEntity() };
-				auto& transform{ entGUN.GetComponent<CTransform>() };
+				// Note: spider has no normal map (scaling is a little off)
+				Entity entSpider{ CreateEntity() }; 
+				auto& transform{ entSpider.GetComponent<CTransform>() };
 				transform.Translate({ dis(gen), dis(gen), dis(gen) });
 				transform.Scale({ .05f, .05f, .05f });
-			//	entGUN.AddComponent<CStaticMesh>("Resources/Models/Spider/spider.obj");
+				entSpider.AddComponent<CStaticMesh>("Resources/Models/Spider/spider.obj");
 			}
 		}
 

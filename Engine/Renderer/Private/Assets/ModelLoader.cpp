@@ -41,19 +41,21 @@ namespace MauRen
 			return model;
 		}
 
+		aiMatrix4x4 const rootTransform{ scene->mRootNode->mTransformation };
+
         for (unsigned i{ 0 }; i < scene->mNumMeshes; ++i)
 		{
 			aiMesh const* const mesh{ scene->mMeshes[i] };
-
+			
 			uint32_t const vertexOffset{ static_cast<uint32_t>(model.vertices.size()) };
 			uint32_t const indexOffset{ static_cast<uint32_t>(model.indices.size()) };
 
 		    for (unsigned j{ 0 }; j < mesh->mNumVertices; ++j) 
 		    {
-				aiVector3D const vertex{ mesh->mVertices[j] };
+				aiVector3D const vertex{ rootTransform * mesh->mVertices[j] };
 
 				//For now just support channel 0
-				glm::vec3 color{ 1.0f };
+				glm::vec3 color{ 1.0f };	
 				if (mesh->HasVertexColors(0))
 				{
 					aiColor4D const& col { mesh->mColors[0][j] };
@@ -103,8 +105,8 @@ namespace MauRen
 			aiMaterial const* const material{ scene->mMaterials[mesh->mMaterialIndex] };
 			aiString matName;
 			auto result{ material->Get(AI_MATKEY_NAME, matName) };
+			ME_ASSERT(mesh->mMaterialIndex < scene->mNumMaterials);
 			ME_ASSERT(result == AI_SUCCESS);
-
 			auto& matManager{ VulkanMaterialManager::GetInstance() };
 
 			std::string const matStr{ matName.C_Str() };
