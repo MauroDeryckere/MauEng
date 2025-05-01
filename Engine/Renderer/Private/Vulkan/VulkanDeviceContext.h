@@ -44,6 +44,9 @@ namespace MauRen
 
 		[[nodiscard]] VkSampleCountFlagBits GetSampleCount() const noexcept { return m_MsaaSamples; }
 
+		[[nodiscard]] uint32_t GetMaxSampledImages() const noexcept { return MAX_SAMPLED_IMAGES; }
+		[[nodiscard]] uint32_t GetMaxDescriptorSets() const noexcept { return MAX_DESCRIPTORS_STAGE; }
+
 		VulkanDeviceContext(VulkanDeviceContext const&) = delete;
 		VulkanDeviceContext(VulkanDeviceContext&&) = delete;
 		VulkanDeviceContext& operator=(VulkanDeviceContext const&) = delete;
@@ -65,6 +68,10 @@ namespace MauRen
 		VkQueue m_UnifiedGraphicsPresentQueue{ VK_NULL_HANDLE };
 
 		VkSampleCountFlagBits m_MsaaSamples;
+
+		uint32_t const MAX_SAMPLED_IMAGES{ 0 };
+		uint32_t const MAX_DESCRIPTORS_SET{ 0 };
+		uint32_t const MAX_DESCRIPTORS_STAGE{ 0 };
 
 		void SelectPhysicalDevice();
 		void CreateLogicalDevice();

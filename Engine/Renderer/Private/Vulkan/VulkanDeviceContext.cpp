@@ -145,6 +145,18 @@ namespace MauRen
 			vkGetPhysicalDeviceProperties(m_PhysicalDevice, &selectedProps);
 
 			LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Renderer, "Selected GPU: {}  (score: {} )" , selectedProps.deviceName, bestScore);
+
+			// for bindless
+			uint32_t const maxSampledImages{ selectedProps.limits.maxPerStageDescriptorSampledImages };
+			const_cast<uint32_t&>(MAX_SAMPLED_IMAGES) = maxSampledImages;
+			LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Renderer, "Max per stage sampled images: {}", maxSampledImages);
+
+			uint32_t const maxDescriptorsPerStage{ selectedProps.limits.maxPerStageResources };
+			const_cast<uint32_t&>(MAX_DESCRIPTORS_STAGE) = maxDescriptorsPerStage;
+			LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Renderer, "Max per stage descriptors: {}", maxDescriptorsPerStage);
+
+			uint32_t const maxDescriptorsPerSet{ selectedProps.limits.maxDescriptorSetSampledImages };
+			const_cast<uint32_t&>(MAX_DESCRIPTORS_SET) = maxDescriptorsPerSet;
 		}
 
 		// Allow user to manually select 
@@ -188,6 +200,18 @@ namespace MauRen
 			VkPhysicalDeviceProperties selectedProps;
 			vkGetPhysicalDeviceProperties(m_PhysicalDevice, &selectedProps);
 			LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Renderer, "Selected GPU: {}", selectedProps.deviceName);
+
+			// for bindless
+			uint32_t const maxSampledImages{ selectedProps.limits.maxPerStageDescriptorSampledImages };
+			const_cast<uint32_t&>(MAX_SAMPLED_IMAGES) = maxSampledImages;
+			LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Renderer, "Max per stage sampled images: {}", maxSampledImages);
+
+			uint32_t const maxDescriptorsPerStage{ selectedProps.limits.maxPerStageResources };
+			const_cast<uint32_t&>(MAX_DESCRIPTORS_STAGE) = maxDescriptorsPerStage;
+			LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Renderer, "Max per stage descriptors: {}", maxDescriptorsPerStage);
+
+			uint32_t const maxDescriptorsPerSet{ selectedProps.limits.maxDescriptorSetSampledImages };
+			const_cast<uint32_t&>(MAX_DESCRIPTORS_SET) = maxDescriptorsPerSet;
 		}
 	}
 

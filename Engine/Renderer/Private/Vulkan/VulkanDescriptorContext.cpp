@@ -19,6 +19,9 @@ namespace MauRen
 			descriptorWrite.dstSet = m_DescriptorSets[i];
 			descriptorWrite.dstBinding = TEXTURE_BINDING_SLOT;
 			descriptorWrite.dstArrayElement = destLocation;
+
+			ME_ASSERT(destLocation < MAX_TEXTURES);
+
 			descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
 			descriptorWrite.descriptorCount = 1;
 
@@ -141,6 +144,8 @@ namespace MauRen
 
 	void VulkanDescriptorContext::CreateDescriptorPool()
 	{
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+
 		std::array<VkDescriptorPoolSize, 6> poolSizes{};
 		poolSizes[UBO_BINDING_SLOT].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 		poolSizes[UBO_BINDING_SLOT].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
@@ -160,6 +165,25 @@ namespace MauRen
 		poolSizes[MESH_INSTANCE_DATA_BINDING_SLOT].type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
 		poolSizes[MESH_INSTANCE_DATA_BINDING_SLOT].descriptorCount = static_cast<uint32_t>(1 * MAX_FRAMES_IN_FLIGHT);
 
+		if (MAX_TEXTURES > deviceContext->GetMaxSampledImages())
+		{
+			throw std::runtime_error("Max textures is bigger than device limitations");
+		}
+
+		if ([&]() -> uint32_t
+			{
+				uint32_t tot{0};
+				for (auto&& s : poolSizes)
+				{
+					tot += s.descriptorCount;
+				}
+				return tot;
+
+			}() > deviceContext->GetMaxDescriptorSets())
+		{
+			throw std::runtime_error("descriptor set count is bigger than device limitations");
+		}
+
 		VkDescriptorPoolCreateInfo poolInfo{};
 		poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 		poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
@@ -167,7 +191,6 @@ namespace MauRen
 		poolInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
 		poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT;
 
-		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 		if (vkCreateDescriptorPool(deviceContext->GetLogicalDevice(), &poolInfo, nullptr, &m_DescriptorPool) != VK_SUCCESS) {
 
 			throw std::runtime_error("Failed to create descriptor pool!");

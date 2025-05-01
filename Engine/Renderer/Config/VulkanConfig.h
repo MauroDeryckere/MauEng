@@ -34,8 +34,10 @@ namespace MauRen
 	uint32_t constexpr MAX_FRAMES_IN_FLIGHT{ 3 };
 	static_assert(MAX_FRAMES_IN_FLIGHT > 0);
 
-	// These are ust arbitrary numbers for now, they have to actally be calculated in the futrue
+	// The descriptor pool creation will throw if this number is too large
 	uint32_t constexpr MAX_TEXTURES{ 4'048 };			// For texture array
+
+	// These are ust arbitrary numbers for now, they have to actally be calculated in the futrue
 	uint32_t constexpr MAX_MATERIALS{ 512 };			// Matches MaterialData[] buffer
 
 	uint32_t constexpr MAX_MESH_INSTANCES{ 5'000'000 };	// Matches MeshInstanceData[] buffer
