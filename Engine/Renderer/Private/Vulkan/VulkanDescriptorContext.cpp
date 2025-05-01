@@ -110,9 +110,9 @@ namespace MauRen
 			0,
 			0,
 			VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT_EXT, // Flags for bindless textures
-			VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT_EXT, // Flags for material data
-			VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT_EXT,
-			VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT_EXT
+			0,
+			0,
+			0
 		};
 		VkDescriptorSetLayoutBindingFlagsCreateInfoEXT bindingFlagsInfo{};
 		bindingFlagsInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO_EXT;

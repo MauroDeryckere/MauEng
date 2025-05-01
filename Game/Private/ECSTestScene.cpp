@@ -25,7 +25,7 @@ namespace MauGam
 			transform.Rotate(rot);
 			transform.Scale({ .5f, .5f, .5f });
 
-			//enttCar.AddComponent<CStaticMesh>("Resources/Models/old_rusty_car/scene.gltf");
+			enttCar.AddComponent<CStaticMesh>("Resources/Models/old_rusty_car/scene.gltf");
 		}
 
 		{
@@ -37,7 +37,7 @@ namespace MauGam
 			//transform.Rotate(rot);
 		//	transform.Scale({ .5f, .5f, .5f });
 
-		//	enttHelmet.AddComponent<CStaticMesh>("Resources/Models/FlightHelmet/glTF/FlightHelmet.gltf");
+		//nttHelmet.AddComponent<CStaticMesh>("Resources/Models/FlightHelmet/glTF/FlightHelmet.gltf");
 		}
 
 		{
@@ -49,7 +49,7 @@ namespace MauGam
 			//transform.Rotate(rot);
 		//	transform.Scale({ .5f, .5f, .5f });
 
-			enttSponza.AddComponent<CStaticMesh>("Resources/Models/Sponza/glTF/Sponza.gltf");
+		//	enttSponza.AddComponent<CStaticMesh>("Resources/Models/Sponza/glTF/Sponza.gltf");
 		}
 
 		{

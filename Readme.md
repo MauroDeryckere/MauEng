@@ -111,18 +111,23 @@ As a test I loaded a mesh with 100 000 instances. The mesh is a simple gun and h
 - Bindless (indirect) Rendering
 The renderer uses a global index and vertex buffer, draw commands are batched and issued using vkCmdDrawIndexedIndirect. Textures are in a descriptor array.
 
+- Dynamic rendering
+
 - Mesh & material support (loading a material from a file)
 Assimp is integrated, and all formats supported by Assimp can be used to load meshes & materials. Meshes are split up in submeshes, these submeshes are then instanced.
 Default and invalid materials are used to prevent branching on the GPU.
 
 ### Features I want to add inn the near future
+- Deferred Rendering
 - Full material support (currently only supports diffuse & normal maps textures)
+- GPU frustrum culling
 - Lighting (currently very basic hard coded light dir is supported)
 - Deleting / hiding meshes
-- GPU frustrum culling
+- Auto exposure
 
 ### In the further future: 
-- 
+- Animations
+- Different Post processing effects
 
 ### Debug Rendering
 Easy to use API for debug rendering.

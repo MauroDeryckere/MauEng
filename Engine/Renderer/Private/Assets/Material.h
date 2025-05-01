@@ -23,17 +23,17 @@ namespace MauRen
 
 	struct Material final
 	{
-        std::string name {"DefaultMaterial"};
+        std::string name{"DefaultMaterial"};
 
-        glm::vec3 diffuseColor { 1.0f };
-        glm::vec3 specularColor { 0.0f };
-        glm::vec3 ambientColor {0.f };
-        glm::vec3 emissiveColor {0.f};
+        glm::vec3 diffuseColor{ 1.0f };
+        glm::vec3 specularColor{ 0.0f };
+        glm::vec3 ambientColor{0.f };
+        glm::vec3 emissiveColor{0.f};
 
-        float transparency {0.f};
-        float shininess {0.f};
-        float refractionIndex {1.f};
-        int illuminationModel{1};
+        float transparency{ 0.f };
+        float shininess{ 0.f };
+        float refractionIndex{ 1.f };
+        int illuminationModel{ 1 };
 
         std::string diffuseTexture{ "__DefaultWhite" };
         EmbeddedTexture embDiffuse{};
@@ -43,8 +43,6 @@ namespace MauRen
         EmbeddedTexture embNormal{};
         std::string ambientTexture{ "__DefaultGray" };
         EmbeddedTexture embAmbient{};
-
-        std::string displacementMap{"NONE"};
 	};
 }
 
