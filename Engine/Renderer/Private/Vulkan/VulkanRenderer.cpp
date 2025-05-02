@@ -237,6 +237,7 @@ namespace MauRen
 			vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 				vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipeline->GetDepthPrePassPipeline());
 				VulkanMeshManager::GetInstance().Draw(commandBuffer, m_GraphicsPipeline->GetDepthPrePassPipelineLayout(), 1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame], m_CurrentFrame);
+				RenderDebug(commandBuffer);
 			vkCmdEndRendering(commandBuffer);
 		}
 #pragma endregion

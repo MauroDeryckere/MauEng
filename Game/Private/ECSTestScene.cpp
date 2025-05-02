@@ -165,6 +165,8 @@ namespace MauGam
 			m_CameraManager.GetActiveCamera().RotateY(-mouseMovement.second * rot);
 		}
 
+		DEBUG_RENDERER.DrawCylinder({}, { 100, 100, 100 }, {}, {1,1,1}, 100);
+
 		using namespace MauEng;
 		{
 			std::random_device rd;  // Random device for seed 
