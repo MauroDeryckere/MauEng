@@ -176,6 +176,7 @@ namespace MauRen
 	{
 		ME_PROFILE_FUNCTION()
 
+	//	VkRenderingInfo renderInfoDepthPrepass{};
 		VkRenderingInfo renderInfo{};
 		auto& depth{ m_SwapChainContext.GetDepthImage() };
 		auto& colour{ m_SwapChainContext.GetColorImage() };
@@ -183,7 +184,7 @@ namespace MauRen
 		{
 			ME_PROFILE_SCOPE("Begin frame cmd buffer transitions & setup")
 
-				VkCommandBufferBeginInfo beginInfo{};
+			VkCommandBufferBeginInfo beginInfo{};
 
 			// VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT: The command buffer will be rerecorded right after executing it once.
 			// VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT: This is a secondary command buffer that will be entirely within a single render pass.
@@ -247,6 +248,14 @@ namespace MauRen
 			renderInfo.pDepthAttachment = &depthAttachment;
 			renderInfo.pStencilAttachment = nullptr;
 
+			//renderInfoDepthPrepass.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
+			//renderInfoDepthPrepass.renderArea = VkRect2D{ VkOffset2D{ 0, 0 }, m_SwapChainContext.GetExtent() };
+			//renderInfoDepthPrepass.layerCount = 1;
+			//renderInfoDepthPrepass.colorAttachmentCount = 1;
+			//renderInfoDepthPrepass.pColorAttachments = nullptr;
+			//renderInfoDepthPrepass.pDepthAttachment = &depthAttachment;
+			//renderInfoDepthPrepass.pStencilAttachment = nullptr;
+
 			VkViewport viewport{};
 			viewport.x = 0.0f;
 			viewport.y = 0.0f;
@@ -272,12 +281,12 @@ namespace MauRen
 
 			ME_PROFILE_SCOPE("End frame cmd buffer transitions & setup")
 
-				depth.TransitionImageLayout(commandBuffer,
-					VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL,
-					VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT,
-					VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT,
-					VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-					VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT);
+			depth.TransitionImageLayout(commandBuffer,
+				VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL,
+				VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT,
+				VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT,
+				VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+				VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT);
 
 
 			// Transition color layout to transfer optimal before resolving

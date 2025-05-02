@@ -87,11 +87,10 @@ set(SHADER_OUTPUT_DIR "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Resources/Shaders")
 find_program(GLSLC glslc REQUIRED)
 
 # List your shaders here
-set(SHADERS
-    ${SHADER_DIR}/debug_shader.vert
-    ${SHADER_DIR}/debug_shader.frag
-    ${SHADER_DIR}/shader.vert
-    ${SHADER_DIR}/shader.frag
+file(GLOB SHADERS
+    "${SHADER_DIR}/*.vert"
+    "${SHADER_DIR}/*.frag"
+    "${SHADER_DIR}/*.comp"
 )
 
 set(COMPILED_SHADERS "")

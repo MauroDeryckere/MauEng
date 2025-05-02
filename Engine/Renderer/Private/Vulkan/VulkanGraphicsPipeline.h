@@ -18,9 +18,11 @@ namespace MauRen
 		void Initialize(VulkanSwapchainContext* pSwapChainContext, VkDescriptorSetLayout descriptorSetLayout, uint32_t descriptorSetLayoutCount);
 		void Destroy();
 
-		[[nodiscard]] VkRenderPass GetRenderPass() const noexcept { return m_RenderPass; }
 		[[nodiscard]] VkPipeline GetPipeline() const noexcept { return m_GraphicsPipeline; }
 		[[nodiscard]] VkPipelineLayout GetPipelineLayout() const noexcept { return m_PipelineLayout; }
+
+		[[nodiscard]] VkPipeline GetDepthPrePassPipeline() const noexcept { return m_DepthPrePassPipeline; }
+		[[nodiscard]] VkPipelineLayout GetDepthPrePassPipelineLayout() const noexcept { return m_DepthPrePassPipelineLayout; }
 
 		[[nodiscard]] VkPipeline GetDebugPipeline() const noexcept { return m_DebugPipeline; }
 		[[nodiscard]] VkPipelineLayout GetDebugPipelineLayout() const noexcept { return m_DebugPipelineLayout; }
@@ -31,16 +33,17 @@ namespace MauRen
 		VulkanGraphicsPipeline& operator=(VulkanGraphicsPipeline&&) = delete;
 
 	private:
-		VkRenderPass m_RenderPass{ VK_NULL_HANDLE };
 		VkPipelineLayout m_PipelineLayout{ VK_NULL_HANDLE };
 		VkPipeline m_GraphicsPipeline{ VK_NULL_HANDLE };
+
+		VkPipelineLayout m_DepthPrePassPipelineLayout{ VK_NULL_HANDLE };
+		VkPipeline m_DepthPrePassPipeline{ VK_NULL_HANDLE };
 
 		VkPipelineLayout m_DebugPipelineLayout{ VK_NULL_HANDLE };
 		VkPipeline m_DebugPipeline{ VK_NULL_HANDLE };
 
-		void CreateRenderPass(VulkanSwapchainContext* pSwapChainContext);
 		void CreateGraphicsPipeline(VulkanSwapchainContext* pSwapChainContext, VkDescriptorSetLayout descriptorSetLayout, uint32_t descriptorSetLayoutCount);
-
+		void CreateDepthPrePassPipeline(VulkanSwapchainContext* pSwapChainContext, VkDescriptorSetLayout descriptorSetLayout, uint32_t descriptorSetLayoutCount);
 		void CreateDebugGraphicsPipeline(VulkanSwapchainContext* pSwapChainContext, VkDescriptorSetLayout descriptorSetLayout, uint32_t descriptorSetLayoutCount);
 
 		static std::vector<char> ReadFile(std::filesystem::path const& filepath);
