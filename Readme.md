@@ -107,20 +107,20 @@ In this project, we use a right-handed 3D coordinate system with the following c
 ![Screenshot](docs/Pipeline.png)
 
 ### Features
-- Instanced Rendering
+- Instanced Rendering<br>
 As a test I loaded a mesh with 100 000 instances. The mesh is a simple gun and has 1425 indices and 311 vertices. This runs very smoothly on my hardware (RTX 3060, 60 FPS cap but main thread was sleeping for +/-10ms and GPU had a lot of room left)
 ![Screenshot](docs/ZoomedOutInstances.png)
 ![Screenshot](docs/ZoomedInInstances.png)
 
-- Bindless (indirect) Rendering
+- Bindless (indirect) Rendering<br>
 The renderer uses a global index and vertex buffer, draw commands are batched and issued using vkCmdDrawIndexedIndirect. Textures are in a descriptor array.
 
-- Dynamic rendering
+- Dynamic rendering<br>
 
-- Depth prepass
+- Depth prepass<br>
 Reduce overdaw by doing a depth prepass.
 
-- Mesh & material support (loading a material from a file)
+- Mesh & material support (loading a material from a file)<br>
 Assimp is integrated, and all formats supported by Assimp can be used to load meshes & materials. Meshes are split up in submeshes, these submeshes are then instanced.
 Default and invalid materials are used to prevent branching on the GPU.
 
