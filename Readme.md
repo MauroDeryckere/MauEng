@@ -12,6 +12,7 @@
 	- [Component System](#component-system)
 	- [Renderer](#renderer)
 	  - [Coordinate System](#coordinate-system)
+	  - [Pipeline Overview](#Pipeline-Overview)
 	  - [Features](#features)
 	  - [Features I want to add inn the near future](#features-i-want-to-add-inn-the-near-future)
 	  - [In the further future](#in-the-further-future)
@@ -102,6 +103,9 @@ In this project, we use a right-handed 3D coordinate system with the following c
 - Positive Z moves forward (towards the camera's view).
 - Negative Z moves backward (away from the camera's view).
 
+### Pipeline Overview
+![Screenshot](docs/Pipeline.png)
+
 ### Features
 - Instanced Rendering
 As a test I loaded a mesh with 100 000 instances. The mesh is a simple gun and has 1425 indices and 311 vertices. This runs very smoothly on my hardware (RTX 3060, 60 FPS cap but main thread was sleeping for +/-10ms and GPU had a lot of room left)
@@ -112,6 +116,9 @@ As a test I loaded a mesh with 100 000 instances. The mesh is a simple gun and h
 The renderer uses a global index and vertex buffer, draw commands are batched and issued using vkCmdDrawIndexedIndirect. Textures are in a descriptor array.
 
 - Dynamic rendering
+
+- Depth prepass
+Reduce overdaw by doing a depth prepass.
 
 - Mesh & material support (loading a material from a file)
 Assimp is integrated, and all formats supported by Assimp can be used to load meshes & materials. Meshes are split up in submeshes, these submeshes are then instanced.

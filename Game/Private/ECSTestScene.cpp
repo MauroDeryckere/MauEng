@@ -54,9 +54,9 @@ namespace MauGam
 		}
 
 
-		bool constexpr ENABLE_HIGH_INSTANCE_TEST{ false };
+		bool constexpr ENABLE_HIGH_INSTANCE_TEST{ true };
 		//uint32_t constexpr NUM_INSTANCES{ 75'000 };
-		uint32_t constexpr NUM_INSTANCES{ 20'000 };
+		uint32_t constexpr NUM_INSTANCES{ 100'000 };
 		if constexpr (ENABLE_HIGH_INSTANCE_TEST)
 		{
 			std::random_device rd;  // Random device for seed 
