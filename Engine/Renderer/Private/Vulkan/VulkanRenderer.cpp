@@ -176,7 +176,7 @@ namespace MauRen
 	{
 		ME_PROFILE_FUNCTION()
 
-	//	VkRenderingInfo renderInfoDepthPrepass{};
+		//VkRenderingInfo renderInfoDepthPrepass{};
 		VkRenderingInfo renderInfo{};
 		auto& depth{ m_SwapChainContext.GetDepthImage() };
 		auto& colour{ m_SwapChainContext.GetColorImage() };
@@ -403,6 +403,7 @@ namespace MauRen
 			ME_PROFILE_SCOPE("Reset command buffer")
 			vkResetCommandBuffer(m_CommandPoolManager.GetCommandBuffer(m_CurrentFrame), 0);
 		}
+
 		RecordCommandBuffer(m_CommandPoolManager.GetCommandBuffer(m_CurrentFrame), imageIndex);
 
 		VkSubmitInfo submitInfo{};
@@ -579,7 +580,9 @@ namespace MauRen
 		ME_PROFILE_FUNCTION()
 
 		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipeline->GetPipeline());
+		VulkanMeshManager::GetInstance().PreDraw(commandBuffer, m_GraphicsPipeline->GetPipelineLayout(), 1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame], m_CurrentFrame);
 		VulkanMeshManager::GetInstance().Draw(commandBuffer, m_GraphicsPipeline->GetPipelineLayout(), 1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame], m_CurrentFrame);
+		VulkanMeshManager::GetInstance().PostDraw(commandBuffer, m_GraphicsPipeline->GetPipelineLayout(), 1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame], m_CurrentFrame);
 	}
 
 	void VulkanRenderer::RenderDebug(VkCommandBuffer commandBuffer)

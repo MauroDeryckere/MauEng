@@ -119,10 +119,8 @@ namespace MauRen
 		throw std::runtime_error("Mesh not found! ");
 	}
 
-	void VulkanMeshManager::Draw(VkCommandBuffer commandBuffer, VkPipelineLayout layout, uint32_t setCount, VkDescriptorSet const* pDescriptorSets, uint32_t frame)
+	void VulkanMeshManager::PreDraw(VkCommandBuffer commandBuffer, VkPipelineLayout layout, uint32_t setCount, VkDescriptorSet const* pDescriptorSets, uint32_t frame)
 	{
-		ME_PROFILE_FUNCTION()
-
 		{
 			ME_PROFILE_SCOPE("Mesh instance data update - buffer")
 
@@ -138,7 +136,7 @@ namespace MauRen
 		{
 			ME_PROFILE_SCOPE("Mesh instance data update - descriptor sets")
 
-			auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+				auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 			VkDescriptorBufferInfo bufferInfo = {};
 			bufferInfo.buffer = m_MeshInstanceDataBuffers[frame].buffer.buffer;
 			bufferInfo.offset = 0;
@@ -155,6 +153,11 @@ namespace MauRen
 
 			vkUpdateDescriptorSets(deviceContext->GetLogicalDevice(), 1, &descriptorWrite, 0, nullptr);
 		}
+	}
+
+	void VulkanMeshManager::Draw(VkCommandBuffer commandBuffer, VkPipelineLayout layout, uint32_t setCount, VkDescriptorSet const* pDescriptorSets, uint32_t frame)
+	{
+		ME_PROFILE_FUNCTION()
 
 		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, setCount, pDescriptorSets, 0, nullptr);
 		vkCmdBindIndexBuffer(commandBuffer, m_IndexBuffer.buffer.buffer, 0, VK_INDEX_TYPE_UINT32);
@@ -168,7 +171,10 @@ namespace MauRen
 			static_cast<uint32_t>(m_DrawCommands.size()),			 // Number of draw commands to execute
 			sizeof(DrawCommand)
 		);
+	}
 
+	void VulkanMeshManager::PostDraw(VkCommandBuffer commandBuffer, VkPipelineLayout layout, uint32_t setCount, VkDescriptorSet const* pDescriptorSets, uint32_t frame)
+	{
 		{
 			ME_PROFILE_SCOPE("Clearing the data")
 
