@@ -80,7 +80,7 @@ namespace MauRen
 		VkAccessFlags2 srcAccessMask,
 		VkAccessFlags2 dstAccessMask)
 	{
-		ME_ASSERT(layout != newLayout);
+		//ME_ASSERT(layout != newLayout);
 		ME_ASSERT(cmdBuffer != VK_NULL_HANDLE);
 		ME_ASSERT(image != VK_NULL_HANDLE);
 
@@ -99,6 +99,7 @@ namespace MauRen
 
 		if (format == VK_FORMAT_D32_SFLOAT)
 		{
+			ME_ASSERT(1 == mipLevels);
 			barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
 		}
 		else

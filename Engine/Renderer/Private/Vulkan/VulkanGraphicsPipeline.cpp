@@ -150,7 +150,7 @@ namespace MauRen
 		depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
 		depthStencil.depthTestEnable = VK_TRUE;
 		depthStencil.depthWriteEnable = VK_FALSE; // Written in the depth prepass
-		depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;
+		depthStencil.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
 		depthStencil.depthBoundsTestEnable = VK_FALSE;
 		depthStencil.stencilTestEnable = VK_FALSE;
 		//depthStencil.front = {}; // Optional
@@ -304,9 +304,10 @@ namespace MauRen
 		VkPipelineColorBlendAttachmentState colorBlendAttachment{};
 		colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
 		colorBlendAttachment.blendEnable = VK_FALSE;
+
 		VkPipelineColorBlendStateCreateInfo colorBlending{};
 		colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-		colorBlending.attachmentCount = 1;
+		colorBlending.attachmentCount = 0;
 		colorBlending.pAttachments = &colorBlendAttachment;
 
 		VkPipelineDepthStencilStateCreateInfo depthStencil{};
@@ -334,10 +335,10 @@ namespace MauRen
 
 		VkPipelineRenderingCreateInfo renderingCreate{};
 		renderingCreate.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
-		renderingCreate.colorAttachmentCount = 1;
-		renderingCreate.pColorAttachmentFormats = formats.data();
+		renderingCreate.colorAttachmentCount = 0;
+		renderingCreate.pColorAttachmentFormats = nullptr;
 		renderingCreate.depthAttachmentFormat = pSwapChainContext->GetDepthImage().format;
-
+		
 		VkGraphicsPipelineCreateInfo pipelineInfo{};
 		pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
 		pipelineInfo.stageCount = static_cast<uint32_t>(std::size(shaderStages));
@@ -352,7 +353,7 @@ namespace MauRen
 		pipelineInfo.pDynamicState = &dynamicState;
 		pipelineInfo.pDepthStencilState = &depthStencil;
 		pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
-		pipelineInfo.layout = m_PipelineLayout;
+		pipelineInfo.layout = m_DepthPrePassPipelineLayout;
 
 		pipelineInfo.renderPass = VK_NULL_HANDLE;
 		pipelineInfo.subpass = 0;

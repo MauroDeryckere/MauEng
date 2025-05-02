@@ -136,7 +136,7 @@ namespace MauRen
 		{
 			ME_PROFILE_SCOPE("Mesh instance data update - descriptor sets")
 
-				auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+			auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 			VkDescriptorBufferInfo bufferInfo = {};
 			bufferInfo.buffer = m_MeshInstanceDataBuffers[frame].buffer.buffer;
 			bufferInfo.offset = 0;
