@@ -182,7 +182,7 @@ namespace MauRen
 		beginInfo.pInheritanceInfo = nullptr; // Optional; only relevant for secondary
 
 		//Note: if the command buffer was already recorded once, then a call to vkBeginCommandBuffer will implicitly reset it.
-		if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS)
+		if (VK_SUCCESS != vkBeginCommandBuffer(commandBuffer, &beginInfo))
 		{
 			throw std::runtime_error("Failed to begin recording command buffer!");
 		}
@@ -208,6 +208,7 @@ namespace MauRen
 #pragma endregion
 #pragma region DEPTH_PREPASS
 		{
+			ME_PROFILE_SCOPE("Depth Prepass")
 			// Depth
 			depth.TransitionImageLayout(commandBuffer,
 				VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL,
@@ -240,10 +241,12 @@ namespace MauRen
 		}
 #pragma endregion
 
-#pragma region COLOR_PASS
+#pragma region MAIN_PASS
 		{
+			ME_PROFILE_SCOPE("Main pass")
+
 			// Colour
-			if (colour.layout != VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
+			if (VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL != colour.layout)
 			{
 				colour.TransitionImageLayout(commandBuffer,
 					VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
@@ -252,11 +255,11 @@ namespace MauRen
 			}
 
 			// Depth
-			if (depth.layout != VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_OPTIMAL)
+			if (VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_OPTIMAL != depth.layout)
 			{
 				depth.TransitionImageLayout(commandBuffer,
 					VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_OPTIMAL,
-					VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT, VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT,
+					VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT, VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT,
 					VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT, VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT);
 			}
 
@@ -291,65 +294,61 @@ namespace MauRen
 
 				vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipeline->GetPipeline());
 				VulkanMeshManager::GetInstance().Draw(commandBuffer, m_GraphicsPipeline->GetPipelineLayout(), 1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame], m_CurrentFrame);
-				//RenderDebug(commandBuffer);
+				RenderDebug(commandBuffer);
 			vkCmdEndRendering(commandBuffer);
 		}
 #pragma endregion
 
 #pragma region POST_DRAW
-		VulkanMeshManager::GetInstance().PostDraw(commandBuffer, m_GraphicsPipeline->GetPipelineLayout(), 1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame], m_CurrentFrame);
-
-		depth.TransitionImageLayout(commandBuffer,
-			VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL,
-			VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT,
-			VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT,
-			VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-			VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT);
-
-
-		// Transition color layout to transfer optimal before resolving
-		if (colour.layout != VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL)
 		{
-			colour.TransitionImageLayout(commandBuffer,
-				VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-				VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
-				VK_PIPELINE_STAGE_2_TRANSFER_BIT,
-				VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT,
-				VK_ACCESS_2_TRANSFER_READ_BIT);
-		}
+			ME_PROFILE_SCOPE("Post draw")
 
-		VkImageResolve resolveRegion = {};
-		resolveRegion.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-		resolveRegion.srcSubresource.mipLevel = 0;
-		resolveRegion.srcSubresource.baseArrayLayer = 0;
-		resolveRegion.srcSubresource.layerCount = 1;
-		resolveRegion.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-		resolveRegion.dstSubresource.mipLevel = 0;
-		resolveRegion.dstSubresource.baseArrayLayer = 0;
-		resolveRegion.dstSubresource.layerCount = 1;
-		resolveRegion.extent = { m_SwapChainContext.GetExtent().width, m_SwapChainContext.GetExtent().height, 1 };
+			VulkanMeshManager::GetInstance().PostDraw(commandBuffer, m_GraphicsPipeline->GetPipelineLayout(), 1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame], m_CurrentFrame);
 
-		if (m_SwapChainContext.GetSwapchainImages()[imageIndex].layout != VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
-		{
+			// Transition color layout to transfer optimal before resolving
+			if (VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL != colour.layout)
+			{
+				colour.TransitionImageLayout(commandBuffer,
+					VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+					VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
+					VK_PIPELINE_STAGE_2_TRANSFER_BIT,
+					VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT,
+					VK_ACCESS_2_TRANSFER_READ_BIT);
+			}
+
+			VkImageResolve resolveRegion = {};
+			resolveRegion.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+			resolveRegion.srcSubresource.mipLevel = 0;
+			resolveRegion.srcSubresource.baseArrayLayer = 0;
+			resolveRegion.srcSubresource.layerCount = 1;
+			resolveRegion.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+			resolveRegion.dstSubresource.mipLevel = 0;
+			resolveRegion.dstSubresource.baseArrayLayer = 0;
+			resolveRegion.dstSubresource.layerCount = 1;
+			resolveRegion.extent = { m_SwapChainContext.GetExtent().width, m_SwapChainContext.GetExtent().height, 1 };
+
+			if (VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL != m_SwapChainContext.GetSwapchainImages()[imageIndex].layout)
+			{
+				m_SwapChainContext.GetSwapchainImages()[imageIndex].TransitionImageLayout(commandBuffer,
+					VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+					VK_PIPELINE_STAGE_2_NONE, VK_PIPELINE_STAGE_2_TRANSFER_BIT,
+					VK_ACCESS_2_NONE, VK_ACCESS_2_TRANSFER_WRITE_BIT);
+			}
+
+			vkCmdResolveImage(commandBuffer,
+				colour.image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+				m_SwapChainContext.GetSwapchainImages()[imageIndex].image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+				1, &resolveRegion);
+
 			m_SwapChainContext.GetSwapchainImages()[imageIndex].TransitionImageLayout(commandBuffer,
-				VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-				VK_PIPELINE_STAGE_2_NONE, VK_PIPELINE_STAGE_2_TRANSFER_BIT,
-				VK_ACCESS_2_NONE, VK_ACCESS_2_TRANSFER_WRITE_BIT);
-		}
+				VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+				VK_PIPELINE_STAGE_2_TRANSFER_BIT, VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT,
+				VK_ACCESS_2_TRANSFER_WRITE_BIT, VK_ACCESS_2_MEMORY_READ_BIT);
 
-		vkCmdResolveImage(commandBuffer,
-			colour.image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-			m_SwapChainContext.GetSwapchainImages()[imageIndex].image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-			1, &resolveRegion);
-
-		m_SwapChainContext.GetSwapchainImages()[imageIndex].TransitionImageLayout(commandBuffer,
-			VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
-			VK_PIPELINE_STAGE_2_TRANSFER_BIT, VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT,
-			VK_ACCESS_2_TRANSFER_WRITE_BIT, VK_ACCESS_2_MEMORY_READ_BIT);
-
-		if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS)
-		{
-			throw std::runtime_error("Failed to record command buffer!");
+			if (VK_SUCCESS != vkEndCommandBuffer(commandBuffer))
+			{
+				throw std::runtime_error("Failed to record command buffer!");
+			}
 		}
 #pragma endregion
 	}
@@ -397,7 +396,7 @@ namespace MauRen
 
 			VkResult const acquireNextImageResult{ vkAcquireNextImageKHR(deviceContext->GetLogicalDevice(), m_SwapChainContext.GetSwapchain(), UINT64_MAX, m_ImageAvailableSemaphores[m_CurrentFrame], VK_NULL_HANDLE, &imageIndex) };
 
-			if (acquireNextImageResult == VK_ERROR_OUT_OF_DATE_KHR)
+			if (VK_ERROR_OUT_OF_DATE_KHR == acquireNextImageResult)
 			{
 				RecreateSwapchain();
 				return;
@@ -406,7 +405,8 @@ namespace MauRen
 			// TODO
 			// You could also decide to do that if the swap chain is suboptimal, but I've chosen to proceed anyway in that case because we've already acquired an image.
 			// Both VK_SUCCESS and VK_SUBOPTIMAL_KHR are considered "success" return codes.
-			if (acquireNextImageResult != VK_SUCCESS && acquireNextImageResult != VK_SUBOPTIMAL_KHR)
+			if (VK_SUCCESS != acquireNextImageResult 
+			and VK_SUBOPTIMAL_KHR != acquireNextImageResult)
 			{
 				throw std::runtime_error("Failed to acquire swap chain image!");
 			}
@@ -441,7 +441,7 @@ namespace MauRen
 		submitInfo.pSignalSemaphores = signalSemaphores;
 		//vkQueueSubmit2();
 		// m_InFlightFences here effectively means, this submit must be finished before our next render may start
-		if (vkQueueSubmit(deviceContext->GetGraphicsQueue(), 1, &submitInfo, m_InFlightFences[m_CurrentFrame]) != VK_SUCCESS)
+		if (VK_SUCCESS != vkQueueSubmit(deviceContext->GetGraphicsQueue(), 1, &submitInfo, m_InFlightFences[m_CurrentFrame]))
 		{
 			throw std::runtime_error("Failed to submit draw command buffer!");
 		}
@@ -462,7 +462,7 @@ namespace MauRen
 		presentInfo.pResults = nullptr; // Optional
 
 		VkResult const queuePresentResult{ vkQueuePresentKHR(deviceContext->GetPresentQueue(), &presentInfo) };
-		if (queuePresentResult == VK_ERROR_OUT_OF_DATE_KHR || queuePresentResult == VK_SUBOPTIMAL_KHR || m_FramebufferResized)
+		if (VK_ERROR_OUT_OF_DATE_KHR == queuePresentResult || VK_SUBOPTIMAL_KHR == queuePresentResult || m_FramebufferResized)
 		{
 			RecreateSwapchain();
 		}
@@ -470,7 +470,7 @@ namespace MauRen
 		// TODO
 		// You could also decide to do that if the swap chain is suboptimal, but I've chosen to proceed anyway in that case because we've already acquired an image.
 		// Both VK_SUCCESS and VK_SUBOPTIMAL_KHR are considered "success" return codes.
-		else if (queuePresentResult != VK_SUCCESS) 
+		else if (VK_SUCCESS != queuePresentResult)
 		{
 			throw std::runtime_error("Failed to present swap chain image!");
 		}
@@ -506,7 +506,7 @@ namespace MauRen
 			SDL_Event event;
 			while (SDL_PollEvent(&event))
 			{
-				if (event.type == SDL_EVENT_QUIT || event.type == SDL_EVENT_WINDOW_CLOSE_REQUESTED)
+				if (SDL_EVENT_QUIT == event.type || SDL_EVENT_WINDOW_CLOSE_REQUESTED == event.type)
 				{
 					return false;
 				}
