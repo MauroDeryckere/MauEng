@@ -21,6 +21,11 @@ namespace MauRen
 		//VulkanImage normal; // R8, G8 == Normal X; B8, A8 == Normal Y
 		//VulkanImage albedo; // diffuse color information (RGB), A unused currently
 
+		static std::array<VkFormat, 1> constexpr formats
+		{
+			VK_FORMAT_R8G8B8A8_SRGB
+		};
+
 		void Destroy()
 		{
 			color.Destroy();
@@ -74,11 +79,15 @@ namespace MauRen
 		VkFormat m_SwapChainImageFormat{};
 		VkExtent2D m_SwapChainExtent{};
 
+		// final presentation imgs
 		std::vector<VulkanImage> m_SwapChainImages{};
 
+		// written to in depth prepass, used everywhere else
 		std::vector<VulkanImage> m_DepthImages{};
+		// Written to in lightpas
 		std::vector<VulkanImage> m_ColorImages{};
 
+		// gbuffer pass
 		std::vector<GBuffer> m_GBuffers{};
 
 		void CreateSwapchain(SDL_Window* pWindow, VulkanSurfaceContext const * pVulkanSurfaceContext);

@@ -48,13 +48,17 @@ namespace MauRen
 		VkPipelineLayout m_GBufferPipelineLayout{ VK_NULL_HANDLE };
 		VkPipeline m_GBufferPipeline{ VK_NULL_HANDLE };
 
+		VkPipelineLayout m_LightPassPipelineLayout{ VK_NULL_HANDLE };
+		VkPipeline m_LightPassPipeline{ VK_NULL_HANDLE };
+
 		void CreateForwardPipeline(VulkanSwapchainContext* pSwapChainContext, VkDescriptorSetLayout descriptorSetLayout, uint32_t descriptorSetLayoutCount);
 		void CreateDepthPrePassPipeline(VulkanSwapchainContext* pSwapChainContext, VkDescriptorSetLayout descriptorSetLayout, uint32_t descriptorSetLayoutCount);
 		void CreateDebugGraphicsPipeline(VulkanSwapchainContext* pSwapChainContext, VkDescriptorSetLayout descriptorSetLayout, uint32_t descriptorSetLayoutCount);
 		void CreateGBufferPipeline(VulkanSwapchainContext* pSwapChainContext, VkDescriptorSetLayout descriptorSetLayout, uint32_t descriptorSetLayoutCount);
+		void CreateLightPassPipeline(VulkanSwapchainContext* pSwapChainContext, VkDescriptorSetLayout descriptorSetLayout, uint32_t descriptorSetLayoutCount);
 
-		static std::vector<char> ReadFile(std::filesystem::path const& filepath);
-		[[nodiscard]] VkShaderModule CreateShaderModule(std::vector<char> const& code) const;
+		static [[nodiscard]] std::vector<char> ReadFile(std::filesystem::path const& filepath);
+		static [[nodiscard]] VkShaderModule CreateShaderModule(std::vector<char> const& code);
 	};
 }
 
