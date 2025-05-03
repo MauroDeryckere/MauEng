@@ -189,8 +189,8 @@ namespace MauRen
 
 		
 		// Image memory barriers
-		auto& depth{ m_SwapChainContext.GetDepthImage() };
-		auto& colour{ m_SwapChainContext.GetColorImage() };
+		auto& depth{ m_SwapChainContext.GetDepthImage(imageIndex) };
+		auto& colour{ m_SwapChainContext.GetColorImage(imageIndex) };
 
 		VkViewport viewport{};
 		viewport.x = 0.0f;

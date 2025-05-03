@@ -39,10 +39,10 @@ namespace MauRen
 		[[nodiscard]] std::vector<VulkanImage>& GetSwapchainImages()noexcept { return m_SwapChainImages; }
 		[[nodiscard]] VkFormat GetImageFormat() const noexcept { return m_SwapChainImageFormat; }
 
-		[[nodiscard]] VulkanImage const& GetColorImage() const noexcept { return m_ColorImage; }
-		[[nodiscard]] VulkanImage const& GetDepthImage() const noexcept { return m_DepthImage; }
-		[[nodiscard]] VulkanImage& GetColorImage() noexcept { return m_ColorImage; }
-		[[nodiscard]] VulkanImage& GetDepthImage() noexcept { return m_DepthImage; }
+		[[nodiscard]] VulkanImage const& GetColorImage(uint32_t frame) const noexcept { return m_ColorImage[frame]; }
+		[[nodiscard]] VulkanImage const& GetDepthImage(uint32_t frame) const noexcept { return m_DepthImage[frame]; }
+		[[nodiscard]] VulkanImage& GetColorImage(uint32_t frame) noexcept { return m_ColorImage[frame]; }
+		[[nodiscard]] VulkanImage& GetDepthImage(uint32_t frame) noexcept { return m_DepthImage[frame]; }
 
 		[[nodiscard]] VkExtent2D GetExtent() const noexcept { return m_SwapChainExtent; }
 
@@ -60,14 +60,16 @@ namespace MauRen
 		std::vector<VulkanImage> m_SwapChainImages{};
 
 		//TODO buffer depth & colour
-		VulkanImage m_DepthImage{};
-		VulkanImage m_ColorImage{};
+		std::vector<VulkanImage> m_DepthImage{};
+		std::vector<VulkanImage> m_ColorImage{};
 
+		//TOOD init
+		// Single colour for temp testing
 		struct GBuffer final
 		{
-			VulkanImage depth;
-			VulkanImage normal; // R8, G8 == Normal X; B8, A8 == Normal Y
-			VulkanImage albedo; // diffuse color information (RGB), A unused currently
+			VulkanImage color;
+			//VulkanImage normal; // R8, G8 == Normal X; B8, A8 == Normal Y
+			//VulkanImage albedo; // diffuse color information (RGB), A unused currently
 		};
 		std::vector<GBuffer> m_GBuffers;
 
