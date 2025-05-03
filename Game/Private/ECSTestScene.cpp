@@ -54,9 +54,9 @@ namespace MauGam
 		}
 
 
-		bool constexpr ENABLE_HIGH_INSTANCE_TEST{ false };
+		bool constexpr ENABLE_HIGH_INSTANCE_TEST{ true };
 		//uint32_t constexpr NUM_INSTANCES{ 75'000 };
-		uint32_t constexpr NUM_INSTANCES{ 20'000 };
+		uint32_t constexpr NUM_INSTANCES{ 100'000 };
 		if constexpr (ENABLE_HIGH_INSTANCE_TEST)
 		{
 			std::random_device rd;  // Random device for seed 
@@ -164,6 +164,8 @@ namespace MauGam
 			m_CameraManager.GetActiveCamera().RotateX(mouseMovement.first * rot);
 			m_CameraManager.GetActiveCamera().RotateY(-mouseMovement.second * rot);
 		}
+
+		DEBUG_RENDERER.DrawCylinder({}, { 100, 100, 100 }, {}, {1,1,1}, 100);
 
 		using namespace MauEng;
 		{

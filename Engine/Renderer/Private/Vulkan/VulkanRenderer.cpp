@@ -175,41 +175,79 @@ namespace MauRen
 	void VulkanRenderer::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex)
 	{
 		ME_PROFILE_FUNCTION()
+#pragma region PRE_DRAW
+		VkCommandBufferBeginInfo beginInfo{};
+		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT; // Optional
+		beginInfo.pInheritanceInfo = nullptr; // Optional; only relevant for secondary
 
-		VkRenderingInfo renderInfo{};
+		//Note: if the command buffer was already recorded once, then a call to vkBeginCommandBuffer will implicitly reset it.
+		if (VK_SUCCESS != vkBeginCommandBuffer(commandBuffer, &beginInfo))
+		{
+			throw std::runtime_error("Failed to begin recording command buffer!");
+		}
+
+		
+		// Image memory barriers
 		auto& depth{ m_SwapChainContext.GetDepthImage() };
 		auto& colour{ m_SwapChainContext.GetColorImage() };
 
+		VkViewport viewport{};
+		viewport.x = 0.0f;
+		viewport.y = 0.0f;
+		viewport.width = static_cast<float>(m_SwapChainContext.GetExtent().width);
+		viewport.height = static_cast<float>(m_SwapChainContext.GetExtent().height);
+		viewport.minDepth = 0.0f;
+		viewport.maxDepth = 1.0f;
+
+		VkRect2D scissor{};
+		scissor.offset = { 0, 0 };
+		scissor.extent = m_SwapChainContext.GetExtent();
+
+		VulkanMeshManager::GetInstance().PreDraw(commandBuffer, m_GraphicsPipeline->GetPipelineLayout(), 1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame], m_CurrentFrame);
+#pragma endregion
+#pragma region DEPTH_PREPASS
 		{
-			ME_PROFILE_SCOPE("Begin frame cmd buffer transitions & setup")
-
-				VkCommandBufferBeginInfo beginInfo{};
-
-			// VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT: The command buffer will be rerecorded right after executing it once.
-			// VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT: This is a secondary command buffer that will be entirely within a single render pass.
-			// VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT : The command buffer can be resubmitted while it is also already pending execution.
-			beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-
-			beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT; // Optional
-			beginInfo.pInheritanceInfo = nullptr; // Optional; only relevant for secondary
-
-			//Note: if the command buffer was already recorded once, then a call to vkBeginCommandBuffer will implicitly reset it.
-			if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS)
-			{
-				throw std::runtime_error("Failed to begin recording command buffer!");
-			}
-
-			// Image memory barriers
+			ME_PROFILE_SCOPE("Depth Prepass")
 			// Depth
-			if (depth.layout != VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL)
-			{
-				depth.TransitionImageLayout(commandBuffer,
-					VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL,
-					VK_PIPELINE_STAGE_2_NONE, VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT,
-					VK_ACCESS_2_NONE, VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT);
-			}
+			depth.TransitionImageLayout(commandBuffer,
+				VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL,
+				VK_PIPELINE_STAGE_2_NONE, VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT,
+				VK_ACCESS_2_NONE, VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT);
+
+			VkRenderingAttachmentInfo depthAttachment{};
+			depthAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+			depthAttachment.imageView = depth.imageViews[0];
+			depthAttachment.imageLayout = depth.layout;
+			depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+			depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+			depthAttachment.clearValue = CLEAR_VALUES[DEPTH_CLEAR_ID];
+
+			VkRenderingInfo renderInfoDepthPrepass{};
+			renderInfoDepthPrepass.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
+			renderInfoDepthPrepass.renderArea = VkRect2D{ VkOffset2D{ 0, 0 }, m_SwapChainContext.GetExtent() };
+			renderInfoDepthPrepass.layerCount = 1;
+			renderInfoDepthPrepass.colorAttachmentCount = 0;
+			renderInfoDepthPrepass.pColorAttachments = nullptr;
+			renderInfoDepthPrepass.pDepthAttachment = &depthAttachment;
+			renderInfoDepthPrepass.pStencilAttachment = nullptr;
+			
+			vkCmdBeginRendering(commandBuffer, &renderInfoDepthPrepass);
+			vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+			vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+				vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipeline->GetDepthPrePassPipeline());
+				VulkanMeshManager::GetInstance().Draw(commandBuffer, m_GraphicsPipeline->GetDepthPrePassPipelineLayout(), 1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame], m_CurrentFrame);
+				RenderDebug(commandBuffer);
+			vkCmdEndRendering(commandBuffer);
+		}
+#pragma endregion
+
+#pragma region MAIN_PASS
+		{
+			ME_PROFILE_SCOPE("Main pass")
+
 			// Colour
-			if (colour.layout != VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
+			if (VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL != colour.layout)
 			{
 				colour.TransitionImageLayout(commandBuffer,
 					VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
@@ -217,10 +255,14 @@ namespace MauRen
 					VK_ACCESS_2_NONE, VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT);
 			}
 
-
-			std::array<VkClearValue, 2> clearValues{};
-			clearValues[0].color = { 0.0f, 0.0f, 0.0f, 1.f };
-			clearValues[1].depthStencil = { 1.0f, 0 };
+			// Depth
+			if (VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_OPTIMAL != depth.layout)
+			{
+				depth.TransitionImageLayout(commandBuffer,
+					VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_OPTIMAL,
+					VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT, VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT,
+					VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT, VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT);
+			}
 
 			// Dynamic rendering attachments
 			VkRenderingAttachmentInfo colorAttachment{};
@@ -229,16 +271,16 @@ namespace MauRen
 			colorAttachment.imageLayout = colour.layout;
 			colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 			colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-			colorAttachment.clearValue = clearValues[0];
+			colorAttachment.clearValue = CLEAR_VALUES[COLOR_CLEAR_ID];
 
 			VkRenderingAttachmentInfo depthAttachment{};
 			depthAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
-			depthAttachment.imageView = m_SwapChainContext.GetDepthImage().imageViews[0];
-			depthAttachment.imageLayout = m_SwapChainContext.GetDepthImage().layout;
-			depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+			depthAttachment.imageView = depth.imageViews[0];
+			depthAttachment.imageLayout = depth.layout;
+			depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
 			depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-			depthAttachment.clearValue = clearValues[1];
 
+			VkRenderingInfo renderInfo{};
 			renderInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
 			renderInfo.renderArea = VkRect2D{ VkOffset2D{ 0, 0 }, m_SwapChainContext.GetExtent() };
 			renderInfo.layerCount = 1;
@@ -247,41 +289,25 @@ namespace MauRen
 			renderInfo.pDepthAttachment = &depthAttachment;
 			renderInfo.pStencilAttachment = nullptr;
 
-			VkViewport viewport{};
-			viewport.x = 0.0f;
-			viewport.y = 0.0f;
-			viewport.width = static_cast<float>(m_SwapChainContext.GetExtent().width);
-			viewport.height = static_cast<float>(m_SwapChainContext.GetExtent().height);
-			viewport.minDepth = 0.0f;
-			viewport.maxDepth = 1.0f;
-			vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
-
-			VkRect2D scissor{};
-			scissor.offset = { 0, 0 };
-			scissor.extent = m_SwapChainContext.GetExtent();
-			vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
-
 			vkCmdBeginRendering(commandBuffer, &renderInfo);
-		}
+				vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+				vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-		RenderStaticMeshes(commandBuffer);
-		RenderDebug(commandBuffer);
-
-		{
+				vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipeline->GetPipeline());
+				VulkanMeshManager::GetInstance().Draw(commandBuffer, m_GraphicsPipeline->GetPipelineLayout(), 1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame], m_CurrentFrame);
+				RenderDebug(commandBuffer);
 			vkCmdEndRendering(commandBuffer);
+		}
+#pragma endregion
 
-			ME_PROFILE_SCOPE("End frame cmd buffer transitions & setup")
+#pragma region POST_DRAW
+		{
+			ME_PROFILE_SCOPE("Post draw")
 
-				depth.TransitionImageLayout(commandBuffer,
-					VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL,
-					VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT,
-					VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT,
-					VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-					VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT);
-
+			VulkanMeshManager::GetInstance().PostDraw(commandBuffer, m_GraphicsPipeline->GetPipelineLayout(), 1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame], m_CurrentFrame);
 
 			// Transition color layout to transfer optimal before resolving
-			if (colour.layout != VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL)
+			if (VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL != colour.layout)
 			{
 				colour.TransitionImageLayout(commandBuffer,
 					VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
@@ -302,7 +328,7 @@ namespace MauRen
 			resolveRegion.dstSubresource.layerCount = 1;
 			resolveRegion.extent = { m_SwapChainContext.GetExtent().width, m_SwapChainContext.GetExtent().height, 1 };
 
-			if (m_SwapChainContext.GetSwapchainImages()[imageIndex].layout != VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
+			if (VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL != m_SwapChainContext.GetSwapchainImages()[imageIndex].layout)
 			{
 				m_SwapChainContext.GetSwapchainImages()[imageIndex].TransitionImageLayout(commandBuffer,
 					VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
@@ -320,11 +346,12 @@ namespace MauRen
 				VK_PIPELINE_STAGE_2_TRANSFER_BIT, VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT,
 				VK_ACCESS_2_TRANSFER_WRITE_BIT, VK_ACCESS_2_MEMORY_READ_BIT);
 
-			if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS)
+			if (VK_SUCCESS != vkEndCommandBuffer(commandBuffer))
 			{
 				throw std::runtime_error("Failed to record command buffer!");
 			}
 		}
+#pragma endregion
 	}
 
 	void VulkanRenderer::CreateSyncObjects()
@@ -345,9 +372,9 @@ namespace MauRen
 
 		for (size_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; ++i)
 		{
-			if (vkCreateSemaphore(deviceContext->GetLogicalDevice(), &semaphoreInfo, nullptr, &m_ImageAvailableSemaphores[i]) != VK_SUCCESS
-				|| vkCreateSemaphore(deviceContext->GetLogicalDevice(), &semaphoreInfo, nullptr, &m_RenderFinishedSemaphores[i]) != VK_SUCCESS
-				|| vkCreateFence(deviceContext->GetLogicalDevice(), &fenceInfo, nullptr, &m_InFlightFences[i]) != VK_SUCCESS)
+			if (VK_SUCCESS != vkCreateSemaphore(deviceContext->GetLogicalDevice(), &semaphoreInfo, nullptr, &m_ImageAvailableSemaphores[i])
+			 or VK_SUCCESS != vkCreateSemaphore(deviceContext->GetLogicalDevice(), &semaphoreInfo, nullptr, &m_RenderFinishedSemaphores[i])
+			 or VK_SUCCESS != vkCreateFence(deviceContext->GetLogicalDevice(), &fenceInfo, nullptr, &m_InFlightFences[i]))
 			{
 				throw std::runtime_error("Failed to create synchronization objects for a frame!");
 			}
@@ -370,7 +397,7 @@ namespace MauRen
 
 			VkResult const acquireNextImageResult{ vkAcquireNextImageKHR(deviceContext->GetLogicalDevice(), m_SwapChainContext.GetSwapchain(), UINT64_MAX, m_ImageAvailableSemaphores[m_CurrentFrame], VK_NULL_HANDLE, &imageIndex) };
 
-			if (acquireNextImageResult == VK_ERROR_OUT_OF_DATE_KHR)
+			if (VK_ERROR_OUT_OF_DATE_KHR == acquireNextImageResult)
 			{
 				RecreateSwapchain();
 				return;
@@ -379,7 +406,8 @@ namespace MauRen
 			// TODO
 			// You could also decide to do that if the swap chain is suboptimal, but I've chosen to proceed anyway in that case because we've already acquired an image.
 			// Both VK_SUCCESS and VK_SUBOPTIMAL_KHR are considered "success" return codes.
-			if (acquireNextImageResult != VK_SUCCESS && acquireNextImageResult != VK_SUBOPTIMAL_KHR)
+			if (VK_SUCCESS != acquireNextImageResult 
+			and VK_SUBOPTIMAL_KHR != acquireNextImageResult)
 			{
 				throw std::runtime_error("Failed to acquire swap chain image!");
 			}
@@ -394,6 +422,7 @@ namespace MauRen
 			ME_PROFILE_SCOPE("Reset command buffer")
 			vkResetCommandBuffer(m_CommandPoolManager.GetCommandBuffer(m_CurrentFrame), 0);
 		}
+
 		RecordCommandBuffer(m_CommandPoolManager.GetCommandBuffer(m_CurrentFrame), imageIndex);
 
 		VkSubmitInfo submitInfo{};
@@ -413,7 +442,7 @@ namespace MauRen
 		submitInfo.pSignalSemaphores = signalSemaphores;
 		//vkQueueSubmit2();
 		// m_InFlightFences here effectively means, this submit must be finished before our next render may start
-		if (vkQueueSubmit(deviceContext->GetGraphicsQueue(), 1, &submitInfo, m_InFlightFences[m_CurrentFrame]) != VK_SUCCESS)
+		if (VK_SUCCESS != vkQueueSubmit(deviceContext->GetGraphicsQueue(), 1, &submitInfo, m_InFlightFences[m_CurrentFrame]))
 		{
 			throw std::runtime_error("Failed to submit draw command buffer!");
 		}
@@ -434,7 +463,7 @@ namespace MauRen
 		presentInfo.pResults = nullptr; // Optional
 
 		VkResult const queuePresentResult{ vkQueuePresentKHR(deviceContext->GetPresentQueue(), &presentInfo) };
-		if (queuePresentResult == VK_ERROR_OUT_OF_DATE_KHR || queuePresentResult == VK_SUBOPTIMAL_KHR || m_FramebufferResized)
+		if (VK_ERROR_OUT_OF_DATE_KHR == queuePresentResult || VK_SUBOPTIMAL_KHR == queuePresentResult || m_FramebufferResized)
 		{
 			RecreateSwapchain();
 		}
@@ -442,7 +471,7 @@ namespace MauRen
 		// TODO
 		// You could also decide to do that if the swap chain is suboptimal, but I've chosen to proceed anyway in that case because we've already acquired an image.
 		// Both VK_SUCCESS and VK_SUBOPTIMAL_KHR are considered "success" return codes.
-		else if (queuePresentResult != VK_SUCCESS) 
+		else if (VK_SUCCESS != queuePresentResult)
 		{
 			throw std::runtime_error("Failed to present swap chain image!");
 		}
@@ -478,7 +507,7 @@ namespace MauRen
 			SDL_Event event;
 			while (SDL_PollEvent(&event))
 			{
-				if (event.type == SDL_EVENT_QUIT || event.type == SDL_EVENT_WINDOW_CLOSE_REQUESTED)
+				if (SDL_EVENT_QUIT == event.type || SDL_EVENT_WINDOW_CLOSE_REQUESTED == event.type)
 				{
 					return false;
 				}
@@ -563,14 +592,6 @@ namespace MauRen
 			stagingBuffer.Destroy();
 		}
 
-	}
-
-	void VulkanRenderer::RenderStaticMeshes(VkCommandBuffer commandBuffer)
-	{
-		ME_PROFILE_FUNCTION()
-
-		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipeline->GetPipeline());
-		VulkanMeshManager::GetInstance().Draw(commandBuffer, m_GraphicsPipeline->GetPipelineLayout(), 1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame], m_CurrentFrame);
 	}
 
 	void VulkanRenderer::RenderDebug(VkCommandBuffer commandBuffer)

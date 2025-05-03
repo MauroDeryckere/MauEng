@@ -91,6 +91,15 @@ namespace MauRen
 		VulkanBuffer m_DebugVertexBuffer{};
 		VulkanBuffer m_DebugIndexBuffer{};
 
+		std::array<VkClearValue, 2> static constexpr CLEAR_VALUES
+		{
+			VkClearValue{.color = { 0.0f, 0.0f, 0.0f, 1.f } },
+			VkClearValue{.depthStencil = { 1.0f, 0 } }
+		};
+
+		uint32_t static constexpr COLOR_CLEAR_ID{ 0 };
+		uint32_t static constexpr DEPTH_CLEAR_ID{ 1 };
+
 		void CreateUniformBuffers();
 
 		void CreateSyncObjects();
@@ -105,7 +114,6 @@ namespace MauRen
 		// Update the buffer for debug drawing
 		void UpdateDebugVertexBuffer();
 
-		void RenderStaticMeshes(VkCommandBuffer commandBuffer);
 		void RenderDebug(VkCommandBuffer commandBuffer);
 	};
 }
