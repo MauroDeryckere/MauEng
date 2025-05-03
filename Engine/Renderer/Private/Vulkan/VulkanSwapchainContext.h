@@ -14,6 +14,19 @@ namespace MauRen
 		std::vector<VkPresentModeKHR> presentModes;
 	};
 
+	// Single colour for temp testing
+	struct GBuffer final
+	{
+		VulkanImage color;
+		//VulkanImage normal; // R8, G8 == Normal X; B8, A8 == Normal Y
+		//VulkanImage albedo; // diffuse color information (RGB), A unused currently
+
+		void Destroy()
+		{
+			color.Destroy();
+		}
+	};
+
 	class VulkanSurfaceContext;
 	class VulkanGraphicsPipeline;
 
@@ -32,17 +45,21 @@ namespace MauRen
 		void Destroy();
 
 		// Query if swap chain is supported for a given physical device & window surface
-		static SwapChainSupportDetails QuerySwapchainSupport(VkPhysicalDevice device, VkSurfaceKHR windowSurface);
+		static [[nodiscard]] SwapChainSupportDetails QuerySwapchainSupport(VkPhysicalDevice device, VkSurfaceKHR windowSurface);
 
 		[[nodiscard]] VkSwapchainKHR GetSwapchain() const noexcept { return m_SwapChain; }
 		[[nodiscard]] std::vector<VulkanImage> const& GetSwapchainImages() const noexcept { return m_SwapChainImages; }
 		[[nodiscard]] std::vector<VulkanImage>& GetSwapchainImages()noexcept { return m_SwapChainImages; }
 		[[nodiscard]] VkFormat GetImageFormat() const noexcept { return m_SwapChainImageFormat; }
 
-		[[nodiscard]] VulkanImage const& GetColorImage(uint32_t frame) const noexcept { return m_ColorImage[frame]; }
-		[[nodiscard]] VulkanImage const& GetDepthImage(uint32_t frame) const noexcept { return m_DepthImage[frame]; }
-		[[nodiscard]] VulkanImage& GetColorImage(uint32_t frame) noexcept { return m_ColorImage[frame]; }
-		[[nodiscard]] VulkanImage& GetDepthImage(uint32_t frame) noexcept { return m_DepthImage[frame]; }
+		[[nodiscard]] VulkanImage const& GetColorImage(uint32_t frame) const noexcept { return m_ColorImages[frame]; }
+		[[nodiscard]] VulkanImage& GetColorImage(uint32_t frame) noexcept { return m_ColorImages[frame]; }
+
+		[[nodiscard]] VulkanImage const& GetDepthImage(uint32_t frame) const noexcept { return m_DepthImages[frame]; }
+		[[nodiscard]] VulkanImage& GetDepthImage(uint32_t frame) noexcept { return m_DepthImages[frame]; }
+
+		[[nodiscard]] GBuffer const& GetGBuffer(uint32_t frame) const noexcept { return m_GBuffers[frame]; }
+		[[nodiscard]] GBuffer& GetGBuffer(uint32_t frame) noexcept { return m_GBuffers[frame]; }
 
 		[[nodiscard]] VkExtent2D GetExtent() const noexcept { return m_SwapChainExtent; }
 
@@ -59,31 +76,21 @@ namespace MauRen
 
 		std::vector<VulkanImage> m_SwapChainImages{};
 
-		//TODO buffer depth & colour
-		std::vector<VulkanImage> m_DepthImage{};
-		std::vector<VulkanImage> m_ColorImage{};
+		std::vector<VulkanImage> m_DepthImages{};
+		std::vector<VulkanImage> m_ColorImages{};
 
-		//TOOD init
-		// Single colour for temp testing
-		struct GBuffer final
-		{
-			VulkanImage color;
-			//VulkanImage normal; // R8, G8 == Normal X; B8, A8 == Normal Y
-			//VulkanImage albedo; // diffuse color information (RGB), A unused currently
-		};
-		std::vector<GBuffer> m_GBuffers;
+		std::vector<GBuffer> m_GBuffers{};
 
 		void CreateSwapchain(SDL_Window* pWindow, VulkanSurfaceContext const * pVulkanSurfaceContext);
 		void CreateImageViews();
 
-		static VkSurfaceFormatKHR ChooseSwapSurfaceFormat(std::vector<VkSurfaceFormatKHR> const& availableFormats);
-		static VkPresentModeKHR ChooseSwapPresentMode(std::vector<VkPresentModeKHR> const& availablePresentModes);
-		static VkExtent2D ChooseSwapExtent(SDL_Window* pWindow, VkSurfaceCapabilitiesKHR const& capabilities);
+		static [[nodiscard]] VkSurfaceFormatKHR ChooseSwapSurfaceFormat(std::vector<VkSurfaceFormatKHR> const& availableFormats);
+		static [[nodiscard]] VkPresentModeKHR ChooseSwapPresentMode(std::vector<VkPresentModeKHR> const& availablePresentModes);
+		static [[nodiscard]] VkExtent2D ChooseSwapExtent(SDL_Window* pWindow, VkSurfaceCapabilitiesKHR const& capabilities);
 
 		void CreateColorResources();
 		void CreateDepthResources();
 
-		//TOOD
 		void CreateGBuffers();
 	};
 }

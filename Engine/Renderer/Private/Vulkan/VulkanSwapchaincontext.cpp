@@ -24,18 +24,19 @@ namespace MauRen
 		CreateImageViews();
 		CreateColorResources();
 		CreateDepthResources();
-	}
+		CreateGBuffers();
+	}	
 
 	void VulkanSwapchainContext::Destroy()
 	{
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 
-		for (auto& image : m_DepthImage)
+		for (auto& image : m_DepthImages)
 		{
 			image.Destroy();
 		}
 
-		for (auto& image : m_ColorImage)
+		for (auto& image : m_ColorImages)
 		{
 			image.Destroy();
 		}
@@ -44,6 +45,11 @@ namespace MauRen
 		for (auto& image : m_SwapChainImages)
 		{
 			image.DestroyAllImageViews();
+		}
+
+		for (auto& b : m_GBuffers)
+		{
+			b.Destroy();
 		}
 
 		VulkanUtils::SafeDestroy(deviceContext->GetLogicalDevice(), m_SwapChain, nullptr);
@@ -231,7 +237,7 @@ namespace MauRen
 
 		for (size_t i{ 0 }; i< MAX_FRAMES_IN_FLIGHT; ++i)
 		{
-			m_ColorImage.emplace_back(
+			m_ColorImages.emplace_back(
 				VulkanImage{
 					colorFormat,
 					VK_IMAGE_TILING_OPTIMAL,
@@ -242,7 +248,7 @@ namespace MauRen
 					GetExtent().height
 				});
 
-			m_ColorImage.back().CreateImageView(VK_IMAGE_ASPECT_COLOR_BIT);
+			m_ColorImages.back().CreateImageView(VK_IMAGE_ASPECT_COLOR_BIT);
 		}
 	}
 
@@ -253,7 +259,7 @@ namespace MauRen
 
 		for (size_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; ++i)
 		{
-			m_DepthImage.emplace_back(VulkanImage
+			m_DepthImages.emplace_back(VulkanImage
 			{
 				depthFormat,
 				VK_IMAGE_TILING_OPTIMAL,
@@ -265,14 +271,32 @@ namespace MauRen
 				1
 			});
 
-			m_DepthImage.back().CreateImageView(VK_IMAGE_ASPECT_DEPTH_BIT);
+			m_DepthImages.back().CreateImageView(VK_IMAGE_ASPECT_DEPTH_BIT);
 		}
 	}
 
 	void VulkanSwapchainContext::CreateGBuffers()
 	{
-		//TODO
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+		VkSampleCountFlagBits const samples{ deviceContext->GetSampleCount() };
 
-		GBuffer g;
+		for (size_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; ++i)
+		{
+			GBuffer g;
+			g.color = VulkanImage
+			{
+				VK_FORMAT_R8G8B8A8_SRGB,
+				VK_IMAGE_TILING_OPTIMAL,
+				VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+				VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+				samples,
+				GetExtent().width,
+				GetExtent().height,
+				1
+			};
+			g.color.CreateImageView(VK_IMAGE_ASPECT_COLOR_BIT);
+
+			m_GBuffers.emplace_back(g);
+		}
 	}
 }
