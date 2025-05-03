@@ -59,8 +59,17 @@ namespace MauRen
 
 		std::vector<VulkanImage> m_SwapChainImages{};
 
+		//TODO buffer depth & colour
 		VulkanImage m_DepthImage{};
 		VulkanImage m_ColorImage{};
+
+		struct GBuffer final
+		{
+			VulkanImage depth;
+			VulkanImage normal; // R8, G8 == Normal X; B8, A8 == Normal Y
+			VulkanImage albedo; // diffuse color information (RGB), A unused currently
+		};
+		std::vector<GBuffer> m_GBuffers;
 
 		void CreateSwapchain(SDL_Window* pWindow, VulkanSurfaceContext const * pVulkanSurfaceContext);
 		void CreateImageViews();
@@ -71,6 +80,9 @@ namespace MauRen
 
 		void CreateColorResources();
 		void CreateDepthResources();
+
+		//TOOD
+		void CreateGBuffers();
 	};
 }
 

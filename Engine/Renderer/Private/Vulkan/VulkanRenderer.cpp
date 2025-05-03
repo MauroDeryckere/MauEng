@@ -204,7 +204,7 @@ namespace MauRen
 		scissor.offset = { 0, 0 };
 		scissor.extent = m_SwapChainContext.GetExtent();
 
-		VulkanMeshManager::GetInstance().PreDraw(commandBuffer, m_GraphicsPipeline->GetPipelineLayout(), 1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame], m_CurrentFrame);
+		VulkanMeshManager::GetInstance().PreDraw(commandBuffer, m_GraphicsPipeline->GetForwardPipelineLayout(), 1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame], m_CurrentFrame);
 #pragma endregion
 #pragma region DEPTH_PREPASS
 		{
@@ -293,8 +293,8 @@ namespace MauRen
 				vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
 				vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-				vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipeline->GetPipeline());
-				VulkanMeshManager::GetInstance().Draw(commandBuffer, m_GraphicsPipeline->GetPipelineLayout(), 1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame], m_CurrentFrame);
+				vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipeline->GetForwardPipeline());
+				VulkanMeshManager::GetInstance().Draw(commandBuffer, m_GraphicsPipeline->GetForwardPipelineLayout(), 1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame], m_CurrentFrame);
 				RenderDebug(commandBuffer);
 			vkCmdEndRendering(commandBuffer);
 		}
@@ -304,7 +304,7 @@ namespace MauRen
 		{
 			ME_PROFILE_SCOPE("Post draw")
 
-			VulkanMeshManager::GetInstance().PostDraw(commandBuffer, m_GraphicsPipeline->GetPipelineLayout(), 1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame], m_CurrentFrame);
+			VulkanMeshManager::GetInstance().PostDraw(commandBuffer, m_GraphicsPipeline->GetForwardPipelineLayout(), 1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame], m_CurrentFrame);
 
 			// Transition color layout to transfer optimal before resolving
 			if (VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL != colour.layout)

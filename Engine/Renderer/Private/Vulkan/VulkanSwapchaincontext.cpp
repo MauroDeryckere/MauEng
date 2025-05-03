@@ -13,6 +13,7 @@ namespace MauRen
 		CreateImageViews();
 		CreateColorResources();
 		CreateDepthResources();
+		CreateGBuffers();
 	}
 
 	void VulkanSwapchainContext::ReCreate(SDL_Window* pWindow, VulkanGraphicsPipeline const* pGraphicsPipeline, VulkanSurfaceContext const* pVulkanSurfaceContext)
@@ -254,5 +255,11 @@ namespace MauRen
 		};
 
 		m_DepthImage.CreateImageView(VK_IMAGE_ASPECT_DEPTH_BIT);
+	}
+
+	void VulkanSwapchainContext::CreateGBuffers()
+	{
+
+		GBuffer g;
 	}
 }

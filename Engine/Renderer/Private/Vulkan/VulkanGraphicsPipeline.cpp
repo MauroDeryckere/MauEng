@@ -9,6 +9,7 @@ namespace MauRen
 		CreateGraphicsPipeline(pSwapChainContext, descriptorSetLayout, descriptorSetLayoutCount);
 		CreateDepthPrePassPipeline(pSwapChainContext, descriptorSetLayout, descriptorSetLayoutCount);
 		CreateDebugGraphicsPipeline(pSwapChainContext, descriptorSetLayout, descriptorSetLayoutCount);
+		CreateGBufferPipeline(pSwapChainContext, descriptorSetLayout, descriptorSetLayoutCount);
 	}
 
 	void VulkanGraphicsPipeline::Destroy()
@@ -538,6 +539,11 @@ namespace MauRen
 
 		VulkanUtils::SafeDestroy(deviceContext->GetLogicalDevice(), debugFragShaderModule, nullptr);
 		VulkanUtils::SafeDestroy(deviceContext->GetLogicalDevice(), debugVertShaderModule, nullptr);
+	}
+
+	void VulkanGraphicsPipeline::CreateGBufferPipeline(VulkanSwapchainContext* pSwapChainContext, VkDescriptorSetLayout descriptorSetLayout, uint32_t descriptorSetLayoutCount)
+	{
+
 	}
 
 	std::vector<char> VulkanGraphicsPipeline::ReadFile(std::filesystem::path const& filepath)

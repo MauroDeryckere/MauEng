@@ -18,8 +18,8 @@ namespace MauRen
 		void Initialize(VulkanSwapchainContext* pSwapChainContext, VkDescriptorSetLayout descriptorSetLayout, uint32_t descriptorSetLayoutCount);
 		void Destroy();
 
-		[[nodiscard]] VkPipeline GetPipeline() const noexcept { return m_GraphicsPipeline; }
-		[[nodiscard]] VkPipelineLayout GetPipelineLayout() const noexcept { return m_PipelineLayout; }
+		[[nodiscard]] VkPipeline GetForwardPipeline() const noexcept { return m_ForwardPipeline; }
+		[[nodiscard]] VkPipelineLayout GetForwardPipelineLayout() const noexcept { return m_ForwardPipelineLayout; }
 
 		[[nodiscard]] VkPipeline GetDepthPrePassPipeline() const noexcept { return m_DepthPrePassPipeline; }
 		[[nodiscard]] VkPipelineLayout GetDepthPrePassPipelineLayout() const noexcept { return m_DepthPrePassPipelineLayout; }
@@ -27,14 +27,17 @@ namespace MauRen
 		[[nodiscard]] VkPipeline GetDebugPipeline() const noexcept { return m_DebugPipeline; }
 		[[nodiscard]] VkPipelineLayout GetDebugPipelineLayout() const noexcept { return m_DebugPipelineLayout; }
 
+		[[nodiscard]] VkPipeline GetGBufferPipeline() const noexcept { return m_GBufferPipeline; }
+		[[nodiscard]] VkPipelineLayout GetGBufferPipelineLayout() const noexcept { return m_GBufferPipelineLayout; }
+
 		VulkanGraphicsPipeline(VulkanGraphicsPipeline const&) = delete;
 		VulkanGraphicsPipeline(VulkanGraphicsPipeline&&) = delete;
 		VulkanGraphicsPipeline& operator=(VulkanGraphicsPipeline const&) = delete;
 		VulkanGraphicsPipeline& operator=(VulkanGraphicsPipeline&&) = delete;
 
 	private:
-		VkPipelineLayout m_PipelineLayout{ VK_NULL_HANDLE };
-		VkPipeline m_GraphicsPipeline{ VK_NULL_HANDLE };
+		VkPipelineLayout m_ForwardPipelineLayout{ VK_NULL_HANDLE };
+		VkPipeline m_ForwardPipeline{ VK_NULL_HANDLE };
 
 		VkPipelineLayout m_DepthPrePassPipelineLayout{ VK_NULL_HANDLE };
 		VkPipeline m_DepthPrePassPipeline{ VK_NULL_HANDLE };
@@ -42,9 +45,13 @@ namespace MauRen
 		VkPipelineLayout m_DebugPipelineLayout{ VK_NULL_HANDLE };
 		VkPipeline m_DebugPipeline{ VK_NULL_HANDLE };
 
+		VkPipelineLayout m_GBufferPipelineLayout{ VK_NULL_HANDLE };
+		VkPipeline m_GBufferPipeline{ VK_NULL_HANDLE };
+
 		void CreateGraphicsPipeline(VulkanSwapchainContext* pSwapChainContext, VkDescriptorSetLayout descriptorSetLayout, uint32_t descriptorSetLayoutCount);
 		void CreateDepthPrePassPipeline(VulkanSwapchainContext* pSwapChainContext, VkDescriptorSetLayout descriptorSetLayout, uint32_t descriptorSetLayoutCount);
 		void CreateDebugGraphicsPipeline(VulkanSwapchainContext* pSwapChainContext, VkDescriptorSetLayout descriptorSetLayout, uint32_t descriptorSetLayoutCount);
+		void CreateGBufferPipeline(VulkanSwapchainContext* pSwapChainContext, VkDescriptorSetLayout descriptorSetLayout, uint32_t descriptorSetLayoutCount);
 
 		static std::vector<char> ReadFile(std::filesystem::path const& filepath);
 		[[nodiscard]] VkShaderModule CreateShaderModule(std::vector<char> const& code) const;
