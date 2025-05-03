@@ -33,7 +33,7 @@ namespace MauRen
 	};
 
 	class VulkanSurfaceContext;
-	class VulkanGraphicsPipeline;
+	class VulkanGraphicsPipelineContext;
 
 	class VulkanSwapchainContext final
 	{
@@ -45,7 +45,7 @@ namespace MauRen
 		void Initialize(SDL_Window* pWindow, VulkanSurfaceContext const* pVulkanSurfaceContext);
 
 		// Reecreate the entire swapchain, this will destroy the previous swapchain first
-		void ReCreate(SDL_Window* pWindow, VulkanGraphicsPipeline const* pGraphicsPipeline, VulkanSurfaceContext const* pVulkanSurfaceContext);
+		void ReCreate(SDL_Window* pWindow, VulkanGraphicsPipelineContext const* pGraphicsPipeline, VulkanSurfaceContext const* pVulkanSurfaceContext);
 
 		void Destroy();
 

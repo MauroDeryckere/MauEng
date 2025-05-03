@@ -1,10 +1,10 @@
-#include "VulkanGraphicsPipeline.h"
+#include "VulkanGraphicsPipelineContext.h"
 
 #include "VulkanUtils.h"
 
 namespace MauRen
 {
-	void VulkanGraphicsPipeline::Initialize(VulkanSwapchainContext* pSwapChainContext, VkDescriptorSetLayout descriptorSetLayout, uint32_t descriptorSetLayoutCount)
+	void VulkanGraphicsPipelineContext::Initialize(VulkanSwapchainContext* pSwapChainContext, VkDescriptorSetLayout descriptorSetLayout, uint32_t descriptorSetLayoutCount)
 	{
 		CreateForwardPipeline(pSwapChainContext, descriptorSetLayout, descriptorSetLayoutCount);
 		CreateDepthPrePassPipeline(pSwapChainContext, descriptorSetLayout, descriptorSetLayoutCount);
@@ -13,7 +13,7 @@ namespace MauRen
 		CreateLightPassPipeline(pSwapChainContext, descriptorSetLayout, descriptorSetLayoutCount);
 	}
 
-	void VulkanGraphicsPipeline::Destroy()
+	void VulkanGraphicsPipelineContext::Destroy()
 	{
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 
@@ -33,7 +33,7 @@ namespace MauRen
 		VulkanUtils::SafeDestroy(deviceContext->GetLogicalDevice(), m_LightPassPipelineLayout, nullptr);
 	}
 
-	void VulkanGraphicsPipeline::CreateForwardPipeline(VulkanSwapchainContext* pSwapChainContext, VkDescriptorSetLayout descriptorSetLayout, uint32_t descriptorSetLayoutCount)
+	void VulkanGraphicsPipelineContext::CreateForwardPipeline(VulkanSwapchainContext* pSwapChainContext, VkDescriptorSetLayout descriptorSetLayout, uint32_t descriptorSetLayoutCount)
 	{
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 
@@ -218,7 +218,7 @@ namespace MauRen
 		VulkanUtils::SafeDestroy(deviceContext->GetLogicalDevice(), vertShaderModule, nullptr);
 	}
 
-	void VulkanGraphicsPipeline::CreateDepthPrePassPipeline(VulkanSwapchainContext* pSwapChainContext, VkDescriptorSetLayout descriptorSetLayout, uint32_t descriptorSetLayoutCount)
+	void VulkanGraphicsPipelineContext::CreateDepthPrePassPipeline(VulkanSwapchainContext* pSwapChainContext, VkDescriptorSetLayout descriptorSetLayout, uint32_t descriptorSetLayoutCount)
 	{
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 
@@ -379,7 +379,7 @@ namespace MauRen
 		VulkanUtils::SafeDestroy(deviceContext->GetLogicalDevice(), vertShaderModule, nullptr);
 	}
 
-	void VulkanGraphicsPipeline::CreateDebugGraphicsPipeline(VulkanSwapchainContext* pSwapChainContext, VkDescriptorSetLayout descriptorSetLayout, uint32_t descriptorSetLayoutCount)
+	void VulkanGraphicsPipelineContext::CreateDebugGraphicsPipeline(VulkanSwapchainContext* pSwapChainContext, VkDescriptorSetLayout descriptorSetLayout, uint32_t descriptorSetLayoutCount)
 	{
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 
@@ -548,7 +548,7 @@ namespace MauRen
 		VulkanUtils::SafeDestroy(deviceContext->GetLogicalDevice(), debugVertShaderModule, nullptr);
 	}
 
-	void VulkanGraphicsPipeline::CreateGBufferPipeline(VulkanSwapchainContext* pSwapChainContext, VkDescriptorSetLayout descriptorSetLayout, uint32_t descriptorSetLayoutCount)
+	void VulkanGraphicsPipelineContext::CreateGBufferPipeline(VulkanSwapchainContext* pSwapChainContext, VkDescriptorSetLayout descriptorSetLayout, uint32_t descriptorSetLayoutCount)
 	{
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 
@@ -716,7 +716,7 @@ namespace MauRen
 		VulkanUtils::SafeDestroy(deviceContext->GetLogicalDevice(), vertShaderModule, nullptr);
 	}
 
-	void VulkanGraphicsPipeline::CreateLightPassPipeline(VulkanSwapchainContext* pSwapChainContext, VkDescriptorSetLayout descriptorSetLayout, uint32_t descriptorSetLayoutCount)
+	void VulkanGraphicsPipelineContext::CreateLightPassPipeline(VulkanSwapchainContext* pSwapChainContext, VkDescriptorSetLayout descriptorSetLayout, uint32_t descriptorSetLayoutCount)
 	{
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 
@@ -879,7 +879,7 @@ namespace MauRen
 		VulkanUtils::SafeDestroy(deviceContext->GetLogicalDevice(), vertShaderModule, nullptr);
 	}
 
-	std::vector<char> VulkanGraphicsPipeline::ReadFile(std::filesystem::path const& filepath)
+	std::vector<char> VulkanGraphicsPipelineContext::ReadFile(std::filesystem::path const& filepath)
 	{
 		ME_RENDERER_ASSERT(std::filesystem::exists(filepath));
 
@@ -897,7 +897,7 @@ namespace MauRen
 		return buffer;
 	}
 
-	VkShaderModule VulkanGraphicsPipeline::CreateShaderModule(std::vector<char> const& code)
+	VkShaderModule VulkanGraphicsPipelineContext::CreateShaderModule(std::vector<char> const& code)
 	{
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 

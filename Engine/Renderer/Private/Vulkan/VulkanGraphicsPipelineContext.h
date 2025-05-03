@@ -9,11 +9,11 @@
 
 namespace MauRen
 {
-	class VulkanGraphicsPipeline final
+	class VulkanGraphicsPipelineContext final
 	{
 	public:
-		VulkanGraphicsPipeline() = default;
-		~VulkanGraphicsPipeline() = default;
+		VulkanGraphicsPipelineContext() = default;
+		~VulkanGraphicsPipelineContext() = default;
 
 		void Initialize(VulkanSwapchainContext* pSwapChainContext, VkDescriptorSetLayout descriptorSetLayout, uint32_t descriptorSetLayoutCount);
 		void Destroy();
@@ -30,10 +30,10 @@ namespace MauRen
 		[[nodiscard]] VkPipeline GetGBufferPipeline() const noexcept { return m_GBufferPipeline; }
 		[[nodiscard]] VkPipelineLayout GetGBufferPipelineLayout() const noexcept { return m_GBufferPipelineLayout; }
 
-		VulkanGraphicsPipeline(VulkanGraphicsPipeline const&) = delete;
-		VulkanGraphicsPipeline(VulkanGraphicsPipeline&&) = delete;
-		VulkanGraphicsPipeline& operator=(VulkanGraphicsPipeline const&) = delete;
-		VulkanGraphicsPipeline& operator=(VulkanGraphicsPipeline&&) = delete;
+		VulkanGraphicsPipelineContext(VulkanGraphicsPipelineContext const&) = delete;
+		VulkanGraphicsPipelineContext(VulkanGraphicsPipelineContext&&) = delete;
+		VulkanGraphicsPipelineContext& operator=(VulkanGraphicsPipelineContext const&) = delete;
+		VulkanGraphicsPipelineContext& operator=(VulkanGraphicsPipelineContext&&) = delete;
 
 	private:
 		VkPipelineLayout m_ForwardPipelineLayout{ VK_NULL_HANDLE };

@@ -11,7 +11,7 @@
 #include "VulkanDeviceContext.h"
 #include "VulkanDescriptorContext.h"
 #include "VulkanSwapchainContext.h"
-#include "VulkanGraphicsPipeline.h"
+#include "VulkanGraphicsPipelineContext.h"
 #include "VulkanCommandPoolManager.h"
 
 #include "VulkanBuffer.h"
@@ -64,7 +64,7 @@ namespace MauRen
 
 		VulkanDescriptorContext m_DescriptorContext{};
 		VulkanSwapchainContext m_SwapChainContext{};
-		VulkanGraphicsPipeline* m_GraphicsPipeline{};
+		VulkanGraphicsPipelineContext* m_GraphicsPipeline{};
 
 		VulkanCommandPoolManager m_CommandPoolManager{};
 

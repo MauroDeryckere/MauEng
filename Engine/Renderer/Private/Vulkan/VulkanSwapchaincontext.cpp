@@ -3,7 +3,7 @@
 #include "VulkanSwapchainContext.h"
 #include "VulkanSurfaceContext.h"
 #include "VulkanDeviceContext.h"
-#include "VulkanGraphicsPipeline.h"
+#include "VulkanGraphicsPipelineContext.h"
 
 namespace MauRen
 {
@@ -16,7 +16,7 @@ namespace MauRen
 		CreateGBuffers();
 	}
 
-	void VulkanSwapchainContext::ReCreate(SDL_Window* pWindow, VulkanGraphicsPipeline const* pGraphicsPipeline, VulkanSurfaceContext const* pVulkanSurfaceContext)
+	void VulkanSwapchainContext::ReCreate(SDL_Window* pWindow, VulkanGraphicsPipelineContext const* pGraphicsPipeline, VulkanSurfaceContext const* pVulkanSurfaceContext)
 	{
 		Destroy();
 
