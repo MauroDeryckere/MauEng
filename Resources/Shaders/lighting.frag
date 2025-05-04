@@ -15,7 +15,6 @@ layout(location = 0) out vec4 outColor;
 void main()
 {
     vec3 albedo = texture(sampler2D(gAlbedo, globalSampler), fragUV).rgb;
-    outColor = vec4(1.0, 0.0, 0.0, 1.0); // Red
 
-    //outColor = vec4(fragUV.xy, 0, 1.0);
+    outColor = vec4(albedo, 1.0);
 }
