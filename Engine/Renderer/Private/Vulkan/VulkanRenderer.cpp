@@ -40,8 +40,7 @@ namespace MauRen
 		m_SwapChainContext.Initialize(m_pWindow, &m_SurfaceContext);
 
 		m_DescriptorContext.CreateDescriptorSetLayout();
-		m_GraphicsPipeline = new VulkanGraphicsPipelineContext{};
-		m_GraphicsPipeline->Initialize(&m_SwapChainContext, m_DescriptorContext.GetDescriptorSetLayout(), 1u);
+		m_GraphicsPipelineContext.Initialize(&m_SwapChainContext, m_DescriptorContext.GetDescriptorSetLayout(), 1u);
 
 		m_CommandPoolManager.Initialize();
 
@@ -79,6 +78,31 @@ namespace MauRen
 									  VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
 									  VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT };
 		}
+
+		m_QuadVertexBuffer = { sizeof(m_QuadVertices[0]) * std::size(m_QuadVertices),
+			VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+		};
+
+		VulkanBuffer stagingBuffer
+		{
+			sizeof(m_QuadVertices[0]) * std::size(m_QuadVertices),
+			VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+		};
+
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+		void* mappedMemory;
+		vkMapMemory(deviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory, 0, sizeof(m_QuadVertices[0]) * std::size(m_QuadVertices), 0, &mappedMemory);
+
+		// Copy the data to the buffer
+		memcpy(mappedMemory, m_QuadVertices.data(), sizeof(m_QuadVertices[0]) * std::size(m_QuadVertices));
+
+		// Unmap the memory
+		vkUnmapMemory(deviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory);
+
+		VulkanBuffer::CopyBuffer(m_CommandPoolManager, stagingBuffer.buffer, m_QuadVertexBuffer.buffer, sizeof(m_QuadVertices[0]) * std::size(m_QuadVertices));
+		stagingBuffer.Destroy();
 	}
 
 	void VulkanRenderer::Destroy()
@@ -104,6 +128,8 @@ namespace MauRen
 			m_DebugIndexBuffer.Destroy();
 		}
 
+		m_QuadVertexBuffer.Destroy();
+
 		m_CommandPoolManager.Destroy();
 
 		m_SwapChainContext.Destroy();
@@ -113,9 +139,7 @@ namespace MauRen
 			m_MappedUniformBuffers[i].buffer.Destroy();
 		}
 
-
-		m_GraphicsPipeline->Destroy();
-		delete m_GraphicsPipeline;
+		m_GraphicsPipelineContext.Destroy();
 
 		m_SwapChainContext.Destroy();
 		m_DescriptorContext.Destroy();
@@ -176,6 +200,8 @@ namespace MauRen
 	{
 		ME_PROFILE_FUNCTION()
 #pragma region PRE_DRAW
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+
 		VkCommandBufferBeginInfo beginInfo{};
 		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT; // Optional
@@ -204,7 +230,33 @@ namespace MauRen
 		scissor.offset = { 0, 0 };
 		scissor.extent = m_SwapChainContext.GetExtent();
 
-		VulkanMeshManager::GetInstance().PreDraw(commandBuffer, m_GraphicsPipeline->GetForwardPipelineLayout(), 1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame], m_CurrentFrame);
+		VulkanMeshManager::GetInstance().PreDraw(commandBuffer, m_GraphicsPipelineContext.GetForwardPipelineLayout(), 1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame], m_CurrentFrame);
+
+		auto& gBufferColor{ m_SwapChainContext.GetGBuffer(m_CurrentFrame).color };
+		// GBuffer Colour
+		if (VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL != gBufferColor.layout)
+		{
+			gBufferColor.TransitionImageLayout(commandBuffer,
+				VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+				VK_PIPELINE_STAGE_2_NONE, VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
+				VK_ACCESS_2_NONE, VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT);
+		}
+
+		VkDescriptorImageInfo imageInfo = {};
+		imageInfo.imageView = gBufferColor.imageViews[0];
+		imageInfo.imageLayout = gBufferColor.layout;
+
+		VkWriteDescriptorSet descriptorWrite = {};
+		descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		descriptorWrite.dstSet = m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame];
+		descriptorWrite.dstBinding = 6;
+		descriptorWrite.dstArrayElement = 0;
+		descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+		descriptorWrite.descriptorCount = 1;
+		descriptorWrite.pImageInfo = &imageInfo;
+
+		vkUpdateDescriptorSets(deviceContext->GetLogicalDevice(), 1, &descriptorWrite, 0, nullptr);
+
 #pragma endregion
 #pragma region DEPTH_PREPASS
 		{
@@ -235,21 +287,21 @@ namespace MauRen
 			vkCmdBeginRendering(commandBuffer, &renderInfoDepthPrepass);
 			vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
 			vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
-				vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipeline->GetDepthPrePassPipeline());
-				VulkanMeshManager::GetInstance().Draw(commandBuffer, m_GraphicsPipeline->GetDepthPrePassPipelineLayout(), 1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame], m_CurrentFrame);
-				RenderDebug(commandBuffer);
+				vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipelineContext.GetDepthPrePassPipeline());
+				VulkanMeshManager::GetInstance().Draw(commandBuffer, m_GraphicsPipelineContext.GetDepthPrePassPipelineLayout(), 1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame], m_CurrentFrame);
+				RenderDebug(commandBuffer, true);
 			vkCmdEndRendering(commandBuffer);
 		}
 #pragma endregion
 
-#pragma region MAIN_PASS
+#pragma region GBUFFER_PASS
 		{
-			ME_PROFILE_SCOPE("Main pass")
+			ME_PROFILE_SCOPE("GBuffer pass")
 
-			// Colour
-			if (VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL != colour.layout)
+			// GBuffer Colour
+			if (VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL != gBufferColor.layout)
 			{
-				colour.TransitionImageLayout(commandBuffer,
+				gBufferColor.TransitionImageLayout(commandBuffer,
 					VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
 					VK_PIPELINE_STAGE_2_NONE, VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
 					VK_ACCESS_2_NONE, VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT);
@@ -264,11 +316,10 @@ namespace MauRen
 					VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT, VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT);
 			}
 
-			// Dynamic rendering attachments
-			VkRenderingAttachmentInfo colorAttachment{};
+			VkRenderingAttachmentInfo colorAttachment = {};
 			colorAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
-			colorAttachment.imageView = colour.imageViews[0];
-			colorAttachment.imageLayout = colour.layout;
+			colorAttachment.imageView = gBufferColor.imageViews[0];
+			colorAttachment.imageLayout = gBufferColor.layout;
 			colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 			colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
 			colorAttachment.clearValue = CLEAR_VALUES[COLOR_CLEAR_ID];
@@ -278,7 +329,64 @@ namespace MauRen
 			depthAttachment.imageView = depth.imageViews[0];
 			depthAttachment.imageLayout = depth.layout;
 			depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
-			depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+			depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+			depthAttachment.clearValue = CLEAR_VALUES[DEPTH_CLEAR_ID];
+
+			VkRenderingInfo renderInfoGBuffer{};
+			renderInfoGBuffer.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
+			renderInfoGBuffer.renderArea = VkRect2D{ VkOffset2D{ 0, 0 }, m_SwapChainContext.GetExtent() };
+			renderInfoGBuffer.layerCount = 1;
+			renderInfoGBuffer.colorAttachmentCount = 1;
+			renderInfoGBuffer.pColorAttachments = &colorAttachment;
+			renderInfoGBuffer.pDepthAttachment = &depthAttachment;
+			renderInfoGBuffer.pStencilAttachment = nullptr;
+
+			vkCmdBeginRendering(commandBuffer, &renderInfoGBuffer);
+				vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+				vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+				vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipelineContext.GetGBufferPipeline());
+				VulkanMeshManager::GetInstance().Draw(commandBuffer, m_GraphicsPipelineContext.GetGBufferPipelineLayout(), 1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame], m_CurrentFrame);
+			vkCmdEndRendering(commandBuffer);
+		}
+#pragma endregion
+		//TODO
+		//RenderDebug(commandBuffer, false);
+
+#pragma region LIGHTING_PASS
+		{
+			ME_PROFILE_SCOPE("lighting pass")
+			// Colour
+			if (VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL != colour.layout)
+			{
+				colour.TransitionImageLayout(commandBuffer,
+					VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+					VK_PIPELINE_STAGE_2_NONE, VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
+					VK_ACCESS_2_NONE, VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT);
+			}
+
+			// GBuffer Colour
+			if (VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL != gBufferColor.layout)
+			{
+				gBufferColor.TransitionImageLayout(commandBuffer,
+					VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+					VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT,
+					VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT, VK_ACCESS_2_SHADER_READ_BIT);
+			}
+
+			VkRenderingAttachmentInfo colorAttachment{};
+			colorAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+			colorAttachment.imageView = colour.imageViews[0];
+			colorAttachment.imageLayout = colour.layout;
+			colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+			colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+			colorAttachment.clearValue = CLEAR_VALUES[COLOR_CLEAR_ID];
+
+			//VkRenderingAttachmentInfo depthAttachment{};
+			//depthAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+			//depthAttachment.imageView = depth.imageViews[0];
+			//depthAttachment.imageLayout = depth.layout;
+			//depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+			//depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 
 			VkRenderingInfo renderInfo{};
 			renderInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
@@ -286,47 +394,63 @@ namespace MauRen
 			renderInfo.layerCount = 1;
 			renderInfo.colorAttachmentCount = 1;
 			renderInfo.pColorAttachments = &colorAttachment;
-			renderInfo.pDepthAttachment = &depthAttachment;
+			renderInfo.pDepthAttachment = nullptr;
 			renderInfo.pStencilAttachment = nullptr;
 
 			vkCmdBeginRendering(commandBuffer, &renderInfo);
 				vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
 				vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+				VkDeviceSize constexpr offset{ 0 };
 
-				vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipeline->GetForwardPipeline());
-				VulkanMeshManager::GetInstance().Draw(commandBuffer, m_GraphicsPipeline->GetForwardPipelineLayout(), 1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame], m_CurrentFrame);
-				RenderDebug(commandBuffer);
+				vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipelineContext.GetLightingPipeline());
+				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipelineContext.GetLightingPipelineLayout(), 0, 1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame], 0, nullptr);
+				vkCmdBindVertexBuffers(commandBuffer, 0, 1, &m_QuadVertexBuffer.buffer, &offset);
+				vkCmdDraw(commandBuffer, 6, 1, 0, 0);
+				//VulkanMeshManager::GetInstance().Draw(commandBuffer, m_GraphicsPipelineContext.GetLightingPipelineLayout(), 1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame], m_CurrentFrame);
 			vkCmdEndRendering(commandBuffer);
 		}
 #pragma endregion
-
 #pragma region POST_DRAW
 		{
 			ME_PROFILE_SCOPE("Post draw")
 
-			VulkanMeshManager::GetInstance().PostDraw(commandBuffer, m_GraphicsPipeline->GetForwardPipelineLayout(), 1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame], m_CurrentFrame);
+			VulkanMeshManager::GetInstance().PostDraw(commandBuffer, m_GraphicsPipelineContext.GetForwardPipelineLayout(), 1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame], m_CurrentFrame);
 
-			// Transition color layout to transfer optimal before resolving
-			if (VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL != colour.layout)
-			{
-				colour.TransitionImageLayout(commandBuffer,
-					VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-					VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
-					VK_PIPELINE_STAGE_2_TRANSFER_BIT,
-					VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT,
-					VK_ACCESS_2_TRANSFER_READ_BIT);
-			}
+			//// Transition color layout to transfer optimal before resolving
+			//if (VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL != colour.layout)
+			//{
+			//	colour.TransitionImageLayout(commandBuffer,
+			//		VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+			//		VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
+			//		VK_PIPELINE_STAGE_2_TRANSFER_BIT,
+			//		VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT,
+			//		VK_ACCESS_2_TRANSFER_READ_BIT);
+			//}
 
-			VkImageResolve resolveRegion = {};
-			resolveRegion.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-			resolveRegion.srcSubresource.mipLevel = 0;
-			resolveRegion.srcSubresource.baseArrayLayer = 0;
-			resolveRegion.srcSubresource.layerCount = 1;
-			resolveRegion.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-			resolveRegion.dstSubresource.mipLevel = 0;
-			resolveRegion.dstSubresource.baseArrayLayer = 0;
-			resolveRegion.dstSubresource.layerCount = 1;
-			resolveRegion.extent = { m_SwapChainContext.GetExtent().width, m_SwapChainContext.GetExtent().height, 1 };
+			//VkImageResolve resolveRegion = {};
+			//resolveRegion.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+			//resolveRegion.srcSubresource.mipLevel = 0;
+			//resolveRegion.srcSubresource.baseArrayLayer = 0;
+			//resolveRegion.srcSubresource.layerCount = 1;
+			//resolveRegion.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+			//resolveRegion.dstSubresource.mipLevel = 0;
+			//resolveRegion.dstSubresource.baseArrayLayer = 0;
+			//resolveRegion.dstSubresource.layerCount = 1;
+			//resolveRegion.extent = { m_SwapChainContext.GetExtent().width, m_SwapChainContext.GetExtent().height, 1 };
+
+			//vkCmdResolveImage(commandBuffer,
+			//	colour.image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+			//	m_SwapChainContext.GetSwapchainImages()[imageIndex].image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+			//	1, &resolveRegion);
+
+			colour.TransitionImageLayout(
+				commandBuffer,
+				VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+				VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
+				VK_PIPELINE_STAGE_2_TRANSFER_BIT,
+				VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT,
+				VK_ACCESS_2_TRANSFER_READ_BIT
+			);
 
 			if (VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL != m_SwapChainContext.GetSwapchainImages()[imageIndex].layout)
 			{
@@ -336,11 +460,25 @@ namespace MauRen
 					VK_ACCESS_2_NONE, VK_ACCESS_2_TRANSFER_WRITE_BIT);
 			}
 
-			vkCmdResolveImage(commandBuffer,
-				colour.image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-				m_SwapChainContext.GetSwapchainImages()[imageIndex].image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-				1, &resolveRegion);
+			VkImageCopy copyRegion = {};
+			copyRegion.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+			copyRegion.srcSubresource.mipLevel = 0;
+			copyRegion.srcSubresource.baseArrayLayer = 0;
+			copyRegion.srcSubresource.layerCount = 1;
+			copyRegion.srcOffset = { 0, 0, 0 };
 
+			copyRegion.dstSubresource = copyRegion.srcSubresource;
+			copyRegion.dstOffset = { 0, 0, 0 };
+
+			copyRegion.extent = { m_SwapChainContext.GetExtent().width, m_SwapChainContext.GetExtent().height, 1 }; // Match your output resolution
+
+			vkCmdCopyImage(
+				commandBuffer,
+				colour.image, colour.layout,
+				m_SwapChainContext.GetSwapchainImages()[imageIndex].image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+				1, &copyRegion
+			);
+			m_SwapChainContext.GetSwapchainImages()[imageIndex].layout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
 			m_SwapChainContext.GetSwapchainImages()[imageIndex].TransitionImageLayout(commandBuffer,
 				VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
 				VK_PIPELINE_STAGE_2_TRANSFER_BIT, VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT,
@@ -522,7 +660,7 @@ namespace MauRen
 		m_FramebufferResized = false;
 
 		vkDeviceWaitIdle(deviceContext->GetLogicalDevice());
-		m_SwapChainContext.ReCreate(m_pWindow, m_GraphicsPipeline, &m_SurfaceContext);
+		m_SwapChainContext.ReCreate(m_pWindow, &m_GraphicsPipelineContext, &m_SurfaceContext);
 
 		return true;
 	}
@@ -594,7 +732,7 @@ namespace MauRen
 
 	}
 
-	void VulkanRenderer::RenderDebug(VkCommandBuffer commandBuffer)
+	void VulkanRenderer::RenderDebug(VkCommandBuffer commandBuffer, bool isPrepass)
 	{
 		ME_PROFILE_FUNCTION()
 
@@ -603,7 +741,14 @@ namespace MauRen
 			return;
 		}
 
-		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipeline->GetDebugPipeline());
+		if (isPrepass)
+		{
+			vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipelineContext.GetDepthPrePassPipeline());
+		}
+		else
+		{
+			vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipelineContext.GetDebugPipeline());
+		}
 
 		VkDeviceSize constexpr offset{ 0 };
 		vkCmdBindVertexBuffers(commandBuffer, 0, 1, &m_DebugVertexBuffer.buffer, &offset);

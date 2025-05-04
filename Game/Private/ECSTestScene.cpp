@@ -22,7 +22,7 @@ namespace MauGam
 			auto& transform{ enttCar.GetComponent<CTransform>() };
 			transform.Scale({ .5f, .5f, .5f });
 
-			enttCar.AddComponent<CStaticMesh>("Resources/Models/old_rusty_car/scene.gltf");
+//			enttCar.AddComponent<CStaticMesh>("Resources/Models/old_rusty_car/scene.gltf");
 		}
 
 		{
@@ -56,7 +56,7 @@ namespace MauGam
 
 		bool constexpr ENABLE_HIGH_INSTANCE_TEST{ true };
 		//uint32_t constexpr NUM_INSTANCES{ 75'000 };
-		uint32_t constexpr NUM_INSTANCES{ 100'000 };
+		uint32_t constexpr NUM_INSTANCES{ 10'000 };
 		if constexpr (ENABLE_HIGH_INSTANCE_TEST)
 		{
 			std::random_device rd;  // Random device for seed 

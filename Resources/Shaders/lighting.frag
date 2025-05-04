@@ -6,10 +6,16 @@ layout(set = 0, binding = 0) uniform UniformBufferObject
     vec3 cameraPos;
 } ubo;
 
-layout(location = 0) in vec4 inColor;
+layout(set = 0, binding = 1) uniform sampler globalSampler;
+layout(set = 0, binding = 6) uniform texture2D gAlbedo;
+
+layout(location = 0) in vec2 fragUV;
 layout(location = 0) out vec4 outColor;
 
 void main()
 {
-    outColor = inColor;
+    vec3 albedo = texture(sampler2D(gAlbedo, globalSampler), fragUV).rgb;
+    outColor = vec4(1.0, 0.0, 0.0, 1.0); // Red
+
+    //outColor = vec4(fragUV.xy, 0, 1.0);
 }

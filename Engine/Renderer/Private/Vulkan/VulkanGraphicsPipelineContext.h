@@ -30,6 +30,9 @@ namespace MauRen
 		[[nodiscard]] VkPipeline GetGBufferPipeline() const noexcept { return m_GBufferPipeline; }
 		[[nodiscard]] VkPipelineLayout GetGBufferPipelineLayout() const noexcept { return m_GBufferPipelineLayout; }
 
+		[[nodiscard]] VkPipeline GetLightingPipeline() const noexcept { return m_LightPassPipeline; }
+		[[nodiscard]] VkPipelineLayout GetLightingPipelineLayout() const noexcept { return m_LightPassPipelineLayout; }
+
 		VulkanGraphicsPipelineContext(VulkanGraphicsPipelineContext const&) = delete;
 		VulkanGraphicsPipelineContext(VulkanGraphicsPipelineContext&&) = delete;
 		VulkanGraphicsPipelineContext& operator=(VulkanGraphicsPipelineContext const&) = delete;

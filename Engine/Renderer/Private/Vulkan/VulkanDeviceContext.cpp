@@ -60,6 +60,8 @@ namespace MauRen
 
 	VkSampleCountFlagBits VulkanDeviceContext::GetMaxUsableSampleCount() const noexcept
 	{
+		return VK_SAMPLE_COUNT_1_BIT;
+
 		VkPhysicalDeviceProperties physicalDeviceProperties;
 		vkGetPhysicalDeviceProperties(m_PhysicalDevice, &physicalDeviceProperties);
 

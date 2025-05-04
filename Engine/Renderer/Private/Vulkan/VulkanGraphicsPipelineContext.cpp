@@ -640,7 +640,8 @@ namespace MauRen
 		VkPipelineMultisampleStateCreateInfo multisampling{};
 		multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
 		multisampling.sampleShadingEnable = VK_FALSE;
-		multisampling.rasterizationSamples = deviceContext->GetSampleCount();
+		//multisampling.rasterizationSamples = deviceContext->GetSampleCount();
+		multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
 		multisampling.minSampleShading = 1.0f; // Optional
 		multisampling.pSampleMask = nullptr; // Optional
 		multisampling.alphaToCoverageEnable = VK_FALSE; // Optional
@@ -751,10 +752,25 @@ namespace MauRen
 		dynamicState.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
 		dynamicState.pDynamicStates = dynamicStates.data();
 
+		VkVertexInputBindingDescription bindingDescription{};
+		bindingDescription.binding = 0;
+		bindingDescription.stride = sizeof(glm::vec2);
+		bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+		std::array<VkVertexInputAttributeDescription, 1> atts;
+		VkVertexInputAttributeDescription positionAttribute{};
+		positionAttribute.location = 0;
+		positionAttribute.binding = 0;
+		positionAttribute.format = VK_FORMAT_R32G32_SFLOAT;
+		positionAttribute.offset = 0;
+		atts[0] = positionAttribute;
+
 		VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
 		vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-		vertexInputInfo.vertexBindingDescriptionCount = 0;
-		vertexInputInfo.vertexAttributeDescriptionCount = 0;
+		vertexInputInfo.vertexBindingDescriptionCount = 1;
+		vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
+		vertexInputInfo.vertexAttributeDescriptionCount = 1;
+		vertexInputInfo.pVertexAttributeDescriptions = atts.data();
 
 		VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
 		inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -787,7 +803,7 @@ namespace MauRen
 		rasterizer.rasterizerDiscardEnable = VK_FALSE;
 		rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
 		rasterizer.lineWidth = 1.0f;
-		rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
+		rasterizer.cullMode = VK_CULL_MODE_NONE;
 		rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
 		rasterizer.depthBiasEnable = VK_FALSE;
 		rasterizer.depthBiasConstantFactor = 0.0f; // Optional
@@ -807,13 +823,19 @@ namespace MauRen
 
 		VkPipelineColorBlendAttachmentState lightPassBlendAttachment{};
 		lightPassBlendAttachment.blendEnable = VK_TRUE;
+
 		lightPassBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
 		lightPassBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE;
 		lightPassBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
+
 		lightPassBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
-		lightPassBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+		lightPassBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
 		lightPassBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
-		lightPassBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+
+		lightPassBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT
+												| VK_COLOR_COMPONENT_G_BIT
+												| VK_COLOR_COMPONENT_B_BIT
+												| VK_COLOR_COMPONENT_A_BIT;
 
 		VkPipelineColorBlendStateCreateInfo lightPassColorBlendState{};
 		lightPassColorBlendState.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
@@ -824,9 +846,9 @@ namespace MauRen
 
 		VkPipelineDepthStencilStateCreateInfo depthStencil{};
 		depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-		depthStencil.depthTestEnable = VK_TRUE;
+		depthStencil.depthTestEnable = VK_FALSE;
 		depthStencil.depthWriteEnable = VK_FALSE; // Written in the depth prepass
-		depthStencil.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
+		depthStencil.depthCompareOp = VK_COMPARE_OP_ALWAYS;
 		depthStencil.depthBoundsTestEnable = VK_FALSE;
 		depthStencil.stencilTestEnable = VK_FALSE;
 
@@ -844,8 +866,8 @@ namespace MauRen
 		renderingCreate.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
 		renderingCreate.colorAttachmentCount = 1;
 		renderingCreate.pColorAttachmentFormats = &pSwapChainContext->GetColorImage(0).format;
-		renderingCreate.depthAttachmentFormat = pSwapChainContext->GetDepthImage(0).format;
-
+		//renderingCreate.depthAttachmentFormat = pSwapChainContext->GetDepthImage(0).format;
+		
 		VkGraphicsPipelineCreateInfo pipelineInfo{};
 		pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
 		pipelineInfo.stageCount = static_cast<uint32_t>(std::size(shaderStages));
@@ -858,7 +880,7 @@ namespace MauRen
 		pipelineInfo.pMultisampleState = &multisampling;
 		pipelineInfo.pColorBlendState = &lightPassColorBlendState;
 		pipelineInfo.pDynamicState = &dynamicState;
-		pipelineInfo.pDepthStencilState = &depthStencil;
+		pipelineInfo.pDepthStencilState = nullptr;
 		pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 		pipelineInfo.layout = m_LightPassPipelineLayout;
 

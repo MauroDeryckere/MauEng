@@ -43,13 +43,15 @@ namespace MauRen
 		// descriptor set(index N)!This way, we can avoid rebinding as much as possible!
 		std::vector<VkDescriptorSet> m_DescriptorSets{};
 
-		const uint32_t UBO_BINDING_SLOT{ 0 };
-		const uint32_t SAMPLER_BINDING_SLOT{ 1 };
-		const uint32_t TEXTURE_BINDING_SLOT{ 2 };
-		const uint32_t MATERIAL_DATA_BINDING_SLOT{ 3 };
+		uint32_t const UBO_BINDING_SLOT{ 0 };
+		uint32_t const SAMPLER_BINDING_SLOT{ 1 };
+		uint32_t const TEXTURE_BINDING_SLOT{ 2 };
+		uint32_t const MATERIAL_DATA_BINDING_SLOT{ 3 };
 
-		const uint32_t MESH_DATA_BINDING_SLOT{ 4 };
-		const uint32_t MESH_INSTANCE_DATA_BINDING_SLOT{ 5 };
+		uint32_t const MESH_DATA_BINDING_SLOT{ 4 };
+		uint32_t const MESH_INSTANCE_DATA_BINDING_SLOT{ 5 };
+
+		uint32_t const GBUFFER_COLOR_SLOT{ 6 };
 
 	};
 }
