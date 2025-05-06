@@ -284,9 +284,9 @@ namespace MauRen
 			renderInfoDepthPrepass.pDepthAttachment = &depthAttachment;
 			renderInfoDepthPrepass.pStencilAttachment = nullptr;
 			
-			vkCmdBeginRendering(commandBuffer, &renderInfoDepthPrepass);
 			vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
 			vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+			vkCmdBeginRendering(commandBuffer, &renderInfoDepthPrepass);
 				vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipelineContext.GetDepthPrePassPipeline());
 				VulkanMeshManager::GetInstance().Draw(commandBuffer, m_GraphicsPipelineContext.GetDepthPrePassPipelineLayout(), 1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame], m_CurrentFrame);
 				RenderDebug(commandBuffer, true);
@@ -342,8 +342,6 @@ namespace MauRen
 			renderInfoGBuffer.pStencilAttachment = nullptr;
 
 			vkCmdBeginRendering(commandBuffer, &renderInfoGBuffer);
-				vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
-				vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 				vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipelineContext.GetGBufferPipeline());
 				VulkanMeshManager::GetInstance().Draw(commandBuffer, m_GraphicsPipelineContext.GetGBufferPipelineLayout(), 1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame], m_CurrentFrame);
 			vkCmdEndRendering(commandBuffer);
@@ -388,10 +386,7 @@ namespace MauRen
 			renderInfo.pStencilAttachment = nullptr;
 
 			vkCmdBeginRendering(commandBuffer, &renderInfo);
-				vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
-				vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 				VkDeviceSize constexpr offset{ 0 };
-
 				vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipelineContext.GetLightingPipeline());
 				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipelineContext.GetLightingPipelineLayout(), 0, 1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame], 0, nullptr);
 				vkCmdBindVertexBuffers(commandBuffer, 0, 1, &m_QuadVertexBuffer.buffer, &offset);
@@ -427,8 +422,6 @@ namespace MauRen
 			renderInfo.pDepthAttachment = &depthAttachment;
 			renderInfo.pStencilAttachment = nullptr;
 			vkCmdBeginRendering(commandBuffer, &renderInfo);
-				vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
-				vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 				RenderDebug(commandBuffer, false);
 			vkCmdEndRendering(commandBuffer);
 		}
