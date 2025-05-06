@@ -472,17 +472,22 @@ namespace MauRen
 		depthStencil.back = {}; // Optional
 
 
-		VkPipelineColorBlendAttachmentState colorBlendAttachment = {};
-		colorBlendAttachment.blendEnable = VK_FALSE;
-		colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
-											  VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+		VkPipelineColorBlendAttachmentState blendAttachment = {};
+		blendAttachment.blendEnable = VK_TRUE;
+		blendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+		blendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+		blendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
+		blendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+		blendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+		blendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
+		blendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
 
 		VkPipelineColorBlendStateCreateInfo colorBlendState = {};
 		colorBlendState.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
 		colorBlendState.logicOpEnable = VK_FALSE;
 		colorBlendState.logicOp = VK_LOGIC_OP_COPY;
 		colorBlendState.attachmentCount = 1;
-		colorBlendState.pAttachments = &colorBlendAttachment;
+		colorBlendState.pAttachments = &blendAttachment;
 		colorBlendState.blendConstants[0] = 0.0f;
 		colorBlendState.blendConstants[1] = 0.0f;
 		colorBlendState.blendConstants[2] = 0.0f;

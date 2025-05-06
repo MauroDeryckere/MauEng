@@ -349,9 +349,6 @@ namespace MauRen
 			vkCmdEndRendering(commandBuffer);
 		}
 #pragma endregion
-		//TODO
-		//RenderDebug(commandBuffer, false);
-
 #pragma region LIGHTING_PASS
 		{
 			ME_PROFILE_SCOPE("lighting pass")
@@ -381,13 +378,6 @@ namespace MauRen
 			colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
 			colorAttachment.clearValue = CLEAR_VALUES[COLOR_CLEAR_ID];
 
-			//VkRenderingAttachmentInfo depthAttachment{};
-			//depthAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
-			//depthAttachment.imageView = depth.imageViews[0];
-			//depthAttachment.imageLayout = depth.layout;
-			//depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
-			//depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-
 			VkRenderingInfo renderInfo{};
 			renderInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
 			renderInfo.renderArea = VkRect2D{ VkOffset2D{ 0, 0 }, m_SwapChainContext.GetExtent() };
@@ -406,7 +396,40 @@ namespace MauRen
 				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipelineContext.GetLightingPipelineLayout(), 0, 1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame], 0, nullptr);
 				vkCmdBindVertexBuffers(commandBuffer, 0, 1, &m_QuadVertexBuffer.buffer, &offset);
 				vkCmdDraw(commandBuffer, 6, 1, 0, 0);
-				//VulkanMeshManager::GetInstance().Draw(commandBuffer, m_GraphicsPipelineContext.GetLightingPipelineLayout(), 1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame], m_CurrentFrame);
+			vkCmdEndRendering(commandBuffer);
+		}
+#pragma endregion
+#pragma region DEBUG_RENDER_PASS
+		{
+			ME_PROFILE_SCOPE("Debug render pass")
+			VkRenderingAttachmentInfo colorAttachment{};
+			colorAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+			colorAttachment.imageView = colour.imageViews[0];
+			colorAttachment.imageLayout = colour.layout;
+			colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+			colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+			colorAttachment.clearValue = CLEAR_VALUES[COLOR_CLEAR_ID];
+
+			VkRenderingAttachmentInfo depthAttachment{};
+			depthAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+			depthAttachment.imageView = depth.imageViews[0];
+			depthAttachment.imageLayout = depth.layout;
+			depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+			depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+			depthAttachment.clearValue = CLEAR_VALUES[DEPTH_CLEAR_ID];
+
+			VkRenderingInfo renderInfo{};
+			renderInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
+			renderInfo.renderArea = VkRect2D{ VkOffset2D{ 0, 0 }, m_SwapChainContext.GetExtent() };
+			renderInfo.layerCount = 1;
+			renderInfo.colorAttachmentCount = 1;
+			renderInfo.pColorAttachments = &colorAttachment;
+			renderInfo.pDepthAttachment = &depthAttachment;
+			renderInfo.pStencilAttachment = nullptr;
+			vkCmdBeginRendering(commandBuffer, &renderInfo);
+				vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+				vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+				RenderDebug(commandBuffer, false);
 			vkCmdEndRendering(commandBuffer);
 		}
 #pragma endregion
@@ -415,33 +438,6 @@ namespace MauRen
 			ME_PROFILE_SCOPE("Post draw")
 
 			VulkanMeshManager::GetInstance().PostDraw(commandBuffer, m_GraphicsPipelineContext.GetForwardPipelineLayout(), 1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame], m_CurrentFrame);
-
-			//// Transition color layout to transfer optimal before resolving
-			//if (VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL != colour.layout)
-			//{
-			//	colour.TransitionImageLayout(commandBuffer,
-			//		VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-			//		VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
-			//		VK_PIPELINE_STAGE_2_TRANSFER_BIT,
-			//		VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT,
-			//		VK_ACCESS_2_TRANSFER_READ_BIT);
-			//}
-
-			//VkImageResolve resolveRegion = {};
-			//resolveRegion.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-			//resolveRegion.srcSubresource.mipLevel = 0;
-			//resolveRegion.srcSubresource.baseArrayLayer = 0;
-			//resolveRegion.srcSubresource.layerCount = 1;
-			//resolveRegion.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-			//resolveRegion.dstSubresource.mipLevel = 0;
-			//resolveRegion.dstSubresource.baseArrayLayer = 0;
-			//resolveRegion.dstSubresource.layerCount = 1;
-			//resolveRegion.extent = { m_SwapChainContext.GetExtent().width, m_SwapChainContext.GetExtent().height, 1 };
-
-			//vkCmdResolveImage(commandBuffer,
-			//	colour.image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-			//	m_SwapChainContext.GetSwapchainImages()[imageIndex].image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-			//	1, &resolveRegion);
 
 			colour.TransitionImageLayout(
 				commandBuffer,
@@ -470,7 +466,7 @@ namespace MauRen
 			copyRegion.dstSubresource = copyRegion.srcSubresource;
 			copyRegion.dstOffset = { 0, 0, 0 };
 
-			copyRegion.extent = { m_SwapChainContext.GetExtent().width, m_SwapChainContext.GetExtent().height, 1 }; // Match your output resolution
+			copyRegion.extent = { m_SwapChainContext.GetExtent().width, m_SwapChainContext.GetExtent().height, 1 };
 
 			vkCmdCopyImage(
 				commandBuffer,
