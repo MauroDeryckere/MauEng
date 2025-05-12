@@ -27,6 +27,8 @@ layout(location = 3) in vec3 inNormal;
 
 // GBuffer Out
 layout(location = 0) out vec4 outColor;
+layout(location = 1) out vec2 outNormal;
+
 
 void main()
 {
@@ -41,4 +43,5 @@ void main()
     const vec3 n = normalize(TBN * sampledNormal);
 
     outColor = vec4(fragTexCoord, 0.0, 1.0);
+    outNormal = vec2(0.0, 0.0);
 }

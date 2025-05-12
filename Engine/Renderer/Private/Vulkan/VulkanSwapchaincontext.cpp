@@ -282,10 +282,10 @@ namespace MauRen
 
 		for (size_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; ++i)
 		{
-			GBuffer g;
+			GBuffer g{};
 			g.color = VulkanImage
 			{
-				VK_FORMAT_R8G8B8A8_SRGB,
+				GBuffer::formats[0],
 				VK_IMAGE_TILING_OPTIMAL,
 				VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT ,
 				VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
@@ -295,6 +295,19 @@ namespace MauRen
 				1
 			};
 			g.color.CreateImageView(VK_IMAGE_ASPECT_COLOR_BIT);
+
+			g.normal = VulkanImage
+			{
+				GBuffer::formats[1],
+				VK_IMAGE_TILING_OPTIMAL,
+				VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT ,
+				VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+				VK_SAMPLE_COUNT_1_BIT,
+				GetExtent().width,
+				GetExtent().height,
+				1
+			};
+			g.normal.CreateImageView(VK_IMAGE_ASPECT_COLOR_BIT);
 
 			m_GBuffers.emplace_back(g);
 		}

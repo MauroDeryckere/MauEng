@@ -17,13 +17,14 @@ namespace MauRen
 	// Single colour for temp testing
 	struct GBuffer final
 	{
-		VulkanImage color;
-		//VulkanImage normal; // R8, G8 == Normal X; B8, A8 == Normal Y
-		//VulkanImage albedo; // diffuse color information (RGB), A unused currently
+		VulkanImage color;	// diffuse RGB, A unused currently
 
-		static std::array<VkFormat, 1> constexpr formats
+		VulkanImage normal; // R16 == Normal X; G16 == Normal Y
+		// Depth  is reused from previous stages
+		static std::array<VkFormat, 2> constexpr formats
 		{
-			VK_FORMAT_R8G8B8A8_SRGB
+			VK_FORMAT_R8G8B8A8_SRGB,
+			VK_FORMAT_R16G16_SFLOAT
 		};
 
 		void Destroy()

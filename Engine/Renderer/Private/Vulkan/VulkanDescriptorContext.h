@@ -52,6 +52,7 @@ namespace MauRen
 		uint32_t const MESH_INSTANCE_DATA_BINDING_SLOT{ 5 };
 
 		uint32_t const GBUFFER_COLOR_SLOT{ 6 };
+		uint32_t const GBUFFER_NORMAL_SLOT{ 7 };
 
 	};
 }

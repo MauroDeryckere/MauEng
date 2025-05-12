@@ -103,8 +103,15 @@ namespace MauRen
 		GBufferColorBinding.binding = GBUFFER_COLOR_SLOT;
 		GBufferColorBinding.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
 		GBufferColorBinding.descriptorCount = 1;
-		GBufferColorBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+		GBufferColorBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 		GBufferColorBinding.pImmutableSamplers = nullptr;
+
+		VkDescriptorSetLayoutBinding GBufferNormalBinding{};
+		GBufferNormalBinding.binding = GBUFFER_NORMAL_SLOT;
+		GBufferNormalBinding.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+		GBufferNormalBinding.descriptorCount = 1;
+		GBufferNormalBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+		GBufferNormalBinding.pImmutableSamplers = nullptr;
 
 		std::array const bindings {
 			uboLayoutBinding,
@@ -113,7 +120,8 @@ namespace MauRen
 			materialDataBinding,
 			meshDataBinding,
 			meshInstanceDataBinding,
-			GBufferColorBinding
+			GBufferColorBinding,
+			GBufferNormalBinding
 		};
 
 		// Variable coutn adds more complexity and we do not need it currentl
@@ -124,6 +132,7 @@ namespace MauRen
 			VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT |
 			//VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT |
 			VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT, // Flags for bindless textures
+			0,
 			0,
 			0,
 			0,
@@ -155,7 +164,7 @@ namespace MauRen
 	{
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 
-		std::array<VkDescriptorPoolSize, 7> poolSizes{};
+		std::array<VkDescriptorPoolSize, 8> poolSizes{};
 		poolSizes[UBO_BINDING_SLOT].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 		poolSizes[UBO_BINDING_SLOT].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
 
@@ -176,6 +185,9 @@ namespace MauRen
 
 		poolSizes[GBUFFER_COLOR_SLOT].type = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
 		poolSizes[GBUFFER_COLOR_SLOT].descriptorCount = static_cast<uint32_t>(1 * MAX_FRAMES_IN_FLIGHT);
+
+		poolSizes[GBUFFER_NORMAL_SLOT].type = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+		poolSizes[GBUFFER_NORMAL_SLOT].descriptorCount = static_cast<uint32_t>(1 * MAX_FRAMES_IN_FLIGHT);
 
 		if (MAX_TEXTURES > deviceContext->GetMaxSampledImages())
 		{
