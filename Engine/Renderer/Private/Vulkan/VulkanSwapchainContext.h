@@ -29,6 +29,7 @@ namespace MauRen
 
 		void Destroy()
 		{
+			normal.Destroy();
 			color.Destroy();
 		}
 	};
