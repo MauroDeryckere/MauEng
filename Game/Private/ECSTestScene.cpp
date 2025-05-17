@@ -30,7 +30,7 @@ namespace MauGam
 
 			auto& transform{ enttHelmet.GetComponent<CTransform>() };
 			transform.Scale({ 100.f, 100.f, 100.f });
-			//enttHelmet.AddComponent<CStaticMesh>("Resources/Models/FlightHelmet/glTF/FlightHelmet.gltf");
+			enttHelmet.AddComponent<CStaticMesh>("Resources/Models/FlightHelmet/glTF/FlightHelmet.gltf");
 		}
 
 		{
@@ -50,7 +50,7 @@ namespace MauGam
 			Entity entSpider{ CreateEntity() };
 			auto& transform{ entSpider.GetComponent<CTransform>() };
 			//transform.Scale({ .05f, .05f, .05f });
-			//entSpider.AddComponent<CStaticMesh>("Resources/Models/Spider/spider.obj");
+			entSpider.AddComponent<CStaticMesh>("Resources/Models/Spider/spider.obj");
 		}
 
 
