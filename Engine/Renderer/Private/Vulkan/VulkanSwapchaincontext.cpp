@@ -3,7 +3,7 @@
 #include "VulkanSwapchainContext.h"
 #include "VulkanSurfaceContext.h"
 #include "VulkanDeviceContext.h"
-#include "VulkanGraphicsPipeline.h"
+#include "VulkanGraphicsPipelineContext.h"
 
 namespace MauRen
 {
@@ -13,9 +13,10 @@ namespace MauRen
 		CreateImageViews();
 		CreateColorResources();
 		CreateDepthResources();
+		CreateGBuffers();
 	}
 
-	void VulkanSwapchainContext::ReCreate(SDL_Window* pWindow, VulkanGraphicsPipeline const* pGraphicsPipeline, VulkanSurfaceContext const* pVulkanSurfaceContext)
+	void VulkanSwapchainContext::ReCreate(SDL_Window* pWindow, VulkanGraphicsPipelineContext const* pGraphicsPipeline, VulkanSurfaceContext const* pVulkanSurfaceContext)
 	{
 		Destroy();
 
@@ -23,20 +24,33 @@ namespace MauRen
 		CreateImageViews();
 		CreateColorResources();
 		CreateDepthResources();
-	}
+		CreateGBuffers();
+	}	
 
 	void VulkanSwapchainContext::Destroy()
 	{
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 
-		m_DepthImage.Destroy();
-		m_ColorImage.Destroy();
+		for (auto& image : m_DepthImages)
+		{
+			image.Destroy();
+		}
 
+		for (auto& image : m_ColorImages)
+		{
+			image.Destroy();
+		}
+
+		// Img destroyed when swapchain is destroyed
 		for (auto& image : m_SwapChainImages)
 		{
 			image.DestroyAllImageViews();
 		}
-		m_SwapChainImages.clear();
+
+		for (auto& b : m_GBuffers)
+		{
+			b.Destroy();
+		}
 
 		VulkanUtils::SafeDestroy(deviceContext->GetLogicalDevice(), m_SwapChain, nullptr);
 	}
@@ -219,21 +233,23 @@ namespace MauRen
 	void VulkanSwapchainContext::CreateColorResources()
 	{
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
-
 		VkFormat const colorFormat{ GetImageFormat() };
 
-		m_ColorImage = VulkanImage
+		for (size_t i{ 0 }; i< MAX_FRAMES_IN_FLIGHT; ++i)
 		{
-			colorFormat,
-			VK_IMAGE_TILING_OPTIMAL,
-			VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT ,
-			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-			deviceContext->GetSampleCount(),
-			GetExtent().width,
-			GetExtent().height
-		};
+			m_ColorImages.emplace_back(
+				VulkanImage{
+					colorFormat,
+					VK_IMAGE_TILING_OPTIMAL,
+					VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT ,
+					VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+					deviceContext->GetSampleCount(),
+					GetExtent().width,
+					GetExtent().height
+				});
 
-		m_ColorImage.CreateImageView(VK_IMAGE_ASPECT_COLOR_BIT);
+			m_ColorImages.back().CreateImageView(VK_IMAGE_ASPECT_COLOR_BIT);
+		}
 	}
 
 	void VulkanSwapchainContext::CreateDepthResources()
@@ -241,18 +257,59 @@ namespace MauRen
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 		VkFormat const depthFormat{ deviceContext->FindDepthFormat() };
 
-		m_DepthImage = VulkanImage
+		for (size_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; ++i)
 		{
-			depthFormat,
-			VK_IMAGE_TILING_OPTIMAL,
-			VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
-			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-			deviceContext->GetSampleCount(),
-			GetExtent().width,
-			GetExtent().height,
-			1
-		};
+			m_DepthImages.emplace_back(VulkanImage
+			{
+				depthFormat,
+				VK_IMAGE_TILING_OPTIMAL,
+				VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+				VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+				deviceContext->GetSampleCount(),
+				GetExtent().width,
+				GetExtent().height,
+				1
+			});
 
-		m_DepthImage.CreateImageView(VK_IMAGE_ASPECT_DEPTH_BIT);
+			m_DepthImages.back().CreateImageView(VK_IMAGE_ASPECT_DEPTH_BIT);
+		}
+	}
+
+	void VulkanSwapchainContext::CreateGBuffers()
+	{
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+		VkSampleCountFlagBits const samples{ deviceContext->GetSampleCount() };
+
+		for (size_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; ++i)
+		{
+			GBuffer g{};
+			g.color = VulkanImage
+			{
+				GBuffer::formats[0],
+				VK_IMAGE_TILING_OPTIMAL,
+				VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT ,
+				VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+				VK_SAMPLE_COUNT_1_BIT,
+				GetExtent().width,
+				GetExtent().height,
+				1
+			};
+			g.color.CreateImageView(VK_IMAGE_ASPECT_COLOR_BIT);
+
+			g.normal = VulkanImage
+			{
+				GBuffer::formats[1],
+				VK_IMAGE_TILING_OPTIMAL,
+				VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT ,
+				VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+				VK_SAMPLE_COUNT_1_BIT,
+				GetExtent().width,
+				GetExtent().height,
+				1
+			};
+			g.normal.CreateImageView(VK_IMAGE_ASPECT_COLOR_BIT);
+
+			m_GBuffers.emplace_back(g);
+		}
 	}
 }

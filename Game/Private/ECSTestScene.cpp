@@ -22,7 +22,7 @@ namespace MauGam
 			auto& transform{ enttCar.GetComponent<CTransform>() };
 			transform.Scale({ .5f, .5f, .5f });
 
-			enttCar.AddComponent<CStaticMesh>("Resources/Models/old_rusty_car/scene.gltf");
+//			enttCar.AddComponent<CStaticMesh>("Resources/Models/old_rusty_car/scene.gltf");
 		}
 
 		{
@@ -30,7 +30,7 @@ namespace MauGam
 
 			auto& transform{ enttHelmet.GetComponent<CTransform>() };
 			transform.Scale({ 100.f, 100.f, 100.f });
-			//enttHelmet.AddComponent<CStaticMesh>("Resources/Models/FlightHelmet/glTF/FlightHelmet.gltf");
+			enttHelmet.AddComponent<CStaticMesh>("Resources/Models/FlightHelmet/glTF/FlightHelmet.gltf");
 		}
 
 		{
@@ -50,13 +50,13 @@ namespace MauGam
 			Entity entSpider{ CreateEntity() };
 			auto& transform{ entSpider.GetComponent<CTransform>() };
 			//transform.Scale({ .05f, .05f, .05f });
-			//entSpider.AddComponent<CStaticMesh>("Resources/Models/Spider/spider.obj");
+			entSpider.AddComponent<CStaticMesh>("Resources/Models/Spider/spider.obj");
 		}
 
 
 		bool constexpr ENABLE_HIGH_INSTANCE_TEST{ true };
 		//uint32_t constexpr NUM_INSTANCES{ 75'000 };
-		uint32_t constexpr NUM_INSTANCES{ 100'000 };
+		uint32_t constexpr NUM_INSTANCES{ 10'000 };
 		if constexpr (ENABLE_HIGH_INSTANCE_TEST)
 		{
 			std::random_device rd;  // Random device for seed 

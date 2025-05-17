@@ -27,14 +27,17 @@ layout(location = 3) in vec3 inNormal;
 
 layout(location = 0) out vec4 outColor;
 
+// layout(location = 0) out vec2 outFragTexCoord;
+// layout(location = 1) out flat uint outMaterialIndex;
+// layout(location = 2) out vec4 outTangent;
+// layout(location = 3) out vec3 outNormal;
+
 vec3 g_LightDir = vec3(0.577f, -0.577f, 0.577f);
 
 void main() 
 {
-    // Access the material data based on the materialID from PushConstants
     const MaterialData material = materials[inMaterialIndex];
 
-    // When the ID is 0xFFFFFFFF, we treat it as missing or invalid and return a zero vector.
     const vec4 albedo = texture(sampler2D(TextureBuffer[nonuniformEXT(material.albedoTextureID)], globalSampler), fragTexCoord);
     const vec4 normalTex = texture(sampler2D(TextureBuffer[nonuniformEXT(material.normalTextureID)], globalSampler), fragTexCoord);
         
