@@ -24,7 +24,7 @@ namespace MauRen
 		static std::array<VkFormat, 2> constexpr formats
 		{
 			VK_FORMAT_R8G8B8A8_SRGB,
-			VK_FORMAT_R16G16_SFLOAT
+			VK_FORMAT_R16G16_UNORM
 		};
 
 		void Destroy()
