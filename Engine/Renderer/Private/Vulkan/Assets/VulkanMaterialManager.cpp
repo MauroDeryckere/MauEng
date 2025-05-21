@@ -103,11 +103,11 @@ namespace MauRen
 
 		if (material.embMetalnessRoughness)
 		{
-			vkMat.metallicTextureID = m_TextureManager->LoadOrGetTexture(cmdPoolManager, descriptorContext, material.embMetalnessRoughness.hash, material.embMetalnessRoughness, false);
+			vkMat.metallicTextureID = m_TextureManager->LoadOrGetTexture(cmdPoolManager, descriptorContext, material.embMetalnessRoughness.hash, material.embMetalnessRoughness, true);
 		}
 		else
 		{
-			vkMat.metallicTextureID = m_TextureManager->LoadOrGetTexture(cmdPoolManager, descriptorContext, material.metalnessRoughnessTexture, false);
+			vkMat.metallicTextureID = m_TextureManager->LoadOrGetTexture(cmdPoolManager, descriptorContext, material.metalnessRoughnessTexture, true);
 		}
 
 		m_Materials.emplace_back(vkMat);

@@ -53,6 +53,7 @@ namespace MauRen
 
 		uint32_t const GBUFFER_COLOR_SLOT{ 6 };
 		uint32_t const GBUFFER_NORMAL_SLOT{ 7 };
+		uint32_t const GBUFFER_METAL_SLOT{ 8 };
 
 	};
 }

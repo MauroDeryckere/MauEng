@@ -113,6 +113,13 @@ namespace MauRen
 		GBufferNormalBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 		GBufferNormalBinding.pImmutableSamplers = nullptr;
 
+		VkDescriptorSetLayoutBinding GBufferMetalRoughBinding{};
+		GBufferMetalRoughBinding.binding = GBUFFER_METAL_SLOT;
+		GBufferMetalRoughBinding.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+		GBufferMetalRoughBinding.descriptorCount = 1;
+		GBufferMetalRoughBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+		GBufferMetalRoughBinding.pImmutableSamplers = nullptr;
+
 		std::array const bindings {
 			uboLayoutBinding,
 			samplerBinding,
@@ -121,7 +128,8 @@ namespace MauRen
 			meshDataBinding,
 			meshInstanceDataBinding,
 			GBufferColorBinding,
-			GBufferNormalBinding
+			GBufferNormalBinding,
+			GBufferMetalRoughBinding
 		};
 
 		// Variable coutn adds more complexity and we do not need it currentl
@@ -132,6 +140,7 @@ namespace MauRen
 			VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT |
 			//VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT |
 			VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT, // Flags for bindless textures
+			0,
 			0,
 			0,
 			0,
@@ -164,7 +173,7 @@ namespace MauRen
 	{
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 
-		std::array<VkDescriptorPoolSize, 8> poolSizes{};
+		std::array<VkDescriptorPoolSize, 9> poolSizes{};
 		poolSizes[UBO_BINDING_SLOT].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 		poolSizes[UBO_BINDING_SLOT].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
 
@@ -188,6 +197,10 @@ namespace MauRen
 
 		poolSizes[GBUFFER_NORMAL_SLOT].type = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
 		poolSizes[GBUFFER_NORMAL_SLOT].descriptorCount = static_cast<uint32_t>(1 * MAX_FRAMES_IN_FLIGHT);
+
+		poolSizes[GBUFFER_METAL_SLOT].type = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+		poolSizes[GBUFFER_METAL_SLOT].descriptorCount = static_cast<uint32_t>(1 * MAX_FRAMES_IN_FLIGHT);
+
 
 		if (MAX_TEXTURES > deviceContext->GetMaxSampledImages())
 		{

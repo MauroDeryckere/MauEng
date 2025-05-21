@@ -27,7 +27,7 @@ layout(location = 3) in vec3 inNormal;
 // GBuffer Out
 layout(location = 0) out vec4 outColor;
 layout(location = 1) out vec2 outNormal;
-
+layout(location = 2) out vec4 outMetal;
 
 void main()
 {
@@ -44,4 +44,5 @@ void main()
 
     outColor = vec4(albedo, 1.0);
     outNormal = n.xy * 0.5 + 0.5;
+    outMetal = vec4(metalRough, 1.0);
 }
