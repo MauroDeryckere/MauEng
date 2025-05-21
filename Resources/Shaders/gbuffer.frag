@@ -11,8 +11,7 @@ struct MaterialData
     vec4 baseColor;
     uint albedoTextureID;
     uint normalTextureID;
-    uint roughnessTextureID;
-    uint metallicTextureID;
+    uint metalnessTextureID;
 };
 
 layout(set = 0, binding = 3) buffer readonly MaterialDataBuffer
@@ -36,6 +35,7 @@ void main()
 
     const vec3 albedo = texture(sampler2D(TextureBuffer[nonuniformEXT(material.albedoTextureID)], globalSampler), fragTexCoord).rgb;
     const vec4 normalTex = texture(sampler2D(TextureBuffer[nonuniformEXT(material.normalTextureID)], globalSampler), fragTexCoord);
+    const vec3 metalRough = texture(sampler2D(TextureBuffer[nonuniformEXT(material.metalnessTextureID)], globalSampler), fragTexCoord).rgb;
 
     const vec3 bitangent = cross(inNormal, inTangent.xyz) * inTangent.w;
     const vec3 sampledNormal = normalize(normalTex.xyz * 2.0 - 1.0);

@@ -39,6 +39,8 @@ namespace MauRen
         EmbeddedTexture embDiffuse{};
         std::string normalMap{ "__DefaultNormal" };
         EmbeddedTexture embNormal{};
+        std::string metalnessRoughnessTexture{ "__DefaultMetalness" };
+        EmbeddedTexture embMetalnessRoughness{};
 	};
 }
 

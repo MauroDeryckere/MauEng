@@ -68,8 +68,7 @@ namespace MauRen
         glm::vec4 baseColor{ 0, 0, 0, 1 };         // not used for now
         uint32_t albedoTextureID{ INVALID_DIFFUSE_TEXTURE_ID };
         uint32_t normalTextureID{ INVALID_NORMAL_TEXTURE_ID };
-        uint32_t roughnessTextureID{ INVALID_AMBIENT_TEXTURE_ID };   // not used for now
-        uint32_t metallicTextureID{ INVALID_SPECULAR_TEXTURE_ID };    // not used for now
+        uint32_t metallicTextureID{ INVALID_METALNESS_TEXTURE_ID };
         //...
 
        // uint32_t flags; // Flags for deletion or active status (0 = active, 1 = marked for deletion)

@@ -6,7 +6,7 @@ namespace MauRen
 {
 	void VulkanGraphicsPipelineContext::Initialize(VulkanSwapchainContext* pSwapChainContext, VkDescriptorSetLayout descriptorSetLayout, uint32_t descriptorSetLayoutCount)
 	{
-		CreateForwardPipeline(pSwapChainContext, descriptorSetLayout, descriptorSetLayoutCount);
+		//CreateForwardPipeline(pSwapChainContext, descriptorSetLayout, descriptorSetLayoutCount);
 		CreateDepthPrePassPipeline(pSwapChainContext, descriptorSetLayout, descriptorSetLayoutCount);
 		CreateDebugGraphicsPipeline(pSwapChainContext, descriptorSetLayout, descriptorSetLayoutCount);
 		CreateGBufferPipeline(pSwapChainContext, descriptorSetLayout, descriptorSetLayoutCount);
