@@ -19,9 +19,27 @@ layout(set = 0, binding = 9) uniform texture2D gDepth;
 layout(location = 0) in vec2 fragUV;
 layout(location = 0) out vec4 outColor;
 
-vec3 GetWorldPosFromDepth()
+vec3 GetWorldPosFromDepth(float depth)
 {
-    return vec3(0, 0, 0);
+	const ivec2 fragCoords = ivec2(gl_FragCoord.xy);
+
+    // Convert from frag coordinate system to NDC
+    vec2 ndc = vec2(
+        (float(fragCoords.x) / ubo.screenSize.x) * 2.0f - 1.0f,
+        (float(fragCoords.y) / ubo.screenSize.y) * 2.0f - 1.0f );
+
+	ndc.y *= -1.f;
+
+	const vec4 clipSpacePos = vec4(ndc, depth, 1.0f);
+
+    // Inverse proj to view space
+	vec4 viewSpacePos = ubo.invProj * clipSpacePos;
+	viewSpacePos /= viewSpacePos.w;
+
+	// Inverse view to world space
+	const vec4 worldSpacePos = ubo.invView * viewSpacePos;
+
+    return worldSpacePos.xyz;
 }
 
 void main()
@@ -42,7 +60,10 @@ void main()
     float nZ = sqrt(max(0.0, 1.0 - dot(nXY, nXY)));
     vec3 normal = normalize(vec3(nXY, nZ));
 
-    const vec3 worldPos = GetWorldPosFromDepth();
+	// Reconstruct world position from depth
+    const vec3 worldPos = GetWorldPosFromDepth(depth);
+
+	const vec3 viewDir = normalize(ubo.cameraPos - worldPos);
 
     vec3 lightDir = normalize(vec3(-1.0, -1.0, -1.0));
     vec3 lightColor = vec3(1.0, 0.95, 0.9);
