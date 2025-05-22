@@ -13,8 +13,12 @@ struct MeshInstanceData
 layout(set = 0, binding = 0) uniform UniformBufferObject
 {
     mat4 viewProj;
+    mat4 invView;
+    mat4 invProj;
     vec3 cameraPos;
+    vec2 screenSize;
 } ubo;
+
 
 // Mesh instance data
 layout(set = 0, binding = 5) buffer readonly MeshInstanceDataBuffer

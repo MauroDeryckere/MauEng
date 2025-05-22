@@ -26,6 +26,7 @@ namespace MauEng
 
 		[[nodiscard]] glm::mat4 const& GetViewMatrix() const noexcept { return m_ViewMatrix; }
 		[[nodiscard]] glm::mat4 const& GetProjectionMatrix() const noexcept { return m_ProjectionMatrix; }
+		[[nodiscard]] glm::vec3 const& GetPosition() const noexcept { return m_Position; }
 
 		void SetPosition(glm::vec3 const& pos) noexcept;
 		void SetFOV(float newFov) noexcept;

@@ -151,9 +151,9 @@ namespace MauRen
 		m_InstanceContext.Destroy();
 	}
 
-	void VulkanRenderer::Render(glm::mat4 const& view, glm::mat4 const& proj)
+	void VulkanRenderer::Render(glm::mat4 const& view, glm::mat4 const& proj, glm::vec2 const& screenSize)
 	{
-		DrawFrame(view, proj);
+		DrawFrame(view, proj, screenSize);
 
 		if (m_DebugRenderer)
 		{
@@ -655,7 +655,7 @@ namespace MauRen
 		}
 	}
 
-	void VulkanRenderer::DrawFrame(glm::mat4 const& view, glm::mat4 const& proj)
+	void VulkanRenderer::DrawFrame(glm::mat4 const& view, glm::mat4 const& proj, glm::vec2 const& screenSize)
 	{
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 
@@ -690,7 +690,7 @@ namespace MauRen
 			vkResetFences(deviceContext->GetLogicalDevice(), 1, &m_InFlightFences[m_CurrentFrame]);
 		}
 
-		UpdateUniformBuffer(m_CurrentFrame, view, proj);
+		UpdateUniformBuffer(m_CurrentFrame, view, proj, screenSize);
 		UpdateDebugVertexBuffer();
 		{
 			ME_PROFILE_SCOPE("Reset command buffer")
@@ -753,14 +753,17 @@ namespace MauRen
 		m_CurrentFrame = (m_CurrentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 	}
 
-	void VulkanRenderer::UpdateUniformBuffer(uint32_t currentImage, glm::mat4 const& view, glm::mat4 const& proj)
+	void VulkanRenderer::UpdateUniformBuffer(uint32_t currentImage, glm::mat4 const& view, glm::mat4 const& proj, glm::vec2 const& screenSize)
 	{
 		ME_PROFILE_FUNCTION()
 
 		UniformBufferObject const ubo
 		{
 				.viewProj = proj * view,
-				.cameraPosition = glm::vec3{ glm::inverse(view)[3] }
+				.invView = glm::inverse(view),
+				.invProj = glm::inverse(proj),
+				.cameraPosition = glm::vec3{ glm::inverse(view)[3] },
+				.screenSize = screenSize,
 		};
 
 		memcpy(m_MappedUniformBuffers[currentImage].mapped, &ubo, sizeof(ubo));

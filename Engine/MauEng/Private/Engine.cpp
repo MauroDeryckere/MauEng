@@ -145,7 +145,7 @@ namespace MauEng
 			if (not IsMinimised)
 			{
 				sceneManager.Tick();
-				sceneManager.Render();
+				sceneManager.Render({m_Window->width, m_Window->height});
 			}
 
 			if constexpr (LIMIT_FPS)
