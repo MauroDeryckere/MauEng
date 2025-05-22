@@ -29,7 +29,10 @@ void main()
     vec3 albedo = texture(sampler2D(gAlbedo, globalSampler), fragUV).rgb;
     vec2 packedNormalXY = texture(sampler2D(gNormal, globalSampler), fragUV).xy;
     vec4 metal = texture(sampler2D(gMetal, globalSampler), fragUV);
-    const float depth = texture(sampler2D(gDepth, globalSampler), fragUV).r;
+
+    const float depth = texelFetch(
+        sampler2D(gDepth, globalSampler), 
+        ivec2(gl_FragCoord.xy), 0).r;
 
 	const float metalness = metal.g;
 	const float roughness = metal.b;
