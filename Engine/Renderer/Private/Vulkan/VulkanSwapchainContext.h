@@ -32,6 +32,7 @@ namespace MauRen
 
 		void Destroy()
 		{
+			metalnessRoughness.Destroy();
 			normal.Destroy();	
 			color.Destroy();
 		}

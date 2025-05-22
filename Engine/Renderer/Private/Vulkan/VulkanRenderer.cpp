@@ -265,56 +265,83 @@ namespace MauRen
 				VK_ACCESS_2_NONE, VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT);
 		}
 
-		std::vector<VkWriteDescriptorSet> descriptorWrites;
+		// Depth
+		if (VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_OPTIMAL != depth.layout)
 		{
-			VkDescriptorImageInfo imageInfo = {};
-			imageInfo.imageView = gBufferColor.imageViews[0];
-			imageInfo.imageLayout = gBufferColor.layout;
-
-			VkWriteDescriptorSet descriptorWriteColor = {};
-			descriptorWriteColor.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-			descriptorWriteColor.dstSet = m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame];
-			descriptorWriteColor.dstBinding = 6;
-			descriptorWriteColor.dstArrayElement = 0;
-			descriptorWriteColor.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
-			descriptorWriteColor.descriptorCount = 1;
-			descriptorWriteColor.pImageInfo = &imageInfo;
-			descriptorWrites.emplace_back(descriptorWriteColor);
+			depth.TransitionImageLayout(commandBuffer,
+				VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_OPTIMAL,
+				VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT, VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT,
+				VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT, VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT);
 		}
 
 		{
-			VkDescriptorImageInfo imageInfo = {};
-			imageInfo.imageView = gBufferNormal.imageViews[0];
-			imageInfo.imageLayout = gBufferNormal.layout;
+			std::vector<VkWriteDescriptorSet> descriptorWrites;
+			{
+				VkDescriptorImageInfo imageInfo = {};
+				imageInfo.imageView = gBufferColor.imageViews[0];
+				imageInfo.imageLayout = gBufferColor.layout;
 
-			VkWriteDescriptorSet descriptorWriteNormal = {};
-			descriptorWriteNormal.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-			descriptorWriteNormal.dstSet = m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame];
-			descriptorWriteNormal.dstBinding = 7;
-			descriptorWriteNormal.dstArrayElement = 0;
-			descriptorWriteNormal.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
-			descriptorWriteNormal.descriptorCount = 1;
-			descriptorWriteNormal.pImageInfo = &imageInfo;
-			descriptorWrites.emplace_back(descriptorWriteNormal);
+				VkWriteDescriptorSet descriptorWriteColor = {};
+				descriptorWriteColor.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+				descriptorWriteColor.dstSet = m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame];
+				descriptorWriteColor.dstBinding = 6;
+				descriptorWriteColor.dstArrayElement = 0;
+				descriptorWriteColor.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+				descriptorWriteColor.descriptorCount = 1;
+				descriptorWriteColor.pImageInfo = &imageInfo;
+				descriptorWrites.emplace_back(descriptorWriteColor);
+			}
+
+			{
+				VkDescriptorImageInfo imageInfo = {};
+				imageInfo.imageView = gBufferNormal.imageViews[0];
+				imageInfo.imageLayout = gBufferNormal.layout;
+
+				VkWriteDescriptorSet descriptorWriteNormal = {};
+				descriptorWriteNormal.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+				descriptorWriteNormal.dstSet = m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame];
+				descriptorWriteNormal.dstBinding = 7;
+				descriptorWriteNormal.dstArrayElement = 0;
+				descriptorWriteNormal.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+				descriptorWriteNormal.descriptorCount = 1;
+				descriptorWriteNormal.pImageInfo = &imageInfo;
+				descriptorWrites.emplace_back(descriptorWriteNormal);
+			}
+
+			{
+				VkDescriptorImageInfo imageInfo = {};
+				imageInfo.imageView = gBufferMetalRough.imageViews[0];
+				imageInfo.imageLayout = gBufferMetalRough.layout;
+
+				VkWriteDescriptorSet descriptorWriteMetal = {};
+				descriptorWriteMetal.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+				descriptorWriteMetal.dstSet = m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame];
+				descriptorWriteMetal.dstBinding = 8;
+				descriptorWriteMetal.dstArrayElement = 0;
+				descriptorWriteMetal.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+				descriptorWriteMetal.descriptorCount = 1;
+				descriptorWriteMetal.pImageInfo = &imageInfo;
+				descriptorWrites.emplace_back(descriptorWriteMetal);
+			}
+
+			{
+				VkDescriptorImageInfo imageInfo = {};
+				imageInfo.imageView = depth.imageViews[0];
+				imageInfo.imageLayout = depth.layout;
+
+				VkWriteDescriptorSet descriptorWriteDepth = {};
+				descriptorWriteDepth.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+				descriptorWriteDepth.dstSet = m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame];
+				descriptorWriteDepth.dstBinding = 9;
+				descriptorWriteDepth.dstArrayElement = 0;
+				descriptorWriteDepth.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+				descriptorWriteDepth.descriptorCount = 1;
+				descriptorWriteDepth.pImageInfo = &imageInfo;
+				descriptorWrites.emplace_back(descriptorWriteDepth);
+			}
+
+			vkUpdateDescriptorSets(deviceContext->GetLogicalDevice(), static_cast<uint32_t>(std::size(descriptorWrites)), descriptorWrites.data(), 0, nullptr);
 		}
-
-		{
-			VkDescriptorImageInfo imageInfo = {};
-			imageInfo.imageView = gBufferMetalRough.imageViews[0];
-			imageInfo.imageLayout = gBufferMetalRough.layout;
-
-			VkWriteDescriptorSet descriptorWriteMetal = {};
-			descriptorWriteMetal.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-			descriptorWriteMetal.dstSet = m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame];
-			descriptorWriteMetal.dstBinding = 8;
-			descriptorWriteMetal.dstArrayElement = 0;
-			descriptorWriteMetal.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
-			descriptorWriteMetal.descriptorCount = 1;
-			descriptorWriteMetal.pImageInfo = &imageInfo;
-			descriptorWrites.emplace_back(descriptorWriteMetal);
-		}
-
-		vkUpdateDescriptorSets(deviceContext->GetLogicalDevice(), static_cast<uint32_t>(std::size(descriptorWrites)), descriptorWrites.data(), 0, nullptr);
 
 #pragma endregion
 #pragma region DEPTH_PREPASS
@@ -342,7 +369,7 @@ namespace MauRen
 			renderInfoDepthPrepass.pColorAttachments = nullptr;
 			renderInfoDepthPrepass.pDepthAttachment = &depthAttachment;
 			renderInfoDepthPrepass.pStencilAttachment = nullptr;
-			
+
 			vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
 			vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 			vkCmdBeginRendering(commandBuffer, &renderInfoDepthPrepass);
@@ -382,14 +409,6 @@ namespace MauRen
 					VK_ACCESS_2_NONE, VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT);
 			}
 
-			// Depth
-			if (VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_OPTIMAL != depth.layout)
-			{
-				depth.TransitionImageLayout(commandBuffer,
-					VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_OPTIMAL,
-					VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT, VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT,
-					VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT, VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT);
-			}
 
 			VkRenderingAttachmentInfo colorAttachment = {};
 			colorAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
@@ -448,8 +467,8 @@ namespace MauRen
 			{
 				colour.TransitionImageLayout(commandBuffer,
 					VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-					VK_PIPELINE_STAGE_2_NONE, VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
-					VK_ACCESS_2_NONE, VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT);
+					VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT, VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
+					VK_ACCESS_2_SHADER_SAMPLED_READ_BIT, VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT);
 			}
 
 			// GBuffer Colour
@@ -465,8 +484,26 @@ namespace MauRen
 			{
 				gBufferNormal.TransitionImageLayout(commandBuffer,
 					VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-					VK_PIPELINE_STAGE_2_NONE, VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
-					VK_ACCESS_2_NONE, VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT);
+					VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT,
+					VK_ACCESS_2_NONE, VK_ACCESS_2_SHADER_READ_BIT);
+			}
+
+
+			if (VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL != gBufferMetalRough.layout)
+			{
+				gBufferMetalRough.TransitionImageLayout(commandBuffer,
+					VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+					VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT,
+					VK_ACCESS_2_NONE, VK_ACCESS_2_SHADER_READ_BIT);
+			}
+
+			// Depth
+			if (VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_OPTIMAL != depth.layout)
+			{
+				depth.TransitionImageLayout(commandBuffer,
+					VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_OPTIMAL,
+					VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT,
+					VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT, VK_ACCESS_2_SHADER_READ_BIT);
 			}
 
 			VkRenderingAttachmentInfo colorAttachment{};
@@ -497,6 +534,15 @@ namespace MauRen
 #pragma endregion
 #pragma region DEBUG_RENDER_PASS
 		{
+			// Depth
+			if (VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL != depth.layout)
+			{
+				depth.TransitionImageLayout(commandBuffer,
+					VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL,
+					VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT, VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT,
+					VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT, VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT);
+			}
+
 			ME_PROFILE_SCOPE("Debug render pass")
 			VkRenderingAttachmentInfo colorAttachment{};
 			colorAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
