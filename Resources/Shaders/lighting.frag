@@ -62,8 +62,8 @@ void main()
 
 
 	const float ao = metal.r;
-	const float metalness = metal.g;
-	const float roughness = metal.b;
+	const float metalness = metal.b;
+	const float roughness = metal.g;
 
 	// Reconstruct normal from packed normal
     vec2 nXY = packedNormalXY * 2.0 - 1.0;
@@ -132,18 +132,26 @@ void main()
     //    //outColor = vec4((L_PL * 0.5 + 0.5).r,0,0, 1.0); // visualize L direction
     //    //outColor = vec4(vec3(NdotL_PL), 1.0);
 
-    //    outColor = vec4((kD * albedo.rgb / gPI + specular_PL) * irradiance_PL * NdotL_PL, 1.f);
+    //   // outColor = vec4((kD * albedo.rgb / gPI + specular_PL) * irradiance_PL * NdotL_PL, 1.f);
     //    lighting += (kD * albedo.rgb / gPI + specular_PL) * irradiance_PL * NdotL_PL;
     //}
 
 
-    const vec3 ambient = vec3(0.03) * albedo.rgb;
+    //const vec3 ambient = vec3(0.03) * albedo.rgb;
 
-	vec3 color = lighting + ambient;
+	vec3 color = lighting;
 
  //   color = color / (color + vec3(1.0f));
 	//color = pow(color, vec3(1.0f / 2.2f));
     outColor = vec4(color, 1.0);
+
+    // Material debugging
+    //outColor = vec4(vec3(metalness), 1.0f);
+    //outColor = vec4(vec3(roughness), 1.0f);
+
+    // Fresnel Debugging
+    //outColor = vec4(F0, 1.0);
+    //outColor = vec4(F, 1.0);
 
 	// LightDir Debugging
     //outColor = vec4(vec3(NdotL), 1.0);
@@ -152,8 +160,8 @@ void main()
     //outColor = vec4(worldPos * 0.1, 1.0); // Scale it down to avoid clamping
 
     // Viewdir debugging
-    //float facing = dot(normal, viewDir);
-    //outColor = vec4(vec3(facing * 0.5 + 0.5), 1.0);
+    float facing = dot(normal, viewDir);
+   // outColor = vec4(vec3(facing * 0.5 + 0.5), 1.0);
 
     //Normal debugging
     //outColor = vec4(normal * 0.5 + 0.5, 1.0);
@@ -191,7 +199,7 @@ float DistributionGGX(vec3 N, vec3 H, float roughness)
 {
     float a = roughness;
 
-    const bool squareRoughness = false;
+    const bool squareRoughness = true;
 	if (squareRoughness)
 		a = a * a;
 
