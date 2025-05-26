@@ -166,7 +166,7 @@ namespace MauGam
 		}
 
 		//DEBUG_RENDERER.DrawCylinder({}, { 100, 100, 100 }, {}, {1,1,1}, 100);
-
+		DEBUG_RENDERER.DrawSphere({ 0, -5, 0 }, 10.f);
 		using namespace MauEng;
 		{
 			std::random_device rd;  // Random device for seed 
@@ -198,7 +198,7 @@ namespace MauGam
 						{
 							if (r++ % 2)
 							{
-								t.Rotate(rot);
+							//	t.Rotate(rot);
 							}
 
 						}, std::execution::par_unseq);
