@@ -44,8 +44,8 @@ struct PointLight
 const int numPointLights = 2;
 const PointLight pointLights[numPointLights] = PointLight[]
 (
-    PointLight(vec3(0, -10, 0), vec3(1.0, 0, 0), 1),
-    PointLight(vec3(-4.0, 3.0, 2.0), vec3(0.6, 0.8, 1.0), 1)
+    PointLight(vec3(-10, -10, 0), vec3(1.0, 0, 0), 3),
+    PointLight(vec3(10, -10, 0), vec3(0, 0, 1.0), 3)
 );
 
 void main()
@@ -105,47 +105,49 @@ void main()
     kD *= 1.0 - metalness;
 
     float NdotL = max(dot(normal, lightDir), 0.0);
-    vec3 lighting = (kD * albedo.rgb / gPI + specular) * irradiance * NdotL;
+    vec3 lighting = ((kD * albedo.rgb / gPI) * ao + specular) * irradiance * NdotL;
 
-    //// Point Lights
-    //for (int i = 0; i < 1; ++i)
-    //{
-    //    vec3 lightVec_PL = pointLights[i].position - worldPos;
-    //    float dist_PL = length(lightVec_PL);
-    //    vec3 L_PL = normalize(lightVec_PL);
-    //    // Works; whats diff when its light vec PL?
-    //    /*-normalize(vec3(0.577f, -0.577f, -0.577f))*/
+    // Point Lights
+    for (int i = 0; i < numPointLights; ++i)
+    {
+        vec3 lightVec_PL = pointLights[i].position - worldPos;
+        float dist_PL = length(lightVec_PL);
+        vec3 L_PL = normalize(lightVec_PL);
+        // Works; whats diff when its light vec PL?
+        /*-normalize(vec3(0.577f, -0.577f, -0.577f))*/
 
-    //    //float attenuation = 1.0 / (dist * dist);
-    //    vec3 irradiance_PL = pointLights[i].color * pointLights[i].intensity /** attenuation*/;
+        //float attenuation = 1.0 / (dist * dist);
+        vec3 irradiance_PL = pointLights[i].color * pointLights[i].intensity /** attenuation*/;
 
-    //    vec3 H_PL = normalize(viewDir + L_PL);
-    //    vec3 F_PL = FresnelSchlick(max(dot(H_PL, viewDir), 0.0f), F0);
-    //    float NDF_PL = DistributionGGX(normal, H_PL, roughness);
-    //    float G_PL = GeometrySmith(normal, viewDir, L_PL, roughness);
-    //    vec3 numerator_PL = NDF_PL * G_PL * F_PL;
-    //    float denominator_PL = 4.0 * max(dot(normal, viewDir), 0.0) * max(dot(normal, L_PL), 0.0) + 0.0001;
-    //    vec3 specular_PL = numerator_PL / denominator_PL;
+        vec3 H_PL = normalize(viewDir + L_PL);
+        vec3 F_PL = FresnelSchlick(max(dot(H_PL, viewDir), 0.0f), F0);
+        float NDF_PL = DistributionGGX(normal, H_PL, roughness);
+        float G_PL = GeometrySmith(normal, viewDir, L_PL, roughness);
+        vec3 numerator_PL = NDF_PL * G_PL * F_PL;
+        float denominator_PL = 4.0 * max(dot(normal, viewDir), 0.0) * max(dot(normal, L_PL), 0.0) + 0.0001;
+        vec3 specular_PL = numerator_PL / denominator_PL;
 
-    //    float NdotL_PL = max(dot(normal, L_PL), 0.0);
-    //    // LightDir Debugging
-    //    //outColor = vec4((L_PL * 0.5 + 0.5).r,0,0, 1.0); // visualize L direction
-    //    //outColor = vec4(vec3(NdotL_PL), 1.0);
+        float NdotL_PL = max(dot(normal, L_PL), 0.0);
+        // LightDir Debugging
+        //outColor = vec4((L_PL * 0.5 + 0.5).r,0,0, 1.0); // visualize L direction
+        //outColor = vec4(vec3(NdotL_PL), 1.0);
+        
+        //outColor = vec4(((kD * albedo.rgb / gPI) * ao + specular_PL) * irradiance_PL * NdotL_PL, 1.f);
 
-    //   // outColor = vec4((kD * albedo.rgb / gPI + specular_PL) * irradiance_PL * NdotL_PL, 1.f);
-    //    lighting += (kD * albedo.rgb / gPI + specular_PL) * irradiance_PL * NdotL_PL;
-    //}
+        lighting += ((kD * albedo.rgb / gPI) * ao + specular_PL) * irradiance_PL * NdotL_PL;
+    }
 
 
-    //const vec3 ambient = vec3(0.03) * albedo.rgb;
+    const vec3 ambient = vec3(0.03) * albedo.rgb;
 
-	vec3 color = lighting;
+	vec3 color = lighting + ambient;
 
- //   color = color / (color + vec3(1.0f));
+    //color = color / (color + vec3(1.0f));
 	//color = pow(color, vec3(1.0f / 2.2f));
     outColor = vec4(color, 1.0);
 
     // Material debugging
+    //outColor = vec4(vec3(ao), 1.0f);
     //outColor = vec4(vec3(metalness), 1.0f);
     //outColor = vec4(vec3(roughness), 1.0f);
 
@@ -160,8 +162,8 @@ void main()
     //outColor = vec4(worldPos * 0.1, 1.0); // Scale it down to avoid clamping
 
     // Viewdir debugging
-    float facing = dot(normal, viewDir);
-   // outColor = vec4(vec3(facing * 0.5 + 0.5), 1.0);
+    //float facing = dot(normal, viewDir);
+    //outColor = vec4(vec3(facing * 0.5 + 0.5), 1.0);
 
     //Normal debugging
     //outColor = vec4(normal * 0.5 + 0.5, 1.0);
@@ -178,7 +180,7 @@ vec3 GetWorldPosFromDepth(float depth)
 
     ndc.y *= -1.f;
 
-    const vec4 clipSpacePos = vec4(ndc, depth, 1.0f);
+    const vec4 clipSpacePos = vec4(ndc, depth * 2.0f - 1.0f, 1.0f);
 
     // Inverse proj to view space
     vec4 viewSpacePos = ubo.invProj * clipSpacePos;
