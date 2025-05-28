@@ -44,31 +44,32 @@ struct PointLight
 const int numPointLights = 2;
 const PointLight pointLights[numPointLights] = PointLight[]
 (
-    PointLight(vec3(-10, -10, 0), vec3(1.0, 0, 0), 3),
-    PointLight(vec3(10, -10, 0), vec3(0, 0, 1.0), 3)
+    PointLight(vec3(100, 50, 0), vec3(0, 0, 1.0), 1000000),
+    PointLight(vec3(-100, 50, 50), vec3(1.0, 0, 0), 1000000)
 );
 
 void main()
 {
-    vec4 albedo = texture(sampler2D(gAlbedo, globalSampler), fragUV);
-    vec2 packedNormalXY = texture(sampler2D(gNormal, globalSampler), fragUV).xy;
-    vec4 metal = texture(sampler2D(gMetal, globalSampler), fragUV);
+    const vec4 albedo = texture(sampler2D(gAlbedo, globalSampler), fragUV);
+    const vec2 packedNormalXY = texture(sampler2D(gNormal, globalSampler), fragUV).xy;
+    const vec4 metal = texture(sampler2D(gMetal, globalSampler), fragUV);
 
+    const ivec2 pixelCoords = ivec2(gl_FragCoord.xy);
     const float depth = texelFetch(
         sampler2D(gDepth, globalSampler), 
-        ivec2(gl_FragCoord.xy), 0).r;
+        pixelCoords, 0).r;
 
-    if (depth == 1.0) discard;
+    //if (depth == 1.0) discard;
 
 
 	const float ao = metal.r;
 	const float metalness = metal.b;
-	const float roughness = metal.g;
+	const float roughness = clamp(metal.g, 0.05, 1.0);
 
 	// Reconstruct normal from packed normal
-    vec2 nXY = packedNormalXY * 2.0 - 1.0;
-    float nZ = sqrt(max(0.0, 1.0 - dot(nXY, nXY)));
-    vec3 normal = normalize(vec3(nXY, nZ));
+    const vec2 nXY = packedNormalXY * 2.0 - 1.0;
+    const float nZ = sqrt(max(0.0, 1.0 - dot(nXY, nXY)));
+    const vec3 normal = normalize(vec3(nXY, nZ));
 
 	// Reconstruct world position from depth
     const vec3 worldPos = GetWorldPosFromDepth(depth);
@@ -76,13 +77,14 @@ void main()
 	const vec3 viewDir = normalize(ubo.cameraPos - worldPos);
 
     // Lighting
-    const vec3 lightDir = -normalize(vec3(0.577f, -0.577f, -0.577f));
+    //const vec3 lightDir = -normalize(vec3(0, -1, 0));
+    //const vec3 lightDir = -normalize(vec3(-1, -1, 0));
+    const vec3 lightDir = -normalize(vec3(-1, -1, -1));
+
+
+
     const vec3 lightColor = vec3(1.0, 0.95, 0.9);
     const float intensity = 2.0f;
-
-    //const float distance = length(lightPositions[i] - WorldPos);
-    //const float attenuation = 1.0f / (distance * distance);
-    //const vec3 radiance = lightColor * attenuation;
     
     // Only dir light for now
     const vec3 irradiance = lightColor * intensity;
@@ -111,38 +113,42 @@ void main()
     for (int i = 0; i < numPointLights; ++i)
     {
         vec3 lightVec_PL = pointLights[i].position - worldPos;
-        float dist_PL = length(lightVec_PL);
+        const float dist_PL = length(lightVec_PL);
         vec3 L_PL = normalize(lightVec_PL);
-        // Works; whats diff when its light vec PL?
-        /*-normalize(vec3(0.577f, -0.577f, -0.577f))*/
 
-        //float attenuation = 1.0 / (dist * dist);
-        vec3 irradiance_PL = pointLights[i].color * pointLights[i].intensity /** attenuation*/;
+        const float attenuation = 1.0 / (dist_PL * dist_PL + 0.0001);
+        const vec3 irradiance_PL = pointLights[i].color * pointLights[i].intensity * attenuation;
 
-        vec3 H_PL = normalize(viewDir + L_PL);
-        vec3 F_PL = FresnelSchlick(max(dot(H_PL, viewDir), 0.0f), F0);
-        float NDF_PL = DistributionGGX(normal, H_PL, roughness);
-        float G_PL = GeometrySmith(normal, viewDir, L_PL, roughness);
-        vec3 numerator_PL = NDF_PL * G_PL * F_PL;
-        float denominator_PL = 4.0 * max(dot(normal, viewDir), 0.0) * max(dot(normal, L_PL), 0.0) + 0.0001;
-        vec3 specular_PL = numerator_PL / denominator_PL;
+        const vec3 H_PL = normalize(viewDir + L_PL);
+        const vec3 F_PL = FresnelSchlick(max(dot(H_PL, viewDir), 0.0f), F0);
+        const float NDF_PL = DistributionGGX(normal, H_PL, roughness);
+        const float G_PL = GeometrySmith(normal, viewDir, L_PL, roughness);
+        const vec3 numerator_PL = NDF_PL * G_PL * F_PL;
+        const float denominator_PL = 4.0 * max(dot(normal, viewDir), 0.0) * max(dot(normal, L_PL), 0.0) + 0.0001;
+        const vec3 specular_PL = numerator_PL / denominator_PL;
 
-        float NdotL_PL = max(dot(normal, L_PL), 0.0);
+        const vec3 kS_PL = F_PL;
+        vec3 kD_PL = vec3(1.0) - kS_PL;
+        kD_PL *= 1.0 - metalness;
+
+        const float NdotL_PL = max(dot(normal, L_PL), 0.0);
         // LightDir Debugging
         //outColor = vec4((L_PL * 0.5 + 0.5).r,0,0, 1.0); // visualize L direction
+        //outColor = vec4(vec3(NdotL_PL, 0, 0), 1.0);
         //outColor = vec4(vec3(NdotL_PL), 1.0);
         
         //outColor = vec4(((kD * albedo.rgb / gPI) * ao + specular_PL) * irradiance_PL * NdotL_PL, 1.f);
 
-        lighting += ((kD * albedo.rgb / gPI) * ao + specular_PL) * irradiance_PL * NdotL_PL;
+        //vec3 lambert = albedo.rgb * max(dot(normal, L_PL), 0.0);
+        //outColor = vec4(lambert, 1.0);
+       
+        lighting += ((kD_PL * albedo.rgb / gPI) * ao + specular_PL) * irradiance_PL * NdotL_PL;
     }
 
-
     const vec3 ambient = vec3(0.03) * albedo.rgb;
+    const vec3 color = lighting + ambient;
 
-	vec3 color = lighting + ambient;
-
-    //color = color / (color + vec3(1.0f));
+    //olor = color / (color + vec3(1.0f));
 	//color = pow(color, vec3(1.0f / 2.2f));
     outColor = vec4(color, 1.0);
 
@@ -154,12 +160,18 @@ void main()
     // Fresnel Debugging
     //outColor = vec4(F0, 1.0);
     //outColor = vec4(F, 1.0);
+    //outColor = vec4(G, 0, 0, 1.0);
+    //outColor = vec4(NDF, 0, 0, 1.0);
+    //outColor = vec4(numerator, 1.0);
+
+    //outColor = vec4(specular, 1.0);
 
 	// LightDir Debugging
-    //outColor = vec4(vec3(NdotL), 1.0);
+    outColor = vec4(vec3(NdotL), 1.0);
 
     // WorldPos debugging
-    //outColor = vec4(worldPos * 0.1, 1.0); // Scale it down to avoid clamping
+    //outColor = vec4(worldPos, 1.0);
+    //outColor = vec4(worldPos * 0.1f, 1.0); // Scale it down to avoid clamping
 
     // Viewdir debugging
     //float facing = dot(normal, viewDir);
@@ -171,16 +183,14 @@ void main()
 
 vec3 GetWorldPosFromDepth(float depth)
 {
-    const ivec2 fragCoords = ivec2(gl_FragCoord.xy);
-
     // Convert from frag coordinate system to NDC
     vec2 ndc = vec2(
-        (float(fragCoords.x) / ubo.screenSize.x) * 2.0f - 1.0f,
-        (float(fragCoords.y) / ubo.screenSize.y) * 2.0f - 1.0f);
+        (fragUV.x * 2 - 1),
+        (/*1 - */(fragUV.y * 2 - 1)));
 
-    ndc.y *= -1.f;
+    //ndc.y *= -1.f;
 
-    const vec4 clipSpacePos = vec4(ndc, depth * 2.0f - 1.0f, 1.0f);
+    const vec4 clipSpacePos = vec4(ndc, (depth /** 2.0f - 1.0f*/), 1.0f);
 
     // Inverse proj to view space
     vec4 viewSpacePos = ubo.invProj * clipSpacePos;
