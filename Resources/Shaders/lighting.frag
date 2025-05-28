@@ -65,10 +65,11 @@ void main()
 	const float ao = metal.r;
 	const float metalness = metal.b;
 	const float roughness = clamp(metal.g, 0.05, 1.0);
+	const float nSignZ = metal.a * 2.0 - 1.0;
 
 	// Reconstruct normal from packed normal
     const vec2 nXY = packedNormalXY * 2.0 - 1.0;
-    const float nZ = sqrt(max(0.0, 1.0 - dot(nXY, nXY)));
+    const float nZ = nSignZ * sqrt(max(0.0, 1.0 - dot(nXY, nXY)));
     const vec3 normal = normalize(vec3(nXY, nZ));
 
 	// Reconstruct world position from depth
@@ -167,7 +168,7 @@ void main()
     //outColor = vec4(specular, 1.0);
 
 	// LightDir Debugging
-    outColor = vec4(vec3(NdotL), 1.0);
+    //outColor = vec4(vec3(NdotL), 1.0);
 
     // WorldPos debugging
     //outColor = vec4(worldPos, 1.0);

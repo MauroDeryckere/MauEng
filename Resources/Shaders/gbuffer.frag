@@ -42,7 +42,10 @@ void main()
     const mat3 TBN = mat3(normalize(inTangent.xyz), normalize(bitangent), inNormal);
     const vec3 n = normalize(TBN * sampledNormal);
 
+    float nzSign = n.z < 0.0 ? 0.0 : 1.0;
+    vec3 mr = metalRough.rgb;
+
     outColor = vec4(albedo, 1.0);
     outNormal = n.xy * 0.5 + 0.5;
-    outMetal = vec4(metalRough, 1.0);
+    outMetal = vec4(mr, nzSign);
 }
