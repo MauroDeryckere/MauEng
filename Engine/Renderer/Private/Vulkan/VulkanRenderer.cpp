@@ -763,7 +763,7 @@ namespace MauRen
 				.invView = glm::inverse(view),
 				.invProj = glm::inverse(proj),
 				.cameraPosition = glm::vec3{ glm::inverse(view)[3] },
-				.screenSize = screenSize,
+				.screenSize = { m_SwapChainContext.GetExtent().width, m_SwapChainContext.GetExtent().height }
 		};
 
 		memcpy(m_MappedUniformBuffers[currentImage].mapped, &ubo, sizeof(ubo));

@@ -22,7 +22,7 @@ namespace MauGam
 			auto& transform{ enttCar.GetComponent<CTransform>() };
 			transform.Scale({ .5f, .5f, .5f });
 
-//			enttCar.AddComponent<CStaticMesh>("Resources/Models/old_rusty_car/scene.gltf");
+		//	enttCar.AddComponent<CStaticMesh>("Resources/Models/old_rusty_car/scene.gltf");
 		}
 
 		{
@@ -166,7 +166,20 @@ namespace MauGam
 		}
 
 		//DEBUG_RENDERER.DrawCylinder({}, { 100, 100, 100 }, {}, {1,1,1}, 100);
-		//DEBUG_RENDERER.DrawSphere({ 0, -5, 0 }, 10.f);
+		DEBUG_RENDERER.DrawSphere({ -100, 50, 50 }, 10.f, {}, {1, 0, 0});
+		DEBUG_RENDERER.DrawSphere({ 100, 50, 0 }, 10.f, {}, {0, 0, 1});
+		//PointLight(vec3(-10, -10, 0), vec3(1.0, 0, 0), 3),
+		//	PointLight(vec3(10, -10, 0), vec3(0, 0, 1.0), 3)
+
+		glm::vec3 start = {0, 100, 0};
+		//glm::vec3 dir = -glm::normalize(glm::vec3(0, -1, 0));
+		glm::vec3 dir = -glm::normalize(glm::vec3(-1, -1, -1));
+		float length = 10.0f;
+
+		glm::vec3 end = start + dir * length;
+
+		DEBUG_RENDERER.DrawArrow(start, end, {}, { 1, 1, 1 }, 1.f);
+
 		using namespace MauEng;
 		{
 			std::random_device rd;  // Random device for seed 
