@@ -274,6 +274,15 @@ namespace MauRen
 				VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT, VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT);
 		}
 
+		// Colour
+		if (VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL != colour.layout)
+		{
+			colour.TransitionImageLayout(commandBuffer,
+				VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+				VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT, VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT,
+				VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT, VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT);
+		}
+
 		{
 			std::vector<VkWriteDescriptorSet> descriptorWrites;
 			{
@@ -338,6 +347,22 @@ namespace MauRen
 				descriptorWriteDepth.descriptorCount = 1;
 				descriptorWriteDepth.pImageInfo = &imageInfo;
 				descriptorWrites.emplace_back(descriptorWriteDepth);
+			}
+
+			{
+				VkDescriptorImageInfo imageInfo = {};
+				imageInfo.imageView = colour.imageViews[0];
+				imageInfo.imageLayout = colour.layout;
+
+				VkWriteDescriptorSet descriptorWriteColor = {};
+				descriptorWriteColor.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+				descriptorWriteColor.dstSet = m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame];
+				descriptorWriteColor.dstBinding = 10;
+				descriptorWriteColor.dstArrayElement = 0;
+				descriptorWriteColor.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+				descriptorWriteColor.descriptorCount = 1;
+				descriptorWriteColor.pImageInfo = &imageInfo;
+				descriptorWrites.emplace_back(descriptorWriteColor);
 			}
 
 			vkUpdateDescriptorSets(deviceContext->GetLogicalDevice(), static_cast<uint32_t>(std::size(descriptorWrites)), descriptorWrites.data(), 0, nullptr);
