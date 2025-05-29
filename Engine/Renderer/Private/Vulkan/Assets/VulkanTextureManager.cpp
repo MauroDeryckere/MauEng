@@ -143,37 +143,45 @@ namespace MauRen
 	{
 		// 0
 		auto defaultWhiteTexture{ Create1x1Texture(cmdPoolManager, glm::vec4(1.0f), false) };
-		descriptorContext.BindTexture(m_Textures.size(), defaultWhiteTexture.imageViews[0], VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		descriptorContext.BindTexture(static_cast<uint32_t>(std::size(m_Textures)), defaultWhiteTexture.imageViews[0], VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 		m_Textures.emplace_back(std::move(defaultWhiteTexture));
-		m_TextureIDMap["__DefaultWhite"] = m_Textures.size() - 1;
+		m_TextureIDMap["__DefaultWhite"] = static_cast<uint32_t>(std::size(m_Textures) - 1);
 
 		// 1
 		auto defaultGrayTexture{ Create1x1Texture(cmdPoolManager, glm::vec4(.5f), false) };
-		descriptorContext.BindTexture(m_Textures.size(), defaultGrayTexture.imageViews[0], VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		descriptorContext.BindTexture(static_cast<uint32_t>(std::size(m_Textures)), defaultGrayTexture.imageViews[0], VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 		m_Textures.emplace_back(std::move(defaultGrayTexture));
-		m_TextureIDMap["__DefaultGray"] = m_Textures.size() - 1;
+		m_TextureIDMap["__DefaultGray"] = static_cast<uint32_t>(std::size(m_Textures) - 1);
 
 		// 2
 		auto defaultNormalTexture{ Create1x1Texture(cmdPoolManager, glm::vec4(0.5f, 0.5f, 1.0f, 1.0f), false) };
-		descriptorContext.BindTexture(m_Textures.size(), defaultNormalTexture.imageViews[0], VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		descriptorContext.BindTexture(static_cast<uint32_t>(std::size(m_Textures)), defaultNormalTexture.imageViews[0], VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 		m_Textures.emplace_back(std::move(defaultNormalTexture));
-		m_TextureIDMap["__DefaultNormal"] = m_Textures.size() - 1;
+		m_TextureIDMap["__DefaultNormal"] = static_cast<uint32_t>(std::size(m_Textures) - 1);
 
 		// 3
 		auto defaultBlackTexture{ Create1x1Texture(cmdPoolManager, glm::vec4(0.0f), false) };
-		descriptorContext.BindTexture(m_Textures.size(), defaultBlackTexture.imageViews[0], VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		descriptorContext.BindTexture(static_cast<uint32_t>(std::size(m_Textures)), defaultBlackTexture.imageViews[0], VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 		m_Textures.emplace_back(std::move(defaultBlackTexture));
-		m_TextureIDMap["__DefaultBlack"] = m_Textures.size() - 1;
+		m_TextureIDMap["__DefaultBlack"] = static_cast<uint32_t>(std::size(m_Textures) - 1);
 
 		// 4
+		auto defaultMetalnessTexture{ Create1x1Texture(cmdPoolManager, glm::vec4(1.0f, 1.0f, 0.f, 1.0f), false) };
+		descriptorContext.BindTexture(static_cast<uint32_t>(std::size(m_Textures)), defaultMetalnessTexture.imageViews[0], VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+		m_Textures.emplace_back(std::move(defaultMetalnessTexture));
+		m_TextureIDMap["__DefaultMetalness"] = static_cast<uint32_t>(std::size(m_Textures) - 1);
+
+		// 5
 		auto invalidTexture{ Create1x1Texture(cmdPoolManager, glm::vec4(1.0f, 0.0f, 1.0f, 1.0f), false) };
-		descriptorContext.BindTexture(m_Textures.size(), invalidTexture.imageViews[0], VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		descriptorContext.BindTexture(static_cast<uint32_t>(std::size(m_Textures)), invalidTexture.imageViews[0], VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 		m_Textures.emplace_back(std::move(invalidTexture));
-		m_TextureIDMap["__DefaultInvalid"] = m_Textures.size() - 1;
+		m_TextureIDMap["__DefaultInvalid"] = static_cast<uint32_t>(std::size(m_Textures) - 1);
+
 	}
 
 	VulkanImage VulkanTextureManager::CreateTextureImage(VulkanCommandPoolManager& cmdPoolManager, std::string const& path, bool isNorm)

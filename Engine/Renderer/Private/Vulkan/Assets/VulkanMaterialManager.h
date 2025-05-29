@@ -53,8 +53,7 @@ namespace MauRen
 
 		void InitMaterialBuffers();
 
-		void CreateDefaultMaterial(VulkanCommandPoolManager& cmdPoolManager,
-			VulkanDescriptorContext& descContext);
+		void CreateDefaultMaterial(VulkanCommandPoolManager& cmdPoolManager, VulkanDescriptorContext& descContext);
 	};
 }
 

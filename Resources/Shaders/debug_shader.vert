@@ -3,8 +3,12 @@
 layout(set = 0, binding = 0) uniform UniformBufferObject
 {
     mat4 viewProj;
+    mat4 invView;
+    mat4 invProj;
     vec3 cameraPos;
+    vec2 screenSize;
 } ubo;
+
 
 layout(location = 0) in vec3 inPosition;
 layout(location = 1) in vec3 inColor;

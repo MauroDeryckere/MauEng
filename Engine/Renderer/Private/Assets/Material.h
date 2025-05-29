@@ -37,12 +37,10 @@ namespace MauRen
 
         std::string diffuseTexture{ "__DefaultWhite" };
         EmbeddedTexture embDiffuse{};
-        std::string specularTexture{ "__DefaultGray" };
-        EmbeddedTexture embSpecular{};
         std::string normalMap{ "__DefaultNormal" };
         EmbeddedTexture embNormal{};
-        std::string ambientTexture{ "__DefaultGray" };
-        EmbeddedTexture embAmbient{};
+        std::string metalnessRoughnessTexture{ "__DefaultMetalness" };
+        EmbeddedTexture embMetalnessRoughness{};
 	};
 }
 

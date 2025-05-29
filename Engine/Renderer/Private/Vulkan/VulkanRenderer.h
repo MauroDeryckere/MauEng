@@ -41,7 +41,7 @@ namespace MauRen
 		virtual void Init() override;
 		virtual void Destroy() override;
 
-		virtual void Render(glm::mat4 const& view, glm::mat4 const& proj) override;
+		virtual void Render(glm::mat4 const& view, glm::mat4 const& proj, glm::vec2 const& screenSize) override;
 		virtual void ResizeWindow() override;
 
 		virtual void QueueDraw(glm::mat4 const& transformMat, MauEng::CStaticMesh const& mesh) override;
@@ -84,8 +84,17 @@ namespace MauRen
 		struct alignas(16) UniformBufferObject final
 		{
 			glm::mat4 viewProj;
+			glm::mat4 invView;
+			glm::mat4 invProj;
 			glm::vec3 cameraPosition;
+			glm::vec2 screenSize;
+
+			// Room for 3 more floats (padding) e.g time,...
+			//float padding01;
+			//float padding02;
+			//float padding03;
 		};
+
 		std::vector<VulkanMappedBuffer> m_MappedUniformBuffers{};
 
 		VulkanBuffer m_DebugVertexBuffer{};
@@ -117,9 +126,9 @@ namespace MauRen
 
 		void CreateSyncObjects();
 
-		void DrawFrame(glm::mat4 const& view, glm::mat4 const& proj);
+		void DrawFrame(glm::mat4 const& view, glm::mat4 const& proj, glm::vec2 const& screenSize);
 		void RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
-		void UpdateUniformBuffer(uint32_t currentImage, glm::mat4 const& view, glm::mat4 const& proj);
+		void UpdateUniformBuffer(uint32_t currentImage, glm::mat4 const& view, glm::mat4 const& proj, glm::vec2 const& screenSize);
 
 		// Recreate the swapchain on e.g a window resize
 		bool RecreateSwapchain();

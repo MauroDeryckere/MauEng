@@ -101,16 +101,25 @@ namespace MauRen
 			vkMat.normalTextureID = m_TextureManager->LoadOrGetTexture(cmdPoolManager, descriptorContext, material.normalMap, true);
 		}
 
+		if (material.embMetalnessRoughness)
+		{
+			vkMat.metallicTextureID = m_TextureManager->LoadOrGetTexture(cmdPoolManager, descriptorContext, material.embMetalnessRoughness.hash, material.embMetalnessRoughness, true);
+		}
+		else
+		{
+			vkMat.metallicTextureID = m_TextureManager->LoadOrGetTexture(cmdPoolManager, descriptorContext, material.metalnessRoughnessTexture, true);
+		}
+
 		m_Materials.emplace_back(vkMat);
 
 		// Upload the material id if new
 		{
 			VkDeviceSize constexpr MAT_SIZE{ sizeof(MaterialData) };
 
-			for (size_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; ++i)
+			for (uint32_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; ++i)
 			{
 				// Write to CPU-visible buffer
-				uint8_t* basePtr = static_cast<uint8_t*>(m_MaterialDataBuffers[i].mapped);
+				uint8_t* basePtr{ static_cast<uint8_t*>(m_MaterialDataBuffers[i].mapped) };
 				std::memcpy(basePtr + (m_Materials.size() - 1) * MAT_SIZE, &vkMat, MAT_SIZE);
 
 				// Describe buffer for descriptor

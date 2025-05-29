@@ -20,15 +20,19 @@ namespace MauRen
 		VulkanImage color;	// diffuse RGB, A unused currently
 
 		VulkanImage normal; // R16 == Normal X; G16 == Normal Y
+		VulkanImage metalnessRoughness; // R8 == Opacity; G8 == Metalness, B8 == Roughness, A8 == Normals Z sign
+
 		// Depth  is reused from previous stages
-		static std::array<VkFormat, 2> constexpr formats
+		static std::array<VkFormat, 3> constexpr formats
 		{
 			VK_FORMAT_R8G8B8A8_SRGB,
-			VK_FORMAT_R16G16_SFLOAT
+			VK_FORMAT_R16G16_UNORM,
+			VK_FORMAT_R8G8B8A8_UNORM
 		};
 
 		void Destroy()
 		{
+			metalnessRoughness.Destroy();
 			normal.Destroy();	
 			color.Destroy();
 		}

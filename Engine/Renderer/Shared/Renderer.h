@@ -20,7 +20,7 @@ namespace MauRen
 		virtual void Init() = 0;
 		virtual void Destroy() = 0;
 
-		virtual void Render(glm::mat4 const& view, glm::mat4 const& proj) = 0;
+		virtual void Render(glm::mat4 const& view, glm::mat4 const& proj, glm::vec2 const& screenSize) = 0;
 
 		virtual void ResizeWindow() = 0;
 

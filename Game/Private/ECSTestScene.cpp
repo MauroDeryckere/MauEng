@@ -22,7 +22,7 @@ namespace MauGam
 			auto& transform{ enttCar.GetComponent<CTransform>() };
 			transform.Scale({ .5f, .5f, .5f });
 
-//			enttCar.AddComponent<CStaticMesh>("Resources/Models/old_rusty_car/scene.gltf");
+		//	enttCar.AddComponent<CStaticMesh>("Resources/Models/old_rusty_car/scene.gltf");
 		}
 
 		{
@@ -50,11 +50,11 @@ namespace MauGam
 			Entity entSpider{ CreateEntity() };
 			auto& transform{ entSpider.GetComponent<CTransform>() };
 			//transform.Scale({ .05f, .05f, .05f });
-			entSpider.AddComponent<CStaticMesh>("Resources/Models/Spider/spider.obj");
+			//entSpider.AddComponent<CStaticMesh>("Resources/Models/Spider/spider.obj");
 		}
 
 
-		bool constexpr ENABLE_HIGH_INSTANCE_TEST{ true };
+		bool constexpr ENABLE_HIGH_INSTANCE_TEST{ false };
 		//uint32_t constexpr NUM_INSTANCES{ 75'000 };
 		uint32_t constexpr NUM_INSTANCES{ 10'000 };
 		if constexpr (ENABLE_HIGH_INSTANCE_TEST)
@@ -165,7 +165,20 @@ namespace MauGam
 			m_CameraManager.GetActiveCamera().RotateY(-mouseMovement.second * rot);
 		}
 
-		DEBUG_RENDERER.DrawCylinder({}, { 100, 100, 100 }, {}, {1,1,1}, 100);
+		//DEBUG_RENDERER.DrawCylinder({}, { 100, 100, 100 }, {}, {1,1,1}, 100);
+		DEBUG_RENDERER.DrawSphere({ -100, 50, 50 }, 10.f, {}, {1, 0, 0});
+		DEBUG_RENDERER.DrawSphere({ 100, 50, 0 }, 10.f, {}, {0, 0, 1});
+		//PointLight(vec3(-10, -10, 0), vec3(1.0, 0, 0), 3),
+		//	PointLight(vec3(10, -10, 0), vec3(0, 0, 1.0), 3)
+
+		glm::vec3 start = {0, 100, 0};
+		//glm::vec3 dir = -glm::normalize(glm::vec3(0, -1, 0));
+		glm::vec3 dir = -glm::normalize(glm::vec3(-1, -1, -1));
+		float length = 10.0f;
+
+		glm::vec3 end = start + dir * length;
+
+		DEBUG_RENDERER.DrawArrow(start, end, {}, { 1, 1, 1 }, 1.f);
 
 		using namespace MauEng;
 		{
@@ -173,9 +186,9 @@ namespace MauGam
 			std::mt19937 gen(rd()); // Mersenne Twister generator
 			std::uniform_real_distribution<float> dis(0,2); // Random translation range
 
-			int r = dis(gen);
-
-			float constexpr rotationSpeed{ 90.0f * 2 };
+			//int r = dis(gen);
+			int r = 1;
+			float constexpr rotationSpeed{ 30.f * 2 };
 			ME_PROFILE_SCOPE("UPDATES")
 			{
 				//{
@@ -190,18 +203,18 @@ namespace MauGam
 
 				{
 					// Group is faster.
-					//ME_PROFILE_SCOPE("GROUP")
+					ME_PROFILE_SCOPE("GROUP")
 
-					//MauCor::Rotator const rot{ 0, rotationSpeed * TIME.ElapsedSec() };
-					//auto group{ GetECSWorld().Group<CStaticMesh, CTransform>() };
-					//group.Each([&rot, &r](CStaticMesh const& m, CTransform& t)
-					//	{
-					//		if (r++ % 2)
-					//		{
-					//			t.Rotate(rot);
-					//		}
+					MauCor::Rotator const rot{ 0, rotationSpeed * TIME.ElapsedSec() };
+					auto group{ GetECSWorld().Group<CStaticMesh, CTransform>() };
+					group.Each([&rot, &r](CStaticMesh const& m, CTransform& t)
+						{
+							if (r++ % 2)
+							{
+							//	t.Rotate(rot);
+							}
 
-					//	}, std::execution::par_unseq);
+						}, std::execution::par_unseq);
 				}
 
 			}

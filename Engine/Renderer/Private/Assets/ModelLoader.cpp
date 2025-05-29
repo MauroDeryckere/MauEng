@@ -203,8 +203,8 @@ namespace MauRen
 		}
 
 
-		if (material->GetTexture(aiTextureType_SPECULAR, 0, &texPath) == AI_SUCCESS)
-			mat.specularTexture = texPath.C_Str();
+		//if (material->GetTexture(aiTextureType_SPECULAR, 0, &texPath) == AI_SUCCESS)
+		//	mat.specularTexture = texPath.C_Str();
 
 		if (material->GetTextureCount(aiTextureType_NORMALS) > 0)
 		{
@@ -223,8 +223,25 @@ namespace MauRen
 			}
 		}
 
-		if (material->GetTexture(aiTextureType_AMBIENT, 0, &texPath) == AI_SUCCESS)
-			mat.ambientTexture = texPath.C_Str();
+		if (material->GetTextureCount(aiTextureType_METALNESS) > 0)
+		{
+			if (material->GetTexture(aiTextureType_METALNESS, 0, &texPath) == AI_SUCCESS)
+			{
+				if (texPath.C_Str()[0] == '*')
+				{
+					int const texIndex{ atoi(texPath.C_Str() + 1) };
+					const aiTexture* tex{ scene->mTextures[texIndex] };
+					mat.embMetalnessRoughness = ExtractEmbeddedTexture(tex);
+				}
+				else
+				{
+					mat.metalnessRoughnessTexture = (modelDir / texPath.C_Str()).string();
+				}
+			}
+		}
+
+		//if (material->GetTexture(aiTextureType_AMBIENT, 0, &texPath) == AI_SUCCESS)
+		//	mat.ambientTexture = texPath.C_Str();
 
 		//if (material->GetTexture(aiTextureType_DISPLACEMENT, 0, &texPath) == AI_SUCCESS)
 		//	mat.displacementMap = texPath.C_Str();

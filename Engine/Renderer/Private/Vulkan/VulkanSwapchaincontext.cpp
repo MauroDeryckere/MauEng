@@ -233,7 +233,7 @@ namespace MauRen
 	void VulkanSwapchainContext::CreateColorResources()
 	{
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
-		VkFormat const colorFormat{ GetImageFormat() };
+		VkFormat const colorFormat{ VK_FORMAT_R32G32B32A32_SFLOAT };
 
 		for (size_t i{ 0 }; i< MAX_FRAMES_IN_FLIGHT; ++i)
 		{
@@ -241,7 +241,7 @@ namespace MauRen
 				VulkanImage{
 					colorFormat,
 					VK_IMAGE_TILING_OPTIMAL,
-					VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT ,
+					VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_SAMPLED_BIT ,
 					VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
 					deviceContext->GetSampleCount(),
 					GetExtent().width,
@@ -263,7 +263,7 @@ namespace MauRen
 			{
 				depthFormat,
 				VK_IMAGE_TILING_OPTIMAL,
-				VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+				VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
 				VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
 				deviceContext->GetSampleCount(),
 				GetExtent().width,
@@ -308,6 +308,19 @@ namespace MauRen
 				1
 			};
 			g.normal.CreateImageView(VK_IMAGE_ASPECT_COLOR_BIT);
+
+			g.metalnessRoughness = VulkanImage
+			{
+				GBuffer::formats[2],
+				VK_IMAGE_TILING_OPTIMAL,
+				VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT ,
+				VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+				VK_SAMPLE_COUNT_1_BIT,
+				GetExtent().width,
+				GetExtent().height,
+				1
+			};
+			g.metalnessRoughness.CreateImageView(VK_IMAGE_ASPECT_COLOR_BIT);
 
 			m_GBuffers.emplace_back(g);
 		}
