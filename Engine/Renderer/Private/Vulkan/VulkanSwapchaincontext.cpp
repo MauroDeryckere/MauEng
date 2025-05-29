@@ -233,7 +233,7 @@ namespace MauRen
 	void VulkanSwapchainContext::CreateColorResources()
 	{
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
-		VkFormat const colorFormat{ GetImageFormat() };
+		VkFormat const colorFormat{ VK_FORMAT_R32G32B32A32_SFLOAT };
 
 		for (size_t i{ 0 }; i< MAX_FRAMES_IN_FLIGHT; ++i)
 		{

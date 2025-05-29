@@ -20,7 +20,7 @@ namespace MauRen
 		VulkanImage color;	// diffuse RGB, A unused currently
 
 		VulkanImage normal; // R16 == Normal X; G16 == Normal Y
-		VulkanImage metalnessRoughness;
+		VulkanImage metalnessRoughness; // R8 == Opacity; G8 == Metalness, B8 == Roughness, A8 == Normals Z sign
 
 		// Depth  is reused from previous stages
 		static std::array<VkFormat, 3> constexpr formats

@@ -33,6 +33,9 @@ namespace MauRen
 		[[nodiscard]] VkPipeline GetLightingPipeline() const noexcept { return m_LightPassPipeline; }
 		[[nodiscard]] VkPipelineLayout GetLightingPipelineLayout() const noexcept { return m_LightPassPipelineLayout; }
 
+		[[nodiscard]] VkPipeline GetToneMapPipeline() const noexcept { return m_ToneMapPipeline; }
+		[[nodiscard]] VkPipelineLayout GetToneMapPipelineLayout() const noexcept { return m_ToneMapPipelineLayout; }
+
 		VulkanGraphicsPipelineContext(VulkanGraphicsPipelineContext const&) = delete;
 		VulkanGraphicsPipelineContext(VulkanGraphicsPipelineContext&&) = delete;
 		VulkanGraphicsPipelineContext& operator=(VulkanGraphicsPipelineContext const&) = delete;
@@ -54,11 +57,15 @@ namespace MauRen
 		VkPipelineLayout m_LightPassPipelineLayout{ VK_NULL_HANDLE };
 		VkPipeline m_LightPassPipeline{ VK_NULL_HANDLE };
 
+		VkPipelineLayout m_ToneMapPipelineLayout{ VK_NULL_HANDLE };
+		VkPipeline m_ToneMapPipeline{ VK_NULL_HANDLE };
+
 		void CreateForwardPipeline(VulkanSwapchainContext* pSwapChainContext, VkDescriptorSetLayout descriptorSetLayout, uint32_t descriptorSetLayoutCount);
 		void CreateDepthPrePassPipeline(VulkanSwapchainContext* pSwapChainContext, VkDescriptorSetLayout descriptorSetLayout, uint32_t descriptorSetLayoutCount);
 		void CreateDebugGraphicsPipeline(VulkanSwapchainContext* pSwapChainContext, VkDescriptorSetLayout descriptorSetLayout, uint32_t descriptorSetLayoutCount);
 		void CreateGBufferPipeline(VulkanSwapchainContext* pSwapChainContext, VkDescriptorSetLayout descriptorSetLayout, uint32_t descriptorSetLayoutCount);
 		void CreateLightPassPipeline(VulkanSwapchainContext* pSwapChainContext, VkDescriptorSetLayout descriptorSetLayout, uint32_t descriptorSetLayoutCount);
+		void CreateToneMapPipeline(VulkanSwapchainContext* pSwapChainContext, VkDescriptorSetLayout descriptorSetLayout, uint32_t descriptorSetLayoutCount);
 
 		static [[nodiscard]] std::vector<char> ReadFile(std::filesystem::path const& filepath);
 		static [[nodiscard]] VkShaderModule CreateShaderModule(std::vector<char> const& code);

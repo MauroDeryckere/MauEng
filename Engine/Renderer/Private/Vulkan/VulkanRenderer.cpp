@@ -573,48 +573,89 @@ namespace MauRen
 			vkCmdEndRendering(commandBuffer);
 		}
 #pragma endregion
+#pragma region TONEMAP
+		{
+			// Swapchain Colour
+			auto& swapColor{ m_SwapChainContext.GetSwapchainImages()[imageIndex] };
+			if (VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL != swapColor.layout)
+			{
+				swapColor.TransitionImageLayout(commandBuffer,
+					VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+					VK_PIPELINE_STAGE_2_NONE, VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
+					VK_ACCESS_2_NONE, VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT);
+			}
+
+			ME_PROFILE_SCOPE("Tone Map pass")
+
+
+			VkRenderingAttachmentInfo colorAttachment{};
+			colorAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+			colorAttachment.imageView = m_SwapChainContext.GetSwapchainImages()[imageIndex].imageViews[0];
+			colorAttachment.imageLayout = colour.layout;
+			colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+			colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+			colorAttachment.clearValue = CLEAR_VALUES[COLOR_CLEAR_ID];
+
+			VkRenderingInfo renderInfo{};
+			renderInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
+			renderInfo.renderArea = VkRect2D{ VkOffset2D{ 0, 0 }, m_SwapChainContext.GetExtent() };
+			renderInfo.layerCount = 1;
+			renderInfo.colorAttachmentCount = 1;
+			renderInfo.pColorAttachments = &colorAttachment;
+			renderInfo.pDepthAttachment = nullptr;
+			renderInfo.pStencilAttachment = nullptr;
+
+			vkCmdBeginRendering(commandBuffer, &renderInfo);
+				VkDeviceSize constexpr offset{ 0 };
+				vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipelineContext.GetToneMapPipeline());
+				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipelineContext.GetToneMapPipelineLayout(), 0, 1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame], 0, nullptr);
+				vkCmdBindVertexBuffers(commandBuffer, 0, 1, &m_QuadVertexBuffer.buffer, &offset);
+				vkCmdDraw(commandBuffer, 6, 1, 0, 0);
+			vkCmdEndRendering(commandBuffer);
+		}
+#pragma endregion
 #pragma region POST_DRAW
 		{
 			ME_PROFILE_SCOPE("Post draw")
 
 			VulkanMeshManager::GetInstance().PostDraw(commandBuffer, m_GraphicsPipelineContext.GetForwardPipelineLayout(), 1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame], m_CurrentFrame);
 
-			colour.TransitionImageLayout(
-				commandBuffer,
-				VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-				VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
-				VK_PIPELINE_STAGE_2_TRANSFER_BIT,
-				VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT,
-				VK_ACCESS_2_TRANSFER_READ_BIT
-			);
+			//colour.TransitionImageLayout(
+			//	commandBuffer,
+			//	VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+			//	VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
+			//	VK_PIPELINE_STAGE_2_TRANSFER_BIT,
+			//	VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT,
+			//	VK_ACCESS_2_TRANSFER_READ_BIT
+			//);
 
-			if (VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL != m_SwapChainContext.GetSwapchainImages()[imageIndex].layout)
-			{
-				m_SwapChainContext.GetSwapchainImages()[imageIndex].TransitionImageLayout(commandBuffer,
-					VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-					VK_PIPELINE_STAGE_2_NONE, VK_PIPELINE_STAGE_2_TRANSFER_BIT,
-					VK_ACCESS_2_NONE, VK_ACCESS_2_TRANSFER_WRITE_BIT);
-			}
+			//if (VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL != m_SwapChainContext.GetSwapchainImages()[imageIndex].layout)
+			//{
+			//	m_SwapChainContext.GetSwapchainImages()[imageIndex].TransitionImageLayout(commandBuffer,
+			//		VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+			//		VK_PIPELINE_STAGE_2_NONE, VK_PIPELINE_STAGE_2_TRANSFER_BIT,
+			//		VK_ACCESS_2_NONE, VK_ACCESS_2_TRANSFER_WRITE_BIT);
+			//}
 
-			VkImageCopy copyRegion = {};
-			copyRegion.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-			copyRegion.srcSubresource.mipLevel = 0;
-			copyRegion.srcSubresource.baseArrayLayer = 0;
-			copyRegion.srcSubresource.layerCount = 1;
-			copyRegion.srcOffset = { 0, 0, 0 };
+			//VkImageCopy copyRegion = {};
+			//copyRegion.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+			//copyRegion.srcSubresource.mipLevel = 0;
+			//copyRegion.srcSubresource.baseArrayLayer = 0;
+			//copyRegion.srcSubresource.layerCount = 1;
+			//copyRegion.srcOffset = { 0, 0, 0 };
 
-			copyRegion.dstSubresource = copyRegion.srcSubresource;
-			copyRegion.dstOffset = { 0, 0, 0 };
+			//copyRegion.dstSubresource = copyRegion.srcSubresource;
+			//copyRegion.dstOffset = { 0, 0, 0 };
 
-			copyRegion.extent = { m_SwapChainContext.GetExtent().width, m_SwapChainContext.GetExtent().height, 1 };
+			//copyRegion.extent = { m_SwapChainContext.GetExtent().width, m_SwapChainContext.GetExtent().height, 1 };
 
-			vkCmdCopyImage(
-				commandBuffer,
-				colour.image, colour.layout,
-				m_SwapChainContext.GetSwapchainImages()[imageIndex].image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-				1, &copyRegion
-			);
-			m_SwapChainContext.GetSwapchainImages()[imageIndex].layout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+			//vkCmdCopyImage(
+			//	commandBuffer,
+			//	colour.image, colour.layout,
+			//	m_SwapChainContext.GetSwapchainImages()[imageIndex].image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+			//	1, &copyRegion
+			//);
+			//m_SwapChainContext.GetSwapchainImages()[imageIndex].layout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
 			m_SwapChainContext.GetSwapchainImages()[imageIndex].TransitionImageLayout(commandBuffer,
 				VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
 				VK_PIPELINE_STAGE_2_TRANSFER_BIT, VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT,
