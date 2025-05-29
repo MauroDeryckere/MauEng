@@ -419,7 +419,7 @@ namespace MauRen
 		}
 
 
-		VkFormat colorFormat = pSwapChainContext->GetColorImage(0).format;
+		VkFormat colorFormat = pSwapChainContext->GetSwapchainImages()[0].format;
 		std::vector<VkFormat> formats;
 		formats.emplace_back(colorFormat);
 

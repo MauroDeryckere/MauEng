@@ -557,47 +557,6 @@ namespace MauRen
 			vkCmdEndRendering(commandBuffer);
 		}
 #pragma endregion
-#pragma region DEBUG_RENDER_PASS
-		{
-			// Depth
-			if (VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL != depth.layout)
-			{
-				depth.TransitionImageLayout(commandBuffer,
-					VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL,
-					VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT, VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT,
-					VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT, VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT);
-			}
-
-			ME_PROFILE_SCOPE("Debug render pass")
-			VkRenderingAttachmentInfo colorAttachment{};
-			colorAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
-			colorAttachment.imageView = colour.imageViews[0];
-			colorAttachment.imageLayout = colour.layout;
-			colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
-			colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-			colorAttachment.clearValue = CLEAR_VALUES[COLOR_CLEAR_ID];
-
-			VkRenderingAttachmentInfo depthAttachment{};
-			depthAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
-			depthAttachment.imageView = depth.imageViews[0];
-			depthAttachment.imageLayout = depth.layout;
-			depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
-			depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-			depthAttachment.clearValue = CLEAR_VALUES[DEPTH_CLEAR_ID];
-
-			VkRenderingInfo renderInfo{};
-			renderInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
-			renderInfo.renderArea = VkRect2D{ VkOffset2D{ 0, 0 }, m_SwapChainContext.GetExtent() };
-			renderInfo.layerCount = 1;
-			renderInfo.colorAttachmentCount = 1;
-			renderInfo.pColorAttachments = &colorAttachment;
-			renderInfo.pDepthAttachment = &depthAttachment;
-			renderInfo.pStencilAttachment = nullptr;
-			vkCmdBeginRendering(commandBuffer, &renderInfo);
-				RenderDebug(commandBuffer, false);
-			vkCmdEndRendering(commandBuffer);
-		}
-#pragma endregion
 #pragma region TONEMAP
 		{
 			//  Colour
@@ -645,6 +604,49 @@ namespace MauRen
 				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipelineContext.GetToneMapPipelineLayout(), 0, 1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame], 0, nullptr);
 				vkCmdBindVertexBuffers(commandBuffer, 0, 1, &m_QuadVertexBuffer.buffer, &offset);
 				vkCmdDraw(commandBuffer, 6, 1, 0, 0);
+			vkCmdEndRendering(commandBuffer);
+		}
+#pragma endregion
+#pragma region DEBUG_RENDER_PASS
+		{
+			ME_PROFILE_SCOPE("Debug render pass")
+			auto& swapColor{ m_SwapChainContext.GetSwapchainImages()[imageIndex] };
+
+			// Depth
+			if (VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL != depth.layout)
+			{
+				depth.TransitionImageLayout(commandBuffer,
+					VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL,
+					VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT, VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT,
+					VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT, VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT);
+			}
+
+			VkRenderingAttachmentInfo colorAttachment{};
+			colorAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+			colorAttachment.imageView = swapColor.imageViews[0];
+			colorAttachment.imageLayout = swapColor.layout;
+			colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+			colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+			colorAttachment.clearValue = CLEAR_VALUES[COLOR_CLEAR_ID];
+
+			VkRenderingAttachmentInfo depthAttachment{};
+			depthAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+			depthAttachment.imageView = depth.imageViews[0];
+			depthAttachment.imageLayout = depth.layout;
+			depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+			depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+			depthAttachment.clearValue = CLEAR_VALUES[DEPTH_CLEAR_ID];
+
+			VkRenderingInfo renderInfo{};
+			renderInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
+			renderInfo.renderArea = VkRect2D{ VkOffset2D{ 0, 0 }, m_SwapChainContext.GetExtent() };
+			renderInfo.layerCount = 1;
+			renderInfo.colorAttachmentCount = 1;
+			renderInfo.pColorAttachments = &colorAttachment;
+			renderInfo.pDepthAttachment = &depthAttachment;
+			renderInfo.pStencilAttachment = nullptr;
+			vkCmdBeginRendering(commandBuffer, &renderInfo);
+			RenderDebug(commandBuffer, false);
 			vkCmdEndRendering(commandBuffer);
 		}
 #pragma endregion
