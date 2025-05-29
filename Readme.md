@@ -126,11 +126,14 @@ Reduce overdaw by doing a depth prepass.
 Assimp is integrated, and all formats supported by Assimp can be used to load meshes & materials. Meshes are split up in submeshes, these submeshes are then instanced.
 Default and invalid materials are used to prevent branching on the GPU.
 
+- Lighting & Material 
+ 
+- Tone map & Exposure 
+![Screenshot](docs/FlightHelmetExample.png)
+
+
 ### Features I want to add in the near future
-- Full material support (currently only supports diffuse & normal maps textures)
-- Lighting (BRDF)
 - GPU frustrum culling
-- Lighting (currently very basic hard coded light dir is supported)
 - Deleting / hiding meshes
 - Auto exposure
 
