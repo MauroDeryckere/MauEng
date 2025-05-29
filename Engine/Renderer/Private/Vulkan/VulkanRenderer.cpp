@@ -600,6 +600,15 @@ namespace MauRen
 #pragma endregion
 #pragma region TONEMAP
 		{
+			//  Colour
+			if (VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL != colour.layout)
+			{
+				colour.TransitionImageLayout(commandBuffer,
+					VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+					VK_PIPELINE_STAGE_2_NONE, VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
+					VK_ACCESS_2_NONE, VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT);
+			}
+
 			// Swapchain Colour
 			auto& swapColor{ m_SwapChainContext.GetSwapchainImages()[imageIndex] };
 			if (VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL != swapColor.layout)
@@ -615,8 +624,8 @@ namespace MauRen
 
 			VkRenderingAttachmentInfo colorAttachment{};
 			colorAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
-			colorAttachment.imageView = m_SwapChainContext.GetSwapchainImages()[imageIndex].imageViews[0];
-			colorAttachment.imageLayout = colour.layout;
+			colorAttachment.imageView = swapColor.imageViews[0];
+			colorAttachment.imageLayout = swapColor.layout;
 			colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 			colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
 			colorAttachment.clearValue = CLEAR_VALUES[COLOR_CLEAR_ID];
