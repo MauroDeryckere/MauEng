@@ -98,7 +98,25 @@ namespace MauGam
 			l.type = ELightType::POINT;
 			l.direction_position = { 100.f, 50, 0 };
 			l.intensity = 1000000.f;
-			l.lightColour = { 0.f, 1.f, 0.f };
+			l.lightColour = { 0.f, 0.f, 1.f };
+		}
+
+		{
+			Entity entLightTest{ CreateEntity() };
+
+			auto& l = entLightTest.AddComponent<CLight>();
+			l.type = ELightType::POINT;
+			l.direction_position = { -100.f, 50, 0 };
+			l.intensity = 1000000.f;
+			l.lightColour = { 1.f, 0.f, 0.f };
+		}
+
+		{
+			Entity entLightTest{ CreateEntity() };
+
+			auto& l = entLightTest.AddComponent<CLight>();
+			l.intensity = 10000.f;
+			l.lightColour = { 1.f, 1.f, 0.f };
 		}
 	}
 
@@ -175,20 +193,33 @@ namespace MauGam
 			m_CameraManager.GetActiveCamera().RotateY(-mouseMovement.second * rot);
 		}
 
+		auto view = GetECSWorld().View<MauEng::CLight>();
+		view.Each([](MauEng::CLight const& l)
+		{
+			switch (l.type)
+			{
+			case MauEng::ELightType::DIRECTIONAL:
+				{
+					glm::vec3 start = { 0, 100, 0 };
+					glm::vec3 dir = glm::normalize(l.direction_position);
+					float length = std::clamp(l.intensity / 10000.f, 2.f, 20.f);
+					glm::vec3 end = start + dir * length;
+
+					DEBUG_RENDERER.DrawArrow(start, end, {}, l.lightColour, 1.f);
+
+					break;
+				}
+
+			case MauEng::ELightType::POINT:
+				DEBUG_RENDERER.DrawSphere(l.direction_position, std::clamp(l.intensity/10000.f, 2.f, 20.f), {}, l.lightColour);
+				break;
+			case MauEng::ELightType::COUNT:
+				break;
+			default: ;
+			}
+		});
+
 		//DEBUG_RENDERER.DrawCylinder({}, { 100, 100, 100 }, {}, {1,1,1}, 100);
-		DEBUG_RENDERER.DrawSphere({ -100, 50, 50 }, 10.f, {}, {1, 0, 0});
-		DEBUG_RENDERER.DrawSphere({ 100, 50, 0 }, 10.f, {}, {0, 0, 1});
-		//PointLight(vec3(-10, -10, 0), vec3(1.0, 0, 0), 3),
-		//	PointLight(vec3(10, -10, 0), vec3(0, 0, 1.0), 3)
-
-		glm::vec3 start = {0, 100, 0};
-		//glm::vec3 dir = -glm::normalize(glm::vec3(0, -1, 0));
-		glm::vec3 dir = -glm::normalize(glm::vec3(-1, -1, -1));
-		float length = 10.0f;
-
-		glm::vec3 end = start + dir * length;
-
-		DEBUG_RENDERER.DrawArrow(start, end, {}, { 1, 1, 1 }, 1.f);
 
 		using namespace MauEng;
 		{
