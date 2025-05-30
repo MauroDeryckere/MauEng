@@ -193,7 +193,7 @@ namespace MauRen
 		LightBufferBinding.binding = LIGHT_BUFFER_SLOT;
 		LightBufferBinding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
 		LightBufferBinding.descriptorCount = MAX_SHADOW_MAPS;
-		LightBufferBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+		LightBufferBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_VERTEX_BIT;
 		LightBufferBinding.pImmutableSamplers = nullptr;
 
 		std::array const bindings {

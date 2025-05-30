@@ -14,6 +14,8 @@ namespace MauEng
 
 namespace MauRen
 {
+	class VulkanSwapchainContext;
+	class VulkanGraphicsPipelineContext;
 	class VulkanDescriptorContext;
 
 	class VulkanLightManager final : public MauCor::Singleton<VulkanLightManager>
@@ -25,6 +27,8 @@ namespace MauRen
 		[[nodiscard]] uint32_t GetNumLights() const noexcept { return static_cast<uint32_t>(std::size(m_Lights)); }
 
 		[[nodiscard]] uint32_t CreateLight();
+
+		void Draw(VkCommandBuffer const& commandBuffer, VulkanGraphicsPipelineContext const& graphicsPipelineContext, VulkanDescriptorContext& descriptorContext, VulkanSwapchainContext& swapChainContext, uint32_t frame);
 
 		void PreDraw(VkCommandBuffer commandBuffer, VkPipelineLayout layout, uint32_t setCount, VkDescriptorSet const* pDescriptorSets, uint32_t frame);
 		void QueueLight(VulkanCommandPoolManager& cmdPoolManager, VulkanDescriptorContext& descriptorContext, MauEng::CLight const& light);
@@ -50,6 +54,11 @@ namespace MauRen
 
 		// 1:1 copy of the shadow maps on GPU
 		std::vector<VulkanImage> m_ShadowMaps;
+
+		struct ShadowPassPushConstant final
+		{
+			uint32_t lightIndex;
+		};
 
 		void CreateDefaultShadowMap(VulkanCommandPoolManager& cmdPoolManager, VulkanDescriptorContext& descriptorContext, uint32_t width, uint32_t height);
 		void CreateShadowMap(VulkanCommandPoolManager& cmdPoolManager, uint32_t width, uint32_t height);

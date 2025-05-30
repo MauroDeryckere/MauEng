@@ -10,6 +10,8 @@ namespace MauRen
 	// Light that's stored on the GPU
 	struct alignas(16) Light final
 	{
+		glm::mat4 lightViewProj;
+
 		// Direction for directional lights, position for point lights
 		glm::vec3 direction_position{ 0.0f, -1.0f, 0.0f };
 		// Light type: 0 = directional, 1 = point

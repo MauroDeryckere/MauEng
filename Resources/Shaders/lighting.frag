@@ -26,6 +26,8 @@ layout(set = 0, binding = 9) uniform texture2D gDepth;
 
 struct Light
 {
+    mat4 viewProj;
+
     // Direction for directional lights, position for point lights
     vec3 direction_position;
     // Light type: 0 = directional, 1 = point
@@ -76,6 +78,11 @@ void main()
     const float depth = texelFetch(
         sampler2D(gDepth, globalSampler), 
         pixelCoords, 0).r;
+
+    if (depth == 1.0f)
+    {
+        discard;
+    }
 
 	const float ao = metal.r;
 	const float metalness = metal.b;

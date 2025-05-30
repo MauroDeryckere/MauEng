@@ -418,7 +418,12 @@ namespace MauRen
 			vkCmdEndRendering(commandBuffer);
 		}
 #pragma endregion
-
+#pragma region SHADOW_PASS
+		{
+			ME_PROFILE_SCOPE("Shadow Pass")
+			VulkanLightManager::GetInstance().Draw(commandBuffer, m_GraphicsPipelineContext, m_DescriptorContext, m_SwapChainContext, m_CurrentFrame);
+		}
+#pragma endregion
 #pragma region GBUFFER_PASS
 		{
 			ME_PROFILE_SCOPE("GBuffer pass")

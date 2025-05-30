@@ -177,6 +177,14 @@ namespace MauRen
 		pipelineLayoutInfo.setLayoutCount = descriptorSetLayoutCount;
 		pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
 
+			VkPushConstantRange pushConstantRange{};
+			pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+			pushConstantRange.offset = 0;
+			pushConstantRange.size = sizeof(uint32_t);
+
+		pipelineLayoutInfo.pushConstantRangeCount = 1;
+		pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
+
 		if (vkCreatePipelineLayout(deviceContext->GetLogicalDevice(), &pipelineLayoutInfo, nullptr, &m_ForwardPipelineLayout) != VK_SUCCESS)
 		{
 			throw std::runtime_error("Failed to create pipeline layout!");
@@ -340,6 +348,14 @@ namespace MauRen
 		pipelineLayoutInfo.setLayoutCount = descriptorSetLayoutCount;
 		pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
 
+			VkPushConstantRange pushConstantRange{};
+			pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+			pushConstantRange.offset = 0;
+			pushConstantRange.size = sizeof(uint32_t);
+
+		pipelineLayoutInfo.pushConstantRangeCount = 1;
+		pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
+
 		if (VK_SUCCESS != vkCreatePipelineLayout(deviceContext->GetLogicalDevice(), &pipelineLayoutInfo, nullptr, &m_DepthPrePassPipelineLayout))
 		{
 			throw std::runtime_error("Failed to create pipeline layout!");
@@ -495,11 +511,18 @@ namespace MauRen
 		depthStencil.depthBoundsTestEnable = VK_FALSE;
 		depthStencil.stencilTestEnable = VK_FALSE;
 
-
 		VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 		pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 		pipelineLayoutInfo.setLayoutCount = descriptorSetLayoutCount;
 		pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
+
+			VkPushConstantRange pushConstantRange{};
+			pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+			pushConstantRange.offset = 0;
+			pushConstantRange.size = sizeof(uint32_t);
+
+		pipelineLayoutInfo.pushConstantRangeCount = 1;
+		pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
 
 		if (VK_SUCCESS != vkCreatePipelineLayout(deviceContext->GetLogicalDevice(), &pipelineLayoutInfo, nullptr, &m_ShadowPassPipelineLayout))
 		{
@@ -573,6 +596,13 @@ namespace MauRen
 		pipelineLayoutInfo.setLayoutCount = descriptorSetLayoutCount;
 		pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
 
+			VkPushConstantRange pushConstantRange{};
+			pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+			pushConstantRange.offset = 0;
+			pushConstantRange.size = sizeof(uint32_t);
+
+		pipelineLayoutInfo.pushConstantRangeCount = 1;
+		pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
 
 		if (VK_SUCCESS != vkCreatePipelineLayout(deviceContext->GetLogicalDevice(), &pipelineLayoutInfo, nullptr, &m_DebugPipelineLayout))
 		{
@@ -843,6 +873,14 @@ namespace MauRen
 		pipelineLayoutInfo.setLayoutCount = descriptorSetLayoutCount;
 		pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
 
+			VkPushConstantRange pushConstantRange{};
+			pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+			pushConstantRange.offset = 0;
+			pushConstantRange.size = sizeof(uint32_t);
+
+		pipelineLayoutInfo.pushConstantRangeCount = 1;
+		pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
+
 		if (vkCreatePipelineLayout(deviceContext->GetLogicalDevice(), &pipelineLayoutInfo, nullptr, &m_GBufferPipelineLayout) != VK_SUCCESS)
 		{
 			throw std::runtime_error("Failed to create pipeline layout!");
@@ -1027,6 +1065,14 @@ namespace MauRen
 		pipelineLayoutInfo.setLayoutCount = descriptorSetLayoutCount;
 		pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
 
+			VkPushConstantRange pushConstantRange{};
+			pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+			pushConstantRange.offset = 0;
+			pushConstantRange.size = sizeof(uint32_t);
+
+		pipelineLayoutInfo.pushConstantRangeCount = 1;
+		pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
+
 		if (VK_SUCCESS != vkCreatePipelineLayout(deviceContext->GetLogicalDevice(), &pipelineLayoutInfo, nullptr, &m_LightPassPipelineLayout))
 		{
 			throw std::runtime_error("Failed to create pipeline layout!");
@@ -1210,6 +1256,14 @@ namespace MauRen
 		pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 		pipelineLayoutInfo.setLayoutCount = descriptorSetLayoutCount;
 		pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
+
+			VkPushConstantRange pushConstantRange{};
+			pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+			pushConstantRange.offset = 0;
+			pushConstantRange.size = sizeof(uint32_t);
+
+		pipelineLayoutInfo.pushConstantRangeCount = 1;
+		pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
 
 		if (VK_SUCCESS != vkCreatePipelineLayout(deviceContext->GetLogicalDevice(), &pipelineLayoutInfo, nullptr, &m_ToneMapPipelineLayout))
 		{

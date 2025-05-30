@@ -126,7 +126,6 @@ namespace MauRen
 		}; 
 		VulkanBuffer m_QuadVertexBuffer{};
 
-
 		void CreateUniformBuffers();
 
 		void CreateSyncObjects();

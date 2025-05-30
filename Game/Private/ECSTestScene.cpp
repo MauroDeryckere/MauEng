@@ -54,8 +54,7 @@ namespace MauGam
 		}
 
 
-		bool constexpr ENABLE_HIGH_INSTANCE_TEST{ false };
-		//uint32_t constexpr NUM_INSTANCES{ 75'000 };
+		bool constexpr ENABLE_HIGH_INSTANCE_TEST{ true };
 		uint32_t constexpr NUM_INSTANCES{ 10'000 };
 		if constexpr (ENABLE_HIGH_INSTANCE_TEST)
 		{
@@ -91,26 +90,24 @@ namespace MauGam
 
 		input.BindAction("Rotate", MauEng::MouseInfo{ {},   MauEng::MouseInfo::ActionType::Moved });
 
-		{
-			Entity entLightTest{ CreateEntity() };
+		//{
+		//	Entity entLightTest{ CreateEntity() };
 
-			auto& l = entLightTest.AddComponent<CLight>();
-			l.type = ELightType::POINT;
-			l.direction_position = { 100.f, 50, 0 };
-			l.intensity = 1000000.f;
-			l.lightColour = { 0.f, 0.f, 1.f };
-		}
+		//	auto& l = entLightTest.AddComponent<CLight>();
+		//	l.type = ELightType::POINT;
+		//	l.direction_position = { 100.f, 50, 0 };
+		//	l.intensity = 1000000.f;
+		//	l.lightColour = { 0.f, 0.f, 1.f };
+		//}
+		//{
+		//	Entity entLightTest{ CreateEntity() };
 
-		{
-			Entity entLightTest{ CreateEntity() };
-
-			auto& l = entLightTest.AddComponent<CLight>();
-			l.type = ELightType::POINT;
-			l.direction_position = { -100.f, 50, 0 };
-			l.intensity = 1000000.f;
-			l.lightColour = { 1.f, 0.f, 0.f };
-		}
-
+		//	auto& l = entLightTest.AddComponent<CLight>();
+		//	l.type = ELightType::POINT;
+		//	l.direction_position = { -100.f, 50, 0 };
+		//	l.intensity = 1000000.f;
+		//	l.lightColour = { 1.f, 0.f, 0.f };
+		//}
 		{
 			Entity entLightTest{ CreateEntity() };
 
