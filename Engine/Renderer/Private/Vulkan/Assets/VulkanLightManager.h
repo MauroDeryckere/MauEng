@@ -5,6 +5,7 @@
 #include "VulkanImage.h"
 
 #include "Assets/Light.h"
+#include "Vulkan/VulkanBuffer.h"
 
 namespace MauEng
 {
@@ -18,10 +19,16 @@ namespace MauRen
 	class VulkanLightManager final : public MauCor::Singleton<VulkanLightManager>
 	{
 	public:
-		void Initialize(VulkanCommandPoolManager& cmdPoolManager);
+		void Initialize(VulkanCommandPoolManager& cmdPoolManager, VulkanDescriptorContext& descriptorContext);
 		void Destroy();
 
-		void AddLight(VulkanCommandPoolManager& cmdPoolManager, VulkanDescriptorContext& descriptorContext, MauEng::CLight const& light);
+		[[nodiscard]] uint32_t GetNumLights() const noexcept { return static_cast<uint32_t>(std::size(m_Lights)); }
+
+		[[nodiscard]] uint32_t CreateLight();
+
+		void PreDraw(VkCommandBuffer commandBuffer, VkPipelineLayout layout, uint32_t setCount, VkDescriptorSet const* pDescriptorSets, uint32_t frame);
+		void QueueLight(VulkanCommandPoolManager& cmdPoolManager, VulkanDescriptorContext& descriptorContext, MauEng::CLight const& light);
+		void PostDraw();
 
 		VulkanLightManager(VulkanLightManager const&) = delete;
 		VulkanLightManager(VulkanLightManager&&) = delete;
@@ -33,16 +40,21 @@ namespace MauRen
 		VulkanLightManager() = default;
 		virtual ~VulkanLightManager() override = default;
 
+		uint32_t m_NextLightID{ 0 };
+		uint32_t m_NextShadowMapID{ 1 };
+
 		std::unordered_map<uint32_t, uint32_t> m_LightShadowMapIDMap;
 
-		// TODO Light Buffer - GPU
 		std::vector<Light> m_Lights; // All lights that are currently active
+		std::vector<VulkanMappedBuffer> m_LightBuffers;
 
 		// 1:1 copy of the shadow maps on GPU
 		std::vector<VulkanImage> m_ShadowMaps;
 
-		void CreateDefaultShadowMap(VulkanCommandPoolManager& cmdPoolManager, uint32_t width, uint32_t height);
+		void CreateDefaultShadowMap(VulkanCommandPoolManager& cmdPoolManager, VulkanDescriptorContext& descriptorContext, uint32_t width, uint32_t height);
 		void CreateShadowMap(VulkanCommandPoolManager& cmdPoolManager, uint32_t width, uint32_t height);
+
+		void InitLightBuffers();
 	};
 }
 #endif

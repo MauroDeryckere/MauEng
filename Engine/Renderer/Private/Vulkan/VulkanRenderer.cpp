@@ -65,7 +65,7 @@ namespace MauRen
 		CreateSyncObjects();
 
 		VulkanMaterialManager::GetInstance().InitializeTextureManager(m_CommandPoolManager, m_DescriptorContext);
-		VulkanLightManager::GetInstance().Initialize(m_CommandPoolManager);
+		VulkanLightManager::GetInstance().Initialize(m_CommandPoolManager, m_DescriptorContext);
 		VulkanMeshManager::GetInstance().Initialize(&m_CommandPoolManager);
 
 		if (m_DebugRenderer)
@@ -170,6 +170,16 @@ namespace MauRen
 		m_FramebufferResized = true;
 	}
 
+	uint32_t VulkanRenderer::CreateLight()
+	{
+		return VulkanLightManager::GetInstance().CreateLight();
+	}
+
+	void VulkanRenderer::QueueLight(MauEng::CLight const& light)
+	{
+		VulkanLightManager::GetInstance().QueueLight(m_CommandPoolManager, m_DescriptorContext, light);
+	}
+
 	void VulkanRenderer::QueueDraw(glm::mat4 const& transformMat, MauEng::CStaticMesh const& mesh)
 	{
 		VulkanMeshManager::GetInstance().QueueDraw(transformMat, mesh.meshID);
@@ -234,6 +244,7 @@ namespace MauRen
 		scissor.extent = m_SwapChainContext.GetExtent();
 
 		VulkanMeshManager::GetInstance().PreDraw(commandBuffer, m_GraphicsPipelineContext.GetForwardPipelineLayout(), 1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame], m_CurrentFrame);
+		VulkanLightManager::GetInstance().PreDraw(commandBuffer, m_GraphicsPipelineContext.GetForwardPipelineLayout(), 1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame], m_CurrentFrame);
 
 		auto& gBufferColor{ m_SwapChainContext.GetGBuffer(m_CurrentFrame).color };
 		auto& gBufferNormal{ m_SwapChainContext.GetGBuffer(m_CurrentFrame).normal };
@@ -658,47 +669,16 @@ namespace MauRen
 			ME_PROFILE_SCOPE("Post draw")
 
 			VulkanMeshManager::GetInstance().PostDraw(commandBuffer, m_GraphicsPipelineContext.GetForwardPipelineLayout(), 1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame], m_CurrentFrame);
+			VulkanLightManager::GetInstance().PostDraw();
 
-			//colour.TransitionImageLayout(
-			//	commandBuffer,
-			//	VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-			//	VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
-			//	VK_PIPELINE_STAGE_2_TRANSFER_BIT,
-			//	VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT,
-			//	VK_ACCESS_2_TRANSFER_READ_BIT
-			//);
-
-			//if (VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL != m_SwapChainContext.GetSwapchainImages()[imageIndex].layout)
-			//{
-			//	m_SwapChainContext.GetSwapchainImages()[imageIndex].TransitionImageLayout(commandBuffer,
-			//		VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-			//		VK_PIPELINE_STAGE_2_NONE, VK_PIPELINE_STAGE_2_TRANSFER_BIT,
-			//		VK_ACCESS_2_NONE, VK_ACCESS_2_TRANSFER_WRITE_BIT);
-			//}
-
-			//VkImageCopy copyRegion = {};
-			//copyRegion.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-			//copyRegion.srcSubresource.mipLevel = 0;
-			//copyRegion.srcSubresource.baseArrayLayer = 0;
-			//copyRegion.srcSubresource.layerCount = 1;
-			//copyRegion.srcOffset = { 0, 0, 0 };
-
-			//copyRegion.dstSubresource = copyRegion.srcSubresource;
-			//copyRegion.dstOffset = { 0, 0, 0 };
-
-			//copyRegion.extent = { m_SwapChainContext.GetExtent().width, m_SwapChainContext.GetExtent().height, 1 };
-
-			//vkCmdCopyImage(
-			//	commandBuffer,
-			//	colour.image, colour.layout,
-			//	m_SwapChainContext.GetSwapchainImages()[imageIndex].image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-			//	1, &copyRegion
-			//);
-			//m_SwapChainContext.GetSwapchainImages()[imageIndex].layout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-			m_SwapChainContext.GetSwapchainImages()[imageIndex].TransitionImageLayout(commandBuffer,
-				VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
-				VK_PIPELINE_STAGE_2_TRANSFER_BIT, VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT,
-				VK_ACCESS_2_TRANSFER_WRITE_BIT, VK_ACCESS_2_MEMORY_READ_BIT);
+			if (VK_IMAGE_LAYOUT_PRESENT_SRC_KHR != m_SwapChainContext.GetSwapchainImages()[imageIndex].layout)
+			{
+				m_SwapChainContext.GetSwapchainImages()[imageIndex].TransitionImageLayout(
+					commandBuffer,
+					VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+					VK_PIPELINE_STAGE_2_TRANSFER_BIT, VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT,
+					VK_ACCESS_2_TRANSFER_WRITE_BIT, VK_ACCESS_2_MEMORY_READ_BIT);
+			}
 
 			if (VK_SUCCESS != vkEndCommandBuffer(commandBuffer))
 			{
@@ -837,13 +817,14 @@ namespace MauRen
 	{
 		ME_PROFILE_FUNCTION()
 
-		UniformBufferObject const ubo
+			UniformBufferObject const ubo
 		{
 				.viewProj = proj * view,
 				.invView = glm::inverse(view),
 				.invProj = glm::inverse(proj),
 				.cameraPosition = glm::vec3{ glm::inverse(view)[3] },
-				.screenSize = { m_SwapChainContext.GetExtent().width, m_SwapChainContext.GetExtent().height }
+				.screenSize = { m_SwapChainContext.GetExtent().width, m_SwapChainContext.GetExtent().height },
+				.numLights = VulkanLightManager::GetInstance().GetNumLights()
 		};
 
 		memcpy(m_MappedUniformBuffers[currentImage].mapped, &ubo, sizeof(ubo));

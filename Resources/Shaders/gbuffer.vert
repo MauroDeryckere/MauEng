@@ -17,6 +17,7 @@ layout(set = 0, binding = 0) uniform UniformBufferObject
     mat4 invProj;
     vec3 cameraPos;
     vec2 screenSize;
+    uint numLights;
 } ubo;
 
 

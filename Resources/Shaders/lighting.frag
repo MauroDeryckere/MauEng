@@ -7,6 +7,7 @@ layout(set = 0, binding = 0) uniform UniformBufferObject
     mat4 invProj;
     vec3 cameraPos;
     vec2 screenSize;
+    uint numLights;
 } ubo;
 
 layout(set = 0, binding = 1) uniform sampler globalSampler;
@@ -15,6 +16,9 @@ layout(set = 0, binding = 6) uniform texture2D gAlbedo;
 layout(set = 0, binding = 7) uniform texture2D gNormal;
 layout(set = 0, binding = 8) uniform texture2D gMetal;
 layout(set = 0, binding = 9) uniform texture2D gDepth;
+
+// Bindless shadow map arr
+// Light buffer
 
 layout(location = 0) in vec2 fragUV;
 layout(location = 0) out vec4 outColor;

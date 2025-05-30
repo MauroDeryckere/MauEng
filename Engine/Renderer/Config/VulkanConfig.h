@@ -52,6 +52,10 @@ namespace MauRen
 	uint32_t constexpr MAX_INDICES{ 20'000'000 };       // Maximum number of indices (for all meshes)
 
 	bool constexpr DEBUG_OUT_MAT{ true };
+
+	uint32_t constexpr MAX_LIGHTS{ 128 };
+
+	uint32_t constexpr SHADOW_MAP_SIZE{ 1024 };
 }
 
 #endif // MAUREN_VULKANCONFIG_H

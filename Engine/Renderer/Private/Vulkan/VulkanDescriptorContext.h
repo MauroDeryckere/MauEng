@@ -8,7 +8,8 @@
 
 namespace MauRen
 {
-	// Currently only supports one layout
+	// Currently only supports one layout, more layouts is more optimal;
+	// but to get everything working now I put everything is the single layout
 	class VulkanDescriptorContext final
 	{
 	public:
@@ -24,6 +25,7 @@ namespace MauRen
 
 		void BindTexture(uint32_t destLocation, VkImageView imageView, VkImageLayout imageLayout);
 		void BindMaterialBuffer(VkDescriptorBufferInfo bufferInfo, uint32_t frame);
+		void BindLightBuffer(VkDescriptorBufferInfo bufferInfo, uint32_t frame);
 
 		void BindShadowMap(uint32_t destLocation, VkImageView imageView, VkImageLayout imageLayout);
 
@@ -35,6 +37,8 @@ namespace MauRen
 		VulkanDescriptorContext(VulkanDescriptorContext&&) = delete;
 		VulkanDescriptorContext& operator=(VulkanDescriptorContext const&) = delete;
 		VulkanDescriptorContext& operator=(VulkanDescriptorContext&&) = delete;
+
+		[[nodiscard]] uint32_t GetLightBufferSlot() const noexcept { return LIGHT_BUFFER_SLOT; }
 
 	private:
 		VkDescriptorSetLayout m_DescriptorSetLayout{ VK_NULL_HANDLE };
@@ -61,6 +65,7 @@ namespace MauRen
 		uint32_t const HDRI_COLOR_SLOT{ 10 };
 
 		uint32_t const SHADOW_MAPS_SLOT{ 11 };
+		uint32_t const LIGHT_BUFFER_SLOT{ 12 };
 		//TODO Shadow Sampler
 	};
 }

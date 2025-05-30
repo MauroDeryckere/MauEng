@@ -15,6 +15,7 @@
 #include "VulkanCommandPoolManager.h"
 
 #include "VulkanBuffer.h"
+#include "../../../MauEng/Public/Components/CLight.h"
 
 #include "Assets/VulkanImage.h"
 
@@ -44,6 +45,9 @@ namespace MauRen
 		virtual void Render(glm::mat4 const& view, glm::mat4 const& proj, glm::vec2 const& screenSize) override;
 		virtual void ResizeWindow() override;
 
+		virtual uint32_t CreateLight() override;
+
+		virtual void QueueLight(MauEng::CLight const& light) override;
 		virtual void QueueDraw(glm::mat4 const& transformMat, MauEng::CStaticMesh const& mesh) override;
 		virtual [[nodiscard]] uint32_t LoadOrGetMeshID(char const* path) override;
 
@@ -89,8 +93,9 @@ namespace MauRen
 			glm::vec3 cameraPosition;
 			glm::vec2 screenSize;
 
-			// Room for 3 more floats (padding) e.g time,...
-			//float padding01;
+			uint32_t numLights;
+
+			// Room for 2 more floats (padding) e.g time,...
 			//float padding02;
 			//float padding03;
 		};

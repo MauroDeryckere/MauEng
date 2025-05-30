@@ -24,6 +24,16 @@ namespace MauEng
 								RENDERER.QueueDraw(t.mat, m);
 							});
 			}
+
+			{
+				ME_PROFILE_SCOPE("QUEUE LIGHTS")
+
+				auto view{ GetECSWorld().View<CLight>() };
+				view.Each([](CLight const& l)
+					{
+						RENDERER.QueueLight(l);
+					}, std::execution::seq);
+			}
 		}
 	}
 

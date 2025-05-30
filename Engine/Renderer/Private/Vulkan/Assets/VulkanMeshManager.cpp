@@ -178,7 +178,7 @@ namespace MauRen
 		{
 			ME_PROFILE_SCOPE("Clearing the data")
 
-			// not optimal, useful for testing - just rebuild all draw commands every frame and queue them
+			// not optimal, good enough for now - just rebuild all draw commands every frame and queue them
 			m_DrawCommands.resize(0);
 			m_MeshInstanceData.resize(0);
 

@@ -9,7 +9,7 @@ namespace MauGam
 	{
 		ME_PROFILE_FUNCTION()
 
-		using namespace MauEng;
+			using namespace MauEng;
 
 		m_CameraManager.GetActiveCamera().SetPosition(glm::vec3{ -200.f, 40, -100 });
 		m_CameraManager.GetActiveCamera().SetFOV(60.f);
@@ -22,7 +22,7 @@ namespace MauGam
 			auto& transform{ enttCar.GetComponent<CTransform>() };
 			transform.Scale({ .5f, .5f, .5f });
 
-		//	enttCar.AddComponent<CStaticMesh>("Resources/Models/old_rusty_car/scene.gltf");
+			//	enttCar.AddComponent<CStaticMesh>("Resources/Models/old_rusty_car/scene.gltf");
 		}
 
 		{
@@ -38,11 +38,11 @@ namespace MauGam
 			Entity enttSponza{ CreateEntity() };
 
 			auto& transform{ enttSponza.GetComponent<CTransform>() };
-		//	MauCor::Rotator const rot{ 90, 0, 180 };
-			//transform.Rotate(rot);
-		//	transform.Scale({ .5f, .5f, .5f });
+			//	MauCor::Rotator const rot{ 90, 0, 180 };
+				//transform.Rotate(rot);
+			//	transform.Scale({ .5f, .5f, .5f });
 
-			//enttSponza.AddComponent<CStaticMesh>("Resources/Models/Sponza/glTF/Sponza.gltf");
+				//enttSponza.AddComponent<CStaticMesh>("Resources/Models/Sponza/glTF/Sponza.gltf");
 		}
 
 		{
@@ -63,10 +63,10 @@ namespace MauGam
 			std::mt19937 gen(rd()); // Mersenne Twister generator
 			std::uniform_real_distribution<float> dis(-300.0f, 300); // Random translation range
 
-			for (size_t i { 0 }; i < NUM_INSTANCES; i++)
+			for (size_t i{ 0 }; i < NUM_INSTANCES; i++)
 			{
 				// Note: spider has no normal map (scaling is a little off)
-				Entity entSpider{ CreateEntity() }; 
+				Entity entSpider{ CreateEntity() };
 				auto& transform{ entSpider.GetComponent<CTransform>() };
 				transform.Translate({ dis(gen), dis(gen), dis(gen) });
 				transform.Scale({ .05f, .05f, .05f });
@@ -76,7 +76,7 @@ namespace MauGam
 
 
 		auto& input{ INPUT_MANAGER };
-		input.BindAction("MoveUp", MauEng::KeyInfo{SDLK_UP, MauEng::KeyInfo::ActionType::Held });
+		input.BindAction("MoveUp", MauEng::KeyInfo{ SDLK_UP, MauEng::KeyInfo::ActionType::Held });
 		input.BindAction("MoveLeft", MauEng::KeyInfo{ SDLK_LEFT, MauEng::KeyInfo::ActionType::Held });
 		input.BindAction("MoveRight", MauEng::KeyInfo{ SDLK_RIGHT, MauEng::KeyInfo::ActionType::Held });
 		input.BindAction("MoveDown", MauEng::KeyInfo{ SDLK_DOWN, MauEng::KeyInfo::ActionType::Held });
@@ -90,6 +90,16 @@ namespace MauGam
 
 
 		input.BindAction("Rotate", MauEng::MouseInfo{ {},   MauEng::MouseInfo::ActionType::Moved });
+
+		{
+			Entity entLightTest{ CreateEntity() };
+
+			auto& l = entLightTest.AddComponent<CLight>();
+			l.type = ELightType::POINT;
+			l.direction_position = { 100.f, 100.f, 50.f };
+			l.intensity = 100000.f;
+			l.lightColour = { 0.f, 1.f, 0.f };
+		}
 	}
 
 	void ECSTestScene::OnLoad()

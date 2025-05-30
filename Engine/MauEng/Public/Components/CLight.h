@@ -26,6 +26,8 @@ namespace MauEng
 		float intensity{ 1.0f };
 
 		uint32_t lightID{ MauRen::INVALID_LIGHT_ID };
+
+		CLight();
 	};
 }
 
