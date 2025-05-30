@@ -46,13 +46,10 @@ namespace MauRen
 
 		void CreateDefaultTextures(VulkanCommandPoolManager& cmdPoolManager, VulkanDescriptorContext& descriptorContext);
 
-
-		// ! when normal _UNORM, add bool flag
 		[[nodiscard]] VulkanImage CreateTextureImage(VulkanCommandPoolManager& cmdPoolManager, std::string const& path, bool isNorm);
 		[[nodiscard]] VulkanImage CreateTextureImage(VulkanCommandPoolManager& cmdPoolManager, EmbeddedTexture const& embTex, bool isNorm);
 
 		[[nodiscard]] VulkanImage Create1x1Texture(VulkanCommandPoolManager& cmdPoolManager, glm::vec4 const& color, bool isNorm);
-
 	};
 }
 

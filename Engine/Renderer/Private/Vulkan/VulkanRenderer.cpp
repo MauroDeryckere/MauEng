@@ -2,9 +2,10 @@
 
 #include "Assets/VulkanMeshManager.h"
 #include "Assets/VulkanMaterialManager.h"
+#include "Assets/VulkanLightManager.h"
+
 #include "DebugRenderer/InternalDebugRenderer.h"
 #include "DebugRenderer/NullDebugRenderer.h"
-
 #include "../../MauEng/Public/Components/CStaticMesh.h"
 
 namespace MauRen
@@ -64,6 +65,7 @@ namespace MauRen
 		CreateSyncObjects();
 
 		VulkanMaterialManager::GetInstance().InitializeTextureManager(m_CommandPoolManager, m_DescriptorContext);
+		VulkanLightManager::GetInstance().Initialize();
 		VulkanMeshManager::GetInstance().Initialize(&m_CommandPoolManager);
 
 		if (m_DebugRenderer)
@@ -121,6 +123,7 @@ namespace MauRen
 
 		VulkanMaterialManager::GetInstance().Destroy();
 		VulkanMeshManager::GetInstance().Destroy();
+		VulkanLightManager::GetInstance().Destroy();
 
 		if (m_DebugRenderer)
 		{

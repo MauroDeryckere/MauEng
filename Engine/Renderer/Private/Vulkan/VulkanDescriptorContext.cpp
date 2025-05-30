@@ -50,6 +50,35 @@ namespace MauRen
 		vkUpdateDescriptorSets(deviceContext->GetLogicalDevice(), 1, &descriptorWrite, 0, nullptr);
 	}
 
+	// ! THIS IS NOT SAFE TO CALL DURING A FRAME, HAS TO BE HANDLED IF WE WANT THAT
+	void VulkanDescriptorContext::BindShadowMap(uint32_t destLocation, VkImageView imageView, VkImageLayout imageLayout)
+	{
+		VkDescriptorImageInfo imageInfo{};
+		imageInfo.imageLayout = imageLayout;
+		imageInfo.imageView = imageView;
+		imageInfo.sampler = VK_NULL_HANDLE;
+
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+
+		for (size_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; ++i)
+		{
+			VkWriteDescriptorSet descriptorWrite{};
+			descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+			descriptorWrite.dstSet = m_DescriptorSets[i];
+			descriptorWrite.dstBinding = SHADOW_MAPS_SLOT;
+			descriptorWrite.dstArrayElement = destLocation;
+
+			ME_ASSERT(destLocation < MAX_SHADOW_MAPS);
+
+			descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+			descriptorWrite.descriptorCount = 1;
+
+			descriptorWrite.pImageInfo = &imageInfo;
+
+			vkUpdateDescriptorSets(deviceContext->GetLogicalDevice(), 1, &descriptorWrite, 0, nullptr);
+		}
+	}
+
 	void VulkanDescriptorContext::CreateDescriptorSetLayout()
 	{
 		VkDescriptorSetLayoutBinding uboLayoutBinding{};
@@ -134,6 +163,13 @@ namespace MauRen
 		HDRIColorBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 		HDRIColorBinding.pImmutableSamplers = nullptr;
 
+		VkDescriptorSetLayoutBinding ShadowMapsBinding{};
+		ShadowMapsBinding.binding = SHADOW_MAPS_SLOT;
+		ShadowMapsBinding.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+		ShadowMapsBinding.descriptorCount = MAX_SHADOW_MAPS;
+		ShadowMapsBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+		ShadowMapsBinding.pImmutableSamplers = nullptr;
+
 		std::array const bindings {
 			uboLayoutBinding,
 			samplerBinding,
@@ -145,12 +181,13 @@ namespace MauRen
 			GBufferNormalBinding,
 			GBufferMetalRoughBinding,
 			GBufferDepthBinding,
-			HDRIColorBinding
+			HDRIColorBinding,
+			ShadowMapsBinding
 		};
 
 		// Variable coutn adds more complexity and we do not need it currentl
 		// Flags for the binding - only use valid flags for image samplers
-		VkDescriptorBindingFlagsEXT bindingFlags[bindings.size()] {
+		VkDescriptorBindingFlagsEXT bindingFlags[bindings.size()]{
 			0,
 			0,
 			VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT |
@@ -163,7 +200,10 @@ namespace MauRen
 			0,
 			0,
 			0,
-			0
+			0,
+			VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT |
+			//VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT |
+			VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT, // Flags for shadow maps
 		};
 		VkDescriptorSetLayoutBindingFlagsCreateInfoEXT bindingFlagsInfo{};
 		bindingFlagsInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO_EXT;
@@ -191,7 +231,7 @@ namespace MauRen
 	{
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 
-		std::array<VkDescriptorPoolSize, 11> poolSizes{};
+		std::array<VkDescriptorPoolSize, 12> poolSizes{};
 		poolSizes[UBO_BINDING_SLOT].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 		poolSizes[UBO_BINDING_SLOT].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
 
@@ -225,7 +265,11 @@ namespace MauRen
 		poolSizes[HDRI_COLOR_SLOT].type = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
 		poolSizes[HDRI_COLOR_SLOT].descriptorCount = static_cast<uint32_t>(1 * MAX_FRAMES_IN_FLIGHT);
 
-		if (MAX_TEXTURES > deviceContext->GetMaxSampledImages())
+		poolSizes[SHADOW_MAPS_SLOT].type = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+		poolSizes[SHADOW_MAPS_SLOT].descriptorCount = static_cast<uint32_t>(MAX_SHADOW_MAPS * MAX_FRAMES_IN_FLIGHT);
+
+		// + 5 == hdri, depth, metal, normal, color
+		if (MAX_TEXTURES + MAX_SHADOW_MAPS + 5> deviceContext->GetMaxSampledImages())
 		{
 			throw std::runtime_error("Max textures is bigger than device limitations");
 		}

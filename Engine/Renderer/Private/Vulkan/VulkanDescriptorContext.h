@@ -25,6 +25,8 @@ namespace MauRen
 		void BindTexture(uint32_t destLocation, VkImageView imageView, VkImageLayout imageLayout);
 		void BindMaterialBuffer(VkDescriptorBufferInfo bufferInfo, uint32_t frame);
 
+		void BindShadowMap(uint32_t destLocation, VkImageView imageView, VkImageLayout imageLayout);
+
 		void CreateDescriptorSetLayout();
 		void CreateDescriptorPool();
 		void CreateDescriptorSets(std::vector<VulkanBuffer> const& bufferInfoBuffers, VkDeviceSize offset, VkDeviceSize range, VkImageLayout imageLayout, std::vector<VkImageView> const& imageViews = {}, VkSampler sampler = {});
@@ -57,6 +59,9 @@ namespace MauRen
 		uint32_t const GBUFFER_DEPTH_SLOT{ 9 };
 
 		uint32_t const HDRI_COLOR_SLOT{ 10 };
+
+		uint32_t const SHADOW_MAPS_SLOT{ 11 };
+		//TODO Shadow Sampler
 	};
 }
 

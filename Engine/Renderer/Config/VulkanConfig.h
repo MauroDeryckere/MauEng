@@ -37,6 +37,9 @@ namespace MauRen
 	// The descriptor pool creation will throw if this number is too large
 	uint32_t constexpr MAX_TEXTURES{ 4'048 };			// For texture array
 
+	uint32_t constexpr MAX_SHADOW_MAPS{ 128 };			// For texture array
+
+
 	// These are ust arbitrary numbers for now, they have to actally be calculated in the futrue
 	uint32_t constexpr MAX_MATERIALS{ 512 };			// Matches MaterialData[] buffer
 
