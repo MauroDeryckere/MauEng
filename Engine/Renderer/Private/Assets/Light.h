@@ -10,11 +10,10 @@ namespace MauRen
 	// Light that's stored on the GPU
 	struct alignas(16) Light final
 	{
-		// Light type: 0 = directional, 1 = point
-		uint32_t type{ 0 };
-
 		// Direction for directional lights, position for point lights
 		glm::vec3 direction_position{ 0.0f, -1.0f, 0.0f };
+		// Light type: 0 = directional, 1 = point
+		uint32_t type{ 0 };
 
 		glm::vec3 color = glm::vec3(1.0f);
 		float intensity{ 1.0f };

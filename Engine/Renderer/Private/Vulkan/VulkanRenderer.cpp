@@ -671,14 +671,11 @@ namespace MauRen
 			VulkanMeshManager::GetInstance().PostDraw(commandBuffer, m_GraphicsPipelineContext.GetForwardPipelineLayout(), 1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame], m_CurrentFrame);
 			VulkanLightManager::GetInstance().PostDraw();
 
-			if (VK_IMAGE_LAYOUT_PRESENT_SRC_KHR != m_SwapChainContext.GetSwapchainImages()[imageIndex].layout)
-			{
-				m_SwapChainContext.GetSwapchainImages()[imageIndex].TransitionImageLayout(
-					commandBuffer,
-					VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
-					VK_PIPELINE_STAGE_2_TRANSFER_BIT, VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT,
-					VK_ACCESS_2_TRANSFER_WRITE_BIT, VK_ACCESS_2_MEMORY_READ_BIT);
-			}
+			m_SwapChainContext.GetSwapchainImages()[imageIndex].TransitionImageLayout(
+				commandBuffer,
+				VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+				VK_PIPELINE_STAGE_2_TRANSFER_BIT, VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT,
+				VK_ACCESS_2_TRANSFER_WRITE_BIT, VK_ACCESS_2_MEMORY_READ_BIT);
 
 			if (VK_SUCCESS != vkEndCommandBuffer(commandBuffer))
 			{
@@ -783,7 +780,6 @@ namespace MauRen
 
 		VkPresentInfoKHR presentInfo{};
 		presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-
 		// The first two parameters specify which semaphores to wait on before presentation can happen
 		presentInfo.waitSemaphoreCount = 1;
 		presentInfo.pWaitSemaphores = signalSemaphores;

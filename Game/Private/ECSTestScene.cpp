@@ -96,8 +96,8 @@ namespace MauGam
 
 			auto& l = entLightTest.AddComponent<CLight>();
 			l.type = ELightType::POINT;
-			l.direction_position = { 100.f, 100.f, 50.f };
-			l.intensity = 100000.f;
+			l.direction_position = { 100.f, 50, 0 };
+			l.intensity = 1000000.f;
 			l.lightColour = { 0.f, 1.f, 0.f };
 		}
 	}

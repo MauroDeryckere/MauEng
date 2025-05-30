@@ -87,13 +87,13 @@ namespace MauRen
 
 		struct alignas(16) UniformBufferObject final
 		{
-			glm::mat4 viewProj;
-			glm::mat4 invView;
-			glm::mat4 invProj;
-			glm::vec3 cameraPosition;
-			glm::vec2 screenSize;
+			alignas(16) glm::mat4 viewProj;
+			alignas(16) glm::mat4 invView;
+			alignas(16) glm::mat4 invProj;
+			alignas(16) glm::vec3 cameraPosition;
+			alignas(16) glm::vec2 screenSize;
 
-			uint32_t numLights;
+			alignas(16) uint32_t numLights;
 
 			// Room for 2 more floats (padding) e.g time,...
 			//float padding02;
