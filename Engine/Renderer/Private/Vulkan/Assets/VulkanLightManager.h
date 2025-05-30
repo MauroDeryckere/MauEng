@@ -18,7 +18,7 @@ namespace MauRen
 	class VulkanLightManager final : public MauCor::Singleton<VulkanLightManager>
 	{
 	public:
-		void Initialize();
+		void Initialize(VulkanCommandPoolManager& cmdPoolManager);
 		void Destroy();
 
 		void AddLight(VulkanCommandPoolManager& cmdPoolManager, VulkanDescriptorContext& descriptorContext, MauEng::CLight const& light);
@@ -41,8 +41,8 @@ namespace MauRen
 		// 1:1 copy of the shadow maps on GPU
 		std::vector<VulkanImage> m_ShadowMaps;
 
-		void CreateDefaultShadowMap();
-		void CreateShadowMap();
+		void CreateDefaultShadowMap(VulkanCommandPoolManager& cmdPoolManager, uint32_t width, uint32_t height);
+		void CreateShadowMap(VulkanCommandPoolManager& cmdPoolManager, uint32_t width, uint32_t height);
 	};
 }
 #endif

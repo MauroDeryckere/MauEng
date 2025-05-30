@@ -65,7 +65,7 @@ namespace MauRen
 		CreateSyncObjects();
 
 		VulkanMaterialManager::GetInstance().InitializeTextureManager(m_CommandPoolManager, m_DescriptorContext);
-		VulkanLightManager::GetInstance().Initialize();
+		VulkanLightManager::GetInstance().Initialize(m_CommandPoolManager);
 		VulkanMeshManager::GetInstance().Initialize(&m_CommandPoolManager);
 
 		if (m_DebugRenderer)
