@@ -28,6 +28,7 @@ namespace MauRen
 		virtual void QueueDraw(glm::mat4 const&, MauEng::CStaticMesh const&) override {}
 		virtual uint32_t LoadOrGetMeshID(char const*) override { return INVALID_MESH_ID; }
 
+		virtual void PreLightQueue(glm::mat4 const&) override {}
 		virtual uint32_t CreateLight() override { return INVALID_LIGHT_ID; }
 		virtual void QueueLight(MauEng::CLight const&) override {}
 

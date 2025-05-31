@@ -30,6 +30,7 @@ namespace MauRen
 
 		void Draw(VkCommandBuffer const& commandBuffer, VulkanGraphicsPipelineContext const& graphicsPipelineContext, VulkanDescriptorContext& descriptorContext, VulkanSwapchainContext& swapChainContext, uint32_t frame);
 
+		void PreQueue(glm::mat4 const& viewProj);
 		void PreDraw(VkCommandBuffer commandBuffer, VkPipelineLayout layout, uint32_t setCount, VkDescriptorSet const* pDescriptorSets, uint32_t frame);
 		void QueueLight(VulkanCommandPoolManager& cmdPoolManager, VulkanDescriptorContext& descriptorContext, MauEng::CLight const& light);
 		void PostDraw();
@@ -59,6 +60,9 @@ namespace MauRen
 		{
 			uint32_t lightIndex;
 		};
+
+		glm::vec3 m_SceneAABBMin;
+		glm::vec3 m_SceneAABBMax;
 
 		void CreateDefaultShadowMap(VulkanCommandPoolManager& cmdPoolManager, VulkanDescriptorContext& descriptorContext, uint32_t width, uint32_t height);
 		void CreateShadowMap(VulkanCommandPoolManager& cmdPoolManager, uint32_t width, uint32_t height);

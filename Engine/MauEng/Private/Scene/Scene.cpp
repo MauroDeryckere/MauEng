@@ -25,6 +25,7 @@ namespace MauEng
 							});
 			}
 
+			RENDERER.PreLightQueue(GetCameraManager().GetActiveCamera().GetProjectionMatrix() * GetCameraManager().GetActiveCamera().GetViewMatrix());
 			{
 				ME_PROFILE_SCOPE("QUEUE LIGHTS")
 

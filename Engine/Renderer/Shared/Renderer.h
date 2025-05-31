@@ -27,6 +27,7 @@ namespace MauRen
 		virtual void QueueDraw(glm::mat4 const& transformMat, MauEng::CStaticMesh const& mesh) = 0;
 		virtual [[nodiscard]] uint32_t LoadOrGetMeshID(char const* path) = 0;
 
+		virtual void PreLightQueue(glm::mat4 const& viewProj) = 0;
 		virtual uint32_t CreateLight() = 0;
 		virtual void QueueLight(MauEng::CLight const& light) = 0;
 

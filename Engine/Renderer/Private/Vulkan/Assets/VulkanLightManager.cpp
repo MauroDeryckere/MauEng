@@ -103,6 +103,37 @@ namespace MauRen
 		}
 	}
 
+	void VulkanLightManager::PreQueue(glm::mat4 const& viewProj)
+	{
+		glm::mat4 const invViewProj{ glm::inverse(viewProj) };
+
+		glm::vec3 constexpr ndcCorners[8]
+		{
+			{-1, -1, -1}, {1, -1, -1},
+			{-1,  1, -1}, {1,  1, -1},
+			{-1, -1,  1}, {1, -1,  1},
+			{-1,  1,  1}, {1,  1,  1}
+		};
+
+		glm::vec3 worldCorners[8];
+		for (size_t i{ 0 }; i < 8; ++i)
+		{
+			glm::vec4 worldPos{ invViewProj * glm::vec4(ndcCorners[i], 1.0f) };
+			worldCorners[i] = glm::vec3(worldPos) / worldPos.w;
+		}
+
+		glm::vec3 sceneAABBMin{ FLT_MAX };
+		glm::vec3 sceneAABBMax{ -FLT_MAX };
+		for (size_t i{ 0 }; i < 8; ++i)
+		{
+			sceneAABBMin = glm::min(sceneAABBMin, worldCorners[i]);
+			sceneAABBMax = glm::max(sceneAABBMax, worldCorners[i]);
+		}
+
+		m_SceneAABBMin = sceneAABBMin;
+		m_SceneAABBMax = sceneAABBMax;
+	}
+
 	void VulkanLightManager::PreDraw(VkCommandBuffer commandBuffer, VkPipelineLayout layout, uint32_t setCount, VkDescriptorSet const* pDescriptorSets, uint32_t frame)
 	{
 		{
@@ -171,8 +202,79 @@ namespace MauRen
 		vulkanLight.shadowMapIndex = shadowID;
 		vulkanLight.castsShadows = light.castShadows ? 1 : 0;
 
-		//TODO
-		vulkanLight.lightViewProj = {};
+		if (0 == vulkanLight.type)
+		{
+			glm::vec3 const sceneCenter{ (m_SceneAABBMin + m_SceneAABBMax) * .5f };
+			glm::vec3 const lightDir{ glm::normalize(vulkanLight.direction_position) };
+
+			std::vector<glm::vec3> const sceneCorners
+			{
+				{ m_SceneAABBMin.x, m_SceneAABBMin.y, m_SceneAABBMin.z },
+				{ m_SceneAABBMax.x, m_SceneAABBMin.y, m_SceneAABBMin.z },
+				{ m_SceneAABBMin.x, m_SceneAABBMax.y, m_SceneAABBMin.z },
+				{ m_SceneAABBMax.x, m_SceneAABBMax.y, m_SceneAABBMin.z },
+				{ m_SceneAABBMin.x, m_SceneAABBMin.y, m_SceneAABBMax.z },
+				{ m_SceneAABBMax.x, m_SceneAABBMin.y, m_SceneAABBMax.z },
+				{ m_SceneAABBMin.x, m_SceneAABBMax.y, m_SceneAABBMax.z },
+				{ m_SceneAABBMax.x, m_SceneAABBMax.y, m_SceneAABBMax.z }
+			};
+
+			const glm::mat4 vulkanClipMatrix
+			{
+				1.0f, 0.0f, 0.0f, 0.0f,
+				0.0f, 1.0f, 0.0f, 0.0f,
+				0.0f, 0.0f, 0.5f, 0.0f,
+				0.0f, 0.0f, 0.5f, 1.0f
+			};
+
+			// Project corners on light dir
+			float minProj{ FLT_MAX };
+			float maxProj{ -FLT_MAX };
+			for (auto const& c : sceneCorners)
+			{
+				float const proj{ glm::dot(c, lightDir)};
+
+				minProj = std::min(minProj, proj);
+				maxProj = std::max(maxProj, proj);
+			}
+
+			// Distance & position (even though theres not really a position for dir light)
+			float const distance{ maxProj - glm::dot(sceneCenter, lightDir) };
+			glm::vec3 const lightPos{ sceneCenter - lightDir * distance };
+
+			// Calc safe up vec (aligned dir and up)
+			glm::vec3 const up{
+				(glm::abs(glm::dot(lightDir, glm::vec3{0.f, 1.f, 0.f}))) > .99f
+				? glm::vec3{ 0.f, 0.f, 1.f }
+				: glm::vec3{ 0.f, 1.f, 0.f }
+			};
+
+			// Use lightpos wth centter to gen view mat - inverted Y axis for up
+			auto const lightView{ glm::lookAt(lightPos, sceneCenter, up) };
+
+			// Now go over corners again, find min and max in view/light space
+			glm::vec3 minLightSpace{ FLT_MAX };
+			glm::vec3 maxLightSpace{ -FLT_MAX };
+			for (auto const& c : sceneCorners)
+			{
+				glm::vec3 const tCorner{ glm::vec3{ lightView * glm::vec4{ c, 1.f} } };
+
+				minLightSpace = glm::min(minLightSpace, tCorner);
+				maxLightSpace = glm::max(maxLightSpace, tCorner);
+			}
+
+			// With min and max, create orthographics proj matrix
+			float const nearZ{ 0.f };
+			float const farZ{ maxLightSpace.z - minLightSpace.z };
+
+			auto const lightProj{
+				glm::ortho(minLightSpace.x, maxLightSpace.x,
+				minLightSpace.y, maxLightSpace.y, 
+				nearZ, farZ)
+			};
+
+			vulkanLight.lightViewProj = vulkanClipMatrix * lightProj * lightView;
+		}
 
 		m_Lights.emplace_back(vulkanLight);
 	}

@@ -175,6 +175,11 @@ namespace MauRen
 		return VulkanLightManager::GetInstance().CreateLight();
 	}
 
+	void VulkanRenderer::PreLightQueue(glm::mat4 const& viewProj)
+	{
+		VulkanLightManager::GetInstance().PreQueue(viewProj);
+	}
+
 	void VulkanRenderer::QueueLight(MauEng::CLight const& light)
 	{
 		VulkanLightManager::GetInstance().QueueLight(m_CommandPoolManager, m_DescriptorContext, light);
@@ -209,7 +214,7 @@ namespace MauRen
 		}
 	}
 
-	void VulkanRenderer::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex)
+	void VulkanRenderer::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex, glm::mat4 const& viewProj)
 	{
 		ME_PROFILE_FUNCTION()
 #pragma region PRE_DRAW
@@ -759,7 +764,7 @@ namespace MauRen
 			vkResetCommandBuffer(m_CommandPoolManager.GetCommandBuffer(m_CurrentFrame), 0);
 		}
 
-		RecordCommandBuffer(m_CommandPoolManager.GetCommandBuffer(m_CurrentFrame), imageIndex);
+		RecordCommandBuffer(m_CommandPoolManager.GetCommandBuffer(m_CurrentFrame), imageIndex, proj * view);
 
 		VkSubmitInfo submitInfo{};
 		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -818,14 +823,14 @@ namespace MauRen
 	{
 		ME_PROFILE_FUNCTION()
 
-			UniformBufferObject const ubo
+		UniformBufferObject const ubo
 		{
-				.viewProj = proj * view,
-				.invView = glm::inverse(view),
-				.invProj = glm::inverse(proj),
-				.cameraPosition = glm::vec3{ glm::inverse(view)[3] },
-				.screenSize = { m_SwapChainContext.GetExtent().width, m_SwapChainContext.GetExtent().height },
-				.numLights = VulkanLightManager::GetInstance().GetNumLights()
+			.viewProj = proj * view,
+			.invView = glm::inverse(view),
+			.invProj = glm::inverse(proj),
+			.cameraPosition = glm::vec3{ glm::inverse(view)[3] },
+			.screenSize = { m_SwapChainContext.GetExtent().width, m_SwapChainContext.GetExtent().height },
+			.numLights = VulkanLightManager::GetInstance().GetNumLights()
 		};
 
 		memcpy(m_MappedUniformBuffers[currentImage].mapped, &ubo, sizeof(ubo));

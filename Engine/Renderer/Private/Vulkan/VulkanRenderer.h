@@ -47,6 +47,7 @@ namespace MauRen
 
 		virtual uint32_t CreateLight() override;
 
+		virtual void PreLightQueue(glm::mat4 const& viewProj) override;
 		virtual void QueueLight(MauEng::CLight const& light) override;
 		virtual void QueueDraw(glm::mat4 const& transformMat, MauEng::CStaticMesh const& mesh) override;
 		virtual [[nodiscard]] uint32_t LoadOrGetMeshID(char const* path) override;
@@ -131,7 +132,7 @@ namespace MauRen
 		void CreateSyncObjects();
 
 		void DrawFrame(glm::mat4 const& view, glm::mat4 const& proj, glm::vec2 const& screenSize);
-		void RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
+		void RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex, glm::mat4 const& viewProj);
 		void UpdateUniformBuffer(uint32_t currentImage, glm::mat4 const& view, glm::mat4 const& proj, glm::vec2 const& screenSize);
 
 		// Recreate the swapchain on e.g a window resize
