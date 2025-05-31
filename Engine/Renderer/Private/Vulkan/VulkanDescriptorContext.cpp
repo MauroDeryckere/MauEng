@@ -98,6 +98,28 @@ namespace MauRen
 		}
 	}
 
+	void VulkanDescriptorContext::BindShadowMapSampler(VkSampler sampler)
+	{
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+
+		VkDescriptorImageInfo imageInfo{};
+		imageInfo.sampler = sampler;
+
+		for (size_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; ++i)
+		{
+			VkWriteDescriptorSet samplerWrite{};
+			samplerWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+			samplerWrite.dstSet = m_DescriptorSets[i];
+			samplerWrite.dstBinding = SHADOW_MAP_SAMPLER;
+			samplerWrite.dstArrayElement = 0;
+			samplerWrite.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
+			samplerWrite.descriptorCount = 1;
+			samplerWrite.pImageInfo = &imageInfo;
+
+			vkUpdateDescriptorSets(deviceContext->GetLogicalDevice(), 1, &samplerWrite, 0, nullptr);
+		}
+	}
+
 	void VulkanDescriptorContext::CreateDescriptorSetLayout()
 	{
 		VkDescriptorSetLayoutBinding uboLayoutBinding{};
@@ -196,6 +218,13 @@ namespace MauRen
 		LightBufferBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_VERTEX_BIT;
 		LightBufferBinding.pImmutableSamplers = nullptr;
 
+		VkDescriptorSetLayoutBinding shadowMapSamplerBinding{};
+		shadowMapSamplerBinding.binding = SHADOW_MAP_SAMPLER;
+		shadowMapSamplerBinding.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
+		shadowMapSamplerBinding.descriptorCount = 1;
+		shadowMapSamplerBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+		shadowMapSamplerBinding.pImmutableSamplers = nullptr;
+
 		std::array const bindings {
 			uboLayoutBinding,
 			samplerBinding,
@@ -209,7 +238,8 @@ namespace MauRen
 			GBufferDepthBinding,
 			HDRIColorBinding,
 			ShadowMapsBinding,
-			LightBufferBinding
+			LightBufferBinding,
+			shadowMapSamplerBinding
 		};
 
 		// Variable coutn adds more complexity and we do not need it currentl
@@ -231,6 +261,7 @@ namespace MauRen
 			VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT |
 			//VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT |
 			VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT, // Flags for shadow maps
+			0,
 			0
 		};
 		VkDescriptorSetLayoutBindingFlagsCreateInfoEXT bindingFlagsInfo{};
@@ -259,12 +290,12 @@ namespace MauRen
 	{
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 
-		std::array<VkDescriptorPoolSize, 13> poolSizes{};
+		std::array<VkDescriptorPoolSize, 14> poolSizes{};
 		poolSizes[UBO_BINDING_SLOT].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		poolSizes[UBO_BINDING_SLOT].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+		poolSizes[UBO_BINDING_SLOT].descriptorCount = static_cast<uint32_t>(1 * MAX_FRAMES_IN_FLIGHT);
 
 		poolSizes[SAMPLER_BINDING_SLOT].type = VK_DESCRIPTOR_TYPE_SAMPLER;
-		poolSizes[SAMPLER_BINDING_SLOT].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+		poolSizes[SAMPLER_BINDING_SLOT].descriptorCount = static_cast<uint32_t>(1 * MAX_FRAMES_IN_FLIGHT);
 
 		poolSizes[TEXTURE_BINDING_SLOT].type = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
 		poolSizes[TEXTURE_BINDING_SLOT].descriptorCount = static_cast<uint32_t>(MAX_TEXTURES * MAX_FRAMES_IN_FLIGHT);
@@ -298,6 +329,9 @@ namespace MauRen
 
 		poolSizes[LIGHT_BUFFER_SLOT].type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
 		poolSizes[LIGHT_BUFFER_SLOT].descriptorCount = static_cast<uint32_t>(1 * MAX_FRAMES_IN_FLIGHT);
+
+		poolSizes[SHADOW_MAP_SAMPLER].type = VK_DESCRIPTOR_TYPE_SAMPLER;
+		poolSizes[SHADOW_MAP_SAMPLER].descriptorCount = static_cast<uint32_t>(1 * MAX_FRAMES_IN_FLIGHT);
 
 		// + 5 == hdri, depth, metal, normal, color
 		if (MAX_TEXTURES + MAX_SHADOW_MAPS + 5> deviceContext->GetMaxSampledImages())

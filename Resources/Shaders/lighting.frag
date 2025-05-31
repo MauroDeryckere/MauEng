@@ -41,13 +41,14 @@ struct Light
     int castsShadows;
 };
 
+layout(set = 0, binding = 11) uniform texture2D ShadowMapBuffer[];
+
 layout(set = 0, binding = 12) buffer readonly LightDataBuffer
 {
     Light lights[];
 };
 
-//TODO
-// Bindless shadow map arr
+layout(set = 0, binding = 13) sampler shadowMapSampler
 
 layout(location = 0) in vec2 fragUV;
 layout(location = 0) out vec4 outColor;

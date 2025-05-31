@@ -29,6 +29,8 @@ namespace MauRen
 
 		void BindShadowMap(uint32_t destLocation, VkImageView imageView, VkImageLayout imageLayout);
 
+		void BindShadowMapSampler(VkSampler sampler);
+
 		void CreateDescriptorSetLayout();
 		void CreateDescriptorPool();
 		void CreateDescriptorSets(std::vector<VulkanBuffer> const& bufferInfoBuffers, VkDeviceSize offset, VkDeviceSize range, VkImageLayout imageLayout, std::vector<VkImageView> const& imageViews = {}, VkSampler sampler = {});
@@ -66,7 +68,7 @@ namespace MauRen
 
 		uint32_t const SHADOW_MAPS_SLOT{ 11 };
 		uint32_t const LIGHT_BUFFER_SLOT{ 12 };
-		//TODO Shadow Sampler
+		uint32_t const SHADOW_MAP_SAMPLER{ 13 };
 	};
 }
 

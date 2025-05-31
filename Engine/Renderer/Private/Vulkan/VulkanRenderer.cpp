@@ -11,7 +11,7 @@
 namespace MauRen
 {
 	VulkanRenderer::VulkanRenderer(SDL_Window* pWindow, DebugRenderer& debugRenderer) :
-		Renderer{ pWindow, debugRenderer },
+		Renderer{ pWindow, debugRenderer } ,
 		m_pWindow{ pWindow }
 	{
 		ME_PROFILE_FUNCTION()
@@ -963,5 +963,3 @@ namespace MauRen
 
 	}
 }
-
-

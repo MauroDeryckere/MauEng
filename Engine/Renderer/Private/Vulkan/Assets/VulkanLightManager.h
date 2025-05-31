@@ -35,6 +35,8 @@ namespace MauRen
 		void QueueLight(VulkanCommandPoolManager& cmdPoolManager, VulkanDescriptorContext& descriptorContext, MauEng::CLight const& light);
 		void PostDraw();
 
+		[[nodiscard]] VkSampler GetShadowMapSampler() const noexcept { return m_ShadowMapSampler; }
+
 		VulkanLightManager(VulkanLightManager const&) = delete;
 		VulkanLightManager(VulkanLightManager&&) = delete;
 		VulkanLightManager& operator=(VulkanLightManager const&) = delete;
@@ -63,6 +65,10 @@ namespace MauRen
 
 		glm::vec3 m_SceneAABBMin;
 		glm::vec3 m_SceneAABBMax;
+
+		VkSampler m_ShadowMapSampler{ VK_NULL_HANDLE };
+
+		void CreateShadowMapSampler(VulkanDescriptorContext& descriptorContext);
 
 		void CreateDefaultShadowMap(VulkanCommandPoolManager& cmdPoolManager, VulkanDescriptorContext& descriptorContext, uint32_t width, uint32_t height);
 		void CreateShadowMap(VulkanCommandPoolManager& cmdPoolManager, uint32_t width, uint32_t height);

@@ -12,13 +12,15 @@ namespace MauRen
 	{
 		ME_PROFILE_FUNCTION()
 
+		CreateShadowMapSampler(descriptorContext);
 		CreateDefaultShadowMap(cmdPoolManager, descriptorContext, SHADOW_MAP_SIZE, SHADOW_MAP_SIZE);
-
 		InitLightBuffers();
 	}
 
 	void VulkanLightManager::Destroy()
 	{
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+
 		for (auto& s : m_ShadowMaps)
 		{
 			s.Destroy();
@@ -28,6 +30,8 @@ namespace MauRen
 		{
 			l.buffer.Destroy();
 		}
+
+		VulkanUtils::SafeDestroy(deviceContext->GetLogicalDevice(), m_ShadowMapSampler, nullptr);
 	}
 
 	uint32_t VulkanLightManager::CreateLight()
@@ -282,6 +286,45 @@ namespace MauRen
 	void VulkanLightManager::PostDraw()
 	{
 		m_Lights.clear();
+	}
+
+	void VulkanLightManager::CreateShadowMapSampler(VulkanDescriptorContext& descriptorContext)
+	{
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+
+		VkSamplerCreateInfo samplerInfo{};
+		samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+		samplerInfo.magFilter = VK_FILTER_LINEAR;
+		samplerInfo.minFilter = VK_FILTER_LINEAR;
+
+		// If addressed outside of bounds, repeat (tileable texture)
+		samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+		samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+		samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+
+		samplerInfo.anisotropyEnable = VK_TRUE;
+		VkPhysicalDeviceProperties properties{};
+		vkGetPhysicalDeviceProperties(deviceContext->GetPhysicalDevice(), &properties);
+
+		samplerInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
+		samplerInfo.unnormalizedCoordinates = VK_FALSE;
+
+		samplerInfo.compareEnable = VK_TRUE;
+		samplerInfo.compareOp = VK_COMPARE_OP_LESS;
+
+		samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
+		samplerInfo.minLod = 0.f;
+		samplerInfo.maxLod = 0.0f;
+
+		samplerInfo.anisotropyEnable = VK_FALSE;
+		samplerInfo.mipLodBias = 0.0f;
+
+		if (vkCreateSampler(deviceContext->GetLogicalDevice(), &samplerInfo, nullptr, &m_ShadowMapSampler) != VK_SUCCESS)
+		{
+			throw std::runtime_error("Failed to create ShadowMap sampler!");
+		}
+
+		descriptorContext.BindShadowMapSampler(m_ShadowMapSampler);
 	}
 
 	void VulkanLightManager::CreateDefaultShadowMap(VulkanCommandPoolManager& cmdPoolManager, VulkanDescriptorContext& descriptorContext, uint32_t width, uint32_t height)
