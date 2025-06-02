@@ -245,7 +245,9 @@ namespace MauRen
 		deviceFeatures.samplerAnisotropy = VK_TRUE;
 		deviceFeatures.fillModeNonSolid = VK_TRUE;
 		deviceFeatures.multiDrawIndirect = VK_TRUE;
-		
+		deviceFeatures.depthClamp = VK_TRUE;
+		deviceFeatures.depthBiasClamp = VK_TRUE;
+
 		VkPhysicalDeviceDescriptorIndexingFeatures indexingFeatures{};
 		indexingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
 		indexingFeatures.runtimeDescriptorArray = VK_TRUE;
@@ -408,7 +410,9 @@ namespace MauRen
 							&& vulkan13Features.dynamicRendering
 							&& vulkan13Features.synchronization2
 
-							&& deviceFeatures.multiDrawIndirect;
+							&& deviceFeatures.multiDrawIndirect
+							&& deviceFeatures.depthClamp
+							&& deviceFeatures.depthBiasClamp;
 		}
 
 		return indices.IsComplete() and extensionsSupported and swapChainAdequate;
