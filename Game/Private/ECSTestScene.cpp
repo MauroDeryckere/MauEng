@@ -228,7 +228,7 @@ namespace MauGam
 			}
 		});
 
-		DEBUG_RENDERER.DrawCylinder({}, { 100, 100, 100 }, {}, {1,1,1}, 100);
+		//DEBUG_RENDERER.DrawCylinder({}, { 100, 100, 100 }, {}, {1,1,1}, 100);
 
 		using namespace MauEng;
 		{

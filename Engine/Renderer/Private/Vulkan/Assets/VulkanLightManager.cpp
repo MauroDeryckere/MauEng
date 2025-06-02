@@ -264,11 +264,10 @@ namespace MauRen
 				maxProj = std::max(maxProj, proj);
 			}
 
-			float const sceneExtent = (maxProj - minProj) * 0.5f;
-
 			// Distance & position (even though theres not really a position for dir light)
 			float const distance{ maxProj - glm::dot(sceneCenter, lightDir) };
-			glm::vec3 const lightPos{ sceneCenter - lightDir * sceneExtent };
+			//float const sceneExtent{ (maxProj - minProj) * 0.5f };
+			glm::vec3 const lightPos{ sceneCenter - lightDir * distance };
 
 			// Use lightpos wth centter to gen view mat - inverted Y axis for up
 			auto const lightView{ glm::lookAt(lightPos, sceneCenter, up) };
