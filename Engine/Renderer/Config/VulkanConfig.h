@@ -56,6 +56,8 @@ namespace MauRen
 	uint32_t constexpr MAX_LIGHTS{ 128 };
 
 	uint32_t constexpr SHADOW_MAP_SIZE{ 1024 * 4 };
+
+	bool constexpr DEBUG_RENDER_SCENE_AABB{ false };
 }
 
 #endif // MAUREN_VULKANCONFIG_H

@@ -288,9 +288,6 @@ namespace MauRen
 			float const nearZ{ 0.f };
 			float const farZ{ maxLightSpace.z - minLightSpace.z};
 
-			//float const nearZ{ minLightSpace.z };
-			//float const farZ{ maxLightSpace.z };
-
 			auto lightProj{
 				glm::orthoRH_ZO(minLightSpace.x, maxLightSpace.x,
 				minLightSpace.y, maxLightSpace.y, 
@@ -299,24 +296,18 @@ namespace MauRen
 			
 			vulkanLight.lightViewProj = lightProj * lightView;
 
-			//auto printMat4 = [](const glm::mat4& mat) {
-			//	for (int row = 0; row < 4; ++row) {
-			//		printf("[ ");
-			//		for (int col = 0; col < 4; ++col) {
-			//			printf("% .6f ", mat[col][row]);  // transpose access
-			//		}
-			//		printf("]\n");
-			//	}
-			//	};
-
-			for (auto& c : sceneCorners)
+			if constexpr (DEBUG_RENDER_SCENE_AABB)
 			{
-				DEBUG_RENDERER.DrawSphere(c, 10.f);
-			}
+				for (auto& c : sceneCorners)
+				{
+					DEBUG_RENDERER.DrawSphere(c, 10.f);
+				}
 
-			DEBUG_RENDERER.DrawSphere(m_SceneAABBMin, 20.f, {}, {1, 1, 1});
-			DEBUG_RENDERER.DrawSphere(m_SceneAABBMax, 20.f, {}, { 1, 1, 1 });
-			DEBUG_RENDERER.DrawSphere(sceneCenter, 50.f, {}, { 1, 1, 0 });
+				DEBUG_RENDERER.DrawSphere(m_SceneAABBMin, 20.f, {}, { 1, 1, 1 });
+				DEBUG_RENDERER.DrawSphere(m_SceneAABBMax, 20.f, {}, { 1, 1, 1 });
+				DEBUG_RENDERER.DrawSphere(sceneCenter, 50.f, {}, { 1, 1, 0 });
+				DEBUG_RENDERER.DrawSphere(lightPos, 40.f, {}, light.lightColour);
+			}
 		}
 
 		m_Lights.emplace_back(vulkanLight);
