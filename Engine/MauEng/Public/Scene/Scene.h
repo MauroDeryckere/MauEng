@@ -34,6 +34,8 @@ namespace MauEng
 		// Called when the scene is unloaded
 		virtual void OnUnload(){}
 
+		void SetSceneAABBOverride(glm::vec3 const& min, glm::vec3 const& max);
+
 #pragma region ECS
 		[[nodiscard]] Entity CreateEntity();
 		void DestroyEntity(Entity entity);

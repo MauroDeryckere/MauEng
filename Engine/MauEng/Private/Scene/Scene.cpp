@@ -38,6 +38,11 @@ namespace MauEng
 		}
 	}
 
+	void Scene::SetSceneAABBOverride(glm::vec3 const& min, glm::vec3 const& max)
+	{
+		RENDERER.SetSceneAABBOverride(min, max);
+	}
+
 	Entity Scene::CreateEntity()
 	{
 		Entity ent{ m_ECSWorld.CreateEntity() };

@@ -123,41 +123,44 @@ namespace MauRen
 		}
 	}
 
+	void VulkanLightManager::SetSceneAABBOverride(glm::vec3 const& min, glm::vec3 const& max)
+	{
+		m_HasAABBBOverride = true;
+		m_SceneAABBMin = min;
+		m_SceneAABBMax = max;
+	}
+
 	void VulkanLightManager::PreQueue(glm::mat4 const& viewProj)
 	{
-
-		// Should just be in VIEW - TODO
-
-		glm::mat4 const invViewProj{ glm::inverse(viewProj) };
-
-		glm::vec3 constexpr ndcCorners[8]
+		if (not m_HasAABBBOverride)
 		{
-			{-1, -1, 0}, {1, -1, 0},
-			{-1,  1, 0}, {1,  1, 0},
-			{-1, -1, 1}, {1, -1, 1},
-			{-1,  1, 1}, {1,  1, 1}
-		};
+			glm::mat4 const invViewProj{ glm::inverse(viewProj) };
 
-		glm::vec3 worldCorners[8];
-		for (size_t i{ 0 }; i < 8; ++i)
-		{
-			glm::vec4 worldPos{ invViewProj * glm::vec4(ndcCorners[i], 1.0f) };
-			worldCorners[i] = glm::vec3(worldPos) / worldPos.w;
+			glm::vec3 constexpr ndcCorners[8]
+			{
+				{-1, -1, 0}, {1, -1, 0},
+				{-1,  1, 0}, {1,  1, 0},
+				{-1, -1, 1}, {1, -1, 1},
+				{-1,  1, 1}, {1,  1, 1}
+			};
+
+			glm::vec3 worldCorners[8];
+			for (size_t i{ 0 }; i < 8; ++i)
+			{
+				glm::vec4 worldPos{ invViewProj * glm::vec4(ndcCorners[i], 1.0f) };
+				worldCorners[i] = glm::vec3(worldPos) / worldPos.w;
+			}
+
+			glm::vec3 sceneAABBMin{ FLT_MAX };
+			glm::vec3 sceneAABBMax{ -FLT_MAX };
+			for (size_t i{ 0 }; i < 8; ++i)
+			{
+				sceneAABBMin = glm::min(sceneAABBMin, worldCorners[i]);
+				sceneAABBMax = glm::max(sceneAABBMax, worldCorners[i]);
+			}
+			m_SceneAABBMin = sceneAABBMin;
+			m_SceneAABBMax = sceneAABBMax;
 		}
-
-		glm::vec3 sceneAABBMin{ FLT_MAX };
-		glm::vec3 sceneAABBMax{ -FLT_MAX };
-		for (size_t i{ 0 }; i < 8; ++i)
-		{
-			sceneAABBMin = glm::min(sceneAABBMin, worldCorners[i]);
-			sceneAABBMax = glm::max(sceneAABBMax, worldCorners[i]);
-		}
-
-		//TODO fix; hardcoded test RN
-		m_SceneAABBMin = sceneAABBMin;
-		m_SceneAABBMin = { -50, -50, -50 };
-		m_SceneAABBMax = sceneAABBMax;
-		m_SceneAABBMax = { 50, 50, 50 };
 	}
 
 	void VulkanLightManager::PreDraw(VkCommandBuffer commandBuffer, VkPipelineLayout layout, uint32_t setCount, VkDescriptorSet const* pDescriptorSets, uint32_t frame)

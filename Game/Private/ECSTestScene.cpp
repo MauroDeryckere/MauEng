@@ -30,7 +30,7 @@ namespace MauGam
 			auto& transform{ enttGame.GetComponent<CTransform>() };
 			transform.Scale({ 100, 100, 100 });
 
-			//enttGame.AddComponent<CStaticMesh>("Resources/Models/ABeautifulGame/GLTF/ABeautifulGame.gltf");
+			enttGame.AddComponent<CStaticMesh>("Resources/Models/ABeautifulGame/GLTF/ABeautifulGame.gltf");
 		}
 
 		
@@ -39,7 +39,7 @@ namespace MauGam
 
 			auto& transform{ enttHelmet.GetComponent<CTransform>() };
 			transform.Scale({ 100.f, 100.f, 100.f });
-			enttHelmet.AddComponent<CStaticMesh>("Resources/Models/FlightHelmet/glTF/FlightHelmet.gltf");
+			//enttHelmet.AddComponent<CStaticMesh>("Resources/Models/FlightHelmet/glTF/FlightHelmet.gltf");
 		}
 
 		{
@@ -125,6 +125,8 @@ namespace MauGam
 			l.lightColour = { 1.f, 1.f, 1.f };
 			l.direction_position = { -1, -1, 0 };
 		}
+
+		SetSceneAABBOverride({ -100, -100, -100 }, { 100, 100, 100 });
 	}
 
 	void ECSTestScene::OnLoad()

@@ -30,6 +30,7 @@ namespace MauRen
 
 		void Draw(VkCommandBuffer const& commandBuffer, VulkanGraphicsPipelineContext const& graphicsPipelineContext, VulkanDescriptorContext& descriptorContext, VulkanSwapchainContext& swapChainContext, uint32_t frame);
 
+		void SetSceneAABBOverride(glm::vec3 const& min, glm::vec3 const& max);
 		void PreQueue(glm::mat4 const& viewProj);
 		void PreDraw(VkCommandBuffer commandBuffer, VkPipelineLayout layout, uint32_t setCount, VkDescriptorSet const* pDescriptorSets, uint32_t frame);
 		void QueueLight(VulkanCommandPoolManager& cmdPoolManager, VulkanDescriptorContext& descriptorContext, MauEng::CLight const& light);
@@ -65,6 +66,8 @@ namespace MauRen
 
 		glm::vec3 m_SceneAABBMin;
 		glm::vec3 m_SceneAABBMax;
+
+		bool m_HasAABBBOverride;
 
 		VkSampler m_ShadowMapSampler{ VK_NULL_HANDLE };
 

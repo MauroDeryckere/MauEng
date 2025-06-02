@@ -175,6 +175,11 @@ namespace MauRen
 		return VulkanLightManager::GetInstance().CreateLight();
 	}
 
+	void VulkanRenderer::SetSceneAABBOverride(glm::vec3 const& min, glm::vec3 const& max)
+	{
+		VulkanLightManager::GetInstance().SetSceneAABBOverride(min, max);
+	}
+
 	void VulkanRenderer::PreLightQueue(glm::mat4 const& viewProj)
 	{
 		VulkanLightManager::GetInstance().PreQueue(viewProj);
@@ -419,7 +424,7 @@ namespace MauRen
 			vkCmdBeginRendering(commandBuffer, &renderInfoDepthPrepass);
 				vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipelineContext.GetDepthPrePassPipeline());
 				VulkanMeshManager::GetInstance().Draw(commandBuffer, m_GraphicsPipelineContext.GetDepthPrePassPipelineLayout(), 1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame], m_CurrentFrame);
-				RenderDebug(commandBuffer, true);
+				//RenderDebug(commandBuffer, true);
 			vkCmdEndRendering(commandBuffer);
 		}
 #pragma endregion

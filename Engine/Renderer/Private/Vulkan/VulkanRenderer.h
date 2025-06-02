@@ -47,6 +47,7 @@ namespace MauRen
 
 		virtual uint32_t CreateLight() override;
 
+		virtual void SetSceneAABBOverride(glm::vec3 const& min, glm::vec3 const& max) override;
 		virtual void PreLightQueue(glm::mat4 const& viewProj) override;
 		virtual void QueueLight(MauEng::CLight const& light) override;
 		virtual void QueueDraw(glm::mat4 const& transformMat, MauEng::CStaticMesh const& mesh) override;
