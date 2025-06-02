@@ -66,5 +66,7 @@ layout(push_constant) uniform PushConstants {
 void main()
 {
     MeshInstanceData instance = instances[gl_InstanceIndex];
-	gl_Position = lights[pc.lightIndex].viewProj * instance.modelMatrix * vec4(inPosition, 1.0);
+	gl_Position =   lights[pc.lightIndex].viewProj * 
+                    instance.modelMatrix * 
+                    vec4(inPosition, 1.0);
 }

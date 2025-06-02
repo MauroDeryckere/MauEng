@@ -1,10 +1,12 @@
 #include "VulkanLightManager.h"
 
 #include "VulkanMeshManager.h"
+#include "../../../../MauEng/Public/ServiceLocator.h"
 #include "../../MauEng/Public/Components/CLight.h"
 #include "Vulkan/VulkanCommandPoolManager.h"
 #include "Vulkan/VulkanDescriptorContext.h"
 #include "Vulkan/VulkanGraphicsPipelineContext.h"
+
 
 namespace MauRen
 {
@@ -81,6 +83,20 @@ namespace MauRen
 				renderInfoDepthPrepass.pDepthAttachment = &depthAttachment;
 				renderInfoDepthPrepass.pStencilAttachment = nullptr;
 
+				VkViewport viewport{};
+				viewport.x = 0.0f;
+				viewport.y = 0.0f;
+				viewport.width = (float)SHADOW_MAP_SIZE;
+				viewport.height = (float)SHADOW_MAP_SIZE;
+				viewport.minDepth = 0.0f;
+				viewport.maxDepth = 1.0f;
+				vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+
+				VkRect2D scissor{};
+				scissor.offset = { 0, 0 };
+				scissor.extent = { SHADOW_MAP_SIZE, SHADOW_MAP_SIZE };
+				vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+
 				vkCmdBeginRendering(commandBuffer, &renderInfoDepthPrepass);
 				vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipelineContext.GetShadowPassPipeline());
 					vkCmdPushConstants(
@@ -109,14 +125,17 @@ namespace MauRen
 
 	void VulkanLightManager::PreQueue(glm::mat4 const& viewProj)
 	{
+
+		// Should just be in VIEW - TODO
+
 		glm::mat4 const invViewProj{ glm::inverse(viewProj) };
 
 		glm::vec3 constexpr ndcCorners[8]
 		{
-			{-1, -1, -1}, {1, -1, -1},
-			{-1,  1, -1}, {1,  1, -1},
-			{-1, -1,  1}, {1, -1,  1},
-			{-1,  1,  1}, {1,  1,  1}
+			{-1, -1, 0}, {1, -1, 0},
+			{-1,  1, 0}, {1,  1, 0},
+			{-1, -1, 1}, {1, -1, 1},
+			{-1,  1, 1}, {1,  1, 1}
 		};
 
 		glm::vec3 worldCorners[8];
@@ -134,8 +153,11 @@ namespace MauRen
 			sceneAABBMax = glm::max(sceneAABBMax, worldCorners[i]);
 		}
 
+		//TODO fix; hardcoded test RN
 		m_SceneAABBMin = sceneAABBMin;
+		m_SceneAABBMin = { -50, -50, -50 };
 		m_SceneAABBMax = sceneAABBMax;
+		m_SceneAABBMax = { 50, 50, 50 };
 	}
 
 	void VulkanLightManager::PreDraw(VkCommandBuffer commandBuffer, VkPipelineLayout layout, uint32_t setCount, VkDescriptorSet const* pDescriptorSets, uint32_t frame)
@@ -205,11 +227,21 @@ namespace MauRen
 		vulkanLight.intensity = light.intensity;
 		vulkanLight.shadowMapIndex = shadowID;
 		vulkanLight.castsShadows = light.castShadows ? 1 : 0;
-
 		if (0 == vulkanLight.type)
 		{
+			//TOOD
+			//l.viewProj is incorrect
+
 			glm::vec3 const sceneCenter{ (m_SceneAABBMin + m_SceneAABBMax) * .5f };
 			glm::vec3 const lightDir{ glm::normalize(vulkanLight.direction_position) };
+			// Calc safe up vec (aligned dir and up)
+			glm::vec3 const up{
+				glm::abs(glm::dot(lightDir, glm::vec3{0.f, 1.f, 0.f})) > .99f
+				? glm::vec3{ 0.f, 0.f, 1.f }
+				: glm::vec3{ 0.f, 1.f, 0.f }
+			};
+			//printf("\nScene CENTER: (%.3f, %.3f, %.3f)\n", sceneCenter.x, sceneCenter.y, sceneCenter.z);
+			printf("\UP: (%.3f, %.3f, %.3f)\n", up.x, up.y, up.z);
 
 			std::vector<glm::vec3> const sceneCorners
 			{
@@ -223,14 +255,6 @@ namespace MauRen
 				{ m_SceneAABBMax.x, m_SceneAABBMax.y, m_SceneAABBMax.z }
 			};
 
-			const glm::mat4 vulkanClipMatrix
-			{
-				1.0f, 0.0f, 0.0f, 0.0f,
-				0.0f, 1.0f, 0.0f, 0.0f,
-				0.0f, 0.0f, 0.5f, 0.0f,
-				0.0f, 0.0f, 0.5f, 1.0f
-			};
-
 			// Project corners on light dir
 			float minProj{ FLT_MAX };
 			float maxProj{ -FLT_MAX };
@@ -242,16 +266,13 @@ namespace MauRen
 				maxProj = std::max(maxProj, proj);
 			}
 
+			float const sceneExtent = (maxProj - minProj) * 0.5f;
+
 			// Distance & position (even though theres not really a position for dir light)
 			float const distance{ maxProj - glm::dot(sceneCenter, lightDir) };
-			glm::vec3 const lightPos{ sceneCenter - lightDir * distance };
+			glm::vec3 const lightPos{ sceneCenter - lightDir * sceneExtent };
 
-			// Calc safe up vec (aligned dir and up)
-			glm::vec3 const up{
-				(glm::abs(glm::dot(lightDir, glm::vec3{0.f, 1.f, 0.f}))) > .99f
-				? glm::vec3{ 0.f, 0.f, 1.f }
-				: glm::vec3{ 0.f, 1.f, 0.f }
-			};
+			//printf("\LIGHT POs: (%.3f, %.3f, %.3f)\n", lightPos.x, lightPos.y, lightPos.z);
 
 			// Use lightpos wth centter to gen view mat - inverted Y axis for up
 			auto const lightView{ glm::lookAt(lightPos, sceneCenter, up) };
@@ -269,15 +290,56 @@ namespace MauRen
 
 			// With min and max, create orthographics proj matrix
 			float const nearZ{ 0.f };
-			float const farZ{ maxLightSpace.z - minLightSpace.z };
+			float const farZ{ maxLightSpace.z - minLightSpace.z};
 
-			auto const lightProj{
-				glm::ortho(minLightSpace.x, maxLightSpace.x,
+			//float const nearZ{ minLightSpace.z };
+			//float const farZ{ maxLightSpace.z };
+
+			auto lightProj{
+				glm::orthoRH_ZO(minLightSpace.x, maxLightSpace.x,
 				minLightSpace.y, maxLightSpace.y, 
 				nearZ, farZ)
 			};
+			printf("minLS: (%.3f, %.3f, %.3f)\n", minLightSpace.x, minLightSpace.y, minLightSpace.z);
+			printf("maxLS: (%.3f, %.3f, %.3f)\n", maxLightSpace.x, maxLightSpace.y, maxLightSpace.z);
+			vulkanLight.lightViewProj = lightProj * lightView;
 
-			vulkanLight.lightViewProj = vulkanClipMatrix * lightProj * lightView;
+			auto printMat4 = [](const glm::mat4& mat) {
+				for (int row = 0; row < 4; ++row) {
+					printf("[ ");
+					for (int col = 0; col < 4; ++col) {
+						printf("% .6f ", mat[col][row]);  // transpose access
+					}
+					printf("]\n");
+				}
+				};
+
+			printf("\n TEST BEFORE: %f %f %f %f \n", lightPos.x, lightPos.y, lightPos.z, 1.0F);
+			glm::vec4 test{ lightPos.x, lightPos.y, lightPos.z, 1.f };
+			auto t = vulkanLight.lightViewProj * test;
+			printf("\n TEST OUTPUT: %f %f %f %f \n", t.x, t.y, t.z, t.w);
+
+			printf("\n TEST BEFORE: %f %f %f %f \n", 100, 100, 100, 1.0F);
+			glm::vec4 test2{ 100, 100, 100, 1.f };
+			auto t2 = vulkanLight.lightViewProj * test2;
+			printf("\n TEST OUTPUT: %f %f %f %f \n", t2.x, t2.y, t2.z, t2.w);
+
+			printf("\n VIEW \n");
+			printMat4(lightView);
+
+			printf("\n PROJ \n");
+			printMat4(lightProj);
+			//printMat4(vulkanLight.lightViewProj);
+			//printMat4(vulkanLight.lightViewProj);
+
+			for (auto& c : sceneCorners)
+			{
+				DEBUG_RENDERER.DrawSphere(c, 10.f);
+			}
+
+			DEBUG_RENDERER.DrawSphere(m_SceneAABBMin, 20.f, {}, {1, 1, 1});
+			DEBUG_RENDERER.DrawSphere(m_SceneAABBMax, 20.f, {}, { 1, 1, 1 });
+			DEBUG_RENDERER.DrawSphere(sceneCenter, 50.f, {}, { 1, 1, 0 });
 		}
 
 		m_Lights.emplace_back(vulkanLight);
@@ -294,22 +356,21 @@ namespace MauRen
 
 		VkSamplerCreateInfo samplerInfo{};
 		samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-		samplerInfo.magFilter = VK_FILTER_LINEAR;
-		samplerInfo.minFilter = VK_FILTER_LINEAR;
+		samplerInfo.magFilter = VK_FILTER_NEAREST;
+		samplerInfo.minFilter = VK_FILTER_NEAREST;
 
 		// If addressed outside of bounds, repeat (tileable texture)
-		samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
-		samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
-		samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+		samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+		samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+		samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
 
-		samplerInfo.anisotropyEnable = VK_TRUE;
 		VkPhysicalDeviceProperties properties{};
 		vkGetPhysicalDeviceProperties(deviceContext->GetPhysicalDevice(), &properties);
 
 		samplerInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
 		samplerInfo.unnormalizedCoordinates = VK_FALSE;
 
-		samplerInfo.compareEnable = VK_TRUE;
+		samplerInfo.compareEnable = VK_FALSE;
 		samplerInfo.compareOp = VK_COMPARE_OP_LESS;
 
 		samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;

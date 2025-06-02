@@ -22,9 +22,18 @@ namespace MauGam
 			auto& transform{ enttCar.GetComponent<CTransform>() };
 			transform.Scale({ .5f, .5f, .5f });
 
-			//	enttCar.AddComponent<CStaticMesh>("Resources/Models/old_rusty_car/scene.gltf");
+			//enttCar.AddComponent<CStaticMesh>("Resources/Models/old_rusty_car/scene.gltf");
+		}
+		{
+			Entity enttGame{ CreateEntity() };
+
+			auto& transform{ enttGame.GetComponent<CTransform>() };
+			transform.Scale({ 100, 100, 100 });
+
+			//enttGame.AddComponent<CStaticMesh>("Resources/Models/ABeautifulGame/GLTF/ABeautifulGame.gltf");
 		}
 
+		
 		{
 			Entity enttHelmet{ CreateEntity() };
 
@@ -54,7 +63,7 @@ namespace MauGam
 		}
 
 
-		bool constexpr ENABLE_HIGH_INSTANCE_TEST{ true };
+		bool constexpr ENABLE_HIGH_INSTANCE_TEST{ false };
 		uint32_t constexpr NUM_INSTANCES{ 10'000 };
 		if constexpr (ENABLE_HIGH_INSTANCE_TEST)
 		{
@@ -95,9 +104,9 @@ namespace MauGam
 
 		//	auto& l = entLightTest.AddComponent<CLight>();
 		//	l.type = ELightType::POINT;
-		//	l.direction_position = { 100.f, 50, 0 };
+		//	l.direction_position = { 0, 200, 0 };
 		//	l.intensity = 1000000.f;
-		//	l.lightColour = { 0.f, 0.f, 1.f };
+		//	l.lightColour = { 1.f, 1.f, 1.f };
 		//}
 		//{
 		//	Entity entLightTest{ CreateEntity() };
@@ -112,8 +121,9 @@ namespace MauGam
 			Entity entLightTest{ CreateEntity() };
 
 			auto& l = entLightTest.AddComponent<CLight>();
-			l.intensity = 10000.f;
-			l.lightColour = { 1.f, 1.f, 0.f };
+			l.intensity = 5000.f;
+			l.lightColour = { 1.f, 1.f, 1.f };
+			l.direction_position = { -1, -1, 0 };
 		}
 	}
 

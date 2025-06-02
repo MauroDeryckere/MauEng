@@ -55,7 +55,10 @@ float CalculateEV100FromAverageLuminance(float averageLuminance)
 	return log2(averageLuminance * 100.f) / K;
 }
 
-#define INDOOR
+//#define INDOOR
+#define SUNNY_16
+
+const bool enableExposure = true;
 
 void main()
 {
@@ -71,9 +74,14 @@ void main()
     float shutterSpeed = 1.0f / 60.f;
 #endif
 
-    const float EV100 = 1.0f;
-	const float EV100PhysicalCam = CalculateEV100FromPhysicalCamera(aperture, shutterSpeed, ISO);
-	const float exposure = ConvertEV100ToExposure(EV100PhysicalCam);
+    float exposure = 1.0f;
+
+    if (enableExposure)
+    {
+        const float EV100 = 1.0f;
+        const float EV100PhysicalCam = CalculateEV100FromPhysicalCamera(aperture, shutterSpeed, ISO);
+        exposure = ConvertEV100ToExposure(EV100PhysicalCam);
+    }
 
     const vec3 hdrColor = texture(sampler2D(hdriImage, globalSampler), inFragUV).rgb;
     const vec3 mapped = ACESFilm(hdrColor * exposure);

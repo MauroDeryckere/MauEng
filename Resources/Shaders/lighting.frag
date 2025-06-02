@@ -1,4 +1,5 @@
 #version 450
+#extension GL_EXT_nonuniform_qualifier : enable
 
 layout(set = 0, binding = 0, std140) uniform UniformBufferObject
 {
@@ -48,7 +49,7 @@ layout(set = 0, binding = 12) buffer readonly LightDataBuffer
     Light lights[];
 };
 
-layout(set = 0, binding = 13) sampler shadowMapSampler
+layout(set = 0, binding = 13) uniform sampler shadowMapSampler;
 
 layout(location = 0) in vec2 fragUV;
 layout(location = 0) out vec4 outColor;
@@ -109,16 +110,45 @@ void main()
         // DIRECTIONAL LIGHT
         if (l.type == 0u)
         {
-            vec3 L = normalize(-l.direction_position);
+            vec4 lightSpacePos = l.viewProj * vec4(worldPos, 1.0f);
+
+           // outColor = vec4(vec3(lightSpacePos.xyz), 1.0f);
+            //outColor = vec4(vec3(lightSpacePos.w), 1.0f);
+            lightSpacePos /= lightSpacePos.w;
+
+            vec3 shadowMapUV = vec3(lightSpacePos.xy * 0.5f + 0.5f, lightSpacePos.z);
+            //shadowMapUV.y = 1.0f - shadowMapUV.y;
+
+            // Closest depth
+            float closestDepth = texture(
+                sampler2D(ShadowMapBuffer[nonuniformEXT(l.shadowMapIndex)], shadowMapSampler),
+                shadowMapUV.xy).r;
+
+            float shadow = shadowMapUV.z > closestDepth ? 1.0 : 0.0;
+
+            vec3 L = -normalize(l.direction_position);
             vec3 irradiance = l.color * l.intensity;
 
             lighting += EvaluateBRDF(normal, viewDir, L,
                 albedo.rgb, metalness, roughness,
-                ao, irradiance);
+                ao, irradiance) * (1 - shadow);
+
+            //if (shadow == 0)
+            //{
+            //    outColor = vec4(1, 0, 0, 1);
+            //}
+            //else
+            //{
+            //    outColor = vec4(vec3(shadow), 1.0f);
+            //}
+
+            //outColor = vec4(lightSpacePos.xyz, 1.0f);
         }
         // POINT LIGHT
         else if (l.type == 1u)
         {
+            float shadowFactor = 1.0f;
+
             vec3 lightVec = l.direction_position - worldPos;
             float dist = length(lightVec);
             vec3  L = lightVec / dist;
@@ -135,7 +165,7 @@ void main()
     const vec3 ambient = vec3(0.03) * albedo.rgb;
     const vec3 color = lighting + ambient;
 
-    //olor = color / (color + vec3(1.0f));
+    //color = color / (color + vec3(1.0f));
 	//color = pow(color, vec3(1.0f / 2.2f));
     outColor = vec4(color, 1.0);
 
@@ -173,11 +203,10 @@ vec3 GetWorldPosFromDepth(float depth)
     // Convert from frag coordinate system to NDC
     vec2 ndc = vec2(
         (fragUV.x * 2 - 1),
-        (/*1 - */(fragUV.y * 2 - 1)));
-
+        (fragUV.y * 2 - 1));
     //ndc.y *= -1.f;
 
-    const vec4 clipSpacePos = vec4(ndc, (depth /** 2.0f - 1.0f*/), 1.0f);
+    const vec4 clipSpacePos = vec4(ndc, depth, 1.0f);
 
     // Inverse proj to view space
     vec4 viewSpacePos = ubo.invProj * clipSpacePos;

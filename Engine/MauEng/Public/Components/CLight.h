@@ -2,6 +2,7 @@
 #define MAUENG_CLIGHT_H
 
 #include "RendererIdentifiers.h"
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 
 namespace MauEng
@@ -21,7 +22,7 @@ namespace MauEng
 		bool castShadows{ true };
 
 		glm::vec3 lightColour{ 1.0f, 1.0f, 1.0f };
-		glm::vec3 direction_position{ 0.0f, -1.0f, 0.0f }; // Directional light direction or position for other lighttypes
+		glm::vec3 direction_position{ -1.0f, -1.0f, -1.0f }; // Directional light direction or position for other lighttypes
 
 		float intensity{ 1.0f };
 

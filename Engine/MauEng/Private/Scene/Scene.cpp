@@ -33,7 +33,7 @@ namespace MauEng
 				view.Each([](CLight const& l)
 					{
 						RENDERER.QueueLight(l);
-					}, std::execution::seq);
+					});
 			}
 		}
 	}
