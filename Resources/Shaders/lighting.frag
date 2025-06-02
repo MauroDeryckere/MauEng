@@ -49,7 +49,7 @@ layout(set = 0, binding = 12) buffer readonly LightDataBuffer
     Light lights[];
 };
 
-layout(set = 0, binding = 13) uniform sampler shadowMapSampler;
+layout(set = 0, binding = 13) uniform samplerShadow shadowMapSampler;
 
 layout(location = 0) in vec2 fragUV;
 layout(location = 0) out vec4 outColor;
@@ -110,6 +110,7 @@ void main()
         // DIRECTIONAL LIGHT
         if (l.type == 0u)
         {
+
             vec4 lightSpacePos = l.viewProj * vec4(worldPos, 1.0f);
 
            // outColor = vec4(vec3(lightSpacePos.xyz), 1.0f);
@@ -120,18 +121,21 @@ void main()
             //shadowMapUV.y = 1.0f - shadowMapUV.y;
 
             // Closest depth
-            float closestDepth = texture(
-                sampler2D(ShadowMapBuffer[nonuniformEXT(l.shadowMapIndex)], shadowMapSampler),
-                shadowMapUV.xy).r;
+            //float closestDepth = texture(
+            //    sampler2D(ShadowMapBuffer[nonuniformEXT(l.shadowMapIndex)], shadowMapSampler),
+            //    shadowMapUV.xy).r;
 
-            float shadow = shadowMapUV.z > closestDepth ? 1.0 : 0.0;
+            float shadow = texture(sampler2DShadow(ShadowMapBuffer[nonuniformEXT(l.shadowMapIndex)], shadowMapSampler),
+                                          shadowMapUV).r;
+
+            //float shadow = shadowMapUV.z > closestDepth ? 1.0 : 0.0;
 
             vec3 L = -normalize(l.direction_position);
             vec3 irradiance = l.color * l.intensity;
 
             lighting += EvaluateBRDF(normal, viewDir, L,
                 albedo.rgb, metalness, roughness,
-                ao, irradiance) * (1 - shadow);
+                ao, irradiance) * shadow;
 
             //if (shadow == 0)
             //{
