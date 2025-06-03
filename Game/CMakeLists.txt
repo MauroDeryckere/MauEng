@@ -7,6 +7,7 @@ target_sources(${EXECUTABLE_NAME} PRIVATE
     ${GAME_PRIVATE_DIR}/main.cpp
     ${GAME_PRIVATE_DIR}/DebugDrawingDemo.cpp
     ${GAME_PRIVATE_DIR}/ECSTestScene.cpp
+    ${GAME_PRIVATE_DIR}/DemoScene.cpp
 )
 
 # Include directories

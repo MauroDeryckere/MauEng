@@ -42,7 +42,7 @@ namespace MauRen
 		}
 
 		aiMatrix4x4 const rootTransform{ scene->mRootNode->mTransformation };
-
+		
         for (unsigned i{ 0 }; i < scene->mNumMeshes; ++i)
 		{
 			aiMesh const* const mesh{ scene->mMeshes[i] };
@@ -106,10 +106,18 @@ namespace MauRen
 			aiString matName;
 			auto result{ material->Get(AI_MATKEY_NAME, matName) };
 			ME_ASSERT(mesh->mMaterialIndex < scene->mNumMaterials);
-			ME_ASSERT(result == AI_SUCCESS);
+
+			std::string matStr{ matName.C_Str() };
+
+			if (result != AI_SUCCESS)
+			{
+				matStr = { path + std::to_string(mesh->mMaterialIndex) };
+				ME_LOG_WARN(MauCor::LogCategory::Renderer, "setting material name manually for:{}", matStr);
+
+			}
+
 			auto& matManager{ VulkanMaterialManager::GetInstance() };
 
-			std::string const matStr{ matName.C_Str() };
 			auto const getMat{ matManager.GetMaterial(matStr) };
 			if (getMat.first)
 			{
@@ -140,7 +148,7 @@ namespace MauRen
 		std::filesystem::path modelDir = modelPath.parent_path();
 
 		Material mat{};
-
+		 
 		aiString name;
 		if (material->Get(AI_MATKEY_NAME, name) == AI_SUCCESS)
 			mat.name = name.C_Str();
