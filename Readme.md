@@ -15,9 +15,9 @@
 	  - [Coordinate System](#coordinate-system)
 	  - [Pipeline Overview](#Pipeline-Overview)
 	  - [Features](#features)
-	  - [Features I want to add inn the near future](#features-i-want-to-add-inn-the-near-future)
-	  - [In the further future](#in-the-further-future)
 	  - [Debug Rendering](#debug-rendering)
+  - [Features I want to add inn the near future](#features-i-want-to-add-inn-the-near-future)
+	  - [In the further future](#in-the-further-future)
 
 ## Introduction
 
@@ -137,20 +137,11 @@ Reduce overdaw by doing a depth prepass.
 Assimp is integrated, and all formats supported by Assimp can be used to load meshes & materials. Meshes are split up in submeshes, these submeshes are then instanced.
 Default and invalid materials are used to prevent branching on the GPU.
 
-- Lighting & Material 
+- Lighting & Material<br>
  
-- Tone map & Exposure 
+- Tone map & Exposure<br>
 ![Screenshot](docs/FlightHelmetExample.png)
 
-
-### Features I want to add in the near future
-- GPU frustrum culling
-- Deleting / hiding meshes
-- Auto exposure
-
-### In the further future: 
-- Animations
-- Different Post processing effects
 
 ### Debug Rendering
 Easy to use API for debug rendering.
@@ -171,4 +162,17 @@ void GameScene::Tick()
 
 Result of that last example is this: 
 ![Screenshot](docs/SphereDebugDrawingExample.png)
+
+## Features I want to add in the near future
+- Image based lighting (skybox)
+- Auto exposure
+- GPU frustrum culling
+- Deleting / hiding meshes
+- Optimized scene AABB calculation for shadow maps
+- Soft shadows
+- ImGUI integration
+
+### In the further future: 
+- Animations
+- Different Post processing effects
 
