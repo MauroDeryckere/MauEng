@@ -27,9 +27,9 @@ namespace MauGam
 		{
 			Entity enttHelmet{ CreateEntity() };
 
-			auto& transform{ enttHelmet.GetComponent<CTransform>() };
+	 		auto& transform{ enttHelmet.GetComponent<CTransform>() };
 			transform.Scale({ 100.f, 100.f, 100.f });
-			//enttHelmet.AddComponent<CStaticMesh>("Resources/Models/FlightHelmet/glTF/FlightHelmet.gltf");
+			enttHelmet.AddComponent<CStaticMesh>("Resources/Models/FlightHelmet/glTF/FlightHelmet.gltf");
 		}
 
 		bool constexpr ENABLE_HIGH_INSTANCE_TEST{ false };
