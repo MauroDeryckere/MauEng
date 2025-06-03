@@ -25,43 +25,12 @@ namespace MauGam
 			//enttCar.AddComponent<CStaticMesh>("Resources/Models/old_rusty_car/scene.gltf");
 		}
 		{
-			Entity enttGame{ CreateEntity() };
-
-			auto& transform{ enttGame.GetComponent<CTransform>() };
-			transform.Scale({ 100, 100, 100 });
-
-			enttGame.AddComponent<CStaticMesh>("Resources/Models/ABeautifulGame/GLTF/ABeautifulGame.gltf");
-		}
-
-		
-		{
 			Entity enttHelmet{ CreateEntity() };
 
 			auto& transform{ enttHelmet.GetComponent<CTransform>() };
 			transform.Scale({ 100.f, 100.f, 100.f });
 			//enttHelmet.AddComponent<CStaticMesh>("Resources/Models/FlightHelmet/glTF/FlightHelmet.gltf");
 		}
-
-		{
-			//TODO does not work
-			Entity enttSponza{ CreateEntity() };
-
-			auto& transform{ enttSponza.GetComponent<CTransform>() };
-			//	MauCor::Rotator const rot{ 90, 0, 180 };
-				//transform.Rotate(rot);
-			//	transform.Scale({ .5f, .5f, .5f });
-
-				//enttSponza.AddComponent<CStaticMesh>("Resources/Models/Sponza/glTF/Sponza.gltf");
-		}
-
-		{
-			// Note: spider has no normal map
-			Entity entSpider{ CreateEntity() };
-			auto& transform{ entSpider.GetComponent<CTransform>() };
-			//transform.Scale({ .05f, .05f, .05f });
-			//entSpider.AddComponent<CStaticMesh>("Resources/Models/Spider/spider.obj");
-		}
-
 
 		bool constexpr ENABLE_HIGH_INSTANCE_TEST{ false };
 		uint32_t constexpr NUM_INSTANCES{ 10'000 };
@@ -81,7 +50,6 @@ namespace MauGam
 				entSpider.AddComponent<CStaticMesh>("Resources/Models/Spider/spider.obj");
 			}
 		}
-
 
 		auto& input{ INPUT_MANAGER };
 		input.BindAction("MoveUp", MauEng::KeyInfo{ SDLK_UP, MauEng::KeyInfo::ActionType::Held });
@@ -117,6 +85,7 @@ namespace MauGam
 		//	l.intensity = 1000000.f;
 		//	l.lightColour = { 1.f, 0.f, 0.f };
 		//}
+
 		{
 			Entity entLightTest{ CreateEntity() };
 
@@ -127,6 +96,11 @@ namespace MauGam
 		}
 
 		SetSceneAABBOverride({ -100, -100, -100 }, { 100, 100, 100 });
+
+		if constexpr (ENABLE_HIGH_INSTANCE_TEST)
+		{
+			SetSceneAABBOverride({ -350, -350, -350 }, { 350, 350, 350 });
+		}
 	}
 
 	void ECSTestScene::OnLoad()
