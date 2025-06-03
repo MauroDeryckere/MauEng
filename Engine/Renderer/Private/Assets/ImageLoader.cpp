@@ -62,4 +62,28 @@ namespace MauRen
 			pixels = nullptr;
 		}
 	}
+
+	HDRI_Image::HDRI_Image(std::string const& filepath, int desiredChannels)
+	{
+		pixels = stbi_loadf(filepath.c_str(), &width, &height, &channels, desiredChannels);
+
+		if (!pixels or width == 0 or height == 0)
+		{
+			throw std::runtime_error("Failed to load texture image!");
+		}
+
+		if (desiredChannels > 0)
+		{
+			channels = desiredChannels;
+		}
+	}
+
+	HDRI_Image::~HDRI_Image()
+	{
+		if (pixels)
+		{
+			delete[] pixels;
+			pixels = nullptr;
+		}
+	}
 }

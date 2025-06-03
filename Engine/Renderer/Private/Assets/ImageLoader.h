@@ -23,6 +23,23 @@ namespace MauRen
 		Image(Image&& other) noexcept = delete;
 		Image& operator=(Image&& other) noexcept = delete;
 	};
+
+	struct HDRI_Image final
+	{
+		int width{ 0 };
+		int height{ 0 };
+		int channels{ 0 };
+		float* pixels{ nullptr };
+
+		HDRI_Image() = default;
+		HDRI_Image(std::string const& filepath, int desiredChannels = 4);
+		~HDRI_Image();
+
+		HDRI_Image(const HDRI_Image&) = delete;
+		HDRI_Image& operator=(const HDRI_Image&) = delete;
+		HDRI_Image(HDRI_Image&& other) noexcept = delete;
+		HDRI_Image& operator=(HDRI_Image&& other) noexcept = delete;
+	};
 }
 
 #endif
