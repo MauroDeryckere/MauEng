@@ -71,12 +71,16 @@ namespace MauRen
 
 		VkSampler m_ShadowMapSampler{ VK_NULL_HANDLE };
 
+		VulkanImage m_Skybox{};
+
 		void CreateShadowMapSampler(VulkanDescriptorContext& descriptorContext);
 
 		void CreateDefaultShadowMap(VulkanCommandPoolManager& cmdPoolManager, VulkanDescriptorContext& descriptorContext, uint32_t width, uint32_t height);
 		void CreateShadowMap(VulkanCommandPoolManager& cmdPoolManager, uint32_t width, uint32_t height);
 
 		void InitLightBuffers();
+
+		void LoadSkyBox();
 	};
 }
 #endif

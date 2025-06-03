@@ -3,6 +3,7 @@
 #include "VulkanMeshManager.h"
 #include "../../../../MauEng/Public/ServiceLocator.h"
 #include "../../MauEng/Public/Components/CLight.h"
+#include "Assets/ImageLoader.h"
 #include "Vulkan/VulkanCommandPoolManager.h"
 #include "Vulkan/VulkanDescriptorContext.h"
 #include "Vulkan/VulkanGraphicsPipelineContext.h"
@@ -17,6 +18,8 @@ namespace MauRen
 		CreateShadowMapSampler(descriptorContext);
 		CreateDefaultShadowMap(cmdPoolManager, descriptorContext, SHADOW_MAP_SIZE, SHADOW_MAP_SIZE);
 		InitLightBuffers();
+
+		LoadSkyBox();
 	}
 
 	void VulkanLightManager::Destroy()
@@ -34,6 +37,8 @@ namespace MauRen
 		}
 
 		VulkanUtils::SafeDestroy(deviceContext->GetLogicalDevice(), m_ShadowMapSampler, nullptr);
+
+		m_Skybox.Destroy();
 	}
 
 	uint32_t VulkanLightManager::CreateLight()
@@ -441,5 +446,33 @@ namespace MauRen
 			// Persistent mapping
 			vkMapMemory(deviceContext->GetLogicalDevice(), m_LightBuffers[i].buffer.bufferMemory, 0, BUFFER_SIZE, 0, &m_LightBuffers[i].mapped);
 		}
+	}
+
+	void VulkanLightManager::LoadSkyBox()
+	{
+		HDRI_Image img{ "Resources/Skybox/circus_arena_4k.hdr", 4 };
+
+		uint64_t const imageSize{ static_cast<uint64_t>(img.width) * img.height * 4 * sizeof(float) };
+		uint32_t const faceSize{ static_cast<uint32_t>(img.height) };
+
+		m_Skybox = VulkanImage{
+			VK_FORMAT_R8G8B8A8_SRGB,
+			VK_IMAGE_TILING_OPTIMAL,
+			VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT,
+			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+			VK_SAMPLE_COUNT_1_BIT,
+			static_cast<uint32_t>(img.width),
+			static_cast<uint32_t>(img.height),
+			1,
+			6,
+			VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT
+		};
+
+		m_Skybox.CreateImageView(VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_VIEW_TYPE_CUBE);
+
+
+		// TODO 6 temp views, one for each layer!
+		// TODO render into using dynamic rendering
+
 	}
 }

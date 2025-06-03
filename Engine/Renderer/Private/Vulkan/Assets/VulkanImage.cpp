@@ -241,20 +241,20 @@ namespace MauRen
 		CmdPoolManager.EndSingleTimeCommands(commandBuffer);
 	}
 
-	uint32_t VulkanImage::CreateImageView(VkImageAspectFlags aspectFlags)
+	uint32_t VulkanImage::CreateImageView(VkImageAspectFlags aspectFlags, VkImageViewType viewType)
 	{
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 
 		VkImageViewCreateInfo viewInfo{};
 		viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 		viewInfo.image = image;
-		viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+		viewInfo.viewType = viewType;
 		viewInfo.format = format;
 		viewInfo.subresourceRange.aspectMask = aspectFlags;
 		viewInfo.subresourceRange.baseMipLevel = 0;
 		viewInfo.subresourceRange.levelCount = mipLevels;
 		viewInfo.subresourceRange.baseArrayLayer = 0;
-		viewInfo.subresourceRange.layerCount = 1;
+		viewInfo.subresourceRange.layerCount = arrayLayers;
 
 		VkImageView imageView;
 		if (vkCreateImageView(deviceContext->GetLogicalDevice(), &viewInfo, nullptr, &imageView) != VK_SUCCESS)
@@ -279,7 +279,7 @@ namespace MauRen
 
 	VulkanImage::VulkanImage(VkFormat imgFormat, VkImageTiling tiling, VkImageUsageFlags usage,
 	                         VkMemoryPropertyFlags properties, VkSampleCountFlagBits numSamples, uint32_t imgWidth, uint32_t imgHeight,
-	                         uint32_t imgMipLevels)
+	                         uint32_t imgMipLevels, uint32_t arrLayers, VkImageCreateFlags flags)
 	{
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 
@@ -289,6 +289,7 @@ namespace MauRen
 		height = imgHeight;
 
 		mipLevels = imgMipLevels;
+		arrayLayers = arrLayers;
 
 		VkImageCreateInfo imageInfo{};
 		imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -297,7 +298,7 @@ namespace MauRen
 		imageInfo.extent.height = height;
 		imageInfo.extent.depth = 1;
 		imageInfo.mipLevels = mipLevels;
-		imageInfo.arrayLayers = 1;
+		imageInfo.arrayLayers = arrayLayers;
 		
 		imageInfo.format = format;
 		imageInfo.tiling = tiling;
@@ -307,8 +308,8 @@ namespace MauRen
 		imageInfo.usage = usage;
 		imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 		imageInfo.samples = numSamples;
-		imageInfo.flags = 0; // Optional
-
+		imageInfo.flags = flags;
+		
 		if (vkCreateImage(deviceContext->GetLogicalDevice(), &imageInfo, nullptr, &image) != VK_SUCCESS)
 		{
 			throw std::runtime_error("Failed to create image!");

@@ -21,7 +21,7 @@ namespace MauRen
 		uint32_t width{ 0 };
 		uint32_t height{ 0 };
 		uint32_t mipLevels{ 1 };
-
+		uint32_t arrayLayers{ 1 };
 		void Destroy();
 
 		// Transition image layout using single time commands 
@@ -35,14 +35,29 @@ namespace MauRen
 									VkAccessFlags2 dstAccessMask);
 
 		void GenerateMipmaps(VulkanCommandPoolManager const& CmdPoolManager);
-		uint32_t CreateImageView(VkImageAspectFlags aspectFlags);
+		uint32_t CreateImageView(VkImageAspectFlags aspectFlags, VkImageViewType viewType = VK_IMAGE_VIEW_TYPE_2D);
 
 		void DestroyAllImageViews() noexcept;
+
+		[[nodiscard]] bool Valid() const noexcept
+		{
+			return  VK_NULL_HANDLE != image
+				and VK_NULL_HANDLE != imageMemory;
+		}
 
 		// Manual creation if necessary
 		VulkanImage() = default;
 		// Fully create image via the constructor
-		VulkanImage(VkFormat imgFormat, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkSampleCountFlagBits numSamples, uint32_t imgWidth, uint32_t imgHeight, uint32_t imgMipLevels = 1);
+		VulkanImage(VkFormat imgFormat, 
+					VkImageTiling tiling, 
+					VkImageUsageFlags usage, 
+					VkMemoryPropertyFlags properties,
+					VkSampleCountFlagBits numSamples, 
+					uint32_t imgWidth, 
+					uint32_t imgHeight, 
+					uint32_t imgMipLevels = 1,
+					uint32_t arrLayers = 1,
+					VkImageCreateFlags flags = 0);
 
 		~VulkanImage() = default;
 
