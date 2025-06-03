@@ -14,6 +14,18 @@ namespace MauGam
 		virtual void Tick() override;
 		virtual void OnRender() const override;
 	private:
+		enum class EDemo : uint8_t
+		{
+			Sponza,
+			Chess,
+			COUNT
+		};
+
+		EDemo m_Demo{ EDemo::Chess };
+
+		void SetupInput();
+		void HandleInput();
+
 	};
 }
 

@@ -4,6 +4,7 @@
 - [3D Game Engine Project](#3d-game-engine-project)
   - [Table of Contents](#table-of-contents)
   - [Introduction](#introduction)
+  - [Demo](#demo)
   - [Core](#core)
 	- [Logging](#logging)
 	- [Debugging - Asserts](#debugging---asserts)
@@ -18,6 +19,16 @@
 	  - [In the further future](#in-the-further-future)
 	  - [Debug Rendering](#debug-rendering)
 
+## Introduction
+
+## Demo
+
+Keybinds & config
+F4 toggle shadows
+F5 lower light intensity 
+F6 up light intesnity
+Mouse movement, rotate cam
+arrows cam movement
 ## Core
 
 ### Logging
