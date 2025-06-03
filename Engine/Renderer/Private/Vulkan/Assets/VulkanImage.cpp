@@ -63,10 +63,10 @@ namespace MauRen
 			srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
 			dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 		}
-		else
-		{
-			throw std::invalid_argument("Unsupported layout transition!");
-		}
+		//else
+		//{
+		//	throw std::invalid_argument("Unsupported layout transition!");
+		//}
 
 		TransitionImageLayout(commandBuffer, newLayout, srcStageMask, dstStageMask, srcAccessMask, dstAccessMask);
 
@@ -298,7 +298,7 @@ namespace MauRen
 		imageInfo.extent.depth = 1;
 		imageInfo.mipLevels = mipLevels;
 		imageInfo.arrayLayers = 1;
-
+		
 		imageInfo.format = format;
 		imageInfo.tiling = tiling;
 		imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;

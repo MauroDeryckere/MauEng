@@ -24,6 +24,9 @@ namespace MauRen
 		[[nodiscard]] VkPipeline GetDepthPrePassPipeline() const noexcept { return m_DepthPrePassPipeline; }
 		[[nodiscard]] VkPipelineLayout GetDepthPrePassPipelineLayout() const noexcept { return m_DepthPrePassPipelineLayout; }
 
+		[[nodiscard]] VkPipeline GetShadowPassPipeline() const noexcept { return m_ShadowPassPipeline; }
+		[[nodiscard]] VkPipelineLayout GetShadowPassPipelineLayout() const noexcept { return m_ShadowPassPipelineLayout; }
+
 		[[nodiscard]] VkPipeline GetDebugPipeline() const noexcept { return m_DebugPipeline; }
 		[[nodiscard]] VkPipelineLayout GetDebugPipelineLayout() const noexcept { return m_DebugPipelineLayout; }
 
@@ -48,6 +51,9 @@ namespace MauRen
 		VkPipelineLayout m_DepthPrePassPipelineLayout{ VK_NULL_HANDLE };
 		VkPipeline m_DepthPrePassPipeline{ VK_NULL_HANDLE };
 
+		VkPipelineLayout m_ShadowPassPipelineLayout{ VK_NULL_HANDLE };
+		VkPipeline m_ShadowPassPipeline{ VK_NULL_HANDLE };
+
 		VkPipelineLayout m_DebugPipelineLayout{ VK_NULL_HANDLE };
 		VkPipeline m_DebugPipeline{ VK_NULL_HANDLE };
 
@@ -62,6 +68,7 @@ namespace MauRen
 
 		void CreateForwardPipeline(VulkanSwapchainContext* pSwapChainContext, VkDescriptorSetLayout descriptorSetLayout, uint32_t descriptorSetLayoutCount);
 		void CreateDepthPrePassPipeline(VulkanSwapchainContext* pSwapChainContext, VkDescriptorSetLayout descriptorSetLayout, uint32_t descriptorSetLayoutCount);
+		void CreateShadowPassPipeline(VulkanSwapchainContext* pSwapChainContext, VkDescriptorSetLayout descriptorSetLayout, uint32_t descriptorSetLayoutCount);
 		void CreateDebugGraphicsPipeline(VulkanSwapchainContext* pSwapChainContext, VkDescriptorSetLayout descriptorSetLayout, uint32_t descriptorSetLayoutCount);
 		void CreateGBufferPipeline(VulkanSwapchainContext* pSwapChainContext, VkDescriptorSetLayout descriptorSetLayout, uint32_t descriptorSetLayoutCount);
 		void CreateLightPassPipeline(VulkanSwapchainContext* pSwapChainContext, VkDescriptorSetLayout descriptorSetLayout, uint32_t descriptorSetLayoutCount);

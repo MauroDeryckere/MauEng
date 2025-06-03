@@ -9,5 +9,6 @@
 
 #include "Components/CStaticMesh.h"
 #include "Components/CTransform.h"
+#include "Components/CLight.h"
 
 #endif

@@ -24,7 +24,23 @@ namespace MauEng
 								RENDERER.QueueDraw(t.mat, m);
 							});
 			}
+
+			RENDERER.PreLightQueue(GetCameraManager().GetActiveCamera().GetProjectionMatrix() * GetCameraManager().GetActiveCamera().GetViewMatrix());
+			{
+				ME_PROFILE_SCOPE("QUEUE LIGHTS")
+
+				auto view{ GetECSWorld().View<CLight>() };
+				view.Each([](CLight const& l)
+					{
+						RENDERER.QueueLight(l);
+					});
+			}
 		}
+	}
+
+	void Scene::SetSceneAABBOverride(glm::vec3 const& min, glm::vec3 const& max)
+	{
+		RENDERER.SetSceneAABBOverride(min, max);
 	}
 
 	Entity Scene::CreateEntity()

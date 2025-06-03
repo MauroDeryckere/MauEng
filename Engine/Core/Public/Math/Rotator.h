@@ -1,6 +1,7 @@
 #ifndef MAUCOR_ROTATOR_H
 #define MAUCOR_ROTATOR_H
 
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #define GLM_ENABLE_EXPERIMENTAL
 #include "glm/vec3.hpp"
 #include "glm/ext/matrix_transform.hpp"

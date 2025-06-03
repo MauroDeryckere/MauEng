@@ -9,7 +9,7 @@ namespace MauGam
 	{
 		ME_PROFILE_FUNCTION()
 
-		using namespace MauEng;
+			using namespace MauEng;
 
 		m_CameraManager.GetActiveCamera().SetPosition(glm::vec3{ -200.f, 40, -100 });
 		m_CameraManager.GetActiveCamera().SetFOV(60.f);
@@ -22,15 +22,24 @@ namespace MauGam
 			auto& transform{ enttCar.GetComponent<CTransform>() };
 			transform.Scale({ .5f, .5f, .5f });
 
-		//	enttCar.AddComponent<CStaticMesh>("Resources/Models/old_rusty_car/scene.gltf");
+			//enttCar.AddComponent<CStaticMesh>("Resources/Models/old_rusty_car/scene.gltf");
+		}
+		{
+			Entity enttGame{ CreateEntity() };
+
+			auto& transform{ enttGame.GetComponent<CTransform>() };
+			transform.Scale({ 100, 100, 100 });
+
+			enttGame.AddComponent<CStaticMesh>("Resources/Models/ABeautifulGame/GLTF/ABeautifulGame.gltf");
 		}
 
+		
 		{
 			Entity enttHelmet{ CreateEntity() };
 
 			auto& transform{ enttHelmet.GetComponent<CTransform>() };
 			transform.Scale({ 100.f, 100.f, 100.f });
-			enttHelmet.AddComponent<CStaticMesh>("Resources/Models/FlightHelmet/glTF/FlightHelmet.gltf");
+			//enttHelmet.AddComponent<CStaticMesh>("Resources/Models/FlightHelmet/glTF/FlightHelmet.gltf");
 		}
 
 		{
@@ -38,11 +47,11 @@ namespace MauGam
 			Entity enttSponza{ CreateEntity() };
 
 			auto& transform{ enttSponza.GetComponent<CTransform>() };
-		//	MauCor::Rotator const rot{ 90, 0, 180 };
-			//transform.Rotate(rot);
-		//	transform.Scale({ .5f, .5f, .5f });
+			//	MauCor::Rotator const rot{ 90, 0, 180 };
+				//transform.Rotate(rot);
+			//	transform.Scale({ .5f, .5f, .5f });
 
-			//enttSponza.AddComponent<CStaticMesh>("Resources/Models/Sponza/glTF/Sponza.gltf");
+				//enttSponza.AddComponent<CStaticMesh>("Resources/Models/Sponza/glTF/Sponza.gltf");
 		}
 
 		{
@@ -55,7 +64,6 @@ namespace MauGam
 
 
 		bool constexpr ENABLE_HIGH_INSTANCE_TEST{ false };
-		//uint32_t constexpr NUM_INSTANCES{ 75'000 };
 		uint32_t constexpr NUM_INSTANCES{ 10'000 };
 		if constexpr (ENABLE_HIGH_INSTANCE_TEST)
 		{
@@ -63,10 +71,10 @@ namespace MauGam
 			std::mt19937 gen(rd()); // Mersenne Twister generator
 			std::uniform_real_distribution<float> dis(-300.0f, 300); // Random translation range
 
-			for (size_t i { 0 }; i < NUM_INSTANCES; i++)
+			for (size_t i{ 0 }; i < NUM_INSTANCES; i++)
 			{
 				// Note: spider has no normal map (scaling is a little off)
-				Entity entSpider{ CreateEntity() }; 
+				Entity entSpider{ CreateEntity() };
 				auto& transform{ entSpider.GetComponent<CTransform>() };
 				transform.Translate({ dis(gen), dis(gen), dis(gen) });
 				transform.Scale({ .05f, .05f, .05f });
@@ -76,7 +84,7 @@ namespace MauGam
 
 
 		auto& input{ INPUT_MANAGER };
-		input.BindAction("MoveUp", MauEng::KeyInfo{SDLK_UP, MauEng::KeyInfo::ActionType::Held });
+		input.BindAction("MoveUp", MauEng::KeyInfo{ SDLK_UP, MauEng::KeyInfo::ActionType::Held });
 		input.BindAction("MoveLeft", MauEng::KeyInfo{ SDLK_LEFT, MauEng::KeyInfo::ActionType::Held });
 		input.BindAction("MoveRight", MauEng::KeyInfo{ SDLK_RIGHT, MauEng::KeyInfo::ActionType::Held });
 		input.BindAction("MoveDown", MauEng::KeyInfo{ SDLK_DOWN, MauEng::KeyInfo::ActionType::Held });
@@ -90,6 +98,35 @@ namespace MauGam
 
 
 		input.BindAction("Rotate", MauEng::MouseInfo{ {},   MauEng::MouseInfo::ActionType::Moved });
+
+		//{
+		//	Entity entLightTest{ CreateEntity() };
+
+		//	auto& l = entLightTest.AddComponent<CLight>();
+		//	l.type = ELightType::POINT;
+		//	l.direction_position = { 0, 200, 0 };
+		//	l.intensity = 1000000.f;
+		//	l.lightColour = { 1.f, 1.f, 1.f };
+		//}
+		//{
+		//	Entity entLightTest{ CreateEntity() };
+
+		//	auto& l = entLightTest.AddComponent<CLight>();
+		//	l.type = ELightType::POINT;
+		//	l.direction_position = { -100.f, 50, 0 };
+		//	l.intensity = 1000000.f;
+		//	l.lightColour = { 1.f, 0.f, 0.f };
+		//}
+		{
+			Entity entLightTest{ CreateEntity() };
+
+			auto& l = entLightTest.AddComponent<CLight>();
+			l.intensity = 5000.f;
+			l.lightColour = { 1.f, 1.f, 1.f };
+			l.direction_position = { -1, -1, 0 };
+		}
+
+		SetSceneAABBOverride({ -100, -100, -100 }, { 100, 100, 100 });
 	}
 
 	void ECSTestScene::OnLoad()
@@ -165,20 +202,33 @@ namespace MauGam
 			m_CameraManager.GetActiveCamera().RotateY(-mouseMovement.second * rot);
 		}
 
+		auto view = GetECSWorld().View<MauEng::CLight>();
+		view.Each([](MauEng::CLight const& l)
+		{
+			switch (l.type)
+			{
+			case MauEng::ELightType::DIRECTIONAL:
+				{
+					glm::vec3 start = { 0, 100, 0 };
+					glm::vec3 dir = glm::normalize(l.direction_position);
+					float length = std::clamp(l.intensity / 10000.f, 2.f, 20.f);
+					glm::vec3 end = start + dir * length;
+
+					DEBUG_RENDERER.DrawArrow(start, end, {}, l.lightColour, 1.f);
+
+					break;
+				}
+
+			case MauEng::ELightType::POINT:
+				DEBUG_RENDERER.DrawSphere(l.direction_position, std::clamp(l.intensity/10000.f, 2.f, 20.f), {}, l.lightColour);
+				break;
+			case MauEng::ELightType::COUNT:
+				break;
+			default: ;
+			}
+		});
+
 		//DEBUG_RENDERER.DrawCylinder({}, { 100, 100, 100 }, {}, {1,1,1}, 100);
-		DEBUG_RENDERER.DrawSphere({ -100, 50, 50 }, 10.f, {}, {1, 0, 0});
-		DEBUG_RENDERER.DrawSphere({ 100, 50, 0 }, 10.f, {}, {0, 0, 1});
-		//PointLight(vec3(-10, -10, 0), vec3(1.0, 0, 0), 3),
-		//	PointLight(vec3(10, -10, 0), vec3(0, 0, 1.0), 3)
-
-		glm::vec3 start = {0, 100, 0};
-		//glm::vec3 dir = -glm::normalize(glm::vec3(0, -1, 0));
-		glm::vec3 dir = -glm::normalize(glm::vec3(-1, -1, -1));
-		float length = 10.0f;
-
-		glm::vec3 end = start + dir * length;
-
-		DEBUG_RENDERER.DrawArrow(start, end, {}, { 1, 1, 1 }, 1.f);
 
 		using namespace MauEng;
 		{

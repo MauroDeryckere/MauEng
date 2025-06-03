@@ -15,6 +15,7 @@
 #include "VulkanCommandPoolManager.h"
 
 #include "VulkanBuffer.h"
+#include "../../../MauEng/Public/Components/CLight.h"
 
 #include "Assets/VulkanImage.h"
 
@@ -44,6 +45,11 @@ namespace MauRen
 		virtual void Render(glm::mat4 const& view, glm::mat4 const& proj, glm::vec2 const& screenSize) override;
 		virtual void ResizeWindow() override;
 
+		virtual uint32_t CreateLight() override;
+
+		virtual void SetSceneAABBOverride(glm::vec3 const& min, glm::vec3 const& max) override;
+		virtual void PreLightQueue(glm::mat4 const& viewProj) override;
+		virtual void QueueLight(MauEng::CLight const& light) override;
 		virtual void QueueDraw(glm::mat4 const& transformMat, MauEng::CStaticMesh const& mesh) override;
 		virtual [[nodiscard]] uint32_t LoadOrGetMeshID(char const* path) override;
 
@@ -83,14 +89,15 @@ namespace MauRen
 
 		struct alignas(16) UniformBufferObject final
 		{
-			glm::mat4 viewProj;
-			glm::mat4 invView;
-			glm::mat4 invProj;
-			glm::vec3 cameraPosition;
-			glm::vec2 screenSize;
+			alignas(16) glm::mat4 viewProj;
+			alignas(16) glm::mat4 invView;
+			alignas(16) glm::mat4 invProj;
+			alignas(16) glm::vec3 cameraPosition;
+			alignas(16) glm::vec2 screenSize;
 
-			// Room for 3 more floats (padding) e.g time,...
-			//float padding01;
+			alignas(16) uint32_t numLights;
+
+			// Room for 2 more floats (padding) e.g time,...
 			//float padding02;
 			//float padding03;
 		};
@@ -121,13 +128,12 @@ namespace MauRen
 		}; 
 		VulkanBuffer m_QuadVertexBuffer{};
 
-
 		void CreateUniformBuffers();
 
 		void CreateSyncObjects();
 
 		void DrawFrame(glm::mat4 const& view, glm::mat4 const& proj, glm::vec2 const& screenSize);
-		void RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
+		void RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex, glm::mat4 const& viewProj);
 		void UpdateUniformBuffer(uint32_t currentImage, glm::mat4 const& view, glm::mat4 const& proj, glm::vec2 const& screenSize);
 
 		// Recreate the swapchain on e.g a window resize

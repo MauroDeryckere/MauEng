@@ -1,12 +1,21 @@
 #version 450
+#extension GL_EXT_nonuniform_qualifier : enable
 
-layout(set = 0, binding = 0) uniform UniformBufferObject
+layout(set = 0, binding = 0, std140) uniform UniformBufferObject
 {
     mat4 viewProj;
     mat4 invView;
     mat4 invProj;
     vec3 cameraPos;
+    float _pad0; // Padding to align next vec2
+
     vec2 screenSize;
+    vec2 _pad1; // Padding to align next uint
+
+    uint numLights;
+    uint _pad2;
+    uint _pad3;
+    uint _pad4;
 } ubo;
 
 layout(set = 0, binding = 1) uniform sampler globalSampler;
@@ -15,6 +24,32 @@ layout(set = 0, binding = 6) uniform texture2D gAlbedo;
 layout(set = 0, binding = 7) uniform texture2D gNormal;
 layout(set = 0, binding = 8) uniform texture2D gMetal;
 layout(set = 0, binding = 9) uniform texture2D gDepth;
+
+struct Light
+{
+    mat4 viewProj;
+
+    // Direction for directional lights, position for point lights
+    vec3 direction_position;
+    // Light type: 0 = directional, 1 = point
+    uint type;
+
+    vec3 color;
+    float intensity;
+
+    // Index into shadow texture array
+    uint shadowMapIndex;
+    int castsShadows;
+};
+
+layout(set = 0, binding = 11) uniform texture2D ShadowMapBuffer[];
+
+layout(set = 0, binding = 12) buffer readonly LightDataBuffer
+{
+    Light lights[];
+};
+
+layout(set = 0, binding = 13) uniform samplerShadow shadowMapSampler;
 
 layout(location = 0) in vec2 fragUV;
 layout(location = 0) out vec4 outColor;
@@ -27,26 +62,13 @@ vec3 GetWorldPosFromDepth(float depth);
 // how much the surface reflects light versus how much it refracts light. 
 vec3 FresnelSchlick(float cosTheta, vec3 F0);
 
-
 float DistributionGGX(vec3 N, vec3 H, float roughness);
 
 float GeometrySchlickGGX(float NdotV, float roughness);
 
 float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness);
 
-struct PointLight 
-{
-    vec3 position;
-    vec3 color;
-    float intensity;
-};
-
-const int numPointLights = 2;
-const PointLight pointLights[numPointLights] = PointLight[]
-(
-    PointLight(vec3(100, 50, 0), vec3(0, 0, 1.0), 1000000),
-    PointLight(vec3(-100, 50, 50), vec3(1.0, 0, 0), 1000000)
-);
+vec3 EvaluateBRDF(vec3 N, vec3 V, vec3 L, vec3 albedo, float metalness, float roughness, float ao, vec3 irradiance);
 
 void main()
 {
@@ -59,8 +81,10 @@ void main()
         sampler2D(gDepth, globalSampler), 
         pixelCoords, 0).r;
 
-    //if (depth == 1.0) discard;
-
+    if (depth == 1.0f)
+    {
+        discard;
+    }
 
 	const float ao = metal.r;
 	const float metalness = metal.b;
@@ -77,79 +101,75 @@ void main()
 
 	const vec3 viewDir = normalize(ubo.cameraPos - worldPos);
 
-    // Lighting
-    //const vec3 lightDir = -normalize(vec3(0, -1, 0));
-    //const vec3 lightDir = -normalize(vec3(-1, -1, 0));
-    const vec3 lightDir = -normalize(vec3(-1, -1, -1));
+    vec3 lighting = vec3(0.0f);
 
-
-
-    const vec3 lightColor = vec3(1.0, 0.95, 0.9);
-    const float intensity = 2.0f;
-    
-    // Only dir light for now
-    const vec3 irradiance = lightColor * intensity;
-
-    const vec3 H = normalize(viewDir + lightDir);
-
-    const vec3 F0 = mix(vec3(0.04f), albedo.rgb, metalness);
-    const vec3 F = FresnelSchlick(max(dot(H, viewDir), 0.0f), F0);
-
-    // Cook-Torrance BRDF
-    const float NDF = DistributionGGX(normal, H, roughness);
-    const float G = GeometrySmith(normal, viewDir, lightDir, roughness);
-    const vec3 numerator = NDF * G * F;
-    // Note that we add 0.0001 to the denominator to prevent a divide by zero in case any dot product ends up 0.0.
-    const float denominator = 4.0 * max(dot(normal, viewDir), 0.0) * max(dot(normal, lightDir), 0.0) + 0.0001;
-    const vec3 specular = numerator / denominator;
-
-    const vec3 kS = F;
-    vec3 kD = vec3(1.0) - kS;
-    kD *= 1.0 - metalness;
-
-    float NdotL = max(dot(normal, lightDir), 0.0);
-    vec3 lighting = ((kD * albedo.rgb / gPI) * ao + specular) * irradiance * NdotL;
-
-    // Point Lights
-    for (int i = 0; i < numPointLights; ++i)
+    for (int i = 0; i < ubo.numLights; ++i)
     {
-        vec3 lightVec_PL = pointLights[i].position - worldPos;
-        const float dist_PL = length(lightVec_PL);
-        vec3 L_PL = normalize(lightVec_PL);
+        Light l = lights[i];
 
-        const float attenuation = 1.0 / (dist_PL * dist_PL + 0.0001);
-        const vec3 irradiance_PL = pointLights[i].color * pointLights[i].intensity * attenuation;
+        // DIRECTIONAL LIGHT
+        if (l.type == 0u)
+        {
 
-        const vec3 H_PL = normalize(viewDir + L_PL);
-        const vec3 F_PL = FresnelSchlick(max(dot(H_PL, viewDir), 0.0f), F0);
-        const float NDF_PL = DistributionGGX(normal, H_PL, roughness);
-        const float G_PL = GeometrySmith(normal, viewDir, L_PL, roughness);
-        const vec3 numerator_PL = NDF_PL * G_PL * F_PL;
-        const float denominator_PL = 4.0 * max(dot(normal, viewDir), 0.0) * max(dot(normal, L_PL), 0.0) + 0.0001;
-        const vec3 specular_PL = numerator_PL / denominator_PL;
+            vec4 lightSpacePos = l.viewProj * vec4(worldPos, 1.0f);
 
-        const vec3 kS_PL = F_PL;
-        vec3 kD_PL = vec3(1.0) - kS_PL;
-        kD_PL *= 1.0 - metalness;
+           // outColor = vec4(vec3(lightSpacePos.xyz), 1.0f);
+            //outColor = vec4(vec3(lightSpacePos.w), 1.0f);
+            lightSpacePos /= lightSpacePos.w;
 
-        const float NdotL_PL = max(dot(normal, L_PL), 0.0);
-        // LightDir Debugging
-        //outColor = vec4((L_PL * 0.5 + 0.5).r,0,0, 1.0); // visualize L direction
-        //outColor = vec4(vec3(NdotL_PL, 0, 0), 1.0);
-        //outColor = vec4(vec3(NdotL_PL), 1.0);
-        
-        //outColor = vec4(((kD * albedo.rgb / gPI) * ao + specular_PL) * irradiance_PL * NdotL_PL, 1.f);
+            vec3 shadowMapUV = vec3(lightSpacePos.xy * 0.5f + 0.5f, lightSpacePos.z);
+            //shadowMapUV.y = 1.0f - shadowMapUV.y;
 
-        //vec3 lambert = albedo.rgb * max(dot(normal, L_PL), 0.0);
-        //outColor = vec4(lambert, 1.0);
-       
-        lighting += ((kD_PL * albedo.rgb / gPI) * ao + specular_PL) * irradiance_PL * NdotL_PL;
+            // Closest depth
+            //float closestDepth = texture(
+            //    sampler2D(ShadowMapBuffer[nonuniformEXT(l.shadowMapIndex)], shadowMapSampler),
+            //    shadowMapUV.xy).r;
+
+            float shadow = texture(sampler2DShadow(ShadowMapBuffer[nonuniformEXT(l.shadowMapIndex)], shadowMapSampler),
+                                          shadowMapUV).r;
+
+            //float shadow = shadowMapUV.z > closestDepth ? 1.0 : 0.0;
+
+            vec3 L = -normalize(l.direction_position);
+            vec3 irradiance = l.color * l.intensity;
+
+            lighting += EvaluateBRDF(normal, viewDir, L,
+                albedo.rgb, metalness, roughness,
+                ao, irradiance) * shadow;
+
+            //if (shadow == 0)
+            //{
+            //    outColor = vec4(1, 0, 0, 1);
+            //}
+            //else
+            //{
+            //    outColor = vec4(vec3(shadow), 1.0f);
+            //}
+
+            //outColor = vec4(lightSpacePos.xyz, 1.0f);
+        }
+        // POINT LIGHT
+        else if (l.type == 1u)
+        {
+            float shadowFactor = 1.0f;
+
+            vec3 lightVec = l.direction_position - worldPos;
+            float dist = length(lightVec);
+            vec3  L = lightVec / dist;
+
+            float attenuation = 1.0 / (dist * dist + 0.0001);
+            vec3  irradiance = l.color * l.intensity * attenuation;
+
+            lighting += EvaluateBRDF(normal, viewDir, L,
+                albedo.rgb, metalness, roughness,
+                ao, irradiance);
+        }
     }
 
     const vec3 ambient = vec3(0.03) * albedo.rgb;
     const vec3 color = lighting + ambient;
 
-    //olor = color / (color + vec3(1.0f));
+    //color = color / (color + vec3(1.0f));
 	//color = pow(color, vec3(1.0f / 2.2f));
     outColor = vec4(color, 1.0);
 
@@ -187,11 +207,10 @@ vec3 GetWorldPosFromDepth(float depth)
     // Convert from frag coordinate system to NDC
     vec2 ndc = vec2(
         (fragUV.x * 2 - 1),
-        (/*1 - */(fragUV.y * 2 - 1)));
-
+        (fragUV.y * 2 - 1));
     //ndc.y *= -1.f;
 
-    const vec4 clipSpacePos = vec4(ndc, (depth /** 2.0f - 1.0f*/), 1.0f);
+    const vec4 clipSpacePos = vec4(ndc, depth, 1.0f);
 
     // Inverse proj to view space
     vec4 viewSpacePos = ubo.invProj * clipSpacePos;
@@ -246,4 +265,24 @@ float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
     const float ggx1 = GeometrySchlickGGX(NdotL, roughness);
 
     return ggx1 * ggx2;
+}
+
+vec3 EvaluateBRDF(vec3 N, vec3 V, vec3 L, vec3 albedo, float metalness, float roughness, float ao, vec3 irradiance)
+{
+    vec3 H = normalize(V + L);
+
+    vec3 F0 = mix(vec3(0.04), albedo, metalness);
+    vec3 F = FresnelSchlick(max(dot(H, V), 0.0), F0);
+
+    float  NDF = DistributionGGX(N, H, roughness);
+    float  G = GeometrySmith(N, V, L, roughness);
+    vec3   num = NDF * G * F;
+    float  den = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001;
+    vec3   spec = num / den;
+
+    vec3 kS = F;
+    vec3 kD = (1.0 - kS) * (1.0 - metalness);
+
+    float NdotL = max(dot(N, L), 0.0);
+    return ((kD * albedo / gPI) * ao + spec) * irradiance * NdotL;
 }

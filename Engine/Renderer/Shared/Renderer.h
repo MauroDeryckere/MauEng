@@ -5,6 +5,7 @@
 
 namespace MauEng
 {
+	struct CLight;
 	struct CStaticMesh;
 }
 
@@ -23,9 +24,13 @@ namespace MauRen
 		virtual void Render(glm::mat4 const& view, glm::mat4 const& proj, glm::vec2 const& screenSize) = 0;
 
 		virtual void ResizeWindow() = 0;
-
 		virtual void QueueDraw(glm::mat4 const& transformMat, MauEng::CStaticMesh const& mesh) = 0;
 		virtual [[nodiscard]] uint32_t LoadOrGetMeshID(char const* path) = 0;
+
+		virtual void SetSceneAABBOverride(glm::vec3 const& min, glm::vec3 const& max) = 0;
+		virtual void PreLightQueue(glm::mat4 const& viewProj) = 0;
+		virtual uint32_t CreateLight() = 0;
+		virtual void QueueLight(MauEng::CLight const& light) = 0;
 
 		Renderer(Renderer const&) = delete;
 		Renderer(Renderer&&) = delete;

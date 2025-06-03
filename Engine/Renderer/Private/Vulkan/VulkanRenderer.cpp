@@ -2,15 +2,16 @@
 
 #include "Assets/VulkanMeshManager.h"
 #include "Assets/VulkanMaterialManager.h"
+#include "Assets/VulkanLightManager.h"
+
 #include "DebugRenderer/InternalDebugRenderer.h"
 #include "DebugRenderer/NullDebugRenderer.h"
-
 #include "../../MauEng/Public/Components/CStaticMesh.h"
 
 namespace MauRen
 {
 	VulkanRenderer::VulkanRenderer(SDL_Window* pWindow, DebugRenderer& debugRenderer) :
-		Renderer{ pWindow, debugRenderer },
+		Renderer{ pWindow, debugRenderer } ,
 		m_pWindow{ pWindow }
 	{
 		ME_PROFILE_FUNCTION()
@@ -64,6 +65,7 @@ namespace MauRen
 		CreateSyncObjects();
 
 		VulkanMaterialManager::GetInstance().InitializeTextureManager(m_CommandPoolManager, m_DescriptorContext);
+		VulkanLightManager::GetInstance().Initialize(m_CommandPoolManager, m_DescriptorContext);
 		VulkanMeshManager::GetInstance().Initialize(&m_CommandPoolManager);
 
 		if (m_DebugRenderer)
@@ -121,6 +123,7 @@ namespace MauRen
 
 		VulkanMaterialManager::GetInstance().Destroy();
 		VulkanMeshManager::GetInstance().Destroy();
+		VulkanLightManager::GetInstance().Destroy();
 
 		if (m_DebugRenderer)
 		{
@@ -167,6 +170,26 @@ namespace MauRen
 		m_FramebufferResized = true;
 	}
 
+	uint32_t VulkanRenderer::CreateLight()
+	{
+		return VulkanLightManager::GetInstance().CreateLight();
+	}
+
+	void VulkanRenderer::SetSceneAABBOverride(glm::vec3 const& min, glm::vec3 const& max)
+	{
+		VulkanLightManager::GetInstance().SetSceneAABBOverride(min, max);
+	}
+
+	void VulkanRenderer::PreLightQueue(glm::mat4 const& viewProj)
+	{
+		VulkanLightManager::GetInstance().PreQueue(viewProj);
+	}
+
+	void VulkanRenderer::QueueLight(MauEng::CLight const& light)
+	{
+		VulkanLightManager::GetInstance().QueueLight(m_CommandPoolManager, m_DescriptorContext, light);
+	}
+
 	void VulkanRenderer::QueueDraw(glm::mat4 const& transformMat, MauEng::CStaticMesh const& mesh)
 	{
 		VulkanMeshManager::GetInstance().QueueDraw(transformMat, mesh.meshID);
@@ -196,7 +219,7 @@ namespace MauRen
 		}
 	}
 
-	void VulkanRenderer::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex)
+	void VulkanRenderer::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex, glm::mat4 const& viewProj)
 	{
 		ME_PROFILE_FUNCTION()
 #pragma region PRE_DRAW
@@ -218,19 +241,8 @@ namespace MauRen
 		auto& depth{ m_SwapChainContext.GetDepthImage(imageIndex) };
 		auto& colour{ m_SwapChainContext.GetColorImage(imageIndex) };
 
-		VkViewport viewport{};
-		viewport.x = 0.0f;
-		viewport.y = 0.0f;
-		viewport.width = static_cast<float>(m_SwapChainContext.GetExtent().width);
-		viewport.height = static_cast<float>(m_SwapChainContext.GetExtent().height);
-		viewport.minDepth = 0.0f;
-		viewport.maxDepth = 1.0f;
-
-		VkRect2D scissor{};
-		scissor.offset = { 0, 0 };
-		scissor.extent = m_SwapChainContext.GetExtent();
-
 		VulkanMeshManager::GetInstance().PreDraw(commandBuffer, m_GraphicsPipelineContext.GetForwardPipelineLayout(), 1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame], m_CurrentFrame);
+		VulkanLightManager::GetInstance().PreDraw(commandBuffer, m_GraphicsPipelineContext.GetForwardPipelineLayout(), 1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame], m_CurrentFrame);
 
 		auto& gBufferColor{ m_SwapChainContext.GetGBuffer(m_CurrentFrame).color };
 		auto& gBufferNormal{ m_SwapChainContext.GetGBuffer(m_CurrentFrame).normal };
@@ -395,18 +407,50 @@ namespace MauRen
 			renderInfoDepthPrepass.pDepthAttachment = &depthAttachment;
 			renderInfoDepthPrepass.pStencilAttachment = nullptr;
 
+			VkViewport viewport{};
+			viewport.x = 0.0f;
+			viewport.y = 0.0f;
+			viewport.width = static_cast<float>(m_SwapChainContext.GetExtent().width);
+			viewport.height = static_cast<float>(m_SwapChainContext.GetExtent().height);
+			viewport.minDepth = 0.0f;
+			viewport.maxDepth = 1.0f;
+
+			VkRect2D scissor{};
+			scissor.offset = { 0, 0 };
+			scissor.extent = m_SwapChainContext.GetExtent();
+
 			vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
 			vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 			vkCmdBeginRendering(commandBuffer, &renderInfoDepthPrepass);
 				vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipelineContext.GetDepthPrePassPipeline());
 				VulkanMeshManager::GetInstance().Draw(commandBuffer, m_GraphicsPipelineContext.GetDepthPrePassPipelineLayout(), 1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame], m_CurrentFrame);
-				RenderDebug(commandBuffer, true);
+				//RenderDebug(commandBuffer, true);
 			vkCmdEndRendering(commandBuffer);
 		}
 #pragma endregion
-
+#pragma region SHADOW_PASS
+		{
+			ME_PROFILE_SCOPE("Shadow Pass")
+			VulkanLightManager::GetInstance().Draw(commandBuffer, m_GraphicsPipelineContext, m_DescriptorContext, m_SwapChainContext, m_CurrentFrame);
+		}
+#pragma endregion
 #pragma region GBUFFER_PASS
 		{
+			VkViewport viewport{};
+			viewport.x = 0.0f;
+			viewport.y = 0.0f;
+			viewport.width = static_cast<float>(m_SwapChainContext.GetExtent().width);
+			viewport.height = static_cast<float>(m_SwapChainContext.GetExtent().height);
+			viewport.minDepth = 0.0f;
+			viewport.maxDepth = 1.0f;
+
+			VkRect2D scissor{};
+			scissor.offset = { 0, 0 };
+			scissor.extent = m_SwapChainContext.GetExtent();
+
+			vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+			vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+
 			ME_PROFILE_SCOPE("GBuffer pass")
 
 			// GBuffer Colour
@@ -655,44 +699,10 @@ namespace MauRen
 			ME_PROFILE_SCOPE("Post draw")
 
 			VulkanMeshManager::GetInstance().PostDraw(commandBuffer, m_GraphicsPipelineContext.GetForwardPipelineLayout(), 1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame], m_CurrentFrame);
+			VulkanLightManager::GetInstance().PostDraw();
 
-			//colour.TransitionImageLayout(
-			//	commandBuffer,
-			//	VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-			//	VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
-			//	VK_PIPELINE_STAGE_2_TRANSFER_BIT,
-			//	VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT,
-			//	VK_ACCESS_2_TRANSFER_READ_BIT
-			//);
-
-			//if (VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL != m_SwapChainContext.GetSwapchainImages()[imageIndex].layout)
-			//{
-			//	m_SwapChainContext.GetSwapchainImages()[imageIndex].TransitionImageLayout(commandBuffer,
-			//		VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-			//		VK_PIPELINE_STAGE_2_NONE, VK_PIPELINE_STAGE_2_TRANSFER_BIT,
-			//		VK_ACCESS_2_NONE, VK_ACCESS_2_TRANSFER_WRITE_BIT);
-			//}
-
-			//VkImageCopy copyRegion = {};
-			//copyRegion.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-			//copyRegion.srcSubresource.mipLevel = 0;
-			//copyRegion.srcSubresource.baseArrayLayer = 0;
-			//copyRegion.srcSubresource.layerCount = 1;
-			//copyRegion.srcOffset = { 0, 0, 0 };
-
-			//copyRegion.dstSubresource = copyRegion.srcSubresource;
-			//copyRegion.dstOffset = { 0, 0, 0 };
-
-			//copyRegion.extent = { m_SwapChainContext.GetExtent().width, m_SwapChainContext.GetExtent().height, 1 };
-
-			//vkCmdCopyImage(
-			//	commandBuffer,
-			//	colour.image, colour.layout,
-			//	m_SwapChainContext.GetSwapchainImages()[imageIndex].image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-			//	1, &copyRegion
-			//);
-			//m_SwapChainContext.GetSwapchainImages()[imageIndex].layout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-			m_SwapChainContext.GetSwapchainImages()[imageIndex].TransitionImageLayout(commandBuffer,
+			m_SwapChainContext.GetSwapchainImages()[imageIndex].TransitionImageLayout(
+				commandBuffer,
 				VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
 				VK_PIPELINE_STAGE_2_TRANSFER_BIT, VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT,
 				VK_ACCESS_2_TRANSFER_WRITE_BIT, VK_ACCESS_2_MEMORY_READ_BIT);
@@ -774,7 +784,7 @@ namespace MauRen
 			vkResetCommandBuffer(m_CommandPoolManager.GetCommandBuffer(m_CurrentFrame), 0);
 		}
 
-		RecordCommandBuffer(m_CommandPoolManager.GetCommandBuffer(m_CurrentFrame), imageIndex);
+		RecordCommandBuffer(m_CommandPoolManager.GetCommandBuffer(m_CurrentFrame), imageIndex, proj * view);
 
 		VkSubmitInfo submitInfo{};
 		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -800,7 +810,6 @@ namespace MauRen
 
 		VkPresentInfoKHR presentInfo{};
 		presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-
 		// The first two parameters specify which semaphores to wait on before presentation can happen
 		presentInfo.waitSemaphoreCount = 1;
 		presentInfo.pWaitSemaphores = signalSemaphores;
@@ -836,11 +845,12 @@ namespace MauRen
 
 		UniformBufferObject const ubo
 		{
-				.viewProj = proj * view,
-				.invView = glm::inverse(view),
-				.invProj = glm::inverse(proj),
-				.cameraPosition = glm::vec3{ glm::inverse(view)[3] },
-				.screenSize = { m_SwapChainContext.GetExtent().width, m_SwapChainContext.GetExtent().height }
+			.viewProj = proj * view,
+			.invView = glm::inverse(view),
+			.invProj = glm::inverse(proj),
+			.cameraPosition = glm::vec3{ glm::inverse(view)[3] },
+			.screenSize = { m_SwapChainContext.GetExtent().width, m_SwapChainContext.GetExtent().height },
+			.numLights = VulkanLightManager::GetInstance().GetNumLights()
 		};
 
 		memcpy(m_MappedUniformBuffers[currentImage].mapped, &ubo, sizeof(ubo));
@@ -973,5 +983,3 @@ namespace MauRen
 
 	}
 }
-
-

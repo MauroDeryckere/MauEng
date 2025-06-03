@@ -6,8 +6,7 @@
 #include "../VulkanDescriptorContext.h"
 
 
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
+#include "Assets/ImageLoader.h"
 
 namespace MauRen
 {
@@ -191,18 +190,10 @@ namespace MauRen
 		ME_ASSERT(std::filesystem::exists(path));
 
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+		Image const img{ path };
 
-		int texWidth{};
-		int texHeight{};
-		int texChannels{};
+		VkDeviceSize const imageSize{ static_cast<uint32_t>(img.width * img.height * 4) };
 
-		stbi_uc* const pixels{ stbi_load(path.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha) };
-		VkDeviceSize const imageSize{ static_cast<uint32_t>(texWidth * texHeight * 4) };
-
-		if (!pixels or texWidth == 0 or texHeight == 0)
-		{
-			throw std::runtime_error("Failed to load texture image!");
-		}
 
 		VulkanBuffer stagingBuffer{ imageSize,
 									 VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
@@ -210,10 +201,8 @@ namespace MauRen
 
 		void* data;
 		vkMapMemory(deviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory, 0, imageSize, 0, &data);
-		memcpy(data, pixels, static_cast<size_t>(imageSize));
+		memcpy(data, img.pixels, static_cast<size_t>(imageSize));
 		vkUnmapMemory(deviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory);
-
-		stbi_image_free(pixels);
 
 		VulkanImage texImage
 		{
@@ -222,13 +211,13 @@ namespace MauRen
 			VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
 			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
 			VK_SAMPLE_COUNT_1_BIT,
-			static_cast<uint32_t>(texWidth),
-			static_cast<uint32_t>(texHeight),
-			static_cast<uint32_t>(std::floor(std::log2(std::max(texWidth, texHeight)))) + 1
+			static_cast<uint32_t>(img.width),
+			static_cast<uint32_t>(img.height),
+			static_cast<uint32_t>(std::floor(std::log2(std::max(img.width, img.height)))) + 1
 		};
 
 		texImage.TransitionImageLayout(cmdPoolManager, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-		VulkanBuffer::CopyBufferToImage(cmdPoolManager, stagingBuffer.buffer, texImage.image, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
+		VulkanBuffer::CopyBufferToImage(cmdPoolManager, stagingBuffer.buffer, texImage.image, static_cast<uint32_t>(img.width), static_cast<uint32_t>(img.height));
 		// is transitioned to VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL while generating mipmaps
 
 		texImage.GenerateMipmaps(cmdPoolManager);
@@ -248,33 +237,15 @@ namespace MauRen
 
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 
-		int texWidth{};
-		int texHeight{};
-		int texChannels{};
+		Image img{ embTex.data.data(),embTex.data.size(), embTex.isCompressed, 4 };
 
-		stbi_uc* pixels{ nullptr };
-
-		if (embTex.isCompressed)
+		if (not embTex.isCompressed)
 		{
-			// Load from memory like PNG/JPG
-			pixels = stbi_load_from_memory(embTex.data.data(), static_cast<int>(embTex.data.size()), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
-		}
-		else
-		{
-			// Already raw RGBA data, assume 4 channels
-			texWidth = embTex.width;
-			texHeight = embTex.height;
-			texChannels = 4;
-			pixels = new stbi_uc[embTex.data.size()];
-			std::memcpy(pixels, embTex.data.data(), embTex.data.size());
+			img.width = embTex.width;
+			img.height = embTex.height;
 		}
 
-		if (!pixels or texWidth == 0 or texHeight == 0)
-		{
-			throw std::runtime_error("Failed to load embedded texture image!");
-		}
-
-		VkDeviceSize const imageSize{ static_cast<uint32_t>(texWidth * texHeight * 4) };
+		VkDeviceSize const imageSize{ static_cast<uint32_t>(img.width * img.height * 4) };
 
 		VulkanBuffer stagingBuffer{ imageSize,
 									 VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
@@ -282,17 +253,8 @@ namespace MauRen
 
 		void* data;
 		vkMapMemory(deviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory, 0, imageSize, 0, &data);
-		memcpy(data, pixels, static_cast<size_t>(imageSize));
+		memcpy(data, img.pixels, static_cast<size_t>(imageSize));
 		vkUnmapMemory(deviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory);
-
-		if (embTex.isCompressed)
-		{
-			stbi_image_free(pixels);
-		}
-		else
-		{
-			delete[] pixels;
-		}
 
 		VulkanImage texImage
 		{
@@ -301,13 +263,13 @@ namespace MauRen
 			VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
 			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
 			VK_SAMPLE_COUNT_1_BIT,
-			static_cast<uint32_t>(texWidth),
-			static_cast<uint32_t>(texHeight),
-			static_cast<uint32_t>(std::floor(std::log2(std::max(texWidth, texHeight)))) + 1
+			static_cast<uint32_t>(img.width),
+			static_cast<uint32_t>(img.height),
+			static_cast<uint32_t>(std::floor(std::log2(std::max(img.width, img.height)))) + 1
 		};
 
 		texImage.TransitionImageLayout(cmdPoolManager, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-		VulkanBuffer::CopyBufferToImage(cmdPoolManager, stagingBuffer.buffer, texImage.image, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
+		VulkanBuffer::CopyBufferToImage(cmdPoolManager, stagingBuffer.buffer, texImage.image, static_cast<uint32_t>(img.width), static_cast<uint32_t>(img.height));
 		// is transitioned to VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL while generating mipmaps
 
 		texImage.GenerateMipmaps(cmdPoolManager);

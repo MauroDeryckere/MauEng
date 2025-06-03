@@ -37,6 +37,9 @@ namespace MauRen
 	// The descriptor pool creation will throw if this number is too large
 	uint32_t constexpr MAX_TEXTURES{ 4'048 };			// For texture array
 
+	uint32_t constexpr MAX_SHADOW_MAPS{ 128 };			// For texture array
+
+
 	// These are ust arbitrary numbers for now, they have to actally be calculated in the futrue
 	uint32_t constexpr MAX_MATERIALS{ 512 };			// Matches MaterialData[] buffer
 
@@ -49,6 +52,12 @@ namespace MauRen
 	uint32_t constexpr MAX_INDICES{ 20'000'000 };       // Maximum number of indices (for all meshes)
 
 	bool constexpr DEBUG_OUT_MAT{ true };
+
+	uint32_t constexpr MAX_LIGHTS{ 128 };
+
+	uint32_t constexpr SHADOW_MAP_SIZE{ 1024 * 4 };
+
+	bool constexpr DEBUG_RENDER_SCENE_AABB{ false };
 }
 
 #endif // MAUREN_VULKANCONFIG_H
