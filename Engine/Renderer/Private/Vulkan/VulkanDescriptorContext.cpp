@@ -98,6 +98,32 @@ namespace MauRen
 		}
 	}
 
+	void VulkanDescriptorContext::BindEnvMap(VkImageView imageView, VkImageLayout imageLayout)
+	{
+		VkDescriptorImageInfo imageInfo{};
+		imageInfo.imageLayout = imageLayout;
+		imageInfo.imageView = imageView;
+		imageInfo.sampler = VK_NULL_HANDLE;
+
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+
+		for (size_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; ++i)
+		{
+			VkWriteDescriptorSet descriptorWrite{};
+			descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+			descriptorWrite.dstSet = m_DescriptorSets[i];
+			descriptorWrite.dstBinding = ENV_MAP_SLOT;
+			descriptorWrite.dstArrayElement = 0;
+
+			descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+			descriptorWrite.descriptorCount = 1;
+
+			descriptorWrite.pImageInfo = &imageInfo;
+
+			vkUpdateDescriptorSets(deviceContext->GetLogicalDevice(), 1, &descriptorWrite, 0, nullptr);
+		}
+	}
+
 	void VulkanDescriptorContext::BindShadowMapSampler(VkSampler sampler)
 	{
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
@@ -117,6 +143,53 @@ namespace MauRen
 			samplerWrite.pImageInfo = &imageInfo;
 
 			vkUpdateDescriptorSets(deviceContext->GetLogicalDevice(), 1, &samplerWrite, 0, nullptr);
+		}
+	}
+
+	void VulkanDescriptorContext::BindSkyboxSampler(VkSampler sampler)
+	{
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+
+		VkDescriptorImageInfo imageInfo{};
+		imageInfo.sampler = sampler;
+
+		for (size_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; ++i)
+		{
+			VkWriteDescriptorSet samplerWrite{};
+			samplerWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+			samplerWrite.dstSet = m_SkyboxDescriptorSets[i];
+			samplerWrite.dstBinding = 1;
+			samplerWrite.dstArrayElement = 0;
+			samplerWrite.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
+			samplerWrite.descriptorCount = 1;
+			samplerWrite.pImageInfo = &imageInfo;
+
+			vkUpdateDescriptorSets(deviceContext->GetLogicalDevice(), 1, &samplerWrite, 0, nullptr);
+		}
+	}
+
+	void VulkanDescriptorContext::BindSkybox(VkImageView imageView, VkImageLayout imageLayout)
+	{
+		VkDescriptorImageInfo imageInfo{};
+		imageInfo.imageLayout = imageLayout;
+		imageInfo.imageView = imageView;
+		imageInfo.sampler = VK_NULL_HANDLE;
+
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+
+		for (size_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; ++i)
+		{
+			VkWriteDescriptorSet descriptorWrite{};
+			descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+			descriptorWrite.dstSet = m_SkyboxDescriptorSets[i];
+			descriptorWrite.dstBinding = 0;
+
+			descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+			descriptorWrite.descriptorCount = 1;
+
+			descriptorWrite.pImageInfo = &imageInfo;
+
+			vkUpdateDescriptorSets(deviceContext->GetLogicalDevice(), 1, &descriptorWrite, 0, nullptr);
 		}
 	}
 
@@ -225,6 +298,13 @@ namespace MauRen
 		shadowMapSamplerBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 		shadowMapSamplerBinding.pImmutableSamplers = nullptr;
 
+		VkDescriptorSetLayoutBinding envMap{};
+		envMap.binding = ENV_MAP_SLOT;
+		envMap.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+		envMap.descriptorCount = 1;
+		envMap.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+		envMap.pImmutableSamplers = nullptr;
+
 		std::array const bindings {
 			uboLayoutBinding,
 			samplerBinding,
@@ -239,7 +319,8 @@ namespace MauRen
 			HDRIColorBinding,
 			ShadowMapsBinding,
 			LightBufferBinding,
-			shadowMapSamplerBinding
+			shadowMapSamplerBinding,
+			envMap
 		};
 
 		// Variable coutn adds more complexity and we do not need it currentl
@@ -261,6 +342,7 @@ namespace MauRen
 			VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT |
 			//VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT |
 			VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT, // Flags for shadow maps
+			0,
 			0,
 			0
 		};
@@ -290,98 +372,144 @@ namespace MauRen
 	{
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 
-		std::array<VkDescriptorPoolSize, 14> poolSizes{};
-		poolSizes[UBO_BINDING_SLOT].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		poolSizes[UBO_BINDING_SLOT].descriptorCount = static_cast<uint32_t>(1 * MAX_FRAMES_IN_FLIGHT);
-
-		poolSizes[SAMPLER_BINDING_SLOT].type = VK_DESCRIPTOR_TYPE_SAMPLER;
-		poolSizes[SAMPLER_BINDING_SLOT].descriptorCount = static_cast<uint32_t>(1 * MAX_FRAMES_IN_FLIGHT);
-
-		poolSizes[TEXTURE_BINDING_SLOT].type = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
-		poolSizes[TEXTURE_BINDING_SLOT].descriptorCount = static_cast<uint32_t>(MAX_TEXTURES * MAX_FRAMES_IN_FLIGHT);
-
-		poolSizes[MATERIAL_DATA_BINDING_SLOT].type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-		poolSizes[MATERIAL_DATA_BINDING_SLOT].descriptorCount = static_cast<uint32_t>(1 * MAX_FRAMES_IN_FLIGHT);
-
-		poolSizes[MESH_DATA_BINDING_SLOT].type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-		poolSizes[MESH_DATA_BINDING_SLOT].descriptorCount = static_cast<uint32_t>(1 * MAX_FRAMES_IN_FLIGHT);
-
-		poolSizes[MESH_INSTANCE_DATA_BINDING_SLOT].type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-		poolSizes[MESH_INSTANCE_DATA_BINDING_SLOT].descriptorCount = static_cast<uint32_t>(1 * MAX_FRAMES_IN_FLIGHT);
-
-		poolSizes[GBUFFER_COLOR_SLOT].type = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
-		poolSizes[GBUFFER_COLOR_SLOT].descriptorCount = static_cast<uint32_t>(1 * MAX_FRAMES_IN_FLIGHT);
-
-		poolSizes[GBUFFER_NORMAL_SLOT].type = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
-		poolSizes[GBUFFER_NORMAL_SLOT].descriptorCount = static_cast<uint32_t>(1 * MAX_FRAMES_IN_FLIGHT);
-
-		poolSizes[GBUFFER_METAL_SLOT].type = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
-		poolSizes[GBUFFER_METAL_SLOT].descriptorCount = static_cast<uint32_t>(1 * MAX_FRAMES_IN_FLIGHT);
-
-		poolSizes[GBUFFER_DEPTH_SLOT].type = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
-		poolSizes[GBUFFER_DEPTH_SLOT].descriptorCount = static_cast<uint32_t>(1 * MAX_FRAMES_IN_FLIGHT);
-
-		poolSizes[HDRI_COLOR_SLOT].type = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
-		poolSizes[HDRI_COLOR_SLOT].descriptorCount = static_cast<uint32_t>(1 * MAX_FRAMES_IN_FLIGHT);
-
-		poolSizes[SHADOW_MAPS_SLOT].type = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
-		poolSizes[SHADOW_MAPS_SLOT].descriptorCount = static_cast<uint32_t>(MAX_SHADOW_MAPS * MAX_FRAMES_IN_FLIGHT);
-
-		poolSizes[LIGHT_BUFFER_SLOT].type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-		poolSizes[LIGHT_BUFFER_SLOT].descriptorCount = static_cast<uint32_t>(1 * MAX_FRAMES_IN_FLIGHT);
-
-		poolSizes[SHADOW_MAP_SAMPLER].type = VK_DESCRIPTOR_TYPE_SAMPLER;
-		poolSizes[SHADOW_MAP_SAMPLER].descriptorCount = static_cast<uint32_t>(1 * MAX_FRAMES_IN_FLIGHT);
-
-		// + 5 == hdri, depth, metal, normal, color
-		if (MAX_TEXTURES + MAX_SHADOW_MAPS + 5> deviceContext->GetMaxSampledImages())
 		{
-			throw std::runtime_error("Max textures is bigger than device limitations");
-		}
+			std::array<VkDescriptorPoolSize, 15> poolSizes{};
+			poolSizes[UBO_BINDING_SLOT].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+			poolSizes[UBO_BINDING_SLOT].descriptorCount = static_cast<uint32_t>(1 * MAX_FRAMES_IN_FLIGHT);
 
-		if ([&]() -> uint32_t
+			poolSizes[SAMPLER_BINDING_SLOT].type = VK_DESCRIPTOR_TYPE_SAMPLER;
+			poolSizes[SAMPLER_BINDING_SLOT].descriptorCount = static_cast<uint32_t>(1 * MAX_FRAMES_IN_FLIGHT);
+
+			poolSizes[TEXTURE_BINDING_SLOT].type = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+			poolSizes[TEXTURE_BINDING_SLOT].descriptorCount = static_cast<uint32_t>(MAX_TEXTURES * MAX_FRAMES_IN_FLIGHT);
+
+			poolSizes[MATERIAL_DATA_BINDING_SLOT].type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+			poolSizes[MATERIAL_DATA_BINDING_SLOT].descriptorCount = static_cast<uint32_t>(1 * MAX_FRAMES_IN_FLIGHT);
+
+			poolSizes[MESH_DATA_BINDING_SLOT].type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+			poolSizes[MESH_DATA_BINDING_SLOT].descriptorCount = static_cast<uint32_t>(1 * MAX_FRAMES_IN_FLIGHT);
+
+			poolSizes[MESH_INSTANCE_DATA_BINDING_SLOT].type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+			poolSizes[MESH_INSTANCE_DATA_BINDING_SLOT].descriptorCount = static_cast<uint32_t>(1 * MAX_FRAMES_IN_FLIGHT);
+
+			poolSizes[GBUFFER_COLOR_SLOT].type = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+			poolSizes[GBUFFER_COLOR_SLOT].descriptorCount = static_cast<uint32_t>(1 * MAX_FRAMES_IN_FLIGHT);
+
+			poolSizes[GBUFFER_NORMAL_SLOT].type = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+			poolSizes[GBUFFER_NORMAL_SLOT].descriptorCount = static_cast<uint32_t>(1 * MAX_FRAMES_IN_FLIGHT);
+
+			poolSizes[GBUFFER_METAL_SLOT].type = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+			poolSizes[GBUFFER_METAL_SLOT].descriptorCount = static_cast<uint32_t>(1 * MAX_FRAMES_IN_FLIGHT);
+
+			poolSizes[GBUFFER_DEPTH_SLOT].type = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+			poolSizes[GBUFFER_DEPTH_SLOT].descriptorCount = static_cast<uint32_t>(1 * MAX_FRAMES_IN_FLIGHT);
+
+			poolSizes[HDRI_COLOR_SLOT].type = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+			poolSizes[HDRI_COLOR_SLOT].descriptorCount = static_cast<uint32_t>(1 * MAX_FRAMES_IN_FLIGHT);
+
+			poolSizes[SHADOW_MAPS_SLOT].type = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+			poolSizes[SHADOW_MAPS_SLOT].descriptorCount = static_cast<uint32_t>(MAX_SHADOW_MAPS * MAX_FRAMES_IN_FLIGHT);
+
+			poolSizes[LIGHT_BUFFER_SLOT].type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+			poolSizes[LIGHT_BUFFER_SLOT].descriptorCount = static_cast<uint32_t>(1 * MAX_FRAMES_IN_FLIGHT);
+
+			poolSizes[SHADOW_MAP_SAMPLER].type = VK_DESCRIPTOR_TYPE_SAMPLER;
+			poolSizes[SHADOW_MAP_SAMPLER].descriptorCount = static_cast<uint32_t>(1 * MAX_FRAMES_IN_FLIGHT);
+
+			poolSizes[ENV_MAP_SLOT].type = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+			poolSizes[ENV_MAP_SLOT].descriptorCount = static_cast<uint32_t>(1 * MAX_FRAMES_IN_FLIGHT);
+
+			// + 5 == hdri, depth, metal, normal, color, env map
+			if (MAX_TEXTURES + MAX_SHADOW_MAPS + 6> deviceContext->GetMaxSampledImages())
 			{
-				uint32_t tot{0};
-				for (auto&& s : poolSizes)
-				{
-					tot += s.descriptorCount;
-				}
-				return tot;
+				throw std::runtime_error("Max textures is bigger than device limitations");
+			}
 
-			}() > deviceContext->GetMaxDescriptorSets())
-		{
-			throw std::runtime_error("descriptor set count is bigger than device limitations");
+			if ([&]() -> uint32_t
+				{
+					uint32_t tot{0};
+					for (auto&& s : poolSizes)
+					{
+						tot += s.descriptorCount;
+					}
+					return tot;
+
+				}() > deviceContext->GetMaxDescriptorSets())
+			{
+				throw std::runtime_error("descriptor set count is bigger than device limitations");
+			}
+
+			VkDescriptorPoolCreateInfo poolInfo{};
+			poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+			poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
+			poolInfo.pPoolSizes = poolSizes.data();
+			poolInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+			poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT;
+
+			if (vkCreateDescriptorPool(deviceContext->GetLogicalDevice(), &poolInfo, nullptr, &m_DescriptorPool) != VK_SUCCESS) {
+
+				throw std::runtime_error("Failed to create descriptor pool!");
+			}
 		}
 
-		VkDescriptorPoolCreateInfo poolInfo{};
-		poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-		poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
-		poolInfo.pPoolSizes = poolSizes.data();
-		poolInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-		poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT;
+		{
+			std::array<VkDescriptorPoolSize, 2> poolSizes{};
 
-		if (vkCreateDescriptorPool(deviceContext->GetLogicalDevice(), &poolInfo, nullptr, &m_DescriptorPool) != VK_SUCCESS) {
+			poolSizes[0].type = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+			poolSizes[0].descriptorCount = static_cast<uint32_t>(1 * MAX_FRAMES_IN_FLIGHT);
 
-			throw std::runtime_error("Failed to create descriptor pool!");
+			poolSizes[1].type = VK_DESCRIPTOR_TYPE_SAMPLER;
+			poolSizes[1].descriptorCount = static_cast<uint32_t>(1 * MAX_FRAMES_IN_FLIGHT);
+
+			VkDescriptorPoolCreateInfo poolInfo{};
+			poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+			poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
+			poolInfo.pPoolSizes = poolSizes.data();
+			poolInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+			poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT;
+
+			if (vkCreateDescriptorPool(deviceContext->GetLogicalDevice(), &poolInfo, nullptr, &m_SkyboxDescriptorPool) != VK_SUCCESS) {
+
+				throw std::runtime_error("Failed to create descriptor pool!");
+			}
 		}
 	}
 
 	void VulkanDescriptorContext::CreateDescriptorSets(std::vector<VulkanBuffer> const& bufferInfoBuffers, VkDeviceSize offset, VkDeviceSize range, VkImageLayout imageLayout, std::vector<VkImageView> const& imageViews, VkSampler sampler)
 	{
-		std::vector<VkDescriptorSetLayout> const layouts(MAX_FRAMES_IN_FLIGHT, m_DescriptorSetLayout);
-
-		VkDescriptorSetAllocateInfo allocInfo{};
-		allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-		allocInfo.descriptorPool = m_DescriptorPool;
-		allocInfo.descriptorSetCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-		allocInfo.pSetLayouts = layouts.data();
-
-		m_DescriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
-
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
-		if (vkAllocateDescriptorSets(deviceContext->GetLogicalDevice(), &allocInfo, m_DescriptorSets.data()) != VK_SUCCESS)
+
 		{
-			throw std::runtime_error("Failed to allocate descriptor sets!");
+			std::vector<VkDescriptorSetLayout> const layouts(MAX_FRAMES_IN_FLIGHT, m_DescriptorSetLayout);
+
+			VkDescriptorSetAllocateInfo allocInfo{};
+			allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+			allocInfo.descriptorPool = m_DescriptorPool;
+			allocInfo.descriptorSetCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+			allocInfo.pSetLayouts = layouts.data();
+
+			m_DescriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
+
+			if (vkAllocateDescriptorSets(deviceContext->GetLogicalDevice(), &allocInfo, m_DescriptorSets.data()) != VK_SUCCESS)
+			{
+				throw std::runtime_error("Failed to allocate descriptor sets!");
+			}
+		}
+		{
+			std::vector<VkDescriptorSetLayout> const layouts(MAX_FRAMES_IN_FLIGHT, m_SkyboxDescriptorSetLayout);
+
+			VkDescriptorSetAllocateInfo allocInfo{};
+			allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+			allocInfo.descriptorPool = m_SkyboxDescriptorPool;
+			allocInfo.descriptorSetCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+			allocInfo.pSetLayouts = layouts.data();
+
+			m_SkyboxDescriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
+
+			if (vkAllocateDescriptorSets(deviceContext->GetLogicalDevice(), &allocInfo, m_SkyboxDescriptorSets.data()) != VK_SUCCESS)
+			{
+				throw std::runtime_error("Failed to allocate descriptor sets!");
+			}
 		}
 
 		for (size_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; ++i)
@@ -429,11 +557,47 @@ namespace MauRen
 		}
 	}
 
+	void VulkanDescriptorContext::CreateSkyboxDescriptorSetLayout()
+	{
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+
+		VkDescriptorSetLayoutBinding cubemapBinding{};
+		cubemapBinding.binding = 0;
+		cubemapBinding.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+		cubemapBinding.descriptorCount = 1;
+		cubemapBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;	
+
+		VkDescriptorSetLayoutBinding samplerBinding{};
+		samplerBinding.binding = 1;
+		samplerBinding.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
+		samplerBinding.descriptorCount = 1;
+		samplerBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+		std::array<VkDescriptorSetLayoutBinding, 2> bindings
+		{
+			cubemapBinding,
+			samplerBinding
+		};
+
+		VkDescriptorSetLayoutCreateInfo layoutInfo{};
+		layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+		layoutInfo.bindingCount = static_cast<uint32_t>(std::size(bindings));
+		layoutInfo.pBindings = bindings.data();
+
+		if (vkCreateDescriptorSetLayout(deviceContext->GetLogicalDevice(), &layoutInfo, nullptr, &m_SkyboxDescriptorSetLayout) != VK_SUCCESS)
+		{
+			throw std::runtime_error("failed to create skybox descriptor set layout!");
+		}
+	}
+
 	void VulkanDescriptorContext::Destroy()
 	{
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 
 		VulkanUtils::SafeDestroy(deviceContext->GetLogicalDevice(), m_DescriptorPool, nullptr);
 		VulkanUtils::SafeDestroy(deviceContext->GetLogicalDevice(), m_DescriptorSetLayout, nullptr);
+
+		VulkanUtils::SafeDestroy(deviceContext->GetLogicalDevice(), m_SkyboxDescriptorPool, nullptr);
+		VulkanUtils::SafeDestroy(deviceContext->GetLogicalDevice(), m_SkyboxDescriptorSetLayout, nullptr);
 	}
 }

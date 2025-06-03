@@ -38,6 +38,8 @@ namespace MauRen
 
 		[[nodiscard]] VkSampler GetShadowMapSampler() const noexcept { return m_ShadowMapSampler; }
 
+		void RenderSkybox(VkCommandBuffer const& commandBuffer, VulkanGraphicsPipelineContext const& graphicsPipelineContext, VulkanDescriptorContext& descriptorContext, VulkanSwapchainContext& swapChainContext, uint32_t frame, VulkanBuffer const& screenBuffer);
+
 		VulkanLightManager(VulkanLightManager const&) = delete;
 		VulkanLightManager(VulkanLightManager&&) = delete;
 		VulkanLightManager& operator=(VulkanLightManager const&) = delete;
@@ -64,14 +66,22 @@ namespace MauRen
 			uint32_t lightIndex;
 		};
 
-		glm::vec3 m_SceneAABBMin;
-		glm::vec3 m_SceneAABBMax;
+		struct SkyBoxPushConstant final
+		{
+			glm::mat4 view;
+			glm::mat4 proj;
+		};
 
-		bool m_HasAABBBOverride;
+		glm::vec3 m_SceneAABBMin{};
+		glm::vec3 m_SceneAABBMax{};
+
+		bool m_HasAABBBOverride{ false };
 
 		VkSampler m_ShadowMapSampler{ VK_NULL_HANDLE };
+		VkSampler m_SkyboxSampler{ VK_NULL_HANDLE };
 
 		VulkanImage m_Skybox{};
+		bool execOnce = false;
 
 		void CreateShadowMapSampler(VulkanDescriptorContext& descriptorContext);
 
@@ -80,7 +90,8 @@ namespace MauRen
 
 		void InitLightBuffers();
 
-		void LoadSkyBox();
+		void LoadSkyBox(VulkanCommandPoolManager& cmdPoolManager, VulkanDescriptorContext& descriptorContext);
+		void CreateSkyboxSampler(VulkanDescriptorContext& descriptorContext);
 	};
 }
 #endif

@@ -51,6 +51,9 @@ layout(set = 0, binding = 12) buffer readonly LightDataBuffer
 
 layout(set = 0, binding = 13) uniform samplerShadow shadowMapSampler;
 
+
+layout(set = 0, binding = 14) uniform texture2D envMap;
+
 layout(location = 0) in vec2 fragUV;
 layout(location = 0) out vec4 outColor;
 
@@ -200,6 +203,14 @@ void main()
 
     //Normal debugging
     //outColor = vec4(normal * 0.5 + 0.5, 1.0);
+
+    const vec3 sampleDirection = normalize(worldPos.xyz);
+  //  outColor = vec4(texture(samplerCube(envMap, globalSampler), sampleDirection.xyz).rgb, 1.0);
+    //vec4 test = vec4(texture(
+    //    samplerCube(envMap, globalSampler), sampleDirection).rgb, 1.f);
+
+    vec3 c = texture(sampler2D(envMap, globalSampler), vec2(1,1)).rgb;
+    
 }
 
 vec3 GetWorldPosFromDepth(float depth)

@@ -41,7 +41,8 @@ namespace MauRen
 		m_SwapChainContext.Initialize(m_pWindow, &m_SurfaceContext);
 
 		m_DescriptorContext.CreateDescriptorSetLayout();
-		m_GraphicsPipelineContext.Initialize(&m_SwapChainContext, m_DescriptorContext.GetDescriptorSetLayout(), 1u);
+		m_DescriptorContext.CreateSkyboxDescriptorSetLayout();
+		m_GraphicsPipelineContext.Initialize(&m_SwapChainContext, m_DescriptorContext);
 
 		m_CommandPoolManager.Initialize();
 
@@ -599,6 +600,12 @@ namespace MauRen
 				vkCmdBindVertexBuffers(commandBuffer, 0, 1, &m_QuadVertexBuffer.buffer, &offset);
 				vkCmdDraw(commandBuffer, 6, 1, 0, 0);
 			vkCmdEndRendering(commandBuffer);
+		}
+#pragma endregion
+#pragma region SKYBOX_PASS
+		{
+			ME_PROFILE_SCOPE("skybox pass")
+			VulkanLightManager::GetInstance().RenderSkybox(commandBuffer, m_GraphicsPipelineContext, m_DescriptorContext, m_SwapChainContext, imageIndex, m_QuadVertexBuffer);
 		}
 #pragma endregion
 #pragma region TONEMAP

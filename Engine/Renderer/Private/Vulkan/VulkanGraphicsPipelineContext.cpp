@@ -1,18 +1,19 @@
 #include "VulkanGraphicsPipelineContext.h"
-
+#include "VulkanDescriptorContext.h"
 #include "VulkanUtils.h"
 
 namespace MauRen
 {
-	void VulkanGraphicsPipelineContext::Initialize(VulkanSwapchainContext* pSwapChainContext, VkDescriptorSetLayout descriptorSetLayout, uint32_t descriptorSetLayoutCount)
+	void VulkanGraphicsPipelineContext::Initialize(VulkanSwapchainContext* pSwapChainContext, VulkanDescriptorContext& descriptorContext)
 	{
 		//CreateForwardPipeline(pSwapChainContext, descriptorSetLayout, descriptorSetLayoutCount);
-		CreateDepthPrePassPipeline(pSwapChainContext, descriptorSetLayout, descriptorSetLayoutCount);
-		CreateShadowPassPipeline(pSwapChainContext, descriptorSetLayout, descriptorSetLayoutCount);
-		CreateDebugGraphicsPipeline(pSwapChainContext, descriptorSetLayout, descriptorSetLayoutCount);
-		CreateGBufferPipeline(pSwapChainContext, descriptorSetLayout, descriptorSetLayoutCount);
-		CreateLightPassPipeline(pSwapChainContext, descriptorSetLayout, descriptorSetLayoutCount);
-		CreateToneMapPipeline(pSwapChainContext, descriptorSetLayout, descriptorSetLayoutCount);
+		CreateDepthPrePassPipeline(pSwapChainContext, descriptorContext.GetDescriptorSetLayout(), 1);
+		CreateShadowPassPipeline(pSwapChainContext, descriptorContext.GetDescriptorSetLayout(), 1);
+		CreateDebugGraphicsPipeline(pSwapChainContext, descriptorContext.GetDescriptorSetLayout(), 1);
+		CreateGBufferPipeline(pSwapChainContext, descriptorContext.GetDescriptorSetLayout(), 1);
+		CreateLightPassPipeline(pSwapChainContext, descriptorContext.GetDescriptorSetLayout(), 1);
+		CreateToneMapPipeline(pSwapChainContext, descriptorContext.GetDescriptorSetLayout(), 1);
+		CreateSkyboxPipeline(pSwapChainContext, descriptorContext.GetSkyboxDescriptorSetLayout(), 1);
 	}
 
 	void VulkanGraphicsPipelineContext::Destroy()
@@ -39,6 +40,9 @@ namespace MauRen
 
 		VulkanUtils::SafeDestroy(deviceContext->GetLogicalDevice(), m_ToneMapPipeline, nullptr);
 		VulkanUtils::SafeDestroy(deviceContext->GetLogicalDevice(), m_ToneMapPipelineLayout, nullptr);
+
+		VulkanUtils::SafeDestroy(deviceContext->GetLogicalDevice(), m_SkyboxPipeline, nullptr);
+		VulkanUtils::SafeDestroy(deviceContext->GetLogicalDevice(), m_SkyboxPipelineLayout, nullptr);
 	}
 
 	void VulkanGraphicsPipelineContext::CreateForwardPipeline(VulkanSwapchainContext* pSwapChainContext, VkDescriptorSetLayout descriptorSetLayout, uint32_t descriptorSetLayoutCount)
@@ -1302,6 +1306,183 @@ namespace MauRen
 		pipelineInfo.basePipelineIndex = -1; // Optional
 
 		if (VK_SUCCESS != vkCreateGraphicsPipelines(deviceContext->GetLogicalDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_ToneMapPipeline))
+		{
+			throw std::runtime_error("Failed to create graphics pipeline!");
+		}
+
+		VulkanUtils::SafeDestroy(deviceContext->GetLogicalDevice(), fragShaderModule, nullptr);
+		VulkanUtils::SafeDestroy(deviceContext->GetLogicalDevice(), vertShaderModule, nullptr);
+	}
+
+	void VulkanGraphicsPipelineContext::CreateSkyboxPipeline(VulkanSwapchainContext* pSwapChainContext, VkDescriptorSetLayout descriptorSetLayout, uint32_t descriptorSetLayoutCount)
+	{
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+
+		auto const vertShaderCode{ ReadFile("Resources/Shaders/skybox.vert.spv") };
+		auto const fragShaderCode{ ReadFile("Resources/Shaders/skybox.frag.spv") };
+
+		// Shader modules are linked internally, the VkShaderModule is just a wrapper so we do not need to store it.
+		VkShaderModule vertShaderModule{ CreateShaderModule(vertShaderCode) };
+		VkShaderModule fragShaderModule{ CreateShaderModule(fragShaderCode) };
+
+		VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
+		vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+		vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
+		vertShaderStageInfo.module = vertShaderModule;
+		vertShaderStageInfo.pName = "main";
+
+		VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
+		fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+		fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+		fragShaderStageInfo.module = fragShaderModule;
+		fragShaderStageInfo.pName = "main";
+
+		std::array const shaderStages{ vertShaderStageInfo, fragShaderStageInfo };
+
+		std::array const dynamicStates{
+			VK_DYNAMIC_STATE_VIEWPORT,
+			VK_DYNAMIC_STATE_SCISSOR
+		};
+
+		VkVertexInputBindingDescription bindingDescription{};
+		bindingDescription.binding = 0;
+		bindingDescription.stride = sizeof(glm::vec3);
+		bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+		std::array<VkVertexInputAttributeDescription, 1> atts;
+		VkVertexInputAttributeDescription positionAttribute{};
+		positionAttribute.location = 0;
+		positionAttribute.binding = 0;
+		positionAttribute.format = VK_FORMAT_R32G32_SFLOAT;
+		positionAttribute.offset = 0;
+		atts[0] = positionAttribute;
+
+		VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
+		vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+		vertexInputInfo.vertexBindingDescriptionCount = 1;
+		vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
+		vertexInputInfo.vertexAttributeDescriptionCount = 1;
+		vertexInputInfo.pVertexAttributeDescriptions = atts.data();
+
+		VkPipelineDynamicStateCreateInfo dynamicState{};
+		dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+		dynamicState.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
+		dynamicState.pDynamicStates = dynamicStates.data();
+
+		VkViewport viewport{};
+		viewport.x = 0.0f;
+		viewport.y = 0.0f;
+		viewport.width = static_cast<float>(pSwapChainContext->GetExtent().width);
+		viewport.height = static_cast<float>(pSwapChainContext->GetExtent().height);
+		viewport.minDepth = 0.0f;
+		viewport.maxDepth = 1.0f;
+
+		VkRect2D scissor{};
+		scissor.offset = { 0, 0 };
+		scissor.extent = pSwapChainContext->GetExtent();
+		
+		VkPipelineViewportStateCreateInfo viewportState{};
+		viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+		viewportState.viewportCount = 1;
+		viewportState.pViewports = &viewport;
+		viewportState.scissorCount = 1;
+		viewportState.pScissors = &scissor;
+
+		VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
+		inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+		inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+		inputAssembly.primitiveRestartEnable = VK_FALSE;
+
+		VkPipelineRasterizationStateCreateInfo rasterizer{};
+		rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+		rasterizer.depthClampEnable = VK_FALSE;
+		rasterizer.rasterizerDiscardEnable = VK_FALSE;
+		rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
+		rasterizer.lineWidth = 1.0f;
+		rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
+		rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+		rasterizer.depthBiasEnable = VK_FALSE;
+		rasterizer.depthBiasConstantFactor = 0.0f; // Optional
+		rasterizer.depthBiasClamp = 0.0f; // Optional
+		rasterizer.depthBiasSlopeFactor = 0.0f; // Optional
+
+
+		VkPipelineMultisampleStateCreateInfo multisampling{};
+		multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+		multisampling.sampleShadingEnable = VK_FALSE;
+		//multisampling.rasterizationSamples = deviceContext->GetSampleCount();
+		multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+		multisampling.minSampleShading = 1.0f; // Optional
+		multisampling.pSampleMask = nullptr; // Optional
+		multisampling.alphaToCoverageEnable = VK_FALSE; // Optional
+		multisampling.alphaToOneEnable = VK_FALSE; // Optional
+
+		VkPipelineColorBlendAttachmentState skyboxBlendAttachment{};
+		skyboxBlendAttachment.blendEnable = VK_FALSE;
+
+		VkPipelineColorBlendStateCreateInfo colorBlending{};
+		colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+		colorBlending.logicOpEnable = VK_FALSE;
+		colorBlending.attachmentCount = 1;
+		colorBlending.pAttachments = &skyboxBlendAttachment;
+
+		VkPipelineDepthStencilStateCreateInfo depthStencil{};
+		depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+		depthStencil.depthTestEnable = VK_TRUE;
+		depthStencil.depthWriteEnable = VK_FALSE; // Written in the depth prepass
+		depthStencil.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
+		depthStencil.depthBoundsTestEnable = VK_FALSE;
+		depthStencil.stencilTestEnable = VK_FALSE;
+
+		VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
+		pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+		pipelineLayoutInfo.setLayoutCount = descriptorSetLayoutCount;
+		pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
+
+		VkPushConstantRange pushConstantRange{};
+		pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+		pushConstantRange.offset = 0;
+		pushConstantRange.size = (2 * sizeof(glm::mat4));
+
+		pipelineLayoutInfo.pushConstantRangeCount = 1;
+		pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
+
+		if (vkCreatePipelineLayout(deviceContext->GetLogicalDevice(), &pipelineLayoutInfo, nullptr, &m_SkyboxPipelineLayout) != VK_SUCCESS)
+		{
+			throw std::runtime_error("Failed to create pipeline layout!");
+		}
+		VkFormat const colorOut { VK_FORMAT_R8G8B8A8_SRGB };
+		VkPipelineRenderingCreateInfo renderingCreate{};
+		renderingCreate.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
+		renderingCreate.colorAttachmentCount = 1;
+		renderingCreate.pColorAttachmentFormats = &colorOut;
+		renderingCreate.depthAttachmentFormat = pSwapChainContext->GetDepthImage(0).format;
+
+		VkGraphicsPipelineCreateInfo pipelineInfo{};
+		pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+		pipelineInfo.stageCount = static_cast<uint32_t>(std::size(shaderStages));
+		pipelineInfo.pStages = shaderStages.data();
+
+		pipelineInfo.pVertexInputState = &vertexInputInfo;
+		pipelineInfo.pInputAssemblyState = &inputAssembly;
+		pipelineInfo.pViewportState = &viewportState;
+		pipelineInfo.pRasterizationState = &rasterizer;
+		pipelineInfo.pMultisampleState = &multisampling;
+		pipelineInfo.pColorBlendState = &colorBlending;
+		pipelineInfo.pDynamicState = &dynamicState;
+		pipelineInfo.pDepthStencilState = &depthStencil;
+		pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
+		pipelineInfo.layout = m_SkyboxPipelineLayout;
+
+		pipelineInfo.renderPass = VK_NULL_HANDLE;
+		pipelineInfo.subpass = 0;
+		pipelineInfo.pNext = &renderingCreate;
+
+		// Note: These values are only used if the VK_PIPELINE_CREATE_DERIVATIVE_BIT flag is also specified in the flags field of VkGraphicsPipelineCreateInfo.
+		pipelineInfo.basePipelineHandle = VK_NULL_HANDLE; // Optional
+		pipelineInfo.basePipelineIndex = -1; // Optional
+
+		if (vkCreateGraphicsPipelines(deviceContext->GetLogicalDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_SkyboxPipeline) != VK_SUCCESS)
 		{
 			throw std::runtime_error("Failed to create graphics pipeline!");
 		}

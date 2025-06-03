@@ -16,10 +16,12 @@ namespace MauRen
 		ME_PROFILE_FUNCTION()
 
 		CreateShadowMapSampler(descriptorContext);
+		CreateSkyboxSampler(descriptorContext);
+
 		CreateDefaultShadowMap(cmdPoolManager, descriptorContext, SHADOW_MAP_SIZE, SHADOW_MAP_SIZE);
 		InitLightBuffers();
 
-		LoadSkyBox();
+		LoadSkyBox(cmdPoolManager, descriptorContext);
 	}
 
 	void VulkanLightManager::Destroy()
@@ -37,6 +39,7 @@ namespace MauRen
 		}
 
 		VulkanUtils::SafeDestroy(deviceContext->GetLogicalDevice(), m_ShadowMapSampler, nullptr);
+		VulkanUtils::SafeDestroy(deviceContext->GetLogicalDevice(), m_SkyboxSampler, nullptr);
 
 		m_Skybox.Destroy();
 	}
@@ -322,6 +325,133 @@ namespace MauRen
 		m_Lights.clear();
 	}
 
+	void VulkanLightManager::RenderSkybox(VkCommandBuffer const& commandBuffer, VulkanGraphicsPipelineContext const& graphicsPipelineContext, VulkanDescriptorContext& descriptorContext, VulkanSwapchainContext& swapChainContext, uint32_t frame, VulkanBuffer const& screenBuffer)
+	{
+		if (execOnce)
+		{
+			return;
+		}
+		execOnce = true;
+
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+
+		// CPU views per face
+		glm::vec3 const eye{ 0.f };
+		glm::mat4 captureViews[6]
+		{
+			glm::lookAt(eye, eye + glm::vec3{ 1.f, 0.f, 0.f }, glm::vec3{ 0.f, -1.f, 0.f }), // +X
+			glm::lookAt(eye, eye + glm::vec3{ -1.f, 0.f, 0.f }, glm::vec3{ 0.f, -1.f, 0.f }), // -X
+			glm::lookAt(eye, eye + glm::vec3{ 0.f, -1.f, 0.f }, glm::vec3{ 0.f, 0.f, -1.f }), // -Y
+			glm::lookAt(eye, eye + glm::vec3{ 0.f, 1.f, 0.f }, glm::vec3{ 0.f, 0.f, 1.f }), // +Y
+			glm::lookAt(eye, eye + glm::vec3{ 0.f, 0.f, 1.f }, glm::vec3{ 0.f, -1.f, 0.f }), // +Z
+			glm::lookAt(eye, eye + glm::vec3{ 0.f, 0.f, -1.f }, glm::vec3{ 0.f, -1.f, 0.f })  // -Z
+		};
+		glm::mat4 captureProj{ glm::perspective(glm::radians(90.f), 1.f, .1f, 10.f) };
+		captureProj[1][1] *= -1.f;
+
+		VkImageView cubemapViews[6];
+		for (size_t i{ 0 }; i < 6; ++i)
+		{
+			VkImageViewCreateInfo viewInfo{};
+			viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+			viewInfo.image = m_Skybox.image;
+			viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+			viewInfo.format = m_Skybox.format;
+			viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+			viewInfo.subresourceRange.baseMipLevel = 0;
+			viewInfo.subresourceRange.levelCount = 1;
+			viewInfo.subresourceRange.baseArrayLayer = i;
+			viewInfo.subresourceRange.layerCount = 1;
+
+			vkCreateImageView(deviceContext->GetLogicalDevice(), &viewInfo, nullptr, &cubemapViews[i]);
+		}
+
+		m_Skybox.TransitionImageLayout(commandBuffer, 
+			VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+			VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT,
+			VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
+			VK_ACCESS_2_SHADER_READ_BIT,
+			VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT
+			);
+
+		for (size_t i{ 0 }; i < 6; ++i)
+		{
+			SkyBoxPushConstant pc
+			{
+				.view = captureViews[i],
+				.proj = captureProj
+			};
+
+			auto& depth{ swapChainContext.GetDepthImage(frame) };
+			VkRenderingAttachmentInfo colorAttachment{};
+			colorAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+			colorAttachment.imageView = cubemapViews[i];
+			colorAttachment.imageLayout = m_Skybox.layout;
+			colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+			colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+			colorAttachment.clearValue = { 1,1,1,1 };
+
+			VkRenderingAttachmentInfo depthAttachment{};
+			depthAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+			depthAttachment.imageView = depth.imageViews[0];
+			depthAttachment.imageLayout = depth.layout;
+			depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+			depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+
+			VkRenderingInfo renderInfoSkybox{};
+			renderInfoSkybox.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
+			renderInfoSkybox.renderArea = VkRect2D{ VkOffset2D{ 0, 0 }, swapChainContext.GetExtent().width, swapChainContext.GetExtent().height };
+			renderInfoSkybox.layerCount = 1;
+			renderInfoSkybox.colorAttachmentCount = 1;
+			renderInfoSkybox.pColorAttachments = &colorAttachment;
+			renderInfoSkybox.pDepthAttachment = &depthAttachment;
+
+			VkViewport viewport{};
+			viewport.x = 0.0f;
+			viewport.y = 0.0f;
+			viewport.width = (float)swapChainContext.GetExtent().width;
+			viewport.height = (float)swapChainContext.GetExtent().height;
+			viewport.minDepth = 0.0f;
+			viewport.maxDepth = 1.0f;
+			vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+
+			VkRect2D scissor{};
+			scissor.offset = { 0, 0 };
+			scissor.extent = { swapChainContext.GetExtent().width, swapChainContext.GetExtent().height };
+			vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+			VkDeviceSize constexpr offset{ 0 };
+
+			vkCmdBeginRendering(commandBuffer, &renderInfoSkybox);
+				vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipelineContext.GetSkyboxPipeline());
+				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipelineContext.GetSkyboxPipelineLayout(), 0, 1, descriptorContext.GetSkyboxDescriptorSets().data(), 0, nullptr);
+				vkCmdPushConstants(
+					commandBuffer,
+					graphicsPipelineContext.GetSkyboxPipelineLayout(),
+					VK_SHADER_STAGE_VERTEX_BIT,
+					0,
+					sizeof(SkyBoxPushConstant),
+					&pc
+				);
+				vkCmdBindVertexBuffers(commandBuffer, 0, 1, &screenBuffer.buffer, &offset);
+				vkCmdDraw(commandBuffer, 6, 1, 0, 0);
+			vkCmdEndRendering(commandBuffer);
+		}
+
+
+		for (size_t i = 0; i < 6; ++i)
+		{
+			vkDestroyImageView(deviceContext->GetLogicalDevice(), cubemapViews[i], nullptr);
+		}
+
+		m_Skybox.TransitionImageLayout(commandBuffer,
+			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+			VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
+			VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT,
+			VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT,
+			VK_ACCESS_2_SHADER_READ_BIT);
+
+	}
+
 	void VulkanLightManager::CreateShadowMapSampler(VulkanDescriptorContext& descriptorContext)
 	{
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
@@ -448,7 +578,7 @@ namespace MauRen
 		}
 	}
 
-	void VulkanLightManager::LoadSkyBox()
+	void VulkanLightManager::LoadSkyBox(VulkanCommandPoolManager& cmdPoolManager, VulkanDescriptorContext& descriptorContext)
 	{
 		HDRI_Image img{ "Resources/Skybox/circus_arena_4k.hdr", 4 };
 
@@ -458,7 +588,7 @@ namespace MauRen
 		m_Skybox = VulkanImage{
 			VK_FORMAT_R8G8B8A8_SRGB,
 			VK_IMAGE_TILING_OPTIMAL,
-			VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT,
+			VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
 			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
 			VK_SAMPLE_COUNT_1_BIT,
 			static_cast<uint32_t>(img.height),
@@ -467,12 +597,41 @@ namespace MauRen
 			6,
 			VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT
 		};
+		m_Skybox.CreateImageView(VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_VIEW_TYPE_2D);
 
-		m_Skybox.CreateImageView(VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_VIEW_TYPE_CUBE);
+		m_Skybox.TransitionImageLayout(cmdPoolManager, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
+		descriptorContext.BindSkybox(m_Skybox.imageViews[0], m_Skybox.layout);
+		descriptorContext.BindEnvMap(m_Skybox.imageViews[0], m_Skybox.layout);
+	}
 
-		// TODO 6 temp views, one for each layer!
-		// TODO render into using dynamic rendering
+	void VulkanLightManager::CreateSkyboxSampler(VulkanDescriptorContext& descriptorContext)
+	{
+		auto const deviceContext = VulkanDeviceContextManager::GetInstance().GetDeviceContext();
 
+		VkSamplerCreateInfo samplerInfo{};
+		samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+		samplerInfo.magFilter = VK_FILTER_LINEAR;
+		samplerInfo.minFilter = VK_FILTER_LINEAR;
+		samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+		samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+		samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+		samplerInfo.anisotropyEnable = VK_FALSE; // Optional: can be VK_TRUE if supported and desired
+		samplerInfo.maxAnisotropy = 1.0f; // Ignored if anisotropyEnable == VK_FALSE
+		samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK; // Not used with clamp to edge
+		samplerInfo.unnormalizedCoordinates = VK_FALSE; // Use normalized texture coordinates
+		samplerInfo.compareEnable = VK_FALSE; // No compare operation needed
+		samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS; // Ignored since compareEnable is VK_FALSE
+		samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR; // Use linear mipmapping
+		samplerInfo.mipLodBias = 0.0f;
+		samplerInfo.minLod = 0.0f;
+		samplerInfo.maxLod = VK_LOD_CLAMP_NONE; // Use all mip levels available
+
+		if (vkCreateSampler(deviceContext->GetLogicalDevice(), &samplerInfo, nullptr, &m_SkyboxSampler) != VK_SUCCESS)
+		{
+			throw std::runtime_error("Failed to create skybox sampler!");
+		}
+
+		descriptorContext.BindSkyboxSampler(m_SkyboxSampler);
 	}
 }

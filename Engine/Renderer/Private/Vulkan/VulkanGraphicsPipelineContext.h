@@ -9,13 +9,18 @@
 
 namespace MauRen
 {
+	class VulkanDescriptorContext;
+}
+
+namespace MauRen
+{
 	class VulkanGraphicsPipelineContext final
 	{
 	public:
 		VulkanGraphicsPipelineContext() = default;
 		~VulkanGraphicsPipelineContext() = default;
 
-		void Initialize(VulkanSwapchainContext* pSwapChainContext, VkDescriptorSetLayout descriptorSetLayout, uint32_t descriptorSetLayoutCount);
+		void Initialize(VulkanSwapchainContext* pSwapChainContext, VulkanDescriptorContext& descriptorContext);
 		void Destroy();
 
 		[[nodiscard]] VkPipeline GetForwardPipeline() const noexcept { return m_ForwardPipeline; }
@@ -38,6 +43,10 @@ namespace MauRen
 
 		[[nodiscard]] VkPipeline GetToneMapPipeline() const noexcept { return m_ToneMapPipeline; }
 		[[nodiscard]] VkPipelineLayout GetToneMapPipelineLayout() const noexcept { return m_ToneMapPipelineLayout; }
+
+		[[nodiscard]] VkPipeline GetSkyboxPipeline() const noexcept { return m_SkyboxPipeline; }
+		[[nodiscard]] VkPipelineLayout GetSkyboxPipelineLayout() const noexcept { return m_SkyboxPipelineLayout; }
+
 
 		VulkanGraphicsPipelineContext(VulkanGraphicsPipelineContext const&) = delete;
 		VulkanGraphicsPipelineContext(VulkanGraphicsPipelineContext&&) = delete;
@@ -66,6 +75,9 @@ namespace MauRen
 		VkPipelineLayout m_ToneMapPipelineLayout{ VK_NULL_HANDLE };
 		VkPipeline m_ToneMapPipeline{ VK_NULL_HANDLE };
 
+		VkPipelineLayout m_SkyboxPipelineLayout{ VK_NULL_HANDLE };
+		VkPipeline m_SkyboxPipeline{ VK_NULL_HANDLE };
+
 		void CreateForwardPipeline(VulkanSwapchainContext* pSwapChainContext, VkDescriptorSetLayout descriptorSetLayout, uint32_t descriptorSetLayoutCount);
 		void CreateDepthPrePassPipeline(VulkanSwapchainContext* pSwapChainContext, VkDescriptorSetLayout descriptorSetLayout, uint32_t descriptorSetLayoutCount);
 		void CreateShadowPassPipeline(VulkanSwapchainContext* pSwapChainContext, VkDescriptorSetLayout descriptorSetLayout, uint32_t descriptorSetLayoutCount);
@@ -73,6 +85,7 @@ namespace MauRen
 		void CreateGBufferPipeline(VulkanSwapchainContext* pSwapChainContext, VkDescriptorSetLayout descriptorSetLayout, uint32_t descriptorSetLayoutCount);
 		void CreateLightPassPipeline(VulkanSwapchainContext* pSwapChainContext, VkDescriptorSetLayout descriptorSetLayout, uint32_t descriptorSetLayoutCount);
 		void CreateToneMapPipeline(VulkanSwapchainContext* pSwapChainContext, VkDescriptorSetLayout descriptorSetLayout, uint32_t descriptorSetLayoutCount);
+		void CreateSkyboxPipeline(VulkanSwapchainContext* pSwapChainContext, VkDescriptorSetLayout descriptorSetLayout, uint32_t descriptorSetLayoutCount);
 
 		static [[nodiscard]] std::vector<char> ReadFile(std::filesystem::path const& filepath);
 		static [[nodiscard]] VkShaderModule CreateShaderModule(std::vector<char> const& code);

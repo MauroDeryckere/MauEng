@@ -80,7 +80,6 @@ namespace MauRen
 		VkAccessFlags2 srcAccessMask,
 		VkAccessFlags2 dstAccessMask)
 	{
-		//ME_ASSERT(layout != newLayout);
 		ME_ASSERT(cmdBuffer != VK_NULL_HANDLE);
 		ME_ASSERT(image != VK_NULL_HANDLE);
 
@@ -95,7 +94,7 @@ namespace MauRen
 		barrier.subresourceRange.baseMipLevel = 0;
 		barrier.subresourceRange.levelCount = mipLevels;
 		barrier.subresourceRange.baseArrayLayer = 0;
-		barrier.subresourceRange.layerCount = 1;
+		barrier.subresourceRange.layerCount = arrayLayers;
 
 		if (format == VK_FORMAT_D32_SFLOAT)
 		{
@@ -124,7 +123,6 @@ namespace MauRen
 		//auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 		//auto test = (PFN_vkCmdPipelineBarrier2)vkGetDeviceProcAddr(deviceContext->GetLogicalDevice(), "vkCmdPipelineBarrier2");
 		//ME_ASSERT(test != nullptr);
-
 
 		vkCmdPipelineBarrier2(cmdBuffer, &dependencyInfo);
 	}
@@ -244,7 +242,6 @@ namespace MauRen
 	uint32_t VulkanImage::CreateImageView(VkImageAspectFlags aspectFlags, VkImageViewType viewType)
 	{
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
-
 		VkImageViewCreateInfo viewInfo{};
 		viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 		viewInfo.image = image;

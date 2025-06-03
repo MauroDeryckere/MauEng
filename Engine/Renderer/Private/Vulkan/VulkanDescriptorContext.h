@@ -21,6 +21,10 @@ namespace MauRen
 
 		[[nodiscard]] VkDescriptorSetLayout GetDescriptorSetLayout() const noexcept { return m_DescriptorSetLayout; }
 		[[nodiscard]] std::vector<VkDescriptorSet> const& GetDescriptorSets() const noexcept { return m_DescriptorSets; }
+
+		[[nodiscard]] VkDescriptorSetLayout GetSkyboxDescriptorSetLayout() const noexcept { return m_SkyboxDescriptorSetLayout; }
+		[[nodiscard]] std::vector<VkDescriptorSet> const& GetSkyboxDescriptorSets() const noexcept { return m_SkyboxDescriptorSets; }
+
 		[[nodiscard]] VkDescriptorPool GetDescriptorPool() const noexcept { return m_DescriptorPool; }
 
 		void BindTexture(uint32_t destLocation, VkImageView imageView, VkImageLayout imageLayout);
@@ -28,12 +32,16 @@ namespace MauRen
 		void BindLightBuffer(VkDescriptorBufferInfo bufferInfo, uint32_t frame);
 
 		void BindShadowMap(uint32_t destLocation, VkImageView imageView, VkImageLayout imageLayout);
+		void BindEnvMap(VkImageView imageView, VkImageLayout imageLayout);
 
 		void BindShadowMapSampler(VkSampler sampler);
+		void BindSkyboxSampler(VkSampler sampler);
+		void BindSkybox(VkImageView imageView, VkImageLayout imageLayout);
 
-		void CreateDescriptorSetLayout();
 		void CreateDescriptorPool();
+		void CreateDescriptorSetLayout();
 		void CreateDescriptorSets(std::vector<VulkanBuffer> const& bufferInfoBuffers, VkDeviceSize offset, VkDeviceSize range, VkImageLayout imageLayout, std::vector<VkImageView> const& imageViews = {}, VkSampler sampler = {});
+		void CreateSkyboxDescriptorSetLayout();
 
 		VulkanDescriptorContext(VulkanDescriptorContext const&) = delete;
 		VulkanDescriptorContext(VulkanDescriptorContext&&) = delete;
@@ -43,13 +51,13 @@ namespace MauRen
 		[[nodiscard]] uint32_t GetLightBufferSlot() const noexcept { return LIGHT_BUFFER_SLOT; }
 
 	private:
-		VkDescriptorSetLayout m_DescriptorSetLayout{ VK_NULL_HANDLE };
 		VkDescriptorPool m_DescriptorPool{ VK_NULL_HANDLE };
-
-		// !
-		// common practice to rank from "least updated" descriptor set(index 0) to "most frequent updated"
-		// descriptor set(index N)!This way, we can avoid rebinding as much as possible!
+		VkDescriptorSetLayout m_DescriptorSetLayout{ VK_NULL_HANDLE };
 		std::vector<VkDescriptorSet> m_DescriptorSets{};
+
+		VkDescriptorPool m_SkyboxDescriptorPool{ VK_NULL_HANDLE };
+		VkDescriptorSetLayout m_SkyboxDescriptorSetLayout{ VK_NULL_HANDLE };
+		std::vector<VkDescriptorSet> m_SkyboxDescriptorSets{};
 
 		uint32_t const UBO_BINDING_SLOT{ 0 };
 		uint32_t const SAMPLER_BINDING_SLOT{ 1 };
@@ -69,6 +77,7 @@ namespace MauRen
 		uint32_t const SHADOW_MAPS_SLOT{ 11 };
 		uint32_t const LIGHT_BUFFER_SLOT{ 12 };
 		uint32_t const SHADOW_MAP_SAMPLER{ 13 };
+		uint32_t const ENV_MAP_SLOT{ 14 };
 	};
 }
 
