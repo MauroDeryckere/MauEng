@@ -130,7 +130,23 @@ namespace MauGam
 			break;
 		case EDemo::DebugRendering:
 			{
-				
+				m_CameraManager.GetActiveCamera().SetPosition({ -200, 125, -200 });
+				m_CameraManager.GetActiveCamera().SetFOV(60.f);
+
+				m_CameraManager.GetActiveCamera().Focus({ 1,1, 3 });
+				m_CameraManager.GetActiveCamera().SetFar(800);
+
+
+				{
+					Entity enttDirLight{ CreateEntity() };
+					auto& cLight{ enttDirLight.AddComponent<CLight>() };
+					cLight.intensity = 500.f;
+					cLight.direction_position = { -1, -1, .1f };
+					cLight.castShadows = false;
+					cLight.lightColour = { .7, .7, 1 };
+				}
+
+				SetSceneAABBOverride({ -300, -300, -300 }, { 300, 300, 300 });
 			}
 			break;
 		}
@@ -145,6 +161,19 @@ namespace MauGam
 		Scene::OnLoad();
 
 		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "Demo Scene Loaded! ");
+
+		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "Demo Scene Info");
+		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "Keybinds: ");
+		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F1: Profile");
+		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F2: Toggle light debug rendering");
+		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F3: Toggle light mode - point light only; dir light only, both");
+		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F4: Toggle shadows");
+		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F5: Lower light intensity");
+		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F6: Higher light intensity");
+		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F7: Toggle scene rotation\n");
+		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "WASD | ARROWS: Move Camera");
+		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "Mouse movement: Rotate Camera");
+		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "Left control: \"Sprint\"");
 	}
 
 	void DemoScene::Tick()
@@ -155,7 +184,8 @@ namespace MauGam
 
 		bool const shouldSceneRotate{	m_Demo == EDemo::Chess or
 										m_Demo == EDemo::FlightHelmet or
-										m_Demo == EDemo::InstanceTest };
+										m_Demo == EDemo::InstanceTest or
+										m_Demo == EDemo::DebugRendering};
 
 		if (m_Rotate and shouldSceneRotate)
 		{
@@ -201,6 +231,11 @@ namespace MauGam
 						break;
 					}
 				});
+		}
+
+		if (m_Demo == EDemo::DebugRendering)
+		{
+			RenderDebugDemo();
 		}
 	}
 
@@ -384,4 +419,8 @@ namespace MauGam
 		}
 	}
 
+	void DemoScene::RenderDebugDemo() const
+	{
+		//TODO copy debug rendering demo
+	}
 }

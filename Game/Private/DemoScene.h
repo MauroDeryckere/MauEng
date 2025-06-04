@@ -32,7 +32,7 @@ namespace MauGam
 			COUNT
 		};
 
-		EDemo m_Demo{ EDemo::FlightHelmet };
+		EDemo m_Demo{ EDemo::Chess };
 
 		ELightMode m_LightMode{ ELightMode::PointAndDir };
 
@@ -42,7 +42,7 @@ namespace MauGam
 
 		void SetupInput();
 		void HandleInput();
-
+		void RenderDebugDemo() const;
 	};
 }
 
