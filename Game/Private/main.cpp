@@ -28,5 +28,4 @@ void InitDemoScene()
 	using namespace MauGam;
 
 	MauEng::SceneManager::GetInstance().LoadScene(std::make_unique<DemoScene>());
-	//MauEng::SceneManager::GetInstance().LoadScene(std::make_unique<DebugDrawingScene>());
 }
