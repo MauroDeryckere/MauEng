@@ -19,6 +19,26 @@ layout(set = 0, binding = 14, std140) uniform CamSettingsUBO
 
 }camSettingsUBO;
 
+vec3 ReinhardToneMap(vec3 x) 
+{
+    return x / (x + vec3(1.0));
+}
+
+vec3 Uncharted2ToneMap(vec3 x) 
+{
+    float A = 0.15;
+    float B = 0.50;
+    float C = 0.10;
+    float D = 0.20;
+    float E = 0.02;
+    float F = 0.30;
+    float W = 11.2;
+    x = ((x * (A * x + C * B) + D * E) / (x * (A * x + B) + D * F)) - E / F;
+    float whiteScale = ((W * (A * W + C * B) + D * E) / (W * (A * W + B) + D * F)) - E / F;
+    return clamp(x / whiteScale, 0.0, 1.0);
+}
+
+
 vec3 ACESFilm(vec3 x) 
 {
     const float a = 2.51;
@@ -29,6 +49,7 @@ vec3 ACESFilm(vec3 x)
 
     return clamp((x * (a * x + b)) / (x * (c * x + d) + e), 0.0, 1.0);
 }
+
 
 // Calculate the EV100 value from physical camera parameters
 float CalculateEV100FromPhysicalCamera(float aperture, float shutterTime, float ISO)
@@ -66,7 +87,6 @@ float CalculateEV100FromAverageLuminance(float averageLuminance)
 	return log2(averageLuminance * 100.f) / K;
 }
 
-const bool enableExposure = true;
 void main()
 {
     float exposure = camSettingsUBO.exposureOverride;
@@ -84,6 +104,19 @@ void main()
     }
 
     const vec3 hdrColor = texture(sampler2D(hdriImage, globalSampler), inFragUV).rgb;
-    const vec3 mapped = ACESFilm(hdrColor * exposure);
-    outColor = vec4(mapped, 1.0);
+    if (camSettingsUBO.mapper == 0)
+    {
+        const vec3 mapped = ACESFilm(hdrColor * exposure);
+        outColor = vec4(mapped, 1.0);
+    }
+    if (camSettingsUBO.mapper == 1)
+    {
+        const vec3 mapped = Uncharted2ToneMap(hdrColor * exposure);
+        outColor = vec4(mapped, 1.0);
+    }
+    if (camSettingsUBO.mapper == 2)
+    {
+        const vec3 mapped = ReinhardToneMap(hdrColor * exposure);
+        outColor = vec4(mapped, 1.0);
+    }
 }

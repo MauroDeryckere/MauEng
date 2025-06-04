@@ -39,6 +39,8 @@ namespace MauEng
 		enum class ToneMapper : uint32_t
 		{
 			ACESFilm,
+			Uncharted2,
+			Reinhard,
 			COUNT
 		};
 

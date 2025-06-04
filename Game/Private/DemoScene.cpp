@@ -214,6 +214,7 @@ namespace MauGam
 		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F8: Toggle Debug render mode");
 		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F9: Randomize light colours\n");
 		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F10: Toggle Cam settings\n");
+		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F11: Toggle Tone map\n");
 
 		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "WASD | ARROWS: Move Camera");
 		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "Mouse movement: Rotate Camera");
@@ -315,6 +316,7 @@ namespace MauGam
 		input.BindAction("ToggleDebugRenderMode", MauEng::KeyInfo{ SDLK_F8, MauEng::KeyInfo::ActionType::Up });
 		input.BindAction("RandomizeLightColours", MauEng::KeyInfo{ SDLK_F9, MauEng::KeyInfo::ActionType::Up });
 		input.BindAction("ToggleCamSettings", MauEng::KeyInfo{ SDLK_F10, MauEng::KeyInfo::ActionType::Up });
+		input.BindAction("ToggleToneMap", MauEng::KeyInfo{ SDLK_F11, MauEng::KeyInfo::ActionType::Up });
 
 		input.BindAction("MoveUp", MauEng::KeyInfo{ SDLK_UP, MauEng::KeyInfo::ActionType::Held });
 		input.BindAction("MoveLeft", MauEng::KeyInfo{ SDLK_LEFT, MauEng::KeyInfo::ActionType::Held });
@@ -587,6 +589,31 @@ namespace MauGam
 			}
 
 			ME_LOG_INFO(MauCor::LogCategory::Game, "Cam Settings: {}", camSettStr);
+		}
+
+		if (input.IsActionExecuted("ToggleToneMap"))
+		{
+			uint8_t currModeID{ static_cast<uint8_t>(m_CameraManager.GetActiveCamera().GetToneMapper()) };
+			++currModeID;
+			currModeID %= static_cast<uint8_t>(MauEng::Camera::ToneMapper::COUNT);
+			m_CameraManager.GetActiveCamera().SetToneMapper(static_cast<MauEng::Camera::ToneMapper>(currModeID));
+
+			std::string camSettStr{ "NONE" };
+			switch (m_CameraManager.GetActiveCamera().GetToneMapper()) {
+			case MauEng::Camera::ToneMapper::ACESFilm:
+				camSettStr = "ACES Film";
+				break;
+			case MauEng::Camera::ToneMapper::Uncharted2:
+				camSettStr = "Uncharted 2";
+				break;
+			case MauEng::Camera::ToneMapper::Reinhard:
+				camSettStr = "Reinhard";
+				break;
+			case MauEng::Camera::ToneMapper::COUNT:
+				break;
+			}
+
+			ME_LOG_INFO(MauCor::LogCategory::Game, "Cam Tone mapper: {}", camSettStr);
 		}
 	}
 
