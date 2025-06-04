@@ -33,7 +33,11 @@ namespace MauRen
 
 		void CreateDescriptorSetLayout();
 		void CreateDescriptorPool();
-		void CreateDescriptorSets(std::vector<VulkanBuffer> const& bufferInfoBuffers, VkDeviceSize offset, VkDeviceSize range, VkImageLayout imageLayout, std::vector<VkImageView> const& imageViews = {}, VkSampler sampler = {});
+
+		//TODO rework this function
+		void CreateDescriptorSets(std::vector<VulkanBuffer> const& bufferInfoBuffers, VkDeviceSize offset, VkDeviceSize range, 
+								  VkImageLayout imageLayout, VkSampler sampler,
+								  std::vector<VulkanBuffer> const& bufferInfoBuffersCamSettings, VkDeviceSize offsetCamSettings, VkDeviceSize rangeCamSettings);
 
 		VulkanDescriptorContext(VulkanDescriptorContext const&) = delete;
 		VulkanDescriptorContext(VulkanDescriptorContext&&) = delete;
@@ -69,6 +73,8 @@ namespace MauRen
 		uint32_t const SHADOW_MAPS_SLOT{ 11 };
 		uint32_t const LIGHT_BUFFER_SLOT{ 12 };
 		uint32_t const SHADOW_MAP_SAMPLER{ 13 };
+
+		uint32_t const CAM_SETTINGS_SLOT{ 14 };
 	};
 }
 

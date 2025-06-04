@@ -5,6 +5,11 @@
 
 namespace MauEng
 {
+	class Camera;
+}
+
+namespace MauEng
+{
 	struct CLight;
 	struct CStaticMesh;
 }
@@ -21,7 +26,7 @@ namespace MauRen
 		virtual void Init() = 0;
 		virtual void Destroy() = 0;
 
-		virtual void Render(glm::mat4 const& view, glm::mat4 const& proj, glm::vec2 const& screenSize) = 0;
+		virtual void Render(MauEng::Camera const& cam) = 0;
 
 		virtual void ResizeWindow() = 0;
 		virtual void QueueDraw(glm::mat4 const& transformMat, MauEng::CStaticMesh const& mesh) = 0;

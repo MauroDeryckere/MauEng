@@ -225,6 +225,12 @@ namespace MauRen
 		shadowMapSamplerBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 		shadowMapSamplerBinding.pImmutableSamplers = nullptr;
 
+		VkDescriptorSetLayoutBinding camSettingsUBO{};
+		camSettingsUBO.binding = CAM_SETTINGS_SLOT;
+		camSettingsUBO.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		camSettingsUBO.descriptorCount = 1;
+		camSettingsUBO.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+
 		std::array const bindings {
 			uboLayoutBinding,
 			samplerBinding,
@@ -239,7 +245,8 @@ namespace MauRen
 			HDRIColorBinding,
 			ShadowMapsBinding,
 			LightBufferBinding,
-			shadowMapSamplerBinding
+			shadowMapSamplerBinding,
+			camSettingsUBO
 		};
 
 		// Variable coutn adds more complexity and we do not need it currentl
@@ -261,6 +268,7 @@ namespace MauRen
 			VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT |
 			//VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT |
 			VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT, // Flags for shadow maps
+			0,
 			0,
 			0
 		};
@@ -290,7 +298,7 @@ namespace MauRen
 	{
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 
-		std::array<VkDescriptorPoolSize, 14> poolSizes{};
+		std::array<VkDescriptorPoolSize, 15> poolSizes{};
 		poolSizes[UBO_BINDING_SLOT].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 		poolSizes[UBO_BINDING_SLOT].descriptorCount = static_cast<uint32_t>(1 * MAX_FRAMES_IN_FLIGHT);
 
@@ -333,6 +341,9 @@ namespace MauRen
 		poolSizes[SHADOW_MAP_SAMPLER].type = VK_DESCRIPTOR_TYPE_SAMPLER;
 		poolSizes[SHADOW_MAP_SAMPLER].descriptorCount = static_cast<uint32_t>(1 * MAX_FRAMES_IN_FLIGHT);
 
+		poolSizes[CAM_SETTINGS_SLOT].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		poolSizes[CAM_SETTINGS_SLOT].descriptorCount = static_cast<uint32_t>(1 * MAX_FRAMES_IN_FLIGHT);
+
 		// + 5 == hdri, depth, metal, normal, color
 		if (MAX_TEXTURES + MAX_SHADOW_MAPS + 5> deviceContext->GetMaxSampledImages())
 		{
@@ -366,7 +377,10 @@ namespace MauRen
 		}
 	}
 
-	void VulkanDescriptorContext::CreateDescriptorSets(std::vector<VulkanBuffer> const& bufferInfoBuffers, VkDeviceSize offset, VkDeviceSize range, VkImageLayout imageLayout, std::vector<VkImageView> const& imageViews, VkSampler sampler)
+	void VulkanDescriptorContext::CreateDescriptorSets(
+		std::vector<VulkanBuffer> const& bufferInfoBuffers, VkDeviceSize offset, VkDeviceSize range, 
+		VkImageLayout imageLayout, VkSampler sampler,
+		std::vector<VulkanBuffer> const& bufferInfoBuffersCamSettings, VkDeviceSize offsetCamSettings, VkDeviceSize rangeCamSettings)
 	{
 		std::vector<VkDescriptorSetLayout> const layouts(MAX_FRAMES_IN_FLIGHT, m_DescriptorSetLayout);
 
@@ -386,7 +400,7 @@ namespace MauRen
 
 		for (size_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; ++i)
 		{
-			VkWriteDescriptorSet descriptorWrites[2] = {};
+			VkWriteDescriptorSet descriptorWrites[3] = {};
 
 			VkDescriptorBufferInfo bufferInfo{};
 			bufferInfo.buffer = bufferInfoBuffers[i].buffer;
@@ -394,7 +408,7 @@ namespace MauRen
 			bufferInfo.range = range;
 
 			// Descriptor write for uniform buffer (binding 0)
-			descriptorWrites[UBO_BINDING_SLOT] = {
+			descriptorWrites[0] = {
 				VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
 				nullptr,
 				m_DescriptorSets[i],
@@ -412,20 +426,38 @@ namespace MauRen
 			samplerInfo.imageView = VK_NULL_HANDLE;
 			samplerInfo.imageLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
-			descriptorWrites[SAMPLER_BINDING_SLOT] = {
+			descriptorWrites[1] = {
 				VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
 				nullptr,
 				m_DescriptorSets[i],
 				SAMPLER_BINDING_SLOT,
 				0,
-				SAMPLER_BINDING_SLOT,
+				1,
 				VK_DESCRIPTOR_TYPE_SAMPLER,
 				&samplerInfo,
 				nullptr,
 				nullptr
 			};
 
-			vkUpdateDescriptorSets(deviceContext->GetLogicalDevice(), 2, descriptorWrites, 0, nullptr);
+			VkDescriptorBufferInfo bufferInfoCamSettings{};
+			bufferInfoCamSettings.buffer = bufferInfoBuffersCamSettings[i].buffer;
+			bufferInfoCamSettings.offset = offsetCamSettings;
+			bufferInfoCamSettings.range = rangeCamSettings;
+
+			descriptorWrites[2] = {
+				VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+				nullptr,
+				m_DescriptorSets[i],
+				CAM_SETTINGS_SLOT,
+				0,
+				1,
+				VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+				nullptr,
+				&bufferInfoCamSettings,
+				nullptr
+			};
+
+			vkUpdateDescriptorSets(deviceContext->GetLogicalDevice(), 3, descriptorWrites, 0, nullptr);
 		}
 	}
 

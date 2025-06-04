@@ -6,7 +6,18 @@ layout(location = 0) out vec4 outColor;
 layout(set = 0, binding = 1) uniform sampler globalSampler;
 layout(set = 0, binding = 10) uniform texture2D hdriImage;
 
-const float gExposure = 1.0f;
+layout(set = 0, binding = 14, std140) uniform CamSettingsUBO
+{
+    float aperture;
+    float ISO;
+    float shutterSpeed;
+    float exposureOverride;
+
+    uint mapper;
+    uint isAutoExposure;
+    uint enableExposure;
+
+}camSettingsUBO;
 
 vec3 ACESFilm(vec3 x) 
 {
@@ -55,31 +66,15 @@ float CalculateEV100FromAverageLuminance(float averageLuminance)
 	return log2(averageLuminance * 100.f) / K;
 }
 
-//#define INDOOR
-#define SUNNY_16
-
 const bool enableExposure = true;
-
 void main()
 {
-#ifdef SUNNY_16
-    float aperture = 5.0f;
-	float ISO = 100.0f;
-    float shutterSpeed = 1.0f / 200.f;
-#endif
+    float exposure = camSettingsUBO.exposureOverride;
 
-#ifdef INDOOR
-    float aperture = 1.4f;
-    float ISO = 1600.0f;
-    float shutterSpeed = 1.0f / 60.f;
-#endif
-
-    float exposure = 1.0f;
-
-    if (enableExposure)
+    if (camSettingsUBO.enableExposure == 1 && exposure == 0.0f)
     {
         const float EV100 = 1.0f;
-        const float EV100PhysicalCam = CalculateEV100FromPhysicalCamera(aperture, shutterSpeed, ISO);
+        const float EV100PhysicalCam = CalculateEV100FromPhysicalCamera(camSettingsUBO.aperture, camSettingsUBO.shutterSpeed, camSettingsUBO.ISO);
         exposure = ConvertEV100ToExposure(EV100PhysicalCam);
     }
 

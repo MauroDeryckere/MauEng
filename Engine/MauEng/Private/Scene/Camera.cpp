@@ -1,5 +1,8 @@
 #include "Scene/Camera.h"
 
+#include "EnginePCH.h"
+
+
 #include <algorithm>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/rotate_vector.hpp>
@@ -121,5 +124,33 @@ namespace MauEng
 	{
 		m_FarPlane = newFar;
 		m_IsDirty = true;
+	}
+
+	void Camera::SetToneMapper(ToneMapper mapper) noexcept
+	{
+		ME_ASSERT(ToneMapper::COUNT != mapper);
+		m_ToneMapper = mapper;
+	}
+
+	void Camera::SetCamSettingsSunny16() noexcept
+	{
+		m_Aperture = 5.0f;
+		m_ISO = 100.0f;
+		m_ShutterSpeed = 1.0f / 200.f;
+
+		m_ExposureOverride = 0.f;
+
+		m_EnableExposure = true;
+	}
+
+	void Camera::SetCamSettingsIndoor() noexcept
+	{
+		m_Aperture = 1.4f;
+		m_ISO = 1600.0f;
+		m_ShutterSpeed = 1.0f / 60.f;
+
+		m_ExposureOverride = 0.f;
+
+		m_EnableExposure = true;
 	}
 }

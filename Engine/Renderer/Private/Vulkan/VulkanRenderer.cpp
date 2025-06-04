@@ -6,7 +6,9 @@
 
 #include "DebugRenderer/InternalDebugRenderer.h"
 #include "DebugRenderer/NullDebugRenderer.h"
+
 #include "../../MauEng/Public/Components/CStaticMesh.h"
+#include "../../../MauEng/Public/Scene/Camera.h"
 
 namespace MauRen
 {
@@ -56,10 +58,16 @@ namespace MauRen
 			tempUniformBuffers.emplace_back(b.buffer);
 		}
 
-		m_DescriptorContext.CreateDescriptorSets(tempUniformBuffers,
-			0,
-			sizeof(UniformBufferObject),
-			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, {}, VulkanMaterialManager::GetInstance().GetTextureSampler());
+		std::vector<VulkanBuffer> tempUniformBuffersCamSett;
+		for (auto const& b : m_CamSettingsMappedUniformBuffers)
+		{
+			tempUniformBuffersCamSett.emplace_back(b.buffer);
+		}
+
+		m_DescriptorContext.CreateDescriptorSets(
+			tempUniformBuffers, 0,sizeof(UniformBufferObject),
+			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VulkanMaterialManager::GetInstance().GetTextureSampler(),
+			tempUniformBuffersCamSett, 0, sizeof(CamSettingsUBO));
 
 		m_CommandPoolManager.CreateCommandBuffers();
 		CreateSyncObjects();
@@ -140,6 +148,7 @@ namespace MauRen
 		for (size_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; ++i)
 		{
 			m_MappedUniformBuffers[i].buffer.Destroy();
+			m_CamSettingsMappedUniformBuffers[i].buffer.Destroy();
 		}
 
 		m_GraphicsPipelineContext.Destroy();
@@ -154,9 +163,9 @@ namespace MauRen
 		m_InstanceContext.Destroy();
 	}
 
-	void VulkanRenderer::Render(glm::mat4 const& view, glm::mat4 const& proj, glm::vec2 const& screenSize)
+	void VulkanRenderer::Render(MauEng::Camera const& cam)
 	{
-		DrawFrame(view, proj, screenSize);
+		DrawFrame(cam);
 
 		if (m_DebugRenderer)
 		{
@@ -204,19 +213,38 @@ namespace MauRen
 	{
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 
-		VkDeviceSize constexpr BUFFER_SIZE{ sizeof(UniformBufferObject) };
-
-		for (size_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; ++i)
 		{
-			m_MappedUniformBuffers.emplace_back(VulkanMappedBuffer{
-												VulkanBuffer{BUFFER_SIZE,
-																	VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-																	VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT },
-												nullptr });
+			VkDeviceSize constexpr BUFFER_SIZE{ sizeof(UniformBufferObject) };
 
-			// Persistent mapping
-			vkMapMemory(deviceContext->GetLogicalDevice(), m_MappedUniformBuffers[i].buffer.bufferMemory, 0, BUFFER_SIZE, 0, &m_MappedUniformBuffers[i].mapped);
+			for (size_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; ++i)
+			{
+				m_MappedUniformBuffers.emplace_back(VulkanMappedBuffer{
+													VulkanBuffer{BUFFER_SIZE,
+																		VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+																		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT },
+													nullptr });
+
+				// Persistent mapping
+				vkMapMemory(deviceContext->GetLogicalDevice(), m_MappedUniformBuffers[i].buffer.bufferMemory, 0, BUFFER_SIZE, 0, &m_MappedUniformBuffers[i].mapped);
+			}
 		}
+
+		{
+			VkDeviceSize constexpr BUFFER_SIZE{ sizeof(CamSettingsUBO) };
+
+			for (size_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; ++i)
+			{
+				m_CamSettingsMappedUniformBuffers.emplace_back(VulkanMappedBuffer{
+													VulkanBuffer{BUFFER_SIZE,
+																		VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+																		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT },
+													nullptr });
+
+				// Persistent mapping
+				vkMapMemory(deviceContext->GetLogicalDevice(), m_CamSettingsMappedUniformBuffers[i].buffer.bufferMemory, 0, BUFFER_SIZE, 0, &m_CamSettingsMappedUniformBuffers[i].mapped);
+			}
+		}
+
 	}
 
 	void VulkanRenderer::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex, glm::mat4 const& viewProj)
@@ -742,7 +770,7 @@ namespace MauRen
 		}
 	}
 
-	void VulkanRenderer::DrawFrame(glm::mat4 const& view, glm::mat4 const& proj, glm::vec2 const& screenSize)
+	void VulkanRenderer::DrawFrame(MauEng::Camera const& cam)
 	{
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 
@@ -777,14 +805,15 @@ namespace MauRen
 			vkResetFences(deviceContext->GetLogicalDevice(), 1, &m_InFlightFences[m_CurrentFrame]);
 		}
 
-		UpdateUniformBuffer(m_CurrentFrame, view, proj, screenSize);
+		UpdateUniformBuffer(m_CurrentFrame, cam.GetViewMatrix(), cam.GetProjectionMatrix());
+		UpdateCamSettings(cam, m_CurrentFrame);
 		UpdateDebugVertexBuffer();
 		{
 			ME_PROFILE_SCOPE("Reset command buffer")
 			vkResetCommandBuffer(m_CommandPoolManager.GetCommandBuffer(m_CurrentFrame), 0);
 		}
 
-		RecordCommandBuffer(m_CommandPoolManager.GetCommandBuffer(m_CurrentFrame), imageIndex, proj * view);
+		RecordCommandBuffer(m_CommandPoolManager.GetCommandBuffer(m_CurrentFrame), imageIndex, cam.GetProjectionMatrix() * cam.GetViewMatrix());
 
 		VkSubmitInfo submitInfo{};
 		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -839,7 +868,7 @@ namespace MauRen
 		m_CurrentFrame = (m_CurrentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 	}
 
-	void VulkanRenderer::UpdateUniformBuffer(uint32_t currentImage, glm::mat4 const& view, glm::mat4 const& proj, glm::vec2 const& screenSize)
+	void VulkanRenderer::UpdateUniformBuffer(uint32_t currentImage, glm::mat4 const& view, glm::mat4 const& proj)
 	{
 		ME_PROFILE_FUNCTION()
 
@@ -854,6 +883,25 @@ namespace MauRen
 		};
 
 		memcpy(m_MappedUniformBuffers[currentImage].mapped, &ubo, sizeof(ubo));
+	}
+
+	void VulkanRenderer::UpdateCamSettings(MauEng::Camera const& cam, uint32_t currentImage)
+	{
+		ME_PROFILE_FUNCTION()
+
+		CamSettingsUBO const ubo
+		{
+			.aperture = cam.GetAperture(),
+			.ISO = cam.GetISO(),
+			.shutterSpeed = cam.GetShutterSpeed(),
+			.exposureOverride = cam.GetExposureOverride(),
+
+			.mapper = static_cast<uint32_t>(cam.GetToneMapper()),
+			.isAutoExposure = 0,
+			.enableExposure = static_cast<uint32_t>(cam.IsExposureEnabled())
+		};
+
+		memcpy(m_CamSettingsMappedUniformBuffers[currentImage].mapped, &ubo, sizeof(ubo));
 	}
 
 	bool VulkanRenderer::RecreateSwapchain()

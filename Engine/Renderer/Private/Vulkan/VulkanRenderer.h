@@ -28,6 +28,11 @@
 
 namespace MauEng
 {
+	class Camera;
+}
+
+namespace MauEng
+{
 	struct CStaticMesh;
 }
 
@@ -42,7 +47,7 @@ namespace MauRen
 		virtual void Init() override;
 		virtual void Destroy() override;
 
-		virtual void Render(glm::mat4 const& view, glm::mat4 const& proj, glm::vec2 const& screenSize) override;
+		virtual void Render(MauEng::Camera const& cam) override;
 		virtual void ResizeWindow() override;
 
 		virtual uint32_t CreateLight() override;
@@ -101,8 +106,21 @@ namespace MauRen
 			//float padding02;
 			//float padding03;
 		};
-
 		std::vector<VulkanMappedBuffer> m_MappedUniformBuffers{};
+
+		struct alignas(16) CamSettingsUBO final
+		{
+			float aperture;
+			float ISO;
+			float shutterSpeed;
+			float exposureOverride;
+
+			uint32_t mapper;
+			uint32_t isAutoExposure;
+			uint32_t enableExposure;
+		};
+
+		std::vector<VulkanMappedBuffer> m_CamSettingsMappedUniformBuffers{};
 
 		VulkanBuffer m_DebugVertexBuffer{};
 		VulkanBuffer m_DebugIndexBuffer{};
@@ -132,9 +150,10 @@ namespace MauRen
 
 		void CreateSyncObjects();
 
-		void DrawFrame(glm::mat4 const& view, glm::mat4 const& proj, glm::vec2 const& screenSize);
+		void DrawFrame(MauEng::Camera const& cam);
 		void RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex, glm::mat4 const& viewProj);
-		void UpdateUniformBuffer(uint32_t currentImage, glm::mat4 const& view, glm::mat4 const& proj, glm::vec2 const& screenSize);
+		void UpdateUniformBuffer(uint32_t currentImage, glm::mat4 const& view, glm::mat4 const& proj);
+		void UpdateCamSettings(MauEng::Camera const& cam, uint32_t currentImage);
 
 		// Recreate the swapchain on e.g a window resize
 		bool RecreateSwapchain();

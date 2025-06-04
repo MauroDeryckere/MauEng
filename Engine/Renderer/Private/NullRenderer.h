@@ -6,6 +6,7 @@
 namespace MauEng
 {
 	struct CStaticMesh;
+	class Camera;
 }
 
 namespace MauRen
@@ -22,7 +23,7 @@ namespace MauRen
 		virtual void Init() override {}
 		virtual void Destroy() override {}
 
-		virtual void Render(glm::mat4 const&, glm::mat4 const&, glm::vec2 const&) override {}
+		virtual void Render(MauEng::Camera const&) override {}
 		virtual void ResizeWindow() override {}
 
 		virtual void QueueDraw(glm::mat4 const&, MauEng::CStaticMesh const&) override {}

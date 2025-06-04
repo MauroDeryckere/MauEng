@@ -36,6 +36,32 @@ namespace MauEng
 		void SetNear(float newNear) noexcept;
 		void SetFar(float newFar) noexcept;
 
+		enum class ToneMapper : uint32_t
+		{
+			ACESFilm,
+			COUNT
+		};
+
+		void SetToneMapper(ToneMapper mapper) noexcept;
+		[[nodiscard]] ToneMapper GetToneMapper() const noexcept { return m_ToneMapper; }
+
+		void EnableExposure() noexcept { m_EnableExposure = true; }
+		void DisableExposure() noexcept { m_EnableExposure = false; }
+		[[nodiscard]] bool IsExposureEnabled() const noexcept { return m_EnableExposure; }
+
+		void SetISO(float iso) noexcept { m_ISO = iso; }
+		void SetAperture(float aperture) noexcept { m_Aperture = aperture; }
+		void SetShutterSpeed(float shutterSpeed) noexcept { m_ShutterSpeed = shutterSpeed; }
+		void SetExposureOverride(float exposure = 0.f) noexcept { m_ExposureOverride = exposure; }
+
+		[[nodiscard]] float GetISO() const noexcept { return m_ISO ; }
+		[[nodiscard]] float GetAperture() const noexcept { return m_Aperture; }
+		[[nodiscard]] float GetShutterSpeed() const noexcept { return m_ShutterSpeed; }
+		[[nodiscard]] float GetExposureOverride() const noexcept { return m_ExposureOverride; }
+
+		void SetCamSettingsSunny16() noexcept;
+		void SetCamSettingsIndoor() noexcept;
+
 		Camera(Camera const&) = default;
 		Camera(Camera&&) = default;
 		Camera& operator=(Camera const&) = default;
@@ -65,6 +91,17 @@ namespace MauEng
 
 		// Should the camera be updated next time the update is called
 		bool m_IsDirty{ false };
+
+		// Auto exposure is not implemented yet
+		bool m_IsAutoExposure{ false };
+		bool m_EnableExposure{ true };
+
+		ToneMapper m_ToneMapper{ ToneMapper::ACESFilm };
+
+		float m_Aperture{ 1.4f };
+		float m_ISO{ 1600.0f };
+		float m_ShutterSpeed{ 1.0f / 60.f };
+		float m_ExposureOverride{ 0.f };
 
 		void UpdateViewMatrix() noexcept;
 		void UpdateProjectionMatrix() noexcept;
