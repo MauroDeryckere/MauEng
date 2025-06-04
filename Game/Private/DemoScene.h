@@ -18,6 +18,8 @@ namespace MauGam
 		{
 			Sponza,
 			Chess,
+			InstanceTest,
+			DebugRendering,
 			COUNT
 		};
 
@@ -35,6 +37,7 @@ namespace MauGam
 
 		bool m_DebugRenderLight{ true };
 		bool m_Rotate{ true };
+		bool m_CastShadows{ false };
 
 		void SetupInput();
 		void HandleInput();

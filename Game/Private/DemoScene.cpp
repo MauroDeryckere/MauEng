@@ -219,6 +219,7 @@ namespace MauGam
 			view.Each([LIGHT_ADJUSTMENT](MauEng::CLight& light)
 				{
 					light.intensity -= LIGHT_ADJUSTMENT;
+					ME_LOG_INFO(MauCor::LogCategory::Game, "Light intensity: {}", light.intensity);
 				});
 		}
 
@@ -228,15 +229,19 @@ namespace MauGam
 			view.Each([LIGHT_ADJUSTMENT](MauEng::CLight& light)
 				{
 					light.intensity += LIGHT_ADJUSTMENT;
+					ME_LOG_INFO(MauCor::LogCategory::Game, "Light intensity: {}", light.intensity);
 				});
 		}
 
 		if (input.IsActionExecuted("ToggleShadows"))
 		{
+			m_CastShadows = not m_CastShadows;
+			ME_LOG_INFO(MauCor::LogCategory::Game, "Shadows: {}", m_CastShadows);
+
 			auto view{ GetECSWorld().View<MauEng::CLight>() };
-			view.Each([](MauEng::CLight& light)
+			view.Each([this](MauEng::CLight& light)
 				{
-					light.castShadows = !light.castShadows;
+					light.castShadows = m_CastShadows;
 				});
 		}
 		
@@ -246,6 +251,20 @@ namespace MauGam
 			++currModeID;
 			currModeID %= static_cast<uint8_t>(ELightMode::COUNT);
 			m_LightMode = static_cast<ELightMode>(currModeID);
+
+			std::string lightMode{"NONE"};
+			switch (m_LightMode) {
+			case ELightMode::PointOnly:
+				lightMode = "Point Only";
+				break;
+			case ELightMode::DirOnly:
+				lightMode = "Directional Only";
+				break;
+			case ELightMode::PointAndDir:
+				lightMode = "Point And Directional";
+				break;
+			}
+			ME_LOG_INFO(MauCor::LogCategory::Game, "Light mode: {}", lightMode);
 
 			auto view{ GetECSWorld().View<MauEng::CLight>() };
 			view.Each([this](MauEng::CLight& light)
@@ -288,11 +307,13 @@ namespace MauGam
 		if (input.IsActionExecuted("ToggleLightDebugRendering"))
 		{
 			m_DebugRenderLight = not m_DebugRenderLight;
+			ME_LOG_INFO(MauCor::LogCategory::Game, "Debug render light: {}", m_DebugRenderLight);
 		}
 
 		if (input.IsActionExecuted("ToggleRotation"))
 		{
 			m_Rotate = not m_Rotate;
+			ME_LOG_INFO(MauCor::LogCategory::Game, "Scene rotation: {}", m_Rotate);
 		}
 	}
 
