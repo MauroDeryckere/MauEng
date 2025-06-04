@@ -308,7 +308,7 @@ namespace MauRen
 				1
 			};
 			g.normal.CreateImageView(VK_IMAGE_ASPECT_COLOR_BIT);
-
+			
 			g.metalnessRoughness = VulkanImage
 			{
 				GBuffer::formats[2],

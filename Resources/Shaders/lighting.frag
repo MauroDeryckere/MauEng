@@ -81,10 +81,10 @@ void main()
         sampler2D(gDepth, globalSampler), 
         pixelCoords, 0).r;
 
-    if (depth == 1.0f)
-    {
-        discard;
-    }
+    //if (depth == 1.0f)
+    //{
+    //    discard;
+    //}
 
 	const float ao = metal.r;
 	const float metalness = metal.b;
@@ -110,7 +110,6 @@ void main()
         // DIRECTIONAL LIGHT
         if (l.type == 0u)
         {
-
             vec4 lightSpacePos = l.viewProj * vec4(worldPos, 1.0f);
 
            // outColor = vec4(vec3(lightSpacePos.xyz), 1.0f);
@@ -120,15 +119,8 @@ void main()
             vec3 shadowMapUV = vec3(lightSpacePos.xy * 0.5f + 0.5f, lightSpacePos.z);
             //shadowMapUV.y = 1.0f - shadowMapUV.y;
 
-            // Closest depth
-            //float closestDepth = texture(
-            //    sampler2D(ShadowMapBuffer[nonuniformEXT(l.shadowMapIndex)], shadowMapSampler),
-            //    shadowMapUV.xy).r;
-
             float shadow = texture(sampler2DShadow(ShadowMapBuffer[nonuniformEXT(l.shadowMapIndex)], shadowMapSampler),
                                           shadowMapUV).r;
-
-            //float shadow = shadowMapUV.z > closestDepth ? 1.0 : 0.0;
 
             vec3 L = -normalize(l.direction_position);
             vec3 irradiance = l.color * l.intensity;
@@ -137,16 +129,6 @@ void main()
                 albedo.rgb, metalness, roughness,
                 ao, irradiance) * shadow;
 
-            //if (shadow == 0)
-            //{
-            //    outColor = vec4(1, 0, 0, 1);
-            //}
-            //else
-            //{
-            //    outColor = vec4(vec3(shadow), 1.0f);
-            //}
-
-            //outColor = vec4(lightSpacePos.xyz, 1.0f);
         }
         // POINT LIGHT
         else if (l.type == 1u)

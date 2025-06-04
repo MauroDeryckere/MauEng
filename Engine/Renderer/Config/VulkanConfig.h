@@ -6,7 +6,8 @@
 namespace MauRen
 {
 	#ifdef NDEBUG
-		bool constexpr ENABLE_VULKAN_VALIDATION_LAYERS{ false };
+		//bool constexpr ENABLE_VULKAN_VALIDATION_LAYERS{ false };
+		bool constexpr ENABLE_VULKAN_VALIDATION_LAYERS{ true };
 	#else
 		bool constexpr ENABLE_VULKAN_VALIDATION_LAYERS{ true };
 	#endif

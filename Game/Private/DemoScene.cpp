@@ -135,6 +135,9 @@ namespace MauGam
 				m_CameraManager.GetActiveCamera().Focus({ 0, 0, 0 });
 				m_CameraManager.GetActiveCamera().SetFar(1000);
 
+				m_CameraManager.GetActiveCamera().SetCamSettingsSunny16();
+
+
 				uint32_t constexpr NUM_INSTANCES{ 100'000 };
 				// Random device for seed 
 				std::random_device rd;
@@ -165,7 +168,6 @@ namespace MauGam
 					cLight.castShadows = false;
 					cLight.lightColour = { 0.2f, 0.2f, 1 };
 				}
-
 			}
 			break;
 		case EDemo::DebugRendering:

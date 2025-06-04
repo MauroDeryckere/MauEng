@@ -127,7 +127,7 @@ namespace MauRen
 
 		std::array<VkClearValue, 2> static constexpr CLEAR_VALUES
 		{
-			VkClearValue{.color = { 0, 0, 0, 1.f } },
+			VkClearValue{.color = { 0, 0, 0, 0 } },
 			VkClearValue{.depthStencil = { 1.0f, 0 } }
 		};
 
