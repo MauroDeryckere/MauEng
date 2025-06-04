@@ -8,7 +8,8 @@ namespace MauGam
 
 		using namespace MauEng;
 
-		switch (m_Demo) {
+		switch (m_Demo)
+		{
 		case EDemo::Sponza:
 			{
 				m_CameraManager.GetActiveCamera().SetPosition({ 0, 20, 10 });
@@ -40,11 +41,11 @@ namespace MauGam
 			break;
 		case EDemo::Chess:
 			{
-				m_CameraManager.GetActiveCamera().SetPosition({ 0, 20, 10 });
+				m_CameraManager.GetActiveCamera().SetPosition({ -75, 65, -75 });
 				m_CameraManager.GetActiveCamera().SetFOV(60.f);
 
-				m_CameraManager.GetActiveCamera().Focus({ 1,1, 3 });
-				m_CameraManager.GetActiveCamera().SetFar(1000);
+				m_CameraManager.GetActiveCamera().Focus({ 0,10, 0 });
+				m_CameraManager.GetActiveCamera().SetFar(500);
 
 				SetSceneAABBOverride({ -100, -100, -100 }, { 100, 100, 100 });
 
@@ -97,6 +98,20 @@ namespace MauGam
 		Scene::Tick();
 
 		HandleInput();
+
+		bool const shouldSceneRotate{ m_Demo == EDemo::Chess };
+		if (m_Rotate and shouldSceneRotate)
+		{
+			using namespace MauEng;
+			float constexpr ROTATION_SPEED{ 15.f };
+			MauCor::Rotator const rot{ 0, ROTATION_SPEED * TIME.ElapsedSec() };
+			auto group{ GetECSWorld().Group<CStaticMesh, CTransform>() };
+			group.Each([&rot](CStaticMesh const& m, CTransform& t)
+				{
+					t.Rotate(rot);
+				}, std::execution::par_unseq);
+		}
+
 	}
 
 	void DemoScene::OnRender() const
@@ -154,6 +169,7 @@ namespace MauGam
 		input.BindAction("ToggleShadows", MauEng::KeyInfo{ SDLK_F4, MauEng::KeyInfo::ActionType::Up });
 		input.BindAction("DownLightIntensity", MauEng::KeyInfo{ SDLK_F5, MauEng::KeyInfo::ActionType::Up });
 		input.BindAction("UpLightIntensity", MauEng::KeyInfo{ SDLK_F6, MauEng::KeyInfo::ActionType::Up });
+		input.BindAction("ToggleRotation", MauEng::KeyInfo{ SDLK_F7, MauEng::KeyInfo::ActionType::Up });
 	}
 
 	void DemoScene::HandleInput()
@@ -273,5 +289,11 @@ namespace MauGam
 		{
 			m_DebugRenderLight = not m_DebugRenderLight;
 		}
+
+		if (input.IsActionExecuted("ToggleRotation"))
+		{
+			m_Rotate = not m_Rotate;
+		}
 	}
+
 }

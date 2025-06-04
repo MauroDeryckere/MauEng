@@ -34,6 +34,7 @@ namespace MauGam
 		ELightMode m_LightMode{ ELightMode::PointAndDir };
 
 		bool m_DebugRenderLight{ true };
+		bool m_Rotate{ true };
 
 		void SetupInput();
 		void HandleInput();

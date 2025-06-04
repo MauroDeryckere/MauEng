@@ -37,6 +37,7 @@ F3 toggle light mode - point light only, dir light only, both
 F4 toggle shadows
 F5 lower light intensity 
 F6 up light intensity
+F7 Toggle rotation
 
 Mouse movement, rotate cam
 arrows / WASD cam movement
