@@ -77,7 +77,61 @@ namespace MauGam
 				}
 			}
 			break;
-		case EDemo::COUNT:
+		case EDemo::FlightHelmet:
+			{
+				m_CameraManager.GetActiveCamera().SetPosition({ 0, 50, -100 });
+				m_CameraManager.GetActiveCamera().SetFOV(60.f);
+
+				m_CameraManager.GetActiveCamera().Focus({ 1,1, 3 });
+				m_CameraManager.GetActiveCamera().SetFar(1000);
+
+				{
+					Entity enttHelmet{ CreateEntity() };
+
+					auto& transform{ enttHelmet.GetComponent<CTransform>() };
+					transform.Scale({ 100.f, 100.f, 100.f });
+					enttHelmet.AddComponent<CStaticMesh>("Resources/Models/FlightHelmet/glTF/FlightHelmet.gltf");
+				}
+
+				{
+					Entity enttDirLight{ CreateEntity() };
+					auto& cLight{ enttDirLight.AddComponent<CLight>() };
+					cLight.intensity = 20.f;
+					cLight.direction_position = { 0, -1, 0 };
+					cLight.castShadows = false;
+					cLight.lightColour = { 1, 1, 1 };
+				}
+
+				{
+					Entity enttPLight{ CreateEntity() };
+					auto& cLight{ enttPLight.AddComponent<CLight>() };
+					cLight.type = ELightType::POINT;
+					cLight.intensity = 100'000.f;
+					cLight.direction_position = { 50.f, 50, -20 };
+					cLight.lightColour = { 1, 0, 0 };
+				}
+
+				{
+					Entity enttPLight{ CreateEntity() };
+					auto& cLight{ enttPLight.AddComponent<CLight>() };
+					cLight.type = ELightType::POINT;
+					cLight.intensity = 100'000.f;
+					cLight.direction_position = { -50.f, 50, -20 };
+					cLight.lightColour = { 0, 0, 1 };
+				}
+
+				SetSceneAABBOverride({ -100, -100, -100 }, { 100, 100, 100 });
+			}
+			break;
+		case EDemo::InstanceTest:
+			{
+				
+			}
+			break;
+		case EDemo::DebugRendering:
+			{
+				
+			}
 			break;
 		}
 
@@ -99,7 +153,10 @@ namespace MauGam
 
 		HandleInput();
 
-		bool const shouldSceneRotate{ m_Demo == EDemo::Chess };
+		bool const shouldSceneRotate{	m_Demo == EDemo::Chess or
+										m_Demo == EDemo::FlightHelmet or
+										m_Demo == EDemo::InstanceTest };
+
 		if (m_Rotate and shouldSceneRotate)
 		{
 			using namespace MauEng;
@@ -228,8 +285,18 @@ namespace MauGam
 			auto view{ GetECSWorld().View<MauEng::CLight>() };
 			view.Each([LIGHT_ADJUSTMENT](MauEng::CLight& light)
 				{
+					std::string lightTypeStr{ "NONE" };
+					switch (light.type) {
+					case MauEng::ELightType::DIRECTIONAL:
+						lightTypeStr = "Directional Light " + std::to_string(light.lightID);
+						break;
+					case MauEng::ELightType::POINT:
+						lightTypeStr = "Point Light " + std::to_string(light.lightID);
+						break;
+
+					}
 					light.intensity += LIGHT_ADJUSTMENT;
-					ME_LOG_INFO(MauCor::LogCategory::Game, "Light intensity: {}", light.intensity);
+					ME_LOG_INFO(MauCor::LogCategory::Game, "Light intensity ({}): {}", lightTypeStr, light.intensity);
 				});
 		}
 

@@ -18,6 +18,7 @@ namespace MauGam
 		{
 			Sponza,
 			Chess,
+			FlightHelmet,
 			InstanceTest,
 			DebugRendering,
 			COUNT
@@ -31,7 +32,7 @@ namespace MauGam
 			COUNT
 		};
 
-		EDemo m_Demo{ EDemo::Chess };
+		EDemo m_Demo{ EDemo::FlightHelmet };
 
 		ELightMode m_LightMode{ ELightMode::PointAndDir };
 
