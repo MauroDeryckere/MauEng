@@ -421,6 +421,163 @@ namespace MauGam
 
 	void DemoScene::RenderDebugDemo() const
 	{
-		//TODO copy debug rendering demo
+		ME_PROFILE_FUNCTION()
+
+
+		//TODO convert to enum
+		// Config
+		bool constexpr DRAW_LINES{ true };
+		bool constexpr DRAW_RECTS{ true };
+		bool constexpr DRAW_TRIANGLES{ true };
+		bool constexpr DRAW_ARROWS{ true };
+		bool constexpr DRAW_CIRCLES{ true };
+		bool constexpr DRAW_SPHERES{ true };
+		bool constexpr DRAW_CYL{ true };
+		bool constexpr DRAW_POLY{ true };
+
+		// Demo debug drawing tests
+		if constexpr (DRAW_LINES)
+		{
+			DEBUG_RENDERER.DrawLine({ 0, 0,0 }, { 100, 10, 10 }, { 0, 0, 0 });
+			DEBUG_RENDERER.DrawLine({ 0, 0,0 }, { 100, 10, 10 }, { 90, 0, 0 }, { 0, 1, 0 });
+			DEBUG_RENDERER.DrawLine({ 0, 0,0 }, { 100, 10, 10 }, { 180, 0, 0 }, { 0, 1, 0 });
+			DEBUG_RENDERER.DrawLine({ 0, 0,0 }, { 100, 10, 10 }, { 0, 90, 0 }, { 0, 0, 1 });
+			DEBUG_RENDERER.DrawLine({ 0, 0,0 }, { 100, 10, 10 }, { 0, 180, 0 }, { 0, 0, 1 });
+			DEBUG_RENDERER.DrawLine({ 0, 0,0 }, { 100, 10, 10 }, { 0, 0, 90 }, { 0, 1, 1 });
+			DEBUG_RENDERER.DrawLine({ 0, 0,0 }, { 100, 10, 10 }, { 0, 0, 180 }, { 0, 1, 1 });
+
+			static float constexpr ROT_SPEED{ 10.f };
+			static float lineRot{};
+			DEBUG_RENDERER.DrawLine({ 0, 0,0 }, { 100, 0, 0 }, { lineRot, lineRot, lineRot }, { 1, 1, 1 });
+
+			DEBUG_RENDERER.DrawLine({ 0, 0,0 }, { 10, 0, 0 }, { 0, lineRot, 0 }, { 1, 1, 0 });
+			DEBUG_RENDERER.DrawLine({ 0, 0,0 }, { 10, 0, 0 }, { 0, lineRot, 0 }, { 1, 1, 1 }, true, { 100, 100, 100 });
+			DEBUG_RENDERER.DrawLine({ 0, 0,0 }, { 10, 0, 0 }, { 0, 0, lineRot }, { 1, 1, 0 });
+
+			lineRot += ROT_SPEED * TIME.ElapsedSec();
+		}
+
+		if constexpr (DRAW_RECTS)
+		{
+			static float constexpr CUBE_ROT_SPEED{ 10.f };
+			static float cubeRot{};
+
+			DEBUG_RENDERER.DrawRect({ 0, 0, 0 }, { 20, 30 }, { 0, 0, cubeRot }, { 1, 0, 0 });
+			DEBUG_RENDERER.DrawRect({ 0, 0, 0 }, { 20, 30 }, { 0, 0, 0 }, { 1, 1, 1 });
+			DEBUG_RENDERER.DrawCube({ 20, 20, 20 }, { 69, 20, 20 }, { 0, 0, 0 }, { 1, 1, 1 });
+			DEBUG_RENDERER.DrawCube({ 20, 20, 20 }, { 69, 20, 20 }, { 0, cubeRot, 0 });
+
+			DEBUG_RENDERER.DrawRect({ 0, 0, 0 }, { 20, 30 }, { 0, 0, cubeRot }, { 0, 1, 1 }, true, { 20, 20, 20 });
+			DEBUG_RENDERER.DrawCube({ 20, 20, 20 }, { 69, 20, 20 }, { 0, cubeRot, 0 }, { 1, 1,0 }, true, { 0, 0, 0 });
+
+
+			cubeRot += CUBE_ROT_SPEED * TIME.ElapsedSec();
+		}
+
+		if constexpr (DRAW_TRIANGLES)
+		{
+			static float constexpr TRIANGLE_ROT_SPEED{ 10.f };
+			static float triRot{};
+
+			DEBUG_RENDERER.DrawTriangle({ 0,0,0 }, { 10, 10, 10 }, { 20, 10, 16 });
+			DEBUG_RENDERER.DrawTriangle({ 0,0,0 }, { 10, 10, 10 }, { 20, 10, 16 }, { 0, triRot, triRot }, { 1, 1, 1 });
+
+			DEBUG_RENDERER.DrawTriangle({ 0,0,0 }, { 10, 10, 10 }, { 20, 10, 16 }, { 0, triRot, triRot }, { 1, 1, 1 }, true, { 25,25, 0 });
+
+
+			triRot += TRIANGLE_ROT_SPEED * TIME.ElapsedSec();
+		}
+
+		if constexpr (DRAW_ARROWS)
+		{
+			static float constexpr ARROW_ROT_SPEED{ 10.f };
+			static float arrRot{};
+
+			DEBUG_RENDERER.DrawArrow({}, { 2, 3, 3 });
+			DEBUG_RENDERER.DrawArrow({}, { 2, 3, 3 }, { 0, arrRot, 0 }, { 1, 1, 1 });
+
+			DEBUG_RENDERER.DrawArrow({}, { 0, 0, 3 });
+			DEBUG_RENDERER.DrawArrow({}, { 0, 0, 3 }, { arrRot,0 , 0 }, { 1, 1, 1 });
+
+			DEBUG_RENDERER.DrawArrow({}, { 0, 0, 3 }, { arrRot,0 , 0 }, { 1, 1, 1 }, 1, true, { 20, 20, 0 });
+
+			arrRot += ARROW_ROT_SPEED * TIME.ElapsedSec();
+		}
+
+		if constexpr (DRAW_CIRCLES)
+		{
+			static float constexpr CIRCLE_ROT_SPEED{ 10.f };
+			static float circleRot{};
+
+			DEBUG_RENDERER.DrawCircle({}, 20);
+			DEBUG_RENDERER.DrawCircle({}, 20, { circleRot, 0, 0 }, { 1, 1, 1 });
+
+			DEBUG_RENDERER.DrawEllipse({}, { 100, 10 }, {}, { 0, 1, 0 });
+			DEBUG_RENDERER.DrawEllipse({}, { 100, 10 }, { circleRot }, { 1, 1, 1 });
+
+			DEBUG_RENDERER.DrawEllipse({}, { 100, 10 }, { circleRot }, { 1, 1, 1 }, 24, true, { 20, 20, 0 });
+
+			circleRot += CIRCLE_ROT_SPEED * TIME.ElapsedSec();
+		}
+
+		if constexpr (DRAW_SPHERES)
+		{
+			static float constexpr SPHERE_ROT_SPEED{ 10.f };
+			static float sphereRot{};
+
+			DEBUG_RENDERER.DrawSphere({}, 20.f);
+			DEBUG_RENDERER.DrawSphere({}, 20.f, sphereRot, { 0, 0,1 });
+
+			DEBUG_RENDERER.DrawSphere({ -10, -10, -10 }, 20.f, {}, { 1, 1, 0 });
+			DEBUG_RENDERER.DrawSphere({ -10, -10, -10 }, 20.f, sphereRot, { 1,1,1 });
+
+			DEBUG_RENDERER.DrawSphereComplex({ 20,20,20 }, 20.f, { }, { 1, 0, 0 }, 24, 6);
+			DEBUG_RENDERER.DrawSphereComplex({ 20,20,20 }, 20.f, { sphereRot }, { 1, 1, 1 }, 24, 6);
+
+			DEBUG_RENDERER.DrawEllipsoid({ -30, -30, 0 }, { 10, 20, 20 }, {});
+			DEBUG_RENDERER.DrawEllipsoid({ -30, -30, 0 }, { 10, 20, 20 }, { sphereRot }, { 1, 1, 1 });
+
+			DEBUG_RENDERER.DrawEllipsoidComplex({ 0, 0, 50 }, { 20, 50, 20 }, {}, { 1, 0, 0 }, 100, 30);
+			DEBUG_RENDERER.DrawEllipsoidComplex({ 0, 0, 50 }, { 20, 50, 20 }, { sphereRot }, { 1, 1, 1 }, 100, 30);
+
+			DEBUG_RENDERER.DrawSphere({ 20, 20, 20 }, 1, {}, { .5, .5, 1 });
+
+			DEBUG_RENDERER.DrawEllipsoidComplex({ 0, 0, -50 }, { 20, 50, 20 }, {}, { 1, 0, 1 }, 100, 30, false);
+			DEBUG_RENDERER.DrawEllipsoidComplex({ 0, 0, -50 }, { 20, 50, 20 }, {}, { 1, 1, 1 }, 100, 30, true);
+			DEBUG_RENDERER.DrawEllipsoidComplex({ 0, 0, -50 }, { 20, 50, 20 }, {}, { 1, 1, 1 }, 100, 30, true, { 20, 20, 20 });
+			DEBUG_RENDERER.DrawEllipsoidComplex({ 0, 0, -50 }, { 20, 50, 20 }, { 0, sphereRot }, { 1, 1, 0 }, 100, 30, true, { 20, 20, 20 });
+
+
+			sphereRot += SPHERE_ROT_SPEED * TIME.ElapsedSec();
+		}
+
+		if constexpr (DRAW_CYL)
+		{
+			static float constexpr CYL_ROT_SPEED{ 10.f };
+			static float cylRot{};
+
+			DEBUG_RENDERER.DrawCylinder({ -10, 0, -10 }, { 20, 100, 20 });
+			DEBUG_RENDERER.DrawCylinder({ -10, 0, -10 }, { 20, 100, 20 }, { cylRot, cylRot, cylRot }, { 1, 1, 1 });
+			DEBUG_RENDERER.DrawCylinder({ -10, 0, -10 }, { 20, 100, 20 }, { cylRot, cylRot, cylRot }, { 0, 1, 0 }, 24, true, { 20, 20, 20 });
+			DEBUG_RENDERER.DrawCylinder({ -10, 0, -10 }, { 20, 100, 20 }, {}, { 0, 1, 1 }, 24, true, { 20, 20, 20 });
+
+			cylRot += CYL_ROT_SPEED * TIME.ElapsedSec();
+		}
+
+		if constexpr (DRAW_POLY)
+		{
+			static float constexpr POL_ROT_SPEED{ 10.f };
+			static float polRot{};
+
+			DEBUG_RENDERER.DrawSphere({}, 1);
+
+			DEBUG_RENDERER.DrawPolygon({ {20, 0, 0}, { 30, 0, 0 }, {30, 10, 0}, {20, 10, 0} });
+			DEBUG_RENDERER.DrawPolygon({ {20, 0, 0}, { 30, 0,0 }, {30, 10, 0}, {20, 10, 0} }, { 0, polRot }, { 1, 1, 1 });
+
+			DEBUG_RENDERER.DrawPolygon({ {20, 0, 0}, { 30, 0, 0  }, {30, 10, 0 }, {20, 10, 0} }, { 0, polRot }, { 1, 1, 1 }, true);
+
+
+			polRot += POL_ROT_SPEED * TIME.ElapsedSec();
+		}
 	}
 }

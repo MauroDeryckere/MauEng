@@ -107,7 +107,7 @@ namespace MauEng
 
 			time.Update();
 
-			if constexpr (LOG_FPS)
+			if (LOG_FPS)
 			{
 				if (IsMinimised)
 				{
