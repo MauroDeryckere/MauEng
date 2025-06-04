@@ -38,6 +38,7 @@ F4 toggle shadows
 F5 lower light intensity 
 F6 up light intensity
 F7 Toggle rotation
+F8 Toggle Debug render mode
 
 Mouse movement, rotate cam
 arrows / WASD cam movement
@@ -158,7 +159,7 @@ Default and invalid materials are used to prevent branching on the GPU.
 
 
 ### Debug Rendering
-Easy to use API for debug rendering.
+Easy to use API for debug rendering. See. Debug rendering demo.
 
 ```cpp
 void GameScene::Tick()
