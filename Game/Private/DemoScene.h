@@ -21,7 +21,19 @@ namespace MauGam
 			COUNT
 		};
 
+		enum class ELightMode : uint8_t
+		{
+			PointOnly,
+			DirOnly,
+			PointAndDir,
+			COUNT
+		};
+
 		EDemo m_Demo{ EDemo::Chess };
+
+		ELightMode m_LightMode{ ELightMode::PointAndDir };
+
+		bool m_DebugRenderLight{ true };
 
 		void SetupInput();
 		void HandleInput();

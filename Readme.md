@@ -24,11 +24,15 @@
 ## Demo
 
 Keybinds & config
+F1 Profile
+F2 Toggle light debug render (display spheres for point light, arrow for dir light)
+F3 toggle light mode - point light only, dir light only, both
 F4 toggle shadows
 F5 lower light intensity 
-F6 up light intesnity
+F6 up light intensity
 Mouse movement, rotate cam
 arrows cam movement
+Sprint control
 ## Core
 
 ### Logging

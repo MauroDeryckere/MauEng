@@ -65,6 +65,15 @@ namespace MauGam
 					cLight.castShadows = false;
 					cLight.lightColour = { 1, 1, .9 };
 				}
+
+				{
+					Entity enttPLight{ CreateEntity() };
+					auto& cLight{ enttPLight.AddComponent<CLight>() };
+					cLight.type = ELightType::POINT;
+					cLight.intensity = 100'000.f;
+					cLight.direction_position = { 10, 40, 10 };
+					cLight.lightColour = { 1, 0, 0 };
+				}
 			}
 			break;
 		case EDemo::COUNT:
@@ -93,6 +102,34 @@ namespace MauGam
 	void DemoScene::OnRender() const
 	{
 		Scene::OnRender();
+
+		if (m_DebugRenderLight)
+		{
+			auto view{ GetECSWorld().View<MauEng::CLight>() };
+			view.Each([](MauEng::CLight const& l)
+				{
+					switch (l.type)
+					{
+					case MauEng::ELightType::DIRECTIONAL:
+					{
+						glm::vec3 constexpr start{ 0, 100, 0 };
+						glm::vec3 const dir{ glm::normalize(l.direction_position) };
+						float const length{ std::clamp(l.intensity / 10000.f, 5.f, 40.f) };
+						glm::vec3 const end{ start + dir * length };
+
+						DEBUG_RENDERER.DrawArrow(start, end, {}, l.lightColour, 1.f);
+
+						break;
+					}
+
+					case MauEng::ELightType::POINT:
+						DEBUG_RENDERER.DrawSphere(l.direction_position, std::clamp(l.intensity / 10000.f, 2.f, 20.f), {}, l.lightColour);
+						break;
+					default:
+						break;
+					}
+				});
+		}
 	}
 
 	void DemoScene::SetupInput()
@@ -103,11 +140,13 @@ namespace MauGam
 		input.BindAction("MoveRight", MauEng::KeyInfo{ SDLK_RIGHT, MauEng::KeyInfo::ActionType::Held });
 		input.BindAction("MoveDown", MauEng::KeyInfo{ SDLK_DOWN, MauEng::KeyInfo::ActionType::Held });
 
-		input.BindAction("Sprint", MauEng::KeyInfo{ SDLK_A, MauEng::KeyInfo::ActionType::Held });
+		input.BindAction("Sprint", MauEng::KeyInfo{ SDLK_LCTRL, MauEng::KeyInfo::ActionType::Held });
 
 		input.BindAction("Rotate", MauEng::MouseInfo{ {}, MauEng::MouseInfo::ActionType::Moved });
 
 
+		input.BindAction("ToggleLightDebugRendering", MauEng::KeyInfo{ SDLK_F2, MauEng::KeyInfo::ActionType::Up });
+		input.BindAction("ToggleLights", MauEng::KeyInfo{ SDLK_F3, MauEng::KeyInfo::ActionType::Up });
 		input.BindAction("ToggleShadows", MauEng::KeyInfo{ SDLK_F4, MauEng::KeyInfo::ActionType::Up });
 		input.BindAction("DownLightIntensity", MauEng::KeyInfo{ SDLK_F5, MauEng::KeyInfo::ActionType::Up });
 		input.BindAction("UpLightIntensity", MauEng::KeyInfo{ SDLK_F6, MauEng::KeyInfo::ActionType::Up });
@@ -179,6 +218,56 @@ namespace MauGam
 				{
 					light.castShadows = !light.castShadows;
 				});
+		}
+		
+		if (input.IsActionExecuted("ToggleLights"))
+		{
+			uint8_t currModeID{ static_cast<uint8_t>(m_LightMode) };
+			++currModeID;
+			currModeID %= static_cast<uint8_t>(ELightMode::COUNT);
+			m_LightMode = static_cast<ELightMode>(currModeID);
+
+			auto view{ GetECSWorld().View<MauEng::CLight>() };
+			view.Each([this](MauEng::CLight& light)
+				{
+					switch (m_LightMode) {
+					case ELightMode::PointOnly:
+						if (MauEng::ELightType::POINT == light.type)
+						{
+							light.isEnabled = true;
+						}
+						else
+						{
+							light.isEnabled = false;
+						}
+						break;
+
+					case ELightMode::DirOnly:
+						if (MauEng::ELightType::DIRECTIONAL == light.type)
+						{
+							light.isEnabled = true;
+						}
+						else
+						{
+							light.isEnabled = false;
+						}
+						break;
+					case ELightMode::PointAndDir:
+						if (MauEng::ELightType::DIRECTIONAL == light.type or MauEng::ELightType::POINT == light.type)
+						{
+							light.isEnabled = true;
+						}
+						break;
+
+					case ELightMode::COUNT:
+						break;
+					}
+				});
+		}
+
+		if (input.IsActionExecuted("ToggleLightDebugRendering"))
+		{
+			m_DebugRenderLight = not m_DebugRenderLight;
 		}
 	}
 }
