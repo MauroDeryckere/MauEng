@@ -32,7 +32,7 @@ namespace MauGam
 			COUNT
 		};
 
-		EDemo m_Demo{ EDemo::DebugRendering };
+		EDemo m_Demo{ EDemo::FlightHelmet };
 
 		ELightMode m_LightMode{ ELightMode::PointAndDir };
 
@@ -54,6 +54,16 @@ namespace MauGam
 			COUNT
 		};
 		EDebugRenderMode m_DebugRenderMode{ EDebugRenderMode::DRAW_LINES };
+
+		enum class ECamSettings : uint8_t
+		{
+			NoExposure,
+			SUNNY16,
+			INDOOR,
+			CUSTOM,
+			COUNT
+		};
+		ECamSettings m_CamSettings{ ECamSettings::SUNNY16 };
 
 		void SetupInput();
 		void HandleInput();

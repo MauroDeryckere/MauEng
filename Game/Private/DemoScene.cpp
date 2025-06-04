@@ -87,6 +87,9 @@ namespace MauGam
 				m_CameraManager.GetActiveCamera().Focus({ 1,1, 3 });
 				m_CameraManager.GetActiveCamera().SetFar(1000);
 
+				m_CamSettings = ECamSettings::INDOOR;
+				m_CameraManager.GetActiveCamera().SetCamSettingsIndoor();
+
 				{
 					Entity enttHelmet{ CreateEntity() };
 
@@ -121,7 +124,6 @@ namespace MauGam
 					cLight.direction_position = { -50.f, 50, -20 };
 					cLight.lightColour = { 0, 0, 1 };
 				}
-
 				SetSceneAABBOverride({ -100, -100, -100 }, { 100, 100, 100 });
 			}
 			break;
@@ -211,6 +213,7 @@ namespace MauGam
 		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F7: Toggle scene rotation");
 		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F8: Toggle Debug render mode");
 		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F9: Randomize light colours\n");
+		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F10: Toggle Cam settings\n");
 
 		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "WASD | ARROWS: Move Camera");
 		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "Mouse movement: Rotate Camera");
@@ -311,6 +314,7 @@ namespace MauGam
 		input.BindAction("ToggleRotation", MauEng::KeyInfo{ SDLK_F7, MauEng::KeyInfo::ActionType::Up });
 		input.BindAction("ToggleDebugRenderMode", MauEng::KeyInfo{ SDLK_F8, MauEng::KeyInfo::ActionType::Up });
 		input.BindAction("RandomizeLightColours", MauEng::KeyInfo{ SDLK_F9, MauEng::KeyInfo::ActionType::Up });
+		input.BindAction("ToggleCamSettings", MauEng::KeyInfo{ SDLK_F10, MauEng::KeyInfo::ActionType::Up });
 
 		input.BindAction("MoveUp", MauEng::KeyInfo{ SDLK_UP, MauEng::KeyInfo::ActionType::Held });
 		input.BindAction("MoveLeft", MauEng::KeyInfo{ SDLK_LEFT, MauEng::KeyInfo::ActionType::Held });
@@ -553,6 +557,36 @@ namespace MauGam
 				}
 			);
 
+		}
+
+		if (input.IsActionExecuted("ToggleCamSettings"))
+		{
+			uint8_t currModeID{ static_cast<uint8_t>(m_CamSettings) };
+			++currModeID;
+			currModeID %= static_cast<uint8_t>(ECamSettings::COUNT);
+			m_CamSettings = static_cast<ECamSettings>(currModeID);
+
+			std::string camSettStr{ "NONE" };
+			switch (m_CamSettings) {
+			case ECamSettings::NoExposure:
+				camSettStr = "No Exposure";
+				GetCameraManager().GetActiveCamera().DisableExposure();
+				break;
+			case ECamSettings::SUNNY16:
+				camSettStr = "Sunny 16";
+				GetCameraManager().GetActiveCamera().SetCamSettingsSunny16();
+				break;
+			case ECamSettings::INDOOR:
+				camSettStr = "Indoor";
+				GetCameraManager().GetActiveCamera().SetCamSettingsIndoor();
+				break;
+			case ECamSettings::CUSTOM:
+				camSettStr = "Custom";
+				GetCameraManager().GetActiveCamera().EnableExposure();
+				break;
+			}
+
+			ME_LOG_INFO(MauCor::LogCategory::Game, "Cam Settings: {}", camSettStr);
 		}
 	}
 

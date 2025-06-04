@@ -20,6 +20,7 @@ namespace MauEng
 	{
 		UpdateProjectionMatrix();
 		UpdateViewMatrix();
+		SetCamSettingsSunny16();
 	}
 
 	void Camera::UpdateViewMatrix() noexcept

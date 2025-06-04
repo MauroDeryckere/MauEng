@@ -40,6 +40,7 @@ F6 up light intensity
 F7 Toggle rotation
 F8 Toggle Debug render mode
 F9 Randomize light color
+F10 Toggle cam settings
 
 Mouse movement, rotate cam
 arrows / WASD cam movement

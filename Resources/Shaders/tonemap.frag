@@ -78,6 +78,11 @@ void main()
         exposure = ConvertEV100ToExposure(EV100PhysicalCam);
     }
 
+    if (exposure == 0.0f)
+    {
+        exposure = 1.0f;
+    }
+
     const vec3 hdrColor = texture(sampler2D(hdriImage, globalSampler), inFragUV).rgb;
     const vec3 mapped = ACESFilm(hdrColor * exposure);
     outColor = vec4(mapped, 1.0);
