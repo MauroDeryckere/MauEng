@@ -22,35 +22,35 @@
 ## Introduction
 
 ## Demo
-Demo scene can be found in Game/DemoScene.h and .cpp
+Demo scene can be found in Game/DemoScene.h and .cpp<br>
 Change the EDemo m_Demo; in the header to a different enum value to view different scenes.
 
-Config
-Config.cmake: build settings
-Renderer/Config/VulkanConfigs: buffer sizes, extensions 
-Core/Public/Config/EngineConfig.h: macros, general settings
+Config<br>
+Config.cmake: build settings<br>
+Renderer/Config/VulkanConfigs: buffer sizes, extensions <br>
+Core/Public/Config/EngineConfig.h: macros, general settings<br>
 
-Key binds
-SPACE output the keybinds
-F1 Profile
-F2 Toggle light debug render (display spheres for point light, arrow for dir light)
-F3 toggle light mode - point light only, dir light only, both
-F4 toggle shadows
-F5 lower light intensity 
-F6 up light intensity
-F7 Toggle rotation
-F8 Toggle Debug render mode
-F9 Randomize light color
-F10 Toggle cam settings
-F11 Toggle tone mapper
-
-E Lower custom exposure (used in custom exposure mode)
-R Higher custom exposure (used in custom exposure mode)
-
-Mouse movement, rotate cam
-arrows / WASD cam movement
-Sprint control
-
+Key binds<br>
+SPACE output the keybinds<br>
+F1 Profile<br>
+F2 Toggle light debug render (display spheres for point light, arrow for dir light)<br>
+F3 toggle light mode - point light only, dir light only, both<br>
+F4 toggle shadows<br>
+F5 lower light intensity <br>
+F6 up light intensity<br>
+F7 Toggle rotation<br>
+F8 Toggle Debug render mode<br>
+F9 Randomize light color<br>
+F10 Toggle cam settings<br>
+F11 Toggle tone mapper<br>
+<br>
+E Lower custom exposure (used in custom exposure mode)<br>
+R Higher custom exposure (used in custom exposure mode)<br>
+<br>
+Mouse movement, rotate cam<br>
+arrows / WASD cam movement<br>
+Sprint control<br>
+<br>
 ## Core
 
 ### Logging
