@@ -32,7 +32,7 @@ namespace MauGam
 			COUNT
 		};
 
-		EDemo m_Demo{ EDemo::DebugRendering };
+		EDemo m_Demo{ EDemo::InstanceTest };
 
 		ELightMode m_LightMode{ ELightMode::PointAndDir };
 

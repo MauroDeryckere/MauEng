@@ -3,8 +3,6 @@
 #include "Engine.h"
 
 #include "Scene/SceneManager.h"
-
-#include "ECSTestScene.h"
 #include "DemoScene.h"
 
 void InitDemoScene();

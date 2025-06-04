@@ -1,5 +1,7 @@
 #include "DemoScene.h"
 
+#include <random>
+
 namespace MauGam
 {
 	DemoScene::DemoScene()
@@ -125,7 +127,43 @@ namespace MauGam
 			break;
 		case EDemo::InstanceTest:
 			{
-				
+				m_CameraManager.GetActiveCamera().SetPosition({ -50, 50, -50 });
+				m_CameraManager.GetActiveCamera().SetFOV(60.f);
+
+				m_CameraManager.GetActiveCamera().Focus({ 0, 0, 0 });
+				m_CameraManager.GetActiveCamera().SetFar(1000);
+
+				uint32_t constexpr NUM_INSTANCES{ 100'000 };
+				// Random device for seed 
+				std::random_device rd;
+				// Mersenne Twister generator
+				std::mt19937 gen(rd());
+				// Random translation range
+				std::uniform_real_distribution<float> dis(-300.0f, 300);
+
+				float constexpr FISH_SCALE_MIN{ 10.f };
+				float constexpr FISH_SCALE_MAX{ 20.f };
+				std::uniform_real_distribution<float> disScale(FISH_SCALE_MIN, FISH_SCALE_MAX);
+
+				for (size_t i{ 0 }; i < NUM_INSTANCES; i++)
+				{
+					float const fishScale{ disScale(gen)};
+					Entity entFish{ CreateEntity() };
+					auto& transform{ entFish.GetComponent<CTransform>() };
+					transform.Translate({ dis(gen), dis(gen), dis(gen) });
+					transform.Scale({ fishScale, fishScale, fishScale });
+					entFish.AddComponent<CStaticMesh>("Resources/Models/BarramundiFish/glTF/BarramundiFish.gltf");
+				}
+
+				{
+					Entity enttDirLight{ CreateEntity() };
+					auto& cLight{ enttDirLight.AddComponent<CLight>() };
+					cLight.intensity = 20'000.f;
+					cLight.direction_position = { -1, -1, -1 };
+					cLight.castShadows = false;
+					cLight.lightColour = { 0.2f, 0.2f, 1 };
+				}
+
 			}
 			break;
 		case EDemo::DebugRendering:
@@ -163,7 +201,7 @@ namespace MauGam
 		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "Demo Scene Loaded! ");
 
 		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "Demo Scene Info");
-		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "Keybinds: ");
+		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "Key binds: ");
 		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F1: Profile");
 		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F2: Toggle light debug rendering");
 		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F3: Toggle light mode - point light only; dir light only, both");
@@ -190,14 +228,28 @@ namespace MauGam
 
 		if (m_Rotate and shouldSceneRotate)
 		{
-			using namespace MauEng;
-			float constexpr ROTATION_SPEED{ 15.f };
-			MauCor::Rotator const rot{ 0, ROTATION_SPEED * TIME.ElapsedSec() };
-			auto group{ GetECSWorld().Group<CStaticMesh, CTransform>() };
-			group.Each([&rot](CStaticMesh const& m, CTransform& t)
-				{
-					t.Rotate(rot);
-				}, std::execution::par_unseq);
+			if (m_Demo == EDemo::InstanceTest)
+			{
+				using namespace MauEng;
+				float constexpr ROTATION_SPEED{ 90.f };
+				MauCor::Rotator const rot{ 0, ROTATION_SPEED * TIME.ElapsedSec() };
+				auto group{ GetECSWorld().Group<CStaticMesh, CTransform>() };
+				group.Each([&rot](CStaticMesh const& m, CTransform& t)
+					{
+						t.Rotate(rot);
+					}, std::execution::par_unseq);
+			}
+			else
+			{
+				using namespace MauEng;
+				float constexpr ROTATION_SPEED{ 15.f };
+				MauCor::Rotator const rot{ 0, ROTATION_SPEED * TIME.ElapsedSec() };
+				auto group{ GetECSWorld().Group<CStaticMesh, CTransform>() };
+				group.Each([&rot](CStaticMesh const& m, CTransform& t)
+					{
+						t.Rotate(rot);
+					}, std::execution::par_unseq);
+			}
 		}
 
 	}
