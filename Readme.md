@@ -41,6 +41,10 @@ F7 Toggle rotation
 F8 Toggle Debug render mode
 F9 Randomize light color
 F10 Toggle cam settings
+F11 Toggle tone mapper
+
+E Lower custom exposure (used in custom exposure mode)
+R Higher custom exposure (used in custom exposure mode)
 
 Mouse movement, rotate cam
 arrows / WASD cam movement

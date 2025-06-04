@@ -212,9 +212,12 @@ namespace MauGam
 		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F6: Higher light intensity");
 		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F7: Toggle scene rotation");
 		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F8: Toggle Debug render mode");
-		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F9: Randomize light colours\n");
-		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F10: Toggle Cam settings\n");
+		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F9: Randomize light colours");
+		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F10: Toggle Cam settings");
 		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F11: Toggle Tone map\n");
+
+		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "E: Lower exposure (custom exposure mode)");
+		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "R: Higher exposure (custom exposure mode)\n");
 
 		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "WASD | ARROWS: Move Camera");
 		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "Mouse movement: Rotate Camera");
@@ -317,6 +320,10 @@ namespace MauGam
 		input.BindAction("RandomizeLightColours", MauEng::KeyInfo{ SDLK_F9, MauEng::KeyInfo::ActionType::Up });
 		input.BindAction("ToggleCamSettings", MauEng::KeyInfo{ SDLK_F10, MauEng::KeyInfo::ActionType::Up });
 		input.BindAction("ToggleToneMap", MauEng::KeyInfo{ SDLK_F11, MauEng::KeyInfo::ActionType::Up });
+
+		input.BindAction("LowerCustomExposure", MauEng::KeyInfo{ SDLK_E, MauEng::KeyInfo::ActionType::Up });
+		input.BindAction("HigherCustomExposure", MauEng::KeyInfo{ SDLK_R, MauEng::KeyInfo::ActionType::Up });
+
 
 		input.BindAction("MoveUp", MauEng::KeyInfo{ SDLK_UP, MauEng::KeyInfo::ActionType::Held });
 		input.BindAction("MoveLeft", MauEng::KeyInfo{ SDLK_LEFT, MauEng::KeyInfo::ActionType::Held });
@@ -585,6 +592,7 @@ namespace MauGam
 			case ECamSettings::CUSTOM:
 				camSettStr = "Custom";
 				GetCameraManager().GetActiveCamera().EnableExposure();
+				GetCameraManager().GetActiveCamera().SetExposureOverride(1.f);
 				break;
 			}
 
@@ -614,6 +622,26 @@ namespace MauGam
 			}
 
 			ME_LOG_INFO(MauCor::LogCategory::Game, "Cam Tone mapper: {}", camSettStr);
+		}
+
+		if (input.IsActionExecuted("LowerCustomExposure"))
+		{
+			float curr = GetCameraManager().GetActiveCamera().GetExposureOverride();
+			curr *= pow(2.0f, -1.0f / 3.0f); // LOWER exposure by 1/3 stop
+
+			GetCameraManager().GetActiveCamera().SetExposureOverride(curr);
+
+			ME_LOG_INFO(MauCor::LogCategory::Game, "New exposure: {}", curr);
+		}
+
+		if (input.IsActionExecuted("HigherCustomExposure"))
+		{
+			float curr = GetCameraManager().GetActiveCamera().GetExposureOverride();
+			curr *= pow(2.0f, 1.0f / 3.0f); // INCREASE exposure by 1/3 stop
+
+			GetCameraManager().GetActiveCamera().SetExposureOverride(curr);
+
+			ME_LOG_INFO(MauCor::LogCategory::Game, "New exposure: {}", curr);
 		}
 	}
 
