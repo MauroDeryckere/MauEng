@@ -40,6 +40,21 @@ namespace MauGam
 		bool m_Rotate{ true };
 		bool m_CastShadows{ false };
 
+		enum class EDebugRenderMode : uint8_t
+		{
+			DRAW_LINES,
+			DRAW_RECTS,
+			DRAW_TRIANGLES,
+			DRAW_ARROWS,
+			DRAW_CIRCLES,
+			DRAW_SPHERES,
+			DRAW_CYL,
+			DRAW_POLY,
+			ALL,
+			COUNT
+		};
+		EDebugRenderMode m_DebugRenderMode{ EDebugRenderMode::DRAW_LINES };
+
 		void SetupInput();
 		void HandleInput();
 		void RenderDebugDemo() const;

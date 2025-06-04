@@ -130,7 +130,7 @@ namespace MauGam
 			break;
 		case EDemo::DebugRendering:
 			{
-				m_CameraManager.GetActiveCamera().SetPosition({ -200, 125, -200 });
+				m_CameraManager.GetActiveCamera().SetPosition({ -100, 100, -100 });
 				m_CameraManager.GetActiveCamera().SetFOV(60.f);
 
 				m_CameraManager.GetActiveCamera().Focus({ 1,1, 3 });
@@ -170,7 +170,8 @@ namespace MauGam
 		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F4: Toggle shadows");
 		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F5: Lower light intensity");
 		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F6: Higher light intensity");
-		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F7: Toggle scene rotation\n");
+		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F7: Toggle scene rotation");
+		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F8: Toggle Debug render mode\n");
 		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "WASD | ARROWS: Move Camera");
 		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "Mouse movement: Rotate Camera");
 		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "Left control: \"Sprint\"");
@@ -262,6 +263,7 @@ namespace MauGam
 		input.BindAction("DownLightIntensity", MauEng::KeyInfo{ SDLK_F5, MauEng::KeyInfo::ActionType::Up });
 		input.BindAction("UpLightIntensity", MauEng::KeyInfo{ SDLK_F6, MauEng::KeyInfo::ActionType::Up });
 		input.BindAction("ToggleRotation", MauEng::KeyInfo{ SDLK_F7, MauEng::KeyInfo::ActionType::Up });
+		input.BindAction("ToggleDebugRenderMode", MauEng::KeyInfo{ SDLK_F8, MauEng::KeyInfo::ActionType::Up });
 	}
 
 	void DemoScene::HandleInput()
@@ -417,26 +419,65 @@ namespace MauGam
 			m_Rotate = not m_Rotate;
 			ME_LOG_INFO(MauCor::LogCategory::Game, "Scene rotation: {}", m_Rotate);
 		}
+
+		if (input.IsActionExecuted("ToggleDebugRenderMode"))
+		{
+			uint8_t currModeID{ static_cast<uint8_t>(m_DebugRenderMode) };
+			++currModeID;
+			currModeID %= static_cast<uint8_t>(EDebugRenderMode::COUNT);
+			m_DebugRenderMode = static_cast<EDebugRenderMode>(currModeID);
+
+			std::string debModeStr{ "NONE" };
+			switch (m_DebugRenderMode) {
+			case EDebugRenderMode::DRAW_LINES:
+				debModeStr = "Draw Lines";
+				break;
+			case EDebugRenderMode::DRAW_RECTS:
+				debModeStr = "Draw Rects";
+				break;
+			case EDebugRenderMode::DRAW_TRIANGLES:
+				debModeStr = "Draw Triangles";
+				break;
+			case EDebugRenderMode::DRAW_ARROWS:
+				debModeStr = "Draw Arrows";
+				break;
+			case EDebugRenderMode::DRAW_CIRCLES:
+				debModeStr = "Draw Circles";
+				break;
+			case EDebugRenderMode::DRAW_SPHERES:
+				debModeStr = "Draw Spheres";
+				break;
+			case EDebugRenderMode::DRAW_CYL:
+				debModeStr = "Draw Cyls";
+				break;
+			case EDebugRenderMode::DRAW_POLY:
+				debModeStr = "Draw Poly";
+				break;
+			case EDebugRenderMode::ALL:
+				debModeStr = "Draw All";
+				break;
+			}
+
+			ME_LOG_INFO(MauCor::LogCategory::Game, "Debug Render Mode: {}", debModeStr);
+		}
 	}
 
 	void DemoScene::RenderDebugDemo() const
 	{
 		ME_PROFILE_FUNCTION()
 
-
-		//TODO convert to enum
 		// Config
-		bool constexpr DRAW_LINES{ true };
-		bool constexpr DRAW_RECTS{ true };
-		bool constexpr DRAW_TRIANGLES{ true };
-		bool constexpr DRAW_ARROWS{ true };
-		bool constexpr DRAW_CIRCLES{ true };
-		bool constexpr DRAW_SPHERES{ true };
-		bool constexpr DRAW_CYL{ true };
-		bool constexpr DRAW_POLY{ true };
+		bool DRAW_LINES{ m_DebugRenderMode == EDebugRenderMode::ALL or m_DebugRenderMode == EDebugRenderMode::DRAW_LINES };
+		bool DRAW_RECTS{ m_DebugRenderMode == EDebugRenderMode::ALL or m_DebugRenderMode == EDebugRenderMode::DRAW_RECTS };
+		bool DRAW_TRIANGLES{ m_DebugRenderMode == EDebugRenderMode::ALL or m_DebugRenderMode == EDebugRenderMode::DRAW_TRIANGLES };
+		bool DRAW_ARROWS{ m_DebugRenderMode == EDebugRenderMode::ALL or m_DebugRenderMode == EDebugRenderMode::DRAW_ARROWS };
+		bool DRAW_CIRCLES{ m_DebugRenderMode == EDebugRenderMode::ALL or m_DebugRenderMode == EDebugRenderMode::DRAW_CIRCLES };
+		bool DRAW_SPHERES{ m_DebugRenderMode == EDebugRenderMode::ALL or m_DebugRenderMode == EDebugRenderMode::DRAW_SPHERES };
+		bool DRAW_CYL{ m_DebugRenderMode == EDebugRenderMode::ALL or m_DebugRenderMode == EDebugRenderMode::DRAW_CYL };
+		bool DRAW_POLY{ m_DebugRenderMode == EDebugRenderMode::ALL or m_DebugRenderMode == EDebugRenderMode::DRAW_POLY };
 
 		// Demo debug drawing tests
-		if constexpr (DRAW_LINES)
+		if (DRAW_LINES)
 		{
 			DEBUG_RENDERER.DrawLine({ 0, 0,0 }, { 100, 10, 10 }, { 0, 0, 0 });
 			DEBUG_RENDERER.DrawLine({ 0, 0,0 }, { 100, 10, 10 }, { 90, 0, 0 }, { 0, 1, 0 });
@@ -457,7 +498,7 @@ namespace MauGam
 			lineRot += ROT_SPEED * TIME.ElapsedSec();
 		}
 
-		if constexpr (DRAW_RECTS)
+		if (DRAW_RECTS)
 		{
 			static float constexpr CUBE_ROT_SPEED{ 10.f };
 			static float cubeRot{};
@@ -474,7 +515,7 @@ namespace MauGam
 			cubeRot += CUBE_ROT_SPEED * TIME.ElapsedSec();
 		}
 
-		if constexpr (DRAW_TRIANGLES)
+		if (DRAW_TRIANGLES)
 		{
 			static float constexpr TRIANGLE_ROT_SPEED{ 10.f };
 			static float triRot{};
@@ -488,7 +529,7 @@ namespace MauGam
 			triRot += TRIANGLE_ROT_SPEED * TIME.ElapsedSec();
 		}
 
-		if constexpr (DRAW_ARROWS)
+		if (DRAW_ARROWS)
 		{
 			static float constexpr ARROW_ROT_SPEED{ 10.f };
 			static float arrRot{};
@@ -504,7 +545,7 @@ namespace MauGam
 			arrRot += ARROW_ROT_SPEED * TIME.ElapsedSec();
 		}
 
-		if constexpr (DRAW_CIRCLES)
+		if (DRAW_CIRCLES)
 		{
 			static float constexpr CIRCLE_ROT_SPEED{ 10.f };
 			static float circleRot{};
@@ -520,7 +561,7 @@ namespace MauGam
 			circleRot += CIRCLE_ROT_SPEED * TIME.ElapsedSec();
 		}
 
-		if constexpr (DRAW_SPHERES)
+		if (DRAW_SPHERES)
 		{
 			static float constexpr SPHERE_ROT_SPEED{ 10.f };
 			static float sphereRot{};
@@ -551,7 +592,7 @@ namespace MauGam
 			sphereRot += SPHERE_ROT_SPEED * TIME.ElapsedSec();
 		}
 
-		if constexpr (DRAW_CYL)
+		if (DRAW_CYL)
 		{
 			static float constexpr CYL_ROT_SPEED{ 10.f };
 			static float cylRot{};
@@ -564,7 +605,7 @@ namespace MauGam
 			cylRot += CYL_ROT_SPEED * TIME.ElapsedSec();
 		}
 
-		if constexpr (DRAW_POLY)
+		if (DRAW_POLY)
 		{
 			static float constexpr POL_ROT_SPEED{ 10.f };
 			static float polRot{};

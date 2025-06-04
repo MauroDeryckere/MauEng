@@ -4,7 +4,6 @@
 
 #include "Scene/SceneManager.h"
 
-#include "DebugDrawingDemo.h"
 #include "ECSTestScene.h"
 #include "DemoScene.h"
 
