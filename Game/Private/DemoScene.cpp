@@ -210,6 +210,7 @@ namespace MauGam
 		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F6: Higher light intensity");
 		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F7: Toggle scene rotation");
 		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F8: Toggle Debug render mode\n");
+		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F9: Randomize light colours\n");
 		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "WASD | ARROWS: Move Camera");
 		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "Mouse movement: Rotate Camera");
 		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "Left control: \"Sprint\"");
@@ -316,6 +317,7 @@ namespace MauGam
 		input.BindAction("UpLightIntensity", MauEng::KeyInfo{ SDLK_F6, MauEng::KeyInfo::ActionType::Up });
 		input.BindAction("ToggleRotation", MauEng::KeyInfo{ SDLK_F7, MauEng::KeyInfo::ActionType::Up });
 		input.BindAction("ToggleDebugRenderMode", MauEng::KeyInfo{ SDLK_F8, MauEng::KeyInfo::ActionType::Up });
+		input.BindAction("RandomizeLightColours", MauEng::KeyInfo{ SDLK_F9, MauEng::KeyInfo::ActionType::Up });
 	}
 
 	void DemoScene::HandleInput()
@@ -512,6 +514,38 @@ namespace MauGam
 
 			ME_LOG_INFO(MauCor::LogCategory::Game, "Debug Render Mode: {}", debModeStr);
 		}
+
+		if (input.IsActionExecuted("RandomizeLightColours"))
+		{
+			ME_LOG_INFO(MauCor::LogCategory::Game, "Randomizing light colours");
+
+			auto view{ GetECSWorld().View<MauEng::CLight>() };
+			view.Each([](MauEng::CLight& light)
+				{
+					std::string lightTypeStr{ "NONE" };
+					switch (light.type) {
+					case MauEng::ELightType::DIRECTIONAL:
+						lightTypeStr = "Directional Light " + std::to_string(light.lightID);
+						break;
+					case MauEng::ELightType::POINT:
+						lightTypeStr = "Point Light " + std::to_string(light.lightID);
+						break;
+
+					}
+
+					// Random device for seed 
+					std::random_device rd;
+					// Mersenne Twister generator
+					std::mt19937 gen(rd());
+					// Random colour range
+					std::uniform_real_distribution<float> dis(0, 1.f);
+
+					light.lightColour= { dis(gen), dis(gen), dis(gen) };
+					ME_LOG_INFO(MauCor::LogCategory::Game, "Light Colour ({}): [{:.2f}, {:.2f}, {:.2f}]", lightTypeStr, light.lightColour.x, light.lightColour.y, light.lightColour.z);
+				}
+			);
+
+		}
 	}
 
 	void DemoScene::RenderDebugDemo() const
@@ -519,14 +553,22 @@ namespace MauGam
 		ME_PROFILE_FUNCTION()
 
 		// Config
-		bool DRAW_LINES{ m_DebugRenderMode == EDebugRenderMode::ALL or m_DebugRenderMode == EDebugRenderMode::DRAW_LINES };
-		bool DRAW_RECTS{ m_DebugRenderMode == EDebugRenderMode::ALL or m_DebugRenderMode == EDebugRenderMode::DRAW_RECTS };
-		bool DRAW_TRIANGLES{ m_DebugRenderMode == EDebugRenderMode::ALL or m_DebugRenderMode == EDebugRenderMode::DRAW_TRIANGLES };
-		bool DRAW_ARROWS{ m_DebugRenderMode == EDebugRenderMode::ALL or m_DebugRenderMode == EDebugRenderMode::DRAW_ARROWS };
-		bool DRAW_CIRCLES{ m_DebugRenderMode == EDebugRenderMode::ALL or m_DebugRenderMode == EDebugRenderMode::DRAW_CIRCLES };
-		bool DRAW_SPHERES{ m_DebugRenderMode == EDebugRenderMode::ALL or m_DebugRenderMode == EDebugRenderMode::DRAW_SPHERES };
-		bool DRAW_CYL{ m_DebugRenderMode == EDebugRenderMode::ALL or m_DebugRenderMode == EDebugRenderMode::DRAW_CYL };
-		bool DRAW_POLY{ m_DebugRenderMode == EDebugRenderMode::ALL or m_DebugRenderMode == EDebugRenderMode::DRAW_POLY };
+		bool const DRAW_LINES{		m_DebugRenderMode == EDebugRenderMode::ALL or
+									m_DebugRenderMode == EDebugRenderMode::DRAW_LINES };
+		bool const DRAW_RECTS{		m_DebugRenderMode == EDebugRenderMode::ALL or
+									m_DebugRenderMode == EDebugRenderMode::DRAW_RECTS };
+		bool const DRAW_TRIANGLES{	m_DebugRenderMode == EDebugRenderMode::ALL or
+									m_DebugRenderMode == EDebugRenderMode::DRAW_TRIANGLES };
+		bool const DRAW_ARROWS{	 m_DebugRenderMode == EDebugRenderMode::ALL or
+								 m_DebugRenderMode == EDebugRenderMode::DRAW_ARROWS };
+		bool const DRAW_CIRCLES{ m_DebugRenderMode == EDebugRenderMode::ALL or
+								 m_DebugRenderMode == EDebugRenderMode::DRAW_CIRCLES };
+		bool const DRAW_SPHERES{ m_DebugRenderMode == EDebugRenderMode::ALL or
+								 m_DebugRenderMode == EDebugRenderMode::DRAW_SPHERES };
+		bool const DRAW_CYL{	 m_DebugRenderMode == EDebugRenderMode::ALL or
+								 m_DebugRenderMode == EDebugRenderMode::DRAW_CYL };
+		bool const DRAW_POLY{	 m_DebugRenderMode == EDebugRenderMode::ALL or
+								 m_DebugRenderMode == EDebugRenderMode::DRAW_POLY };
 
 		// Demo debug drawing tests
 		if (DRAW_LINES)

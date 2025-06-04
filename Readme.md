@@ -30,7 +30,7 @@ Config.cmake: build settings
 Renderer/Config/VulkanConfigs: buffer sizes, extensions 
 Core/Public/Config/EngineConfig.h: macros, general settings
 
-Keybinds
+Key binds
 F1 Profile
 F2 Toggle light debug render (display spheres for point light, arrow for dir light)
 F3 toggle light mode - point light only, dir light only, both
@@ -39,6 +39,7 @@ F5 lower light intensity
 F6 up light intensity
 F7 Toggle rotation
 F8 Toggle Debug render mode
+F9 Randomize light color
 
 Mouse movement, rotate cam
 arrows / WASD cam movement
