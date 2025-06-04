@@ -36,9 +36,26 @@ namespace MauRen
 	private:
 		[[nodiscard]] static Material ExtractMaterial(std::string const& path, aiMaterial const* material, aiScene const* scene);
 		[[nodiscard]] static EmbeddedTexture ExtractEmbeddedTexture(aiTexture const* texture);
-
-
 		[[nodiscard]] static std::string HashEmbeddedTexture(aiTexture const* texture) noexcept;
+
+		static void ProcessMesh(
+			aiMesh const* mesh,
+			aiScene const* scene,
+			aiMatrix4x4 const& transform,
+			LoadedModel& model,
+			VulkanCommandPoolManager& cmdPoolManager,
+			VulkanDescriptorContext& descriptorContext,
+			std::string const& path);
+
+		static void ProcessNode(
+			aiNode const* node,
+			aiScene const* scene,
+			aiMatrix4x4 const& parentTransform,
+			LoadedModel& model,
+			VulkanCommandPoolManager& cmdPoolManager,
+			VulkanDescriptorContext& descriptorContext,
+			std::string const& path);
+
 
 	};
 }

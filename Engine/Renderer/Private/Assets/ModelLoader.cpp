@@ -9,8 +9,6 @@
 #include <vector>
 #include <functional> // for std::hash
 
-
-
 namespace MauRen
 {
 	LoadedModel ModelLoader::LoadModel(std::string const& path, VulkanCommandPoolManager& cmdPoolManager, VulkanDescriptorContext& descriptorContext) noexcept
@@ -18,13 +16,13 @@ namespace MauRen
 		Assimp::Importer importer;
 
 		LoadedModel model;
-
+		//aiProcess_GenBoundingBoxes
 		// And have it read the given file with some example postprocessing
 		// Usually - if speed is not the most important aspect for you - you'll
 		// probably to request more postprocessing than we do in this example.
 		aiScene const* scene{ importer.ReadFile(path,
 												aiProcess_Triangulate |
-												aiProcess_GenNormals |
+												aiProcess_GenSmoothNormals |
 												aiProcess_JoinIdenticalVertices |
 												aiProcess_ImproveCacheLocality |
 												aiProcess_CalcTangentSpace |
@@ -32,7 +30,9 @@ namespace MauRen
 												aiProcess_ValidateDataStructure |
 												aiProcess_RemoveRedundantMaterials |
 												aiProcess_OptimizeGraph |
-												aiProcess_OptimizeMeshes) };
+												aiProcess_OptimizeMeshes |
+												aiProcess_FixInfacingNormals
+		) };
 												// AI_SCENE_FLAGS_NON_VERBOSE_FORMAT
 
 		if (!scene || !scene->HasMeshes()) 
@@ -41,111 +41,133 @@ namespace MauRen
 			return model;
 		}
 
-		aiMatrix4x4 const rootTransform{ scene->mRootNode->mTransformation };
-		
-        for (unsigned i{ 0 }; i < scene->mNumMeshes; ++i)
-		{
-			aiMesh const* const mesh{ scene->mMeshes[i] };
-			
-			uint32_t const vertexOffset{ static_cast<uint32_t>(model.vertices.size()) };
-			uint32_t const indexOffset{ static_cast<uint32_t>(model.indices.size()) };
 
-		    for (unsigned j{ 0 }; j < mesh->mNumVertices; ++j) 
-		    {
-				aiVector3D const vertex{ rootTransform * mesh->mVertices[j] };
-
-				//For now just support channel 0
-				glm::vec3 color{ 1.0f };	
-				if (mesh->HasVertexColors(0))
-				{
-					aiColor4D const& col { mesh->mColors[0][j] };
-					color = glm::vec3(col.r, col.g, col.b);
-				}
-
-				//For now just support channel 0
-				glm::vec2 texCoord{ 0.0f };
-				if (mesh->HasTextureCoords(0))
-				{
-					aiVector3D const& tex{ mesh->mTextureCoords[0][j] };
-					texCoord = glm::vec2{ tex.x, 1 - tex.y };
-				}
-				else
-				{
-					ME_LOG_ERROR(MauCor::LogCategory::Renderer, "No textcoords");
-				}
-
-				Vertex const vert
-				{
-					.position = glm::vec3{ vertex.x, vertex.y, vertex.z },
-					.normal = glm::vec3{ mesh->mNormals[j].x, mesh->mNormals[j].y, mesh->mNormals[j].z },
-					.tangent = mesh->HasTangentsAndBitangents()
-								? glm::vec4{ mesh->mTangents[j].x, mesh->mTangents[j].y, mesh->mTangents[j].z, 1.0f }
-								: glm::vec4{ 0.0f },
-					.texCoord = texCoord
-		        };
-
-				model.vertices.emplace_back(vert);
-		    }
-
-			uint32_t indexCount{ 0 };
-			for (unsigned j{ 0 }; j < mesh->mNumFaces; ++j)
-		    {
-		        aiFace const& face{ mesh->mFaces[j] };
-				for (unsigned k{ 0 }; k < face.mNumIndices; ++k)
-		        {
-					model.indices.emplace_back(face.mIndices[k]);
-		        }
-
-				indexCount += face.mNumIndices;
-		    }
-
-			uint32_t matID{ INVALID_MATERIAL_ID };
-
-			// Material loading (done via material manager)
-			aiMaterial const* const material{ scene->mMaterials[mesh->mMaterialIndex] };
-			aiString matName;
-			auto result{ material->Get(AI_MATKEY_NAME, matName) };
-			ME_ASSERT(mesh->mMaterialIndex < scene->mNumMaterials);
-
-			std::string matStr{ matName.C_Str() };
-
-			if (result != AI_SUCCESS)
-			{
-				matStr = { path + std::to_string(mesh->mMaterialIndex) };
-				ME_LOG_WARN(MauCor::LogCategory::Renderer, "setting material name manually for:{}", matStr);
-
-			}
-
-			auto& matManager{ VulkanMaterialManager::GetInstance() };
-
-			auto const getMat{ matManager.GetMaterial(matStr) };
-			if (getMat.first)
-			{
-				matID = getMat.second;
-			}
-			else
-			{
-				Material const extractedMat{ ExtractMaterial(path, material, scene) };
-				matID = matManager.LoadOrGetMaterial(cmdPoolManager, descriptorContext, extractedMat);
-			}
-
-			model.subMeshes.emplace_back(
-				SubMeshData
-				{
-					.indexCount = indexCount,
-					.firstIndex = indexOffset,
-					.vertexOffset = static_cast<int32_t>(vertexOffset),
-					.materialID = matID
-				});
-		}
-
+		aiMatrix4x4 identity;
+		ProcessNode(scene->mRootNode, scene, identity, model, cmdPoolManager, descriptorContext, path);
 		return model;
 	}
 
-	Material ModelLoader::ExtractMaterial(std::string const&path, aiMaterial const* material, aiScene const* scene)
+	void ModelLoader::ProcessMesh(
+		aiMesh const* mesh,
+		aiScene const* scene,
+		aiMatrix4x4 const& transform,
+		LoadedModel& model,
+		VulkanCommandPoolManager& cmdPoolManager,
+		VulkanDescriptorContext& descriptorContext,
+		std::string const& path)
 	{
-		std::filesystem::path modelPath = path;
-		std::filesystem::path modelDir = modelPath.parent_path();
+		uint32_t const vertexOffset{ static_cast<uint32_t>(model.vertices.size()) };
+		uint32_t const indexOffset{ static_cast<uint32_t>(model.indices.size()) };
+
+		for (unsigned j{ 0 }; j < mesh->mNumVertices; ++j)
+		{
+			aiVector3D const transformedPos{ transform * mesh->mVertices[j] };
+			glm::vec3 const position{ transformedPos.x, transformedPos.y, transformedPos.z };
+
+			glm::vec3 const normal{
+				mesh->HasNormals()
+				? glm::vec3{ mesh->mNormals[j].x, mesh->mNormals[j].y, mesh->mNormals[j].z }
+				: glm::vec3{ 0.0f } };
+
+			glm::vec4 const tangent{ mesh->HasTangentsAndBitangents()
+				? glm::vec4{ mesh->mTangents[j].x, mesh->mTangents[j].y, mesh->mTangents[j].z, 1.0f }
+				: glm::vec4{ 0.0f } };
+
+			glm::vec2 texCoord{ glm::vec2(0.0f) };
+			if (mesh->HasTextureCoords(0))
+			{
+				aiVector3D const& tex{ mesh->mTextureCoords[0][j] };
+				texCoord = glm::vec2{ tex.x, 1.0f - tex.y };
+			}
+			else
+			{
+				ME_LOG_WARN(MauCor::LogCategory::Renderer, "Missing texcoords for vertex {}", j);
+			}
+
+			Vertex vert{
+				.position = position,
+				.normal = normal,
+				.tangent = tangent,
+				.texCoord = texCoord,
+			};
+
+			model.vertices.emplace_back(vert);
+		}
+
+		uint32_t indexCount{ 0 };
+		for (unsigned j{ 0 }; j < mesh->mNumFaces; ++j)
+		{
+			aiFace const& face{ mesh->mFaces[j] };
+			for (unsigned k{ 0 }; k < face.mNumIndices; ++k)
+			{
+				model.indices.emplace_back(face.mIndices[k]);
+			}
+			indexCount += face.mNumIndices;
+		}
+
+		// Material loading
+		uint32_t matID{ INVALID_MATERIAL_ID };
+		aiMaterial const* material{ scene->mMaterials[mesh->mMaterialIndex] };
+		aiString matName;
+
+		std::string matStr{ matName.C_Str() };
+		auto const result{ material->Get(AI_MATKEY_NAME, matName) };
+		if (AI_SUCCESS != result)
+		{
+			matName = path + std::to_string(mesh->mMaterialIndex);
+			ME_LOG_WARN(MauCor::LogCategory::Renderer, "Setting material name manually for: {}", matStr);
+		}
+
+		auto& matManager{ VulkanMaterialManager::GetInstance() };
+		auto const getMat{ matManager.GetMaterial(matStr) };
+		if (getMat.first)
+		{
+			matID = getMat.second;
+		}
+		else
+		{
+			Material const extractedMat{ ExtractMaterial(path, material, scene) };
+			matID = matManager.LoadOrGetMaterial(cmdPoolManager, descriptorContext, extractedMat);
+		}
+
+		model.subMeshes.emplace_back(
+			SubMeshData{
+				.indexCount = indexCount,
+				.firstIndex = indexOffset,
+				.vertexOffset = static_cast<int32_t>(vertexOffset),
+				.materialID = matID
+			});
+	}
+
+
+	void ModelLoader::ProcessNode(
+		aiNode const* node,
+		aiScene const* scene,
+		aiMatrix4x4 const& parentTransform,
+		LoadedModel& model,
+		VulkanCommandPoolManager& cmdPoolManager,
+		VulkanDescriptorContext& descriptorContext,
+		std::string const& path)
+	{
+		aiMatrix4x4 const currentTransform{ parentTransform * node->mTransformation };
+
+		for (unsigned i{ 0 }; i < node->mNumMeshes; ++i)
+		{
+			aiMesh const* mesh{ scene->mMeshes[node->mMeshes[i]] };
+			// Call a new function that processes this mesh with currentTransform
+			ProcessMesh(mesh, scene, currentTransform, model, cmdPoolManager, descriptorContext, path);
+		}
+
+		for (unsigned i{ 0 }; i < node->mNumChildren; ++i)
+		{
+			ProcessNode(node->mChildren[i], scene, currentTransform, model, cmdPoolManager, descriptorContext, path);
+		}
+	}
+
+	Material ModelLoader::ExtractMaterial(std::string const& path, aiMaterial const* material, aiScene const* scene)
+	{
+		std::filesystem::path modelPath{ path };
+		std::filesystem::path modelDir{ modelPath.parent_path() };
 
 		Material mat{};
 		 

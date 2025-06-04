@@ -172,7 +172,7 @@ Result of that last example is this:
 - Soft shadows
 - ImGUI integration
 
-### In the further future: 
+### In the further future
 - Animations
 - Different Post processing effects
 
