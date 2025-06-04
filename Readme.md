@@ -31,6 +31,7 @@ Renderer/Config/VulkanConfigs: buffer sizes, extensions
 Core/Public/Config/EngineConfig.h: macros, general settings
 
 Key binds
+SPACE output the keybinds
 F1 Profile
 F2 Toggle light debug render (display spheres for point light, arrow for dir light)
 F3 toggle light mode - point light only, dir light only, both

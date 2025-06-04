@@ -68,6 +68,8 @@ namespace MauGam
 		void SetupInput();
 		void HandleInput();
 		void RenderDebugDemo() const;
+
+		void OutputKeybinds();
 	};
 }
 

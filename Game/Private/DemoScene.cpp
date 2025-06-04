@@ -199,29 +199,7 @@ namespace MauGam
 		ME_PROFILE_FUNCTION()
 
 		Scene::OnLoad();
-
-		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "Demo Scene Loaded! ");
-
-		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "Demo Scene Info");
-		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "Key binds: ");
-		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F1: Profile");
-		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F2: Toggle light debug rendering");
-		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F3: Toggle light mode - point light only; dir light only, both");
-		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F4: Toggle shadows");
-		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F5: Lower light intensity");
-		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F6: Higher light intensity");
-		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F7: Toggle scene rotation");
-		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F8: Toggle Debug render mode");
-		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F9: Randomize light colours");
-		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F10: Toggle Cam settings");
-		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F11: Toggle Tone map\n");
-
-		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "E: Lower exposure (custom exposure mode)");
-		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "R: Higher exposure (custom exposure mode)\n");
-
-		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "WASD | ARROWS: Move Camera");
-		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "Mouse movement: Rotate Camera");
-		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "Left control: \"Sprint\"");
+		OutputKeybinds();
 	}
 
 	void DemoScene::Tick()
@@ -310,6 +288,7 @@ namespace MauGam
 		ME_PROFILE_FUNCTION()
 
 		auto& input{ INPUT_MANAGER };
+		input.BindAction("PrintInfo", MauEng::KeyInfo{ SDLK_SPACE, MauEng::KeyInfo::ActionType::Up });
 		input.BindAction("ToggleLightDebugRendering", MauEng::KeyInfo{ SDLK_F2, MauEng::KeyInfo::ActionType::Up });
 		input.BindAction("ToggleLights", MauEng::KeyInfo{ SDLK_F3, MauEng::KeyInfo::ActionType::Up });
 		input.BindAction("ToggleShadows", MauEng::KeyInfo{ SDLK_F4, MauEng::KeyInfo::ActionType::Up });
@@ -643,6 +622,12 @@ namespace MauGam
 
 			ME_LOG_INFO(MauCor::LogCategory::Game, "New exposure: {}", curr);
 		}
+
+		if (input.IsActionExecuted("PrintInfo"))
+		{
+			OutputKeybinds();
+		}
+
 	}
 
 	void DemoScene::RenderDebugDemo() const
@@ -811,5 +796,31 @@ namespace MauGam
 
 			polRot += POL_ROT_SPEED * TIME.ElapsedSec();
 		}
+	}
+
+	void DemoScene::OutputKeybinds()
+	{
+		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "Demo Scene Info");
+		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "Key binds: ");
+		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "SPACE: Print this screen");
+
+		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F1: Profile");
+		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F2: Toggle light debug rendering");
+		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F3: Toggle light mode - point light only; dir light only, both");
+		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F4: Toggle shadows");
+		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F5: Lower light intensity");
+		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F6: Higher light intensity");
+		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F7: Toggle scene rotation");
+		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F8: Toggle Debug render mode");
+		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F9: Randomize light colours");
+		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F10: Toggle Cam settings");
+		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F11: Toggle Tone map\n");
+
+		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "E: Lower exposure (custom exposure mode)");
+		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "R: Higher exposure (custom exposure mode)\n");
+
+		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "WASD | ARROWS: Move Camera");
+		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "Mouse movement: Rotate Camera");
+		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "Left control: \"Sprint\"");
 	}
 }
