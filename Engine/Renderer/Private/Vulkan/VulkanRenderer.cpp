@@ -264,151 +264,19 @@ namespace MauRen
 			throw std::runtime_error("Failed to begin recording command buffer!");
 		}
 
-		
-		// Image memory barriers
-		auto& depth{ m_SwapChainContext.GetDepthImage(imageIndex) };
-		auto& colour{ m_SwapChainContext.GetColorImage(imageIndex) };
-
 		VulkanMeshManager::GetInstance().PreDraw(commandBuffer, m_GraphicsPipelineContext.GetForwardPipelineLayout(), 1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame], m_CurrentFrame);
 		VulkanLightManager::GetInstance().PreDraw(commandBuffer, m_GraphicsPipelineContext.GetForwardPipelineLayout(), 1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame], m_CurrentFrame);
 
+		// Image memory barriers
+		auto& depth{ m_SwapChainContext.GetDepthImage(m_CurrentFrame) };
+		auto& colour{ m_SwapChainContext.GetColorImage(m_CurrentFrame) };
 		auto& gBufferColor{ m_SwapChainContext.GetGBuffer(m_CurrentFrame).color };
 		auto& gBufferNormal{ m_SwapChainContext.GetGBuffer(m_CurrentFrame).normal };
 		auto& gBufferMetalRough{ m_SwapChainContext.GetGBuffer(m_CurrentFrame).metalnessRoughness };
 
-		// transfer before updating
+		WriteResourcesToDescriptor(imageIndex, true, commandBuffer);
 
-		// GBuffer Colour
-		if (VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL != gBufferColor.layout)
-		{
-			gBufferColor.TransitionImageLayout(commandBuffer,
-				VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-				VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT,
-				VK_ACCESS_2_SHADER_READ_BIT);
-		}
-
-		// GBuffer Normal
-		if (VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL != gBufferNormal.layout)
-		{
-			gBufferNormal.TransitionImageLayout(commandBuffer,
-				VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-				VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT,
-				VK_ACCESS_2_SHADER_READ_BIT);
-		}
-
-		// GBuffer Metal
-		if (VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL != gBufferMetalRough.layout)
-		{
-			gBufferMetalRough.TransitionImageLayout(commandBuffer,
-				VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-				VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT,
-				VK_ACCESS_2_SHADER_READ_BIT);
-		}
-
-		// Depth
-		if (VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_OPTIMAL != depth.layout)
-		{
-			depth.TransitionImageLayout(commandBuffer,
-				VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_OPTIMAL,
-				VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT,
-				VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT);
-		}
-
-		// Colour
-		if (VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL != colour.layout)
-		{
-			colour.TransitionImageLayout(commandBuffer,
-				VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-				VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT,
-				VK_ACCESS_2_SHADER_SAMPLED_READ_BIT);
-		}
-
-		{
-			std::vector<VkWriteDescriptorSet> descriptorWrites;
-			{
-				VkDescriptorImageInfo imageInfo = {};
-				imageInfo.imageView = gBufferColor.imageViews[0];
-				imageInfo.imageLayout = gBufferColor.layout;
-
-				VkWriteDescriptorSet descriptorWriteColor = {};
-				descriptorWriteColor.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-				descriptorWriteColor.dstSet = m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame];
-				descriptorWriteColor.dstBinding = 6;
-				descriptorWriteColor.dstArrayElement = 0;
-				descriptorWriteColor.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
-				descriptorWriteColor.descriptorCount = 1;
-				descriptorWriteColor.pImageInfo = &imageInfo;
-				descriptorWrites.emplace_back(descriptorWriteColor);
-			}
-
-			{
-				VkDescriptorImageInfo imageInfo = {};
-				imageInfo.imageView = gBufferNormal.imageViews[0];
-				imageInfo.imageLayout = gBufferNormal.layout;
-
-				VkWriteDescriptorSet descriptorWriteNormal = {};
-				descriptorWriteNormal.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-				descriptorWriteNormal.dstSet = m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame];
-				descriptorWriteNormal.dstBinding = 7;
-				descriptorWriteNormal.dstArrayElement = 0;
-				descriptorWriteNormal.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
-				descriptorWriteNormal.descriptorCount = 1;
-				descriptorWriteNormal.pImageInfo = &imageInfo;
-				descriptorWrites.emplace_back(descriptorWriteNormal);
-			}
-
-			{
-				VkDescriptorImageInfo imageInfo = {};
-				imageInfo.imageView = gBufferMetalRough.imageViews[0];
-				imageInfo.imageLayout = gBufferMetalRough.layout;
-
-				VkWriteDescriptorSet descriptorWriteMetal = {};
-				descriptorWriteMetal.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-				descriptorWriteMetal.dstSet = m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame];
-				descriptorWriteMetal.dstBinding = 8;
-				descriptorWriteMetal.dstArrayElement = 0;
-				descriptorWriteMetal.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
-				descriptorWriteMetal.descriptorCount = 1;
-				descriptorWriteMetal.pImageInfo = &imageInfo;
-				descriptorWrites.emplace_back(descriptorWriteMetal);
-			}
-
-			{
-				VkDescriptorImageInfo imageInfo = {};
-				imageInfo.imageView = depth.imageViews[0];
-				imageInfo.imageLayout = depth.layout;
-
-				VkWriteDescriptorSet descriptorWriteDepth = {};
-				descriptorWriteDepth.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-				descriptorWriteDepth.dstSet = m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame];
-				descriptorWriteDepth.dstBinding = 9;
-				descriptorWriteDepth.dstArrayElement = 0;
-				descriptorWriteDepth.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
-				descriptorWriteDepth.descriptorCount = 1;
-				descriptorWriteDepth.pImageInfo = &imageInfo;
-				descriptorWrites.emplace_back(descriptorWriteDepth);
-			}
-
-			{
-				VkDescriptorImageInfo imageInfo = {};
-				imageInfo.imageView = colour.imageViews[0];
-				imageInfo.imageLayout = colour.layout;
-
-				VkWriteDescriptorSet descriptorWriteColor = {};
-				descriptorWriteColor.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-				descriptorWriteColor.dstSet = m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame];
-				descriptorWriteColor.dstBinding = 10;
-				descriptorWriteColor.dstArrayElement = 0;
-				descriptorWriteColor.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
-				descriptorWriteColor.descriptorCount = 1;
-				descriptorWriteColor.pImageInfo = &imageInfo;
-				descriptorWrites.emplace_back(descriptorWriteColor);
-			}
-
-			vkUpdateDescriptorSets(deviceContext->GetLogicalDevice(), static_cast<uint32_t>(std::size(descriptorWrites)), descriptorWrites.data(), 0, nullptr);
-		}
-
-#pragma endregion
+		#pragma endregion
 #pragma region DEPTH_PREPASS
 		{
 			ME_PROFILE_SCOPE("Depth Prepass")
@@ -796,7 +664,7 @@ namespace MauRen
 			vkWaitForFences(deviceContext->GetLogicalDevice(), 1, &m_InFlightFences[m_CurrentFrame], VK_TRUE, UINT64_MAX);
 		}
 
-		uint32_t imageIndex;
+		uint32_t imageIndex{ UINT32_MAX };
 		{
 			ME_PROFILE_SCOPE("acquireNextImageResult")
 
@@ -1045,5 +913,157 @@ namespace MauRen
 		vkCmdBindIndexBuffer(commandBuffer, m_DebugIndexBuffer.buffer, offset, VK_INDEX_TYPE_UINT32);
 		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(m_DebugRenderer->m_IndexBuffer.size()), 1, 0, 0, 0);
 
+	}
+
+	void VulkanRenderer::WriteResourcesToDescriptor(uint32_t imageIndex, bool useBuffer, VkCommandBuffer buffer)
+	{
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+
+			if (not useBuffer)
+			{
+				buffer = m_CommandPoolManager.BeginSingleTimeCommands();
+			}
+
+			// Image memory barriers
+			// transfer before updating
+			auto& depth{ m_SwapChainContext.GetDepthImage(m_CurrentFrame) };
+			auto& colour{ m_SwapChainContext.GetColorImage(m_CurrentFrame) };
+			auto& gBufferColor{ m_SwapChainContext.GetGBuffer(m_CurrentFrame).color };
+			auto& gBufferNormal{ m_SwapChainContext.GetGBuffer(m_CurrentFrame).normal };
+			auto& gBufferMetalRough{ m_SwapChainContext.GetGBuffer(m_CurrentFrame).metalnessRoughness };
+
+			// GBuffer Colour
+			if (VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL != gBufferColor.layout)
+			{
+				gBufferColor.TransitionImageLayout(buffer,
+					VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+					VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT,
+					VK_ACCESS_2_SHADER_READ_BIT);
+			}
+
+			// GBuffer Normal
+			if (VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL != gBufferNormal.layout)
+			{
+				gBufferNormal.TransitionImageLayout(buffer,
+					VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+					VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT,
+					VK_ACCESS_2_SHADER_READ_BIT);
+			}
+
+			// GBuffer Metal
+			if (VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL != gBufferMetalRough.layout)
+			{
+				gBufferMetalRough.TransitionImageLayout(buffer,
+					VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+					VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT,
+					VK_ACCESS_2_SHADER_READ_BIT);
+			}
+
+			// Depth
+			if (VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_OPTIMAL != depth.layout)
+			{
+				depth.TransitionImageLayout(buffer,
+					VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_OPTIMAL,
+					VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT,
+					VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT);
+			}
+
+			// Colour
+			if (VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL != colour.layout)
+			{
+				colour.TransitionImageLayout(buffer,
+					VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+					VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT,
+					VK_ACCESS_2_SHADER_SAMPLED_READ_BIT);
+			}
+
+			if (not useBuffer)
+			{
+				m_CommandPoolManager.EndSingleTimeCommands(buffer);
+			}
+			{
+				std::vector<VkWriteDescriptorSet> descriptorWrites;
+				{
+					VkDescriptorImageInfo imageInfo = {};
+					imageInfo.imageView = gBufferColor.imageViews[0];
+					imageInfo.imageLayout = gBufferColor.layout;
+
+					VkWriteDescriptorSet descriptorWriteColor = {};
+					descriptorWriteColor.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+					descriptorWriteColor.dstSet = m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame];
+					descriptorWriteColor.dstBinding = 6;
+					descriptorWriteColor.dstArrayElement = 0;
+					descriptorWriteColor.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+					descriptorWriteColor.descriptorCount = 1;
+					descriptorWriteColor.pImageInfo = &imageInfo;
+					descriptorWrites.emplace_back(descriptorWriteColor);
+				}
+
+				{
+					VkDescriptorImageInfo imageInfo = {};
+					imageInfo.imageView = gBufferNormal.imageViews[0];
+					imageInfo.imageLayout = gBufferNormal.layout;
+
+					VkWriteDescriptorSet descriptorWriteNormal = {};
+					descriptorWriteNormal.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+					descriptorWriteNormal.dstSet = m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame];
+					descriptorWriteNormal.dstBinding = 7;
+					descriptorWriteNormal.dstArrayElement = 0;
+					descriptorWriteNormal.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+					descriptorWriteNormal.descriptorCount = 1;
+					descriptorWriteNormal.pImageInfo = &imageInfo;
+					descriptorWrites.emplace_back(descriptorWriteNormal);
+				}
+
+				{
+					VkDescriptorImageInfo imageInfo = {};
+					imageInfo.imageView = gBufferMetalRough.imageViews[0];
+					imageInfo.imageLayout = gBufferMetalRough.layout;
+
+					VkWriteDescriptorSet descriptorWriteMetal = {};
+					descriptorWriteMetal.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+					descriptorWriteMetal.dstSet = m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame];
+					descriptorWriteMetal.dstBinding = 8;
+					descriptorWriteMetal.dstArrayElement = 0;
+					descriptorWriteMetal.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+					descriptorWriteMetal.descriptorCount = 1;
+					descriptorWriteMetal.pImageInfo = &imageInfo;
+					descriptorWrites.emplace_back(descriptorWriteMetal);
+				}
+
+				{
+					VkDescriptorImageInfo imageInfo = {};
+					imageInfo.imageView = depth.imageViews[0];
+					imageInfo.imageLayout = depth.layout;
+
+					VkWriteDescriptorSet descriptorWriteDepth = {};
+					descriptorWriteDepth.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+					descriptorWriteDepth.dstSet = m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame];
+					descriptorWriteDepth.dstBinding = 9;
+					descriptorWriteDepth.dstArrayElement = 0;
+					descriptorWriteDepth.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+					descriptorWriteDepth.descriptorCount = 1;
+					descriptorWriteDepth.pImageInfo = &imageInfo;
+					descriptorWrites.emplace_back(descriptorWriteDepth);
+				}
+
+				{
+					VkDescriptorImageInfo imageInfo = {};
+					imageInfo.imageView = colour.imageViews[0];
+					imageInfo.imageLayout = colour.layout;
+
+					VkWriteDescriptorSet descriptorWriteColor = {};
+					descriptorWriteColor.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+					descriptorWriteColor.dstSet = m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame];
+					descriptorWriteColor.dstBinding = 10;
+					descriptorWriteColor.dstArrayElement = 0;
+					descriptorWriteColor.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+					descriptorWriteColor.descriptorCount = 1;
+					descriptorWriteColor.pImageInfo = &imageInfo;
+					descriptorWrites.emplace_back(descriptorWriteColor);
+				}
+
+				vkUpdateDescriptorSets(deviceContext->GetLogicalDevice(), static_cast<uint32_t>(std::size(descriptorWrites)), descriptorWrites.data(), 0, nullptr);
+		}
 	}
 }

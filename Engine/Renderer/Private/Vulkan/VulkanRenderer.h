@@ -162,6 +162,8 @@ namespace MauRen
 		void UpdateDebugVertexBuffer();
 
 		void RenderDebug(VkCommandBuffer commandBuffer, bool isPrepass);
+
+		void WriteResourcesToDescriptor(uint32_t imageIndex, bool useBuffer = false, VkCommandBuffer buffer = {});
 	};
 }
 

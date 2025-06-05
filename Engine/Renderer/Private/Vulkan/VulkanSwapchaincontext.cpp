@@ -35,22 +35,26 @@ namespace MauRen
 		{
 			image.Destroy();
 		}
+		m_DepthImages.clear();
 
 		for (auto& image : m_ColorImages)
 		{
 			image.Destroy();
 		}
+		m_ColorImages.clear();
 
 		// Img destroyed when swapchain is destroyed
 		for (auto& image : m_SwapChainImages)
 		{
 			image.DestroyAllImageViews();
 		}
+		m_SwapChainImages.clear();
 
 		for (auto& b : m_GBuffers)
 		{
 			b.Destroy();
 		}
+		m_GBuffers.clear();
 
 		VulkanUtils::SafeDestroy(deviceContext->GetLogicalDevice(), m_SwapChain, nullptr);
 	}
