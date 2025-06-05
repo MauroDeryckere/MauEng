@@ -14,6 +14,8 @@ namespace MauRen
 		VkDeviceMemory imageMemory{ VK_NULL_HANDLE };
 		VkFormat format{ VK_FORMAT_UNDEFINED };
 		VkImageLayout layout{ VK_IMAGE_LAYOUT_UNDEFINED };
+		VkPipelineStageFlags2 lastStage{ VK_PIPELINE_STAGE_2_NONE };
+		VkAccessFlags2 lastAccess{ VK_ACCESS_2_NONE };
 
 		// Currently only work with one view but may support multiple later
 		std::vector<VkImageView> imageViews{ };
@@ -29,9 +31,7 @@ namespace MauRen
 		// Transition image layout using pre-existing command buffer & memeory bariers.
 		void TransitionImageLayout( VkCommandBuffer cmdBuffer, 
 									VkImageLayout newLayout, 
-									VkPipelineStageFlags2 srcStageMask,
 									VkPipelineStageFlags2 dstStageMask,
-									VkAccessFlags2 srcAccessMask,
 									VkAccessFlags2 dstAccessMask);
 
 		void GenerateMipmaps(VulkanCommandPoolManager const& CmdPoolManager);
