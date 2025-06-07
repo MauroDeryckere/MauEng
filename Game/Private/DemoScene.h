@@ -32,7 +32,7 @@ namespace MauGam
 			COUNT
 		};
 
-		EDemo m_Demo{ EDemo::Sponza };
+		EDemo m_Demo{ EDemo::FlightHelmet };
 
 		ELightMode m_LightMode{ ELightMode::PointAndDir };
 

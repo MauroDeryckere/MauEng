@@ -22,9 +22,11 @@ namespace MauEng
 		bool castShadows{ true };
 
 		glm::vec3 lightColour{ 1.0f, 1.0f, 1.0f };
-		glm::vec3 direction_position{ -1.0f, -1.0f, -1.0f }; // Directional light direction or position for other lighttypes
+		// Directional light direction or position for other lighttypes
+		glm::vec3 direction_position{ -1.0f, -1.0f, -1.0f };
 
-		float intensity{ 1.0f };
+		// lumen for point light, lux for directional light
+		float lumen_lux{ 1.0f };
 
 		uint32_t lightID{ MauRen::INVALID_LIGHT_ID };
 

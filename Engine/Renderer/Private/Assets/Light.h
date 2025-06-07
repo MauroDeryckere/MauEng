@@ -18,7 +18,8 @@ namespace MauRen
 		uint32_t type{ 0 };
 
 		glm::vec3 color = glm::vec3(1.0f);
-		float intensity{ 1.0f };
+		// lux for directional light, lumen for point light
+		float lumen_lux{ 1.0f };
 
 		// Index into shadow texture array
 		uint32_t shadowMapIndex{ INVALID_SHADOW_MAP_ID };

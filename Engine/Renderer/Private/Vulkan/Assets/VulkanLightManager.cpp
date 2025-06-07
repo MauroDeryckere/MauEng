@@ -223,7 +223,7 @@ namespace MauRen
 		vulkanLight.type = static_cast<uint32_t>(light.type);
 		vulkanLight.direction_position = light.direction_position;
 		vulkanLight.color = light.lightColour;
-		vulkanLight.intensity = light.intensity;
+		vulkanLight.lumen_lux = light.lumen_lux;
 		vulkanLight.shadowMapIndex = shadowID;
 		vulkanLight.castsShadows = light.castShadows ? 1 : 0;
 		if (0 == vulkanLight.type)

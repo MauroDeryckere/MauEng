@@ -33,7 +33,7 @@ namespace MauGam
 				{
 					Entity enttDirLight{ CreateEntity() };
 					auto& cLight{ enttDirLight.AddComponent<CLight>() };
-					cLight.intensity = 2000.f;
+					cLight.lumen_lux = 2000.f;
 					cLight.direction_position = { 0, -1, -1 };
 					cLight.castShadows = false;
 					cLight.lightColour = { 1, 1, .9 };
@@ -63,7 +63,7 @@ namespace MauGam
 				{
 					Entity enttDirLight{ CreateEntity() };
 					auto& cLight{ enttDirLight.AddComponent<CLight>() };
-					cLight.intensity = 2000.f;
+					cLight.lumen_lux = 2000.f;
 					cLight.direction_position = { -1, -1, -.5 };
 					cLight.castShadows = false;
 					cLight.lightColour = { 1, 1, .9 };
@@ -73,7 +73,7 @@ namespace MauGam
 					Entity enttPLight{ CreateEntity() };
 					auto& cLight{ enttPLight.AddComponent<CLight>() };
 					cLight.type = ELightType::POINT;
-					cLight.intensity = 100'000.f;
+					cLight.lumen_lux = 1'000'000.f;
 					cLight.direction_position = { 10, 40, 10 };
 					cLight.lightColour = { 1, 0, 0 };
 				}
@@ -101,7 +101,7 @@ namespace MauGam
 				{
 					Entity enttDirLight{ CreateEntity() };
 					auto& cLight{ enttDirLight.AddComponent<CLight>() };
-					cLight.intensity = 20.f;
+					cLight.lumen_lux = 20.f;
 					cLight.direction_position = { 0, -1, 0 };
 					cLight.castShadows = false;
 					cLight.lightColour = { 1, 1, 1 };
@@ -111,7 +111,7 @@ namespace MauGam
 					Entity enttPLight{ CreateEntity() };
 					auto& cLight{ enttPLight.AddComponent<CLight>() };
 					cLight.type = ELightType::POINT;
-					cLight.intensity = 100'000.f;
+					cLight.lumen_lux = 1'000'000.f;
 					cLight.direction_position = { 50.f, 50, -20 };
 					cLight.lightColour = { 1, 0, 0 };
 				}
@@ -120,7 +120,7 @@ namespace MauGam
 					Entity enttPLight{ CreateEntity() };
 					auto& cLight{ enttPLight.AddComponent<CLight>() };
 					cLight.type = ELightType::POINT;
-					cLight.intensity = 100'000.f;
+					cLight.lumen_lux = 1'000'000.f;
 					cLight.direction_position = { -50.f, 50, -20 };
 					cLight.lightColour = { 0, 0, 1 };
 				}
@@ -163,7 +163,7 @@ namespace MauGam
 				{
 					Entity enttDirLight{ CreateEntity() };
 					auto& cLight{ enttDirLight.AddComponent<CLight>() };
-					cLight.intensity = 20'000.f;
+					cLight.lumen_lux = 20'000.f;
 					cLight.direction_position = { -1, -1, -1 };
 					cLight.castShadows = false;
 					cLight.lightColour = { 0.2f, 0.2f, 1 };
@@ -182,7 +182,7 @@ namespace MauGam
 				{
 					Entity enttDirLight{ CreateEntity() };
 					auto& cLight{ enttDirLight.AddComponent<CLight>() };
-					cLight.intensity = 500.f;
+					cLight.lumen_lux = 500.f;
 					cLight.direction_position = { -1, -1, .1f };
 					cLight.castShadows = false;
 					cLight.lightColour = { .7, .7, 1 };
@@ -262,7 +262,7 @@ namespace MauGam
 					{
 						glm::vec3 constexpr start{ 0, 100, 0 };
 						glm::vec3 const dir{ glm::normalize(l.direction_position) };
-						float const length{ std::clamp(l.intensity / 10000.f, 5.f, 40.f) };
+						float const length{ std::clamp(l.lumen_lux / 10000.f, 5.f, 40.f) };
 						glm::vec3 const end{ start + dir * length };
 
 						DEBUG_RENDERER.DrawArrow(start, end, {}, l.lightColour, 1.f);
@@ -271,7 +271,7 @@ namespace MauGam
 					}
 
 					case MauEng::ELightType::POINT:
-						DEBUG_RENDERER.DrawSphere(l.direction_position, std::clamp(l.intensity / 10000.f, 2.f, 20.f), {}, l.lightColour);
+						DEBUG_RENDERER.DrawSphere(l.direction_position, std::clamp(l.lumen_lux / 10000.f, 2.f, 20.f), {}, l.lightColour);
 						break;
 					default:
 						break;
@@ -368,8 +368,8 @@ namespace MauGam
 			auto view{ GetECSWorld().View<MauEng::CLight>() };
 			view.Each([LIGHT_ADJUSTMENT](MauEng::CLight& light)
 				{
-					light.intensity -= LIGHT_ADJUSTMENT;
-					ME_LOG_INFO(MauCor::LogCategory::Game, "Light intensity: {}", light.intensity);
+					light.lumen_lux -= LIGHT_ADJUSTMENT;
+					ME_LOG_INFO(MauCor::LogCategory::Game, "Light intensity: {}", light.lumen_lux);
 				});
 		}
 
@@ -388,8 +388,8 @@ namespace MauGam
 						break;
 
 					}
-					light.intensity += LIGHT_ADJUSTMENT;
-					ME_LOG_INFO(MauCor::LogCategory::Game, "Light intensity ({}): {}", lightTypeStr, light.intensity);
+					light.lumen_lux += LIGHT_ADJUSTMENT;
+					ME_LOG_INFO(MauCor::LogCategory::Game, "Light intensity ({}): {}", lightTypeStr, light.lumen_lux);
 				});
 		}
 

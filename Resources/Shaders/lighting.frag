@@ -35,7 +35,7 @@ struct Light
     uint type;
 
     vec3 color;
-    float intensity;
+    float lumen_lux;
 
     // Index into shadow texture array
     uint shadowMapIndex;
@@ -92,8 +92,7 @@ void main()
 	const float roughness = clamp(metal.g, 0.05, 1.0);
 	const float nSignZ = metal.a * 2.0 - 1.0;
 
-	// Reconstruct normal from packed norma
-    // TODO normal xy is off
+	// Reconstruct normal from packed normal
     const vec2 nXY = packedNormalXY * 2.0 - 1.0;
     const float nZ = nSignZ * sqrt(max(0.0, 1.0 - dot(nXY, nXY)));
     const vec3 normal = normalize(vec3(nXY, nZ));
@@ -113,19 +112,16 @@ void main()
         if (l.type == 0u)
         {
             vec4 lightSpacePos = l.viewProj * vec4(worldPos, 1.0f);
-
-           // outColor = vec4(vec3(lightSpacePos.xyz), 1.0f);
-            //outColor = vec4(vec3(lightSpacePos.w), 1.0f);
             lightSpacePos /= lightSpacePos.w;
 
-            vec3 shadowMapUV = vec3(lightSpacePos.xy * 0.5f + 0.5f, lightSpacePos.z);
+            const vec3 shadowMapUV = vec3(lightSpacePos.xy * 0.5f + 0.5f, lightSpacePos.z);
             //shadowMapUV.y = 1.0f - shadowMapUV.y;
 
-            float shadow = texture(sampler2DShadow(ShadowMapBuffer[nonuniformEXT(l.shadowMapIndex)], shadowMapSampler),
+            const float shadow = texture(sampler2DShadow(ShadowMapBuffer[nonuniformEXT(l.shadowMapIndex)], shadowMapSampler),
                                           shadowMapUV).r;
 
-            vec3 L = -normalize(l.direction_position);
-            vec3 irradiance = l.color * l.intensity;
+            const vec3 L = -normalize(l.direction_position);
+            const vec3 irradiance = l.color * l.lumen_lux;
 
             lighting += EvaluateBRDF(normal, viewDir, L,
                 albedo.rgb, metalness, roughness,
@@ -137,12 +133,16 @@ void main()
         {
             float shadowFactor = 1.0f;
 
-            vec3 lightVec = l.direction_position - worldPos;
+            const vec3 lightVec = l.direction_position - worldPos;
             float dist = length(lightVec);
-            vec3  L = lightVec / dist;
+            const vec3 L = lightVec / dist;
 
-            float attenuation = 1.0 / (dist * dist + 0.0001);
-            vec3  irradiance = l.color * l.intensity * attenuation;
+            // Convert lumen to luminous intensity (cd) --> I = Phi / 4 * PI
+            const float intensity = l.lumen_lux / (4.0f * gPI);
+            const float attenuation = 1.0 / (dist * dist + 0.0001);
+
+            // Calculate illuminance (lux) using attenuation --> E = I / (r * r)
+            const vec3 irradiance = l.color * intensity * attenuation;
 
             lighting += EvaluateBRDF(normal, viewDir, L,
                 albedo.rgb, metalness, roughness,
