@@ -72,11 +72,12 @@ vec3 EvaluateBRDF(vec3 N, vec3 V, vec3 L, vec3 albedo, float metalness, float ro
 
 void main()
 {
-    const vec4 albedo = texture(sampler2D(gAlbedo, globalSampler), fragUV);
-    const vec2 packedNormalXY = texture(sampler2D(gNormal, globalSampler), fragUV).xy;
-    const vec4 metal = texture(sampler2D(gMetal, globalSampler), fragUV);
-
     const ivec2 pixelCoords = ivec2(gl_FragCoord.xy);
+
+    const vec4 albedo = texture(sampler2D(gAlbedo, globalSampler), fragUV);
+    const vec4 metal = texture(sampler2D(gMetal, globalSampler), fragUV);
+      
+    const vec2 packedNormalXY = texture(sampler2D(gNormal, globalSampler), fragUV).xy;
     const float depth = texelFetch(
         sampler2D(gDepth, globalSampler), 
         pixelCoords, 0).r;
@@ -91,7 +92,8 @@ void main()
 	const float roughness = clamp(metal.g, 0.05, 1.0);
 	const float nSignZ = metal.a * 2.0 - 1.0;
 
-	// Reconstruct normal from packed normal
+	// Reconstruct normal from packed norma
+    // TODO normal xy is off
     const vec2 nXY = packedNormalXY * 2.0 - 1.0;
     const float nZ = nSignZ * sqrt(max(0.0, 1.0 - dot(nXY, nXY)));
     const vec3 normal = normalize(vec3(nXY, nZ));
@@ -180,8 +182,11 @@ void main()
     //float facing = dot(normal, viewDir);
     //outColor = vec4(vec3(facing * 0.5 + 0.5), 1.0);
 
-    //Normal debugging
-    //outColor = vec4(normal * 0.5 + 0.5, 1.0);
+    // Normal debugging
+    //outColor = vec4(vec3(normal.x, normal.x, normal.x), 1.0);
+    //outColor = vec4(vec3(normal.y, normal.y, normal.y), 1.0);
+    //outColor = vec4(vec3(normal.z, normal.z, normal.z), 1.0);
+    //outColor = vec4(normal, 1.0);
 }
 
 vec3 GetWorldPosFromDepth(float depth)

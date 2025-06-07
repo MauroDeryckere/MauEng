@@ -37,12 +37,16 @@ void main()
     const vec4 normalTex = texture(sampler2D(TextureBuffer[nonuniformEXT(material.normalTextureID)], globalSampler), fragTexCoord);
     const vec3 metalRough = texture(sampler2D(TextureBuffer[nonuniformEXT(material.metalnessTextureID)], globalSampler), fragTexCoord).rgb;
 
-    const vec3 bitangent = cross(inNormal, inTangent.xyz) * inTangent.w;
-    const vec3 sampledNormal = normalize(normalTex.xyz * 2.0 - 1.0);
-    const mat3 TBN = mat3(normalize(inTangent.xyz), normalize(bitangent), inNormal);
-    const vec3 n = normalize(TBN * sampledNormal);
+    vec3 N = normalize(inNormal);
+    vec3 T = normalize(inTangent.xyz);
+    vec3 B = normalize(cross(N, T) * inTangent.w);
+    // Could also input bitangent if necessary (speed things up)
 
-    float nzSign = n.z < 0.0 ? 0.0 : 1.0;
+    mat3 TBN = mat3(T, B, N);
+    vec3 sampledNormal = normalize(normalTex.xyz * 2.0 - 1.0);
+    vec3 n = normalize(TBN * sampledNormal);
+
+    float nzSign = (n.z < 0.0 ? 0.0 : 1.0);
     vec3 mr = metalRough.rgb;
 
     outColor = vec4(albedo, 1.0);

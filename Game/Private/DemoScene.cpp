@@ -34,7 +34,7 @@ namespace MauGam
 					Entity enttDirLight{ CreateEntity() };
 					auto& cLight{ enttDirLight.AddComponent<CLight>() };
 					cLight.intensity = 2000.f;
-					cLight.direction_position = { 0, -1, 0 };
+					cLight.direction_position = { 0, -1, -1 };
 					cLight.castShadows = false;
 					cLight.lightColour = { 1, 1, .9 };
 				}

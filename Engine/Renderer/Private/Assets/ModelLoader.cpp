@@ -59,19 +59,48 @@ namespace MauRen
 		uint32_t const vertexOffset{ static_cast<uint32_t>(model.vertices.size()) };
 		uint32_t const indexOffset{ static_cast<uint32_t>(model.indices.size()) };
 
+		glm::mat4 const glmTransform{ glm::transpose(glm::mat4{ transform.a1 }) };
+		glm::mat3 const normalMatrix{ glm::transpose(glm::inverse(glm::mat3{ glmTransform })) };
 		for (unsigned j{ 0 }; j < mesh->mNumVertices; ++j)
 		{
 			aiVector3D const transformedPos{ transform * mesh->mVertices[j] };
 			glm::vec3 const position{ transformedPos.x, transformedPos.y, transformedPos.z };
 
-			glm::vec3 const normal{
-				mesh->HasNormals()
-				? glm::vec3{ mesh->mNormals[j].x, mesh->mNormals[j].y, mesh->mNormals[j].z }
-				: glm::vec3{ 0.0f } };
+			ME_ASSERT(mesh->HasTangentsAndBitangents());
+			ME_ASSERT(mesh->HasNormals());
 
-			glm::vec4 const tangent{ mesh->HasTangentsAndBitangents()
-				? glm::vec4{ mesh->mTangents[j].x, mesh->mTangents[j].y, mesh->mTangents[j].z, 1.0f }
-				: glm::vec4{ 0.0f } };
+			glm::vec3 const biTangent{
+				glm::normalize(
+					normalMatrix * 
+					glm::vec3
+					{
+						mesh->mBitangents[j].x,
+						mesh->mBitangents[j].y,
+						mesh->mBitangents[j].z
+					} 
+				) };
+			glm::vec3 const tangent{
+				glm::normalize(
+					normalMatrix * 
+					glm::vec3
+					{
+						mesh->mTangents[j].x,
+						mesh->mTangents[j].y,
+						mesh->mTangents[j].z
+					}
+				) };
+			glm::vec3 const normal{
+				glm::normalize(
+					normalMatrix * 
+					glm::vec3
+					{
+						mesh->mNormals[j].x,
+						mesh->mNormals[j].y,
+						mesh->mNormals[j].z
+					} 
+				) };
+
+			float const handedness{ (glm::dot(glm::cross(normal, tangent), biTangent) < 0.0f) ? -1.0f : 1.0f };
 
 			glm::vec2 texCoord{ glm::vec2(0.0f) };
 			if (mesh->HasTextureCoords(0))
@@ -87,7 +116,7 @@ namespace MauRen
 			Vertex vert{
 				.position = position,
 				.normal = normal,
-				.tangent = tangent,
+				.tangent = glm::vec4{ tangent, handedness },
 				.texCoord = texCoord,
 			};
 
