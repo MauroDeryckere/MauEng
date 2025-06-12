@@ -253,8 +253,6 @@ namespace MauRen
 	{
 		ME_PROFILE_FUNCTION()
 #pragma region PRE_DRAW
-		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
-
 		VkCommandBufferBeginInfo beginInfo{};
 		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT; // Optional
@@ -266,9 +264,7 @@ namespace MauRen
 			throw std::runtime_error("Failed to begin recording command buffer!");
 		}
 
-		VulkanMeshManager::GetInstance().PreDraw(commandBuffer, m_GraphicsPipelineContext.GetForwardPipelineLayout(), 1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame], m_CurrentFrame);
-		VulkanLightManager::GetInstance().PreDraw(commandBuffer, m_GraphicsPipelineContext.GetForwardPipelineLayout(), 1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame], m_CurrentFrame);
-
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 
 		// Image memory barriers
 		WriteResourcesToDescriptor(imageIndex, true, commandBuffer);
@@ -657,6 +653,19 @@ namespace MauRen
 		}
 	}
 
+	void VulkanRenderer::PreDraw(MauEng::Camera const& cam, uint32_t image)
+	{
+		UpdateUniformBuffer(m_CurrentFrame, cam.GetViewMatrix(), cam.GetProjectionMatrix());
+		UpdateCamSettings(cam, m_CurrentFrame);
+		UpdateDebugVertexBuffer();
+
+		VulkanMeshManager::GetInstance().PreDraw(1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame], m_CurrentFrame);
+		VulkanLightManager::GetInstance().PreDraw(1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame], m_CurrentFrame);
+
+		//TODO descriptor sets! 
+
+	}
+
 	void VulkanRenderer::DrawFrame(MauEng::Camera const& cam)
 	{
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
@@ -692,9 +701,8 @@ namespace MauRen
 			vkResetFences(deviceContext->GetLogicalDevice(), 1, &m_InFlightFences[m_CurrentFrame]);
 		}
 
-		UpdateUniformBuffer(m_CurrentFrame, cam.GetViewMatrix(), cam.GetProjectionMatrix());
-		UpdateCamSettings(cam, m_CurrentFrame);
-		UpdateDebugVertexBuffer();
+		PreDraw(cam, imageIndex);
+
 		{
 			ME_PROFILE_SCOPE("Reset command buffer")
 			vkResetCommandBuffer(m_CommandPoolManager.GetCommandBuffer(m_CurrentFrame), 0);
@@ -930,6 +938,10 @@ namespace MauRen
 			// Image memory barriers
 			// transfer before updating
 			auto& depth{ m_SwapChainContext.GetDepthImage(m_CurrentFrame) };
+			auto& colour{ m_SwapChainContext.GetColorImage(m_CurrentFrame) };
+			auto& gBufferColor{ m_SwapChainContext.GetGBuffer(m_CurrentFrame).color };
+			auto& gBufferNormal{ m_SwapChainContext.GetGBuffer(m_CurrentFrame).normal };
+			auto& gBufferMetalRough{ m_SwapChainContext.GetGBuffer(m_CurrentFrame).metalnessRoughness };
 
 			// Depth
 			if (VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_OPTIMAL != depth.layout)
@@ -944,27 +956,110 @@ namespace MauRen
 			{
 				m_CommandPoolManager.EndSingleTimeCommands(buffer);
 			}
+
+			std::vector<VkWriteDescriptorSet> descriptorWrites;
 			{
-				std::vector<VkWriteDescriptorSet> descriptorWrites;
+				VkDescriptorImageInfo imageInfo = {};
+				imageInfo.imageView = gBufferColor.imageViews[0];
+				imageInfo.imageLayout = gBufferColor.layout;
 
-				// This one is necessary to prevent errors (?à)
-				{
-					VkDescriptorImageInfo imageInfo = {};
-					imageInfo.imageView = depth.imageViews[0];
-					imageInfo.imageLayout = depth.layout;
+				VkWriteDescriptorSet descriptorWriteColor = {};
+				descriptorWriteColor.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+				descriptorWriteColor.dstSet = m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame];
+				descriptorWriteColor.dstBinding = 6;
+				descriptorWriteColor.dstArrayElement = 0;
+				descriptorWriteColor.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+				descriptorWriteColor.descriptorCount = 1;
+				descriptorWriteColor.pImageInfo = &imageInfo;
+				descriptorWrites.emplace_back(descriptorWriteColor);
+			}
 
-					VkWriteDescriptorSet descriptorWriteDepth = {};
-					descriptorWriteDepth.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-					descriptorWriteDepth.dstSet = m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame];
-					descriptorWriteDepth.dstBinding = 9;
-					descriptorWriteDepth.dstArrayElement = 0;
-					descriptorWriteDepth.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
-					descriptorWriteDepth.descriptorCount = 1;
-					descriptorWriteDepth.pImageInfo = &imageInfo;
-					descriptorWrites.emplace_back(descriptorWriteDepth);
-				}
+			{
+				VkDescriptorImageInfo imageInfo = {};
+				imageInfo.imageView = gBufferNormal.imageViews[0];
+				imageInfo.imageLayout = gBufferNormal.layout;
 
+				VkWriteDescriptorSet descriptorWriteNormal = {};
+				descriptorWriteNormal.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+				descriptorWriteNormal.dstSet = m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame];
+				descriptorWriteNormal.dstBinding = 7;
+				descriptorWriteNormal.dstArrayElement = 0;
+				descriptorWriteNormal.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+				descriptorWriteNormal.descriptorCount = 1;
+				descriptorWriteNormal.pImageInfo = &imageInfo;
+				descriptorWrites.emplace_back(descriptorWriteNormal);
+			}
+
+			{
+				VkDescriptorImageInfo imageInfo = {};
+				imageInfo.imageView = gBufferMetalRough.imageViews[0];
+				imageInfo.imageLayout = gBufferMetalRough.layout;
+
+				VkWriteDescriptorSet descriptorWriteMetal = {};
+				descriptorWriteMetal.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+				descriptorWriteMetal.dstSet = m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame];
+				descriptorWriteMetal.dstBinding = 8;
+				descriptorWriteMetal.dstArrayElement = 0;
+				descriptorWriteMetal.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+				descriptorWriteMetal.descriptorCount = 1;
+				descriptorWriteMetal.pImageInfo = &imageInfo;
+				descriptorWrites.emplace_back(descriptorWriteMetal);
+			}
+
+			{
+				VkDescriptorImageInfo imageInfo = {};
+				imageInfo.imageView = depth.imageViews[0];
+				imageInfo.imageLayout = depth.layout;
+
+				VkWriteDescriptorSet descriptorWriteDepth = {};
+				descriptorWriteDepth.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+				descriptorWriteDepth.dstSet = m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame];
+				descriptorWriteDepth.dstBinding = 9;
+				descriptorWriteDepth.dstArrayElement = 0;
+				descriptorWriteDepth.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+				descriptorWriteDepth.descriptorCount = 1;
+				descriptorWriteDepth.pImageInfo = &imageInfo;
+				descriptorWrites.emplace_back(descriptorWriteDepth);
+			}
+
+			{
+				VkDescriptorImageInfo imageInfo = {};
+				imageInfo.imageView = colour.imageViews[0];
+				imageInfo.imageLayout = colour.layout;
+
+				VkWriteDescriptorSet descriptorWriteColor = {};
+				descriptorWriteColor.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+				descriptorWriteColor.dstSet = m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame];
+				descriptorWriteColor.dstBinding = 10;
+				descriptorWriteColor.dstArrayElement = 0;
+				descriptorWriteColor.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+				descriptorWriteColor.descriptorCount = 1;
+				descriptorWriteColor.pImageInfo = &imageInfo;
+				descriptorWrites.emplace_back(descriptorWriteColor);
+			}
+
+			{
+				//std::vector<VkWriteDescriptorSet> descriptorWrites;
+
+				//// This one is necessary to prevent errors (?à)
+				//{
+				//	VkDescriptorImageInfo imageInfo = {};
+				//	imageInfo.imageView = depth.imageViews[0];
+				//	imageInfo.imageLayout = depth.layout;
+
+				//	VkWriteDescriptorSet descriptorWriteDepth = {};
+				//	descriptorWriteDepth.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+				//	descriptorWriteDepth.dstSet = m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame];
+				//	descriptorWriteDepth.dstBinding = 9;
+				//	descriptorWriteDepth.dstArrayElement = 0;
+				//	descriptorWriteDepth.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+				//	descriptorWriteDepth.descriptorCount = 1;
+				//	descriptorWriteDepth.pImageInfo = &imageInfo;
+				//	descriptorWrites.emplace_back(descriptorWriteDepth);
+				//}
+
+			//TODO needs to haoopen before cilland byffer recording
 				vkUpdateDescriptorSets(deviceContext->GetLogicalDevice(), static_cast<uint32_t>(std::size(descriptorWrites)), descriptorWrites.data(), 0, nullptr);
-		}
+			}
 	}
 }

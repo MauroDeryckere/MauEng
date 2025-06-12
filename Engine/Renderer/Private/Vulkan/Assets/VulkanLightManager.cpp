@@ -159,7 +159,7 @@ namespace MauRen
 		}
 	}
 
-	void VulkanLightManager::PreDraw(VkCommandBuffer commandBuffer, VkPipelineLayout layout, uint32_t setCount, VkDescriptorSet const* pDescriptorSets, uint32_t frame)
+	void VulkanLightManager::PreDraw(uint32_t setCount, VkDescriptorSet const* pDescriptorSets, uint32_t frame)
 	{
 		{
 			ME_PROFILE_SCOPE("Light data update - buffer")

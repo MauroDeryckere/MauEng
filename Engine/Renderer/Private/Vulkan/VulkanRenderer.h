@@ -150,6 +150,9 @@ namespace MauRen
 
 		void CreateSyncObjects();
 
+		// Before command buffer recording, update descriptor set, ...
+		void PreDraw(MauEng::Camera const& cam, uint32_t image);
+
 		void DrawFrame(MauEng::Camera const& cam);
 		void RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex, glm::mat4 const& viewProj);
 		void UpdateUniformBuffer(uint32_t currentImage, glm::mat4 const& view, glm::mat4 const& proj);

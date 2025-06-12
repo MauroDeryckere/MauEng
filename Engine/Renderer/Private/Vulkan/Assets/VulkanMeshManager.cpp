@@ -119,7 +119,7 @@ namespace MauRen
 		throw std::runtime_error("Mesh not found! ");
 	}
 
-	void VulkanMeshManager::PreDraw(VkCommandBuffer commandBuffer, VkPipelineLayout layout, uint32_t setCount, VkDescriptorSet const* pDescriptorSets, uint32_t frame)
+	void VulkanMeshManager::PreDraw(uint32_t setCount, VkDescriptorSet const* pDescriptorSets, uint32_t frame)
 	{
 		{
 			ME_PROFILE_SCOPE("Mesh instance data update - buffer")
