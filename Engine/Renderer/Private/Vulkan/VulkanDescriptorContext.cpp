@@ -180,7 +180,7 @@ namespace MauRen
 		GBufferNormalBinding.binding = GBUFFER_NORMAL_SLOT;
 		GBufferNormalBinding.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
 		GBufferNormalBinding.descriptorCount = 1;
-		GBufferNormalBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+		GBufferNormalBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 		GBufferNormalBinding.pImmutableSamplers = nullptr;
 
 		VkDescriptorSetLayoutBinding GBufferMetalRoughBinding{};

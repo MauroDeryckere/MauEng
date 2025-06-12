@@ -384,8 +384,8 @@ namespace MauRen
 			(
 				buffer,
 				VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-				VK_PIPELINE_STAGE_2_NONE,
-				VK_ACCESS_2_NONE
+				VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT,
+				VK_ACCESS_2_SHADER_READ_BIT
 			);
 
 			g.normal = VulkanImage
@@ -405,8 +405,8 @@ namespace MauRen
 			(
 				buffer,
 				VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-				VK_PIPELINE_STAGE_2_NONE,
-				VK_ACCESS_2_NONE
+				VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT,
+				VK_ACCESS_2_SHADER_READ_BIT
 			);
 
 			g.metalnessRoughness = VulkanImage
@@ -426,8 +426,8 @@ namespace MauRen
 			(
 				buffer,
 				VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-				VK_PIPELINE_STAGE_2_NONE,
-				VK_ACCESS_2_NONE
+				VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT,
+				VK_ACCESS_2_SHADER_READ_BIT
 			);
 
 			m_GBuffers.emplace_back(g);
@@ -442,6 +442,7 @@ namespace MauRen
 				VkDescriptorImageInfo imageInfo = {};
 				imageInfo.imageView = m_GBuffers[i].color.imageViews[0];
 				imageInfo.imageLayout = m_GBuffers[i].color.layout;
+				imageInfo.sampler = nullptr;
 
 				VkWriteDescriptorSet descriptorWriteColor = {};
 				descriptorWriteColor.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -458,6 +459,7 @@ namespace MauRen
 				VkDescriptorImageInfo imageInfo = {};
 				imageInfo.imageView = m_GBuffers[i].normal.imageViews[0];
 				imageInfo.imageLayout = m_GBuffers[i].normal.layout;
+				imageInfo.sampler = nullptr;
 
 				VkWriteDescriptorSet descriptorWriteNormal = {};
 				descriptorWriteNormal.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -474,6 +476,7 @@ namespace MauRen
 				VkDescriptorImageInfo imageInfo = {};
 				imageInfo.imageView = m_GBuffers[i].metalnessRoughness.imageViews[0];
 				imageInfo.imageLayout = m_GBuffers[i].metalnessRoughness.layout;
+				imageInfo.sampler = nullptr;
 
 				VkWriteDescriptorSet descriptorWriteMetal = {};
 				descriptorWriteMetal.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;

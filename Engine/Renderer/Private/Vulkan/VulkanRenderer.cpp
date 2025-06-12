@@ -334,7 +334,6 @@ namespace MauRen
 #pragma endregion
 #pragma region GBUFFER_PASS
 		{
-
 			ME_PROFILE_SCOPE("GBuffer pass")
 			//These dont happen in release?
 
@@ -435,8 +434,8 @@ namespace MauRen
 			{
 				colour.TransitionImageLayout(commandBuffer,
 					VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-					VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT,
-					VK_ACCESS_2_NONE);
+					VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
+					VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT);
 			}
 
 			// GBuffer Colour
@@ -444,16 +443,16 @@ namespace MauRen
 			{
 				gBufferColor.TransitionImageLayout(commandBuffer,
 					VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-					VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT,
-					VK_ACCESS_2_NONE);
+					VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT,
+					VK_ACCESS_2_SHADER_READ_BIT);
 			}
 
 			if (VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL != gBufferNormal.layout)
 			{
 				gBufferNormal.TransitionImageLayout(commandBuffer,
 					VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-					VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT,
-					VK_ACCESS_2_NONE);
+					VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT,
+					VK_ACCESS_2_SHADER_READ_BIT);
 			}
 
 
@@ -461,8 +460,8 @@ namespace MauRen
 			{
 				gBufferMetalRough.TransitionImageLayout(commandBuffer,
 					VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-					VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT,
-					VK_ACCESS_2_NONE);
+					VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT,
+					VK_ACCESS_2_SHADER_READ_BIT);
 			}
 
 			// Depth
@@ -470,8 +469,8 @@ namespace MauRen
 			{
 				depth.TransitionImageLayout(commandBuffer,
 					VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_OPTIMAL,
-					VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT,
-					VK_ACCESS_2_NONE);
+					VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT,
+					VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT);
 			}
 
 			VkRenderingAttachmentInfo colorAttachment{};

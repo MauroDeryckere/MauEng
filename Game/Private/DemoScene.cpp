@@ -643,16 +643,16 @@ namespace MauGam
 									m_DebugRenderMode == EDebugRenderMode::DRAW_RECTS };
 		bool const DRAW_TRIANGLES{	m_DebugRenderMode == EDebugRenderMode::ALL or
 									m_DebugRenderMode == EDebugRenderMode::DRAW_TRIANGLES };
-		bool const DRAW_ARROWS{	 m_DebugRenderMode == EDebugRenderMode::ALL or
-								 m_DebugRenderMode == EDebugRenderMode::DRAW_ARROWS };
-		bool const DRAW_CIRCLES{ m_DebugRenderMode == EDebugRenderMode::ALL or
-								 m_DebugRenderMode == EDebugRenderMode::DRAW_CIRCLES };
-		bool const DRAW_SPHERES{ m_DebugRenderMode == EDebugRenderMode::ALL or
-								 m_DebugRenderMode == EDebugRenderMode::DRAW_SPHERES };
-		bool const DRAW_CYL{	 m_DebugRenderMode == EDebugRenderMode::ALL or
-								 m_DebugRenderMode == EDebugRenderMode::DRAW_CYL };
-		bool const DRAW_POLY{	 m_DebugRenderMode == EDebugRenderMode::ALL or
-								 m_DebugRenderMode == EDebugRenderMode::DRAW_POLY };
+		bool const DRAW_ARROWS{		m_DebugRenderMode == EDebugRenderMode::ALL or
+									m_DebugRenderMode == EDebugRenderMode::DRAW_ARROWS };
+		bool const DRAW_CIRCLES{	m_DebugRenderMode == EDebugRenderMode::ALL or
+									m_DebugRenderMode == EDebugRenderMode::DRAW_CIRCLES };
+		bool const DRAW_SPHERES{	m_DebugRenderMode == EDebugRenderMode::ALL or
+									m_DebugRenderMode == EDebugRenderMode::DRAW_SPHERES };
+		bool const DRAW_CYL{		m_DebugRenderMode == EDebugRenderMode::ALL or
+									m_DebugRenderMode == EDebugRenderMode::DRAW_CYL };
+		bool const DRAW_POLY{		m_DebugRenderMode == EDebugRenderMode::ALL or
+									m_DebugRenderMode == EDebugRenderMode::DRAW_POLY };
 
 		// Demo debug drawing tests
 		if (DRAW_LINES)
