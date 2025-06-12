@@ -7,6 +7,8 @@
 
 namespace MauRen
 {
+	class VulkanDescriptorContext;
+
 	struct SwapChainSupportDetails final
 	{
 		VkSurfaceCapabilitiesKHR capabilities;
@@ -47,11 +49,12 @@ namespace MauRen
 		VulkanSwapchainContext() = default;
 		~VulkanSwapchainContext() = default;
 
+		void PreInitialize(VulkanSurfaceContext const* pVulkanSurfaceContext);
 		// Initialize the swapchain
-		void Initialize(SDL_Window* pWindow, VulkanSurfaceContext const* pVulkanSurfaceContext);
+		void Initialize(SDL_Window* pWindow, VulkanSurfaceContext const* pVulkanSurfaceContext, VulkanCommandPoolManager& commandPoolManager, VulkanDescriptorContext& descriptorContext);
 
 		// Reecreate the entire swapchain, this will destroy the previous swapchain first
-		void ReCreate(SDL_Window* pWindow, VulkanGraphicsPipelineContext const* pGraphicsPipeline, VulkanSurfaceContext const* pVulkanSurfaceContext);
+		void ReCreate(SDL_Window* pWindow, VulkanGraphicsPipelineContext const* pGraphicsPipeline, VulkanSurfaceContext const* pVulkanSurfaceContext, VulkanCommandPoolManager& commandPoolManager, VulkanDescriptorContext& descriptorContext);
 
 		void Destroy();
 
@@ -65,9 +68,11 @@ namespace MauRen
 
 		[[nodiscard]] VulkanImage const& GetColorImage(uint32_t frame) const noexcept { return m_ColorImages[frame]; }
 		[[nodiscard]] VulkanImage& GetColorImage(uint32_t frame) noexcept { return m_ColorImages[frame]; }
+		[[nodiscard]] VkFormat GetColorFormat() const noexcept { return m_ColorFormat; }
 
 		[[nodiscard]] VulkanImage const& GetDepthImage(uint32_t frame) const noexcept { return m_DepthImages[frame]; }
 		[[nodiscard]] VulkanImage& GetDepthImage(uint32_t frame) noexcept { return m_DepthImages[frame]; }
+		[[nodiscard]] VkFormat GetDepthFormat() const noexcept { return m_DepthFormat; }
 
 		[[nodiscard]] GBuffer const& GetGBuffer(uint32_t frame) const noexcept { return m_GBuffers[frame]; }
 		[[nodiscard]] GBuffer& GetGBuffer(uint32_t frame) noexcept { return m_GBuffers[frame]; }
@@ -83,6 +88,9 @@ namespace MauRen
 		VkSwapchainKHR m_SwapChain{ VK_NULL_HANDLE };
 
 		VkFormat m_SwapChainImageFormat{};
+		VkFormat m_DepthFormat{};
+		VkFormat m_ColorFormat{};
+
 		VkExtent2D m_SwapChainExtent{};
 
 		// final presentation imgs
@@ -103,10 +111,10 @@ namespace MauRen
 		static [[nodiscard]] VkPresentModeKHR ChooseSwapPresentMode(std::vector<VkPresentModeKHR> const& availablePresentModes);
 		static [[nodiscard]] VkExtent2D ChooseSwapExtent(SDL_Window* pWindow, VkSurfaceCapabilitiesKHR const& capabilities);
 
-		void CreateColorResources();
-		void CreateDepthResources();
+		void CreateColorResources(VulkanCommandPoolManager& commandPoolManager, VulkanDescriptorContext& descriptorContext);
+		void CreateDepthResources(VulkanCommandPoolManager& commandPoolManager, VulkanDescriptorContext& descriptorContext);
 
-		void CreateGBuffers();
+		void CreateGBuffers(VulkanCommandPoolManager& commandPoolManager, VulkanDescriptorContext& descriptorContext);
 	};
 }
 

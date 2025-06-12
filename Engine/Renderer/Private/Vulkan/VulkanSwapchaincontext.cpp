@@ -1,4 +1,6 @@
 #include "RendererPCH.h"
+#include "VulkanCommandPoolManager.h"
+#include "VulkanDescriptorContext.h"
 
 #include "VulkanSwapchainContext.h"
 #include "VulkanSurfaceContext.h"
@@ -7,24 +9,36 @@
 
 namespace MauRen
 {
-	void VulkanSwapchainContext::Initialize(SDL_Window* pWindow, VulkanSurfaceContext const * pVulkanSurfaceContext)
+	void VulkanSwapchainContext::PreInitialize(VulkanSurfaceContext const* pVulkanSurfaceContext)
+	{
+		m_ColorFormat = VK_FORMAT_R32G32B32A32_SFLOAT;
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+		m_DepthFormat = deviceContext->FindDepthFormat();
+
+		SwapChainSupportDetails const swapChainSupport{ QuerySwapchainSupport(deviceContext->GetPhysicalDevice(), pVulkanSurfaceContext->GetWindowSurface()) };
+		auto format = ChooseSwapSurfaceFormat(swapChainSupport.formats);
+		m_SwapChainImageFormat = format.format;
+	}
+
+	void VulkanSwapchainContext::Initialize(SDL_Window* pWindow, VulkanSurfaceContext const * pVulkanSurfaceContext, VulkanCommandPoolManager& commandPoolManager, VulkanDescriptorContext& descriptorContext)
 	{
 		CreateSwapchain(pWindow, pVulkanSurfaceContext);
 		CreateImageViews();
-		CreateColorResources();
-		CreateDepthResources();
-		CreateGBuffers();
+
+		CreateColorResources(commandPoolManager, descriptorContext);
+		CreateDepthResources(commandPoolManager, descriptorContext);
+		CreateGBuffers(commandPoolManager, descriptorContext);
 	}
 
-	void VulkanSwapchainContext::ReCreate(SDL_Window* pWindow, VulkanGraphicsPipelineContext const* pGraphicsPipeline, VulkanSurfaceContext const* pVulkanSurfaceContext)
+	void VulkanSwapchainContext::ReCreate(SDL_Window* pWindow, VulkanGraphicsPipelineContext const* pGraphicsPipeline, VulkanSurfaceContext const* pVulkanSurfaceContext, VulkanCommandPoolManager& commandPoolManager, VulkanDescriptorContext& descriptorContext)
 	{
 		Destroy();
 
 		CreateSwapchain(pWindow, pVulkanSurfaceContext);
 		CreateImageViews();
-		CreateColorResources();
-		CreateDepthResources();
-		CreateGBuffers();
+		CreateColorResources(commandPoolManager , descriptorContext);
+		CreateDepthResources(commandPoolManager, descriptorContext);
+		CreateGBuffers(commandPoolManager, descriptorContext);
 	}	
 
 	void VulkanSwapchainContext::Destroy()
@@ -234,16 +248,17 @@ namespace MauRen
 		return actualExtent;
 	}
 
-	void VulkanSwapchainContext::CreateColorResources()
+	void VulkanSwapchainContext::CreateColorResources(VulkanCommandPoolManager& commandPoolManager, VulkanDescriptorContext& descriptorContext)
 	{
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
-		VkFormat const colorFormat{ VK_FORMAT_R32G32B32A32_SFLOAT };
+
+		auto buffer{ commandPoolManager.BeginSingleTimeCommands() };
 
 		for (size_t i{ 0 }; i< MAX_FRAMES_IN_FLIGHT; ++i)
 		{
 			m_ColorImages.emplace_back(
 				VulkanImage{
-					colorFormat,
+					m_ColorFormat,
 					VK_IMAGE_TILING_OPTIMAL,
 					VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_SAMPLED_BIT ,
 					VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
@@ -251,21 +266,52 @@ namespace MauRen
 					GetExtent().width,
 					GetExtent().height
 				});
-
 			m_ColorImages.back().CreateImageView(VK_IMAGE_ASPECT_COLOR_BIT);
+
+			m_ColorImages.back().TransitionImageLayout
+			(
+				buffer,
+				VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+				VK_PIPELINE_STAGE_2_NONE,
+				VK_ACCESS_2_NONE
+			);
 		}
+
+		commandPoolManager.EndSingleTimeCommands(buffer);
+
+		std::vector<VkWriteDescriptorSet> descriptorWrites;
+
+		for (uint32_t i{ 0 }; i < m_ColorImages.size(); ++i)
+		{
+			VkDescriptorImageInfo imageInfo = {};
+			imageInfo.imageView = m_ColorImages[i].imageViews[0];
+			imageInfo.imageLayout = m_ColorImages[i].layout;
+
+			VkWriteDescriptorSet descriptorWriteColor = {};
+			descriptorWriteColor.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+			descriptorWriteColor.dstSet = descriptorContext.GetDescriptorSets()[i];
+			descriptorWriteColor.dstBinding = 10;
+			descriptorWriteColor.dstArrayElement = 0;
+			descriptorWriteColor.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+			descriptorWriteColor.descriptorCount = 1;
+			descriptorWriteColor.pImageInfo = &imageInfo;
+			descriptorWrites.emplace_back(descriptorWriteColor);
+		}
+
+		vkUpdateDescriptorSets(deviceContext->GetLogicalDevice(), static_cast<uint32_t>(std::size(descriptorWrites)), descriptorWrites.data(), 0, nullptr);
 	}
 
-	void VulkanSwapchainContext::CreateDepthResources()
+	void VulkanSwapchainContext::CreateDepthResources(VulkanCommandPoolManager& commandPoolManager, VulkanDescriptorContext& descriptorContext)
 	{
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
-		VkFormat const depthFormat{ deviceContext->FindDepthFormat() };
+
+		auto buffer{ commandPoolManager.BeginSingleTimeCommands() };
 
 		for (size_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; ++i)
 		{
 			m_DepthImages.emplace_back(VulkanImage
 			{
-				depthFormat,
+				m_DepthFormat,
 				VK_IMAGE_TILING_OPTIMAL,
 				VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
 				VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
@@ -276,13 +322,47 @@ namespace MauRen
 			});
 
 			m_DepthImages.back().CreateImageView(VK_IMAGE_ASPECT_DEPTH_BIT);
+
+			m_DepthImages.back().TransitionImageLayout
+			(
+				buffer,
+				VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_OPTIMAL,
+				VK_PIPELINE_STAGE_2_NONE,
+				VK_ACCESS_2_NONE
+			);
 		}
+
+		commandPoolManager.EndSingleTimeCommands(buffer);
+
+
+		std::vector<VkWriteDescriptorSet> descriptorWrites;
+
+		for (uint32_t i{ 0 }; i < m_DepthImages.size(); ++i)
+		{
+			VkDescriptorImageInfo imageInfo = {};
+			imageInfo.imageView = m_DepthImages[i].imageViews[0];
+			imageInfo.imageLayout = m_DepthImages[i].layout;
+
+			VkWriteDescriptorSet descriptorWriteDepth = {};
+			descriptorWriteDepth.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+			descriptorWriteDepth.dstSet = descriptorContext.GetDescriptorSets()[i];
+			descriptorWriteDepth.dstBinding = 9;
+			descriptorWriteDepth.dstArrayElement = 0;
+			descriptorWriteDepth.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+			descriptorWriteDepth.descriptorCount = 1;
+			descriptorWriteDepth.pImageInfo = &imageInfo;
+			descriptorWrites.emplace_back(descriptorWriteDepth);
+		}
+
+		vkUpdateDescriptorSets(deviceContext->GetLogicalDevice(), static_cast<uint32_t>(std::size(descriptorWrites)), descriptorWrites.data(), 0, nullptr);
 	}
 
-	void VulkanSwapchainContext::CreateGBuffers()
+	void VulkanSwapchainContext::CreateGBuffers(VulkanCommandPoolManager& commandPoolManager, VulkanDescriptorContext& descriptorContext)
 	{
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 		VkSampleCountFlagBits const samples{ deviceContext->GetSampleCount() };
+
+		auto buffer{ commandPoolManager.BeginSingleTimeCommands() };
 
 		for (size_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; ++i)
 		{
@@ -300,6 +380,14 @@ namespace MauRen
 			};
 			g.color.CreateImageView(VK_IMAGE_ASPECT_COLOR_BIT);
 
+			g.color.TransitionImageLayout
+			(
+				buffer,
+				VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+				VK_PIPELINE_STAGE_2_NONE,
+				VK_ACCESS_2_NONE
+			);
+
 			g.normal = VulkanImage
 			{
 				GBuffer::formats[1],
@@ -312,7 +400,15 @@ namespace MauRen
 				1
 			};
 			g.normal.CreateImageView(VK_IMAGE_ASPECT_COLOR_BIT);
-			
+
+			g.normal.TransitionImageLayout
+			(
+				buffer,
+				VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+				VK_PIPELINE_STAGE_2_NONE,
+				VK_ACCESS_2_NONE
+			);
+
 			g.metalnessRoughness = VulkanImage
 			{
 				GBuffer::formats[2],
@@ -326,7 +422,71 @@ namespace MauRen
 			};
 			g.metalnessRoughness.CreateImageView(VK_IMAGE_ASPECT_COLOR_BIT);
 
+			g.metalnessRoughness.TransitionImageLayout
+			(
+				buffer,
+				VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+				VK_PIPELINE_STAGE_2_NONE,
+				VK_ACCESS_2_NONE
+			);
+
 			m_GBuffers.emplace_back(g);
 		}
+		commandPoolManager.EndSingleTimeCommands(buffer);
+
+		std::vector<VkWriteDescriptorSet> descriptorWrites;
+
+		for (uint32_t i{ 0 }; i < m_GBuffers.size(); ++i)
+		{
+			{
+				VkDescriptorImageInfo imageInfo = {};
+				imageInfo.imageView = m_GBuffers[i].color.imageViews[0];
+				imageInfo.imageLayout = m_GBuffers[i].color.layout;
+
+				VkWriteDescriptorSet descriptorWriteColor = {};
+				descriptorWriteColor.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+				descriptorWriteColor.dstSet = descriptorContext.GetDescriptorSets()[i];
+				descriptorWriteColor.dstBinding = 6;
+				descriptorWriteColor.dstArrayElement = 0;
+				descriptorWriteColor.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+				descriptorWriteColor.descriptorCount = 1;
+				descriptorWriteColor.pImageInfo = &imageInfo;
+				descriptorWrites.emplace_back(descriptorWriteColor);
+			}
+
+			{
+				VkDescriptorImageInfo imageInfo = {};
+				imageInfo.imageView = m_GBuffers[i].normal.imageViews[0];
+				imageInfo.imageLayout = m_GBuffers[i].normal.layout;
+
+				VkWriteDescriptorSet descriptorWriteNormal = {};
+				descriptorWriteNormal.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+				descriptorWriteNormal.dstSet = descriptorContext.GetDescriptorSets()[i];
+				descriptorWriteNormal.dstBinding = 7;
+				descriptorWriteNormal.dstArrayElement = 0;
+				descriptorWriteNormal.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+				descriptorWriteNormal.descriptorCount = 1;
+				descriptorWriteNormal.pImageInfo = &imageInfo;
+				descriptorWrites.emplace_back(descriptorWriteNormal);
+			}
+
+			{
+				VkDescriptorImageInfo imageInfo = {};
+				imageInfo.imageView = m_GBuffers[i].metalnessRoughness.imageViews[0];
+				imageInfo.imageLayout = m_GBuffers[i].metalnessRoughness.layout;
+
+				VkWriteDescriptorSet descriptorWriteMetal = {};
+				descriptorWriteMetal.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+				descriptorWriteMetal.dstSet = descriptorContext.GetDescriptorSets()[i];
+				descriptorWriteMetal.dstBinding = 8;
+				descriptorWriteMetal.dstArrayElement = 0;
+				descriptorWriteMetal.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+				descriptorWriteMetal.descriptorCount = 1;
+				descriptorWriteMetal.pImageInfo = &imageInfo;
+				descriptorWrites.emplace_back(descriptorWriteMetal);
+			}
+		}
+
+		vkUpdateDescriptorSets(deviceContext->GetLogicalDevice(), static_cast<uint32_t>(std::size(descriptorWrites)), descriptorWrites.data(), 0, nullptr);
 	}
 }

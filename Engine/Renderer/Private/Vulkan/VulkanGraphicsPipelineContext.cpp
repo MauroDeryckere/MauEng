@@ -190,7 +190,7 @@ namespace MauRen
 			throw std::runtime_error("Failed to create pipeline layout!");
 		}
 
-		VkFormat colorFormat = pSwapChainContext->GetColorImage(0).format;
+		VkFormat colorFormat = pSwapChainContext->GetColorFormat();
 		std::vector<VkFormat> formats;
 		formats.emplace_back(colorFormat);
 
@@ -198,7 +198,7 @@ namespace MauRen
 		renderingCreate.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
 		renderingCreate.colorAttachmentCount = 1;
 		renderingCreate.pColorAttachmentFormats = formats.data();
-		renderingCreate.depthAttachmentFormat = pSwapChainContext->GetDepthImage(0).format;
+		renderingCreate.depthAttachmentFormat = pSwapChainContext->GetDepthFormat();
 
 		VkGraphicsPipelineCreateInfo pipelineInfo{};
 		pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -361,7 +361,7 @@ namespace MauRen
 			throw std::runtime_error("Failed to create pipeline layout!");
 		}
 
-		VkFormat colorFormat{ pSwapChainContext->GetColorImage(0).format };
+		VkFormat colorFormat{ pSwapChainContext->GetColorFormat() };
 		std::vector<VkFormat> formats;
 		formats.emplace_back(colorFormat);
 
@@ -369,7 +369,7 @@ namespace MauRen
 		renderingCreate.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
 		renderingCreate.colorAttachmentCount = 0;
 		renderingCreate.pColorAttachmentFormats = nullptr;
-		renderingCreate.depthAttachmentFormat = pSwapChainContext->GetDepthImage(0).format;
+		renderingCreate.depthAttachmentFormat = pSwapChainContext->GetDepthFormat();
 		
 		VkGraphicsPipelineCreateInfo pipelineInfo{};
 		pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -611,7 +611,7 @@ namespace MauRen
 		}
 
 
-		VkFormat colorFormat = pSwapChainContext->GetSwapchainImages()[0].format;
+		VkFormat colorFormat = pSwapChainContext->GetImageFormat();
 		std::vector<VkFormat> formats;
 		formats.emplace_back(colorFormat);
 
@@ -619,7 +619,7 @@ namespace MauRen
 		renderingCreate.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
 		renderingCreate.colorAttachmentCount = 1;
 		renderingCreate.pColorAttachmentFormats = formats.data();
-		renderingCreate.depthAttachmentFormat = pSwapChainContext->GetDepthImage(0).format;
+		renderingCreate.depthAttachmentFormat = pSwapChainContext->GetDepthFormat();
 		
 		VkPipelineRasterizationStateCreateInfo debugRasterizer{};
 		debugRasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
@@ -891,7 +891,7 @@ namespace MauRen
 		renderingCreate.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
 		renderingCreate.colorAttachmentCount = static_cast<uint32_t>(std::size(GBuffer::formats));
 		renderingCreate.pColorAttachmentFormats = GBuffer::formats.data();
-		renderingCreate.depthAttachmentFormat = pSwapChainContext->GetDepthImage(0).format;
+		renderingCreate.depthAttachmentFormat = pSwapChainContext->GetDepthFormat();
 
 		VkGraphicsPipelineCreateInfo pipelineInfo{};
 		pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -1075,10 +1075,11 @@ namespace MauRen
 			throw std::runtime_error("Failed to create pipeline layout!");
 		}
 
+		std::array<VkFormat, 1> formats{ pSwapChainContext->GetColorFormat() };
 		VkPipelineRenderingCreateInfo renderingCreate{};
 		renderingCreate.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
 		renderingCreate.colorAttachmentCount = 1;
-		renderingCreate.pColorAttachmentFormats = &pSwapChainContext->GetColorImage(0).format;
+		renderingCreate.pColorAttachmentFormats = formats.data();
 		//renderingCreate.depthAttachmentFormat = pSwapChainContext->GetDepthImage(0).format;
 		
 		VkGraphicsPipelineCreateInfo pipelineInfo{};
@@ -1267,10 +1268,11 @@ namespace MauRen
 			throw std::runtime_error("Failed to create pipeline layout!");
 		}
 
+		std::array<VkFormat, 1> formats{ pSwapChainContext->GetImageFormat() };
 		VkPipelineRenderingCreateInfo renderingCreate{};
 		renderingCreate.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
 		renderingCreate.colorAttachmentCount = 1;
-		renderingCreate.pColorAttachmentFormats = &pSwapChainContext->GetSwapchainImages()[0].format;
+		renderingCreate.pColorAttachmentFormats = formats.data();
 		//renderingCreate.depthAttachmentFormat = pSwapChainContext->GetDepthImage(0).format;
 
 		VkGraphicsPipelineCreateInfo pipelineInfo{};
