@@ -6,7 +6,7 @@
 namespace MauRen
 {
 	#ifdef NDEBUG
-		bool constexpr ENABLE_VULKAN_VALIDATION_LAYERS{ true };
+		bool constexpr ENABLE_VULKAN_VALIDATION_LAYERS{ false };
 	#else
 		bool constexpr ENABLE_VULKAN_VALIDATION_LAYERS{ true };
 	#endif
@@ -20,15 +20,21 @@ namespace MauRen
 	{
 		"VK_LAYER_KHRONOS_validation"
 	};
+
+	uint32_t  constexpr VULKAN_API_VERSION{ VK_API_VERSION_1_3 };
 	
 	std::vector<char const*> const DEVICE_EXTENSIONS
 	{
 		VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-		VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME,
-		"VK_KHR_create_renderpass2",
-		VK_KHR_DEPTH_STENCIL_RESOLVE_EXTENSION_NAME,
-		VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,
-		"VK_KHR_synchronization2"
+		"VK_EXT_pageable_device_local_memory",
+		"VK_EXT_memory_priority"
+
+		// These are in the 1.3 core and don't need to be enabled separately anymore
+		//VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME,
+		//"VK_KHR_create_renderpass2",
+		//VK_KHR_DEPTH_STENCIL_RESOLVE_EXTENSION_NAME,
+		//VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,
+		//"VK_KHR_synchronization2"
 	};
 	
 	uint32_t constexpr MAX_FRAMES_IN_FLIGHT{ 3 };

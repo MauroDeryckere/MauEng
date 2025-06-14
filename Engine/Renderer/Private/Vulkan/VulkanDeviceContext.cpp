@@ -248,6 +248,10 @@ namespace MauRen
 		deviceFeatures.depthClamp = VK_TRUE;
 		deviceFeatures.depthBiasClamp = VK_TRUE;
 
+		VkPhysicalDevicePageableDeviceLocalMemoryFeaturesEXT pageableFeatures{};
+		pageableFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PAGEABLE_DEVICE_LOCAL_MEMORY_FEATURES_EXT;
+		pageableFeatures.pageableDeviceLocalMemory = VK_TRUE;
+
 		VkPhysicalDeviceDescriptorIndexingFeatures indexingFeatures{};
 		indexingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
 		indexingFeatures.runtimeDescriptorArray = VK_TRUE;
@@ -255,7 +259,7 @@ namespace MauRen
 		indexingFeatures.descriptorBindingVariableDescriptorCount = VK_TRUE;
 		indexingFeatures.descriptorBindingSampledImageUpdateAfterBind = VK_TRUE;
 		indexingFeatures.shaderSampledImageArrayNonUniformIndexing = VK_TRUE;
-		indexingFeatures.pNext = nullptr;
+		indexingFeatures.pNext = &pageableFeatures;
 
 		VkPhysicalDeviceVulkan13Features features13
 		{
@@ -378,16 +382,24 @@ namespace MauRen
 		VkPhysicalDeviceFeatures deviceFeatures;
 		vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
 
-		VkPhysicalDeviceVulkan13Features vulkan13Features{};
-		vulkan13Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
+		VkPhysicalDevicePageableDeviceLocalMemoryFeaturesEXT  pageableFeatures{};
+		pageableFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PAGEABLE_DEVICE_LOCAL_MEMORY_FEATURES_EXT;
 
 		VkPhysicalDeviceDescriptorIndexingFeatures indexingFeatures{};
 		indexingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
+		indexingFeatures.pNext = &pageableFeatures;
+
+		VkPhysicalDeviceVulkan13Features vulkan13Features{};
+		vulkan13Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
 		vulkan13Features.pNext = &indexingFeatures;
+
 
 		VkPhysicalDeviceFeatures2 deviceFeatures2{};
 		deviceFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
 		deviceFeatures2.pNext = &vulkan13Features;
+
+
+
 
 		vkGetPhysicalDeviceFeatures2(device, &deviceFeatures2);
 
@@ -412,7 +424,9 @@ namespace MauRen
 
 							&& deviceFeatures.multiDrawIndirect
 							&& deviceFeatures.depthClamp
-							&& deviceFeatures.depthBiasClamp;
+							&& deviceFeatures.depthBiasClamp
+
+							&& pageableFeatures.pageableDeviceLocalMemory;
 		}
 
 		return indices.IsComplete() and extensionsSupported and swapChainAdequate;
