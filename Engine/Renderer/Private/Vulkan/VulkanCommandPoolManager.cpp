@@ -11,7 +11,12 @@ namespace MauRen
 	{
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 
-		VulkanUtils::SafeDestroy(deviceContext->GetLogicalDevice(), m_CommandPool, nullptr);
+		for (auto pool : m_CommandPools)
+		{
+			VulkanUtils::SafeDestroy(deviceContext->GetLogicalDevice(), pool, nullptr);
+		}
+
+		VulkanUtils::SafeDestroy(deviceContext->GetLogicalDevice(), m_SingleTimeCommandPool, nullptr);
 	}
 
 	void VulkanCommandPoolManager::CreateCommandBuffers()
@@ -20,20 +25,24 @@ namespace MauRen
 
 		m_CommandBuffers.resize(MAX_FRAMES_IN_FLIGHT);
 
-		VkCommandBufferAllocateInfo allocInfo{};
-		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-		allocInfo.commandPool = m_CommandPool;
-
-		// VK_COMMAND_BUFFER_LEVEL_PRIMARY: Can be submitted to a queue for execution, but cannot be called from other command buffers.
-		// VK_COMMAND_BUFFER_LEVEL_SECONDARY: Cannot be submitted directly, but can be called from primary command buffers.
-		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-		allocInfo.commandBufferCount = static_cast<uint32_t>(m_CommandBuffers.size());
-
-
-		if (vkAllocateCommandBuffers(deviceContext->GetLogicalDevice(), &allocInfo, m_CommandBuffers.data()) != VK_SUCCESS)
+		for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
 		{
-			throw std::runtime_error("Failed to allocate command buffers!");
+			VkCommandBufferAllocateInfo allocInfo{};
+			allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+			allocInfo.commandPool = m_CommandPools[i];
+			allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+			allocInfo.commandBufferCount = 1;
+
+			if (vkAllocateCommandBuffers(deviceContext->GetLogicalDevice(), &allocInfo, &m_CommandBuffers[i]) != VK_SUCCESS)
+			{
+				throw std::runtime_error("Failed to allocate command buffers!");
+			}
 		}
+	}
+
+	VkCommandPool VulkanCommandPoolManager::GetCommandPool(uint32_t index) noexcept
+	{
+		return m_CommandPools[index];
 	}
 
 	VkCommandBuffer VulkanCommandPoolManager::GetCommandBuffer(uint32_t index) const noexcept
@@ -55,7 +64,7 @@ namespace MauRen
 		VkCommandBufferAllocateInfo allocInfo{};
 		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-		allocInfo.commandPool = m_CommandPool;
+		allocInfo.commandPool = m_SingleTimeCommandPool;
 		allocInfo.commandBufferCount = 1;
 
 		VkCommandBuffer commandBuffer{};
@@ -84,7 +93,7 @@ namespace MauRen
 		vkQueueSubmit(deviceContext->GetGraphicsQueue(), 1, &submitInfo, VK_NULL_HANDLE);
 		vkQueueWaitIdle(deviceContext->GetGraphicsQueue());
 
-		vkFreeCommandBuffers(deviceContext->GetLogicalDevice(), m_CommandPool, 1, &commandBuffer);
+		vkFreeCommandBuffers(deviceContext->GetLogicalDevice(), m_SingleTimeCommandPool, 1, &commandBuffer);
 
 		// TODO 
 		// A fence would allow you to schedule multiple transfers simultaneously and wait for all of them complete, instead of executing one at a time.
@@ -98,14 +107,27 @@ namespace MauRen
 		// Record commands for drawing, which is why we've chosen the graphics queue family
 		QueueFamilyIndices const queueFamilyIndices{ deviceContext->FindQueueFamilies() };
 
+		m_CommandPools.resize(MAX_FRAMES_IN_FLIGHT);
+		{
+			VkCommandPoolCreateInfo poolInfo{};
+			poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+			poolInfo.flags = 0;
+			poolInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily.value();
+
+			for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+			{
+				if (vkCreateCommandPool(deviceContext->GetLogicalDevice(), &poolInfo, nullptr, &m_CommandPools[i]) != VK_SUCCESS)
+				{
+					throw std::runtime_error("Failed to create command pool!");
+				}
+			}
+		}
+
 		VkCommandPoolCreateInfo poolInfo{};
 		poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-		poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+		poolInfo.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;
 		poolInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily.value();
 
-		if (vkCreateCommandPool(deviceContext->GetLogicalDevice(), &poolInfo, nullptr, &m_CommandPool) != VK_SUCCESS)
-		{
-			throw std::runtime_error("Failed to create command pool!");
-		}
+		vkCreateCommandPool(deviceContext->GetLogicalDevice(), &poolInfo, nullptr, &m_SingleTimeCommandPool);
 	}
 }

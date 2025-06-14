@@ -20,6 +20,7 @@ namespace MauRen
 
 		// Currently just creates the command buffers for all frames
 		void CreateCommandBuffers();
+		[[nodiscard]] VkCommandPool GetCommandPool(uint32_t index) noexcept;
 		[[nodiscard]] VkCommandBuffer GetCommandBuffer(uint32_t index) const noexcept;
 		[[nodiscard]] VkCommandBuffer& GetCommandBuffer(uint32_t index) noexcept;
 
@@ -32,7 +33,8 @@ namespace MauRen
 		VulkanCommandPoolManager& operator=(VulkanCommandPoolManager&&) = delete;
 
 	private:
-		VkCommandPool m_CommandPool{ VK_NULL_HANDLE };
+		std::vector<VkCommandPool> m_CommandPools;
+		VkCommandPool m_SingleTimeCommandPool;
 
 		// Are automatically freed when their pool is destroyed
 		std::vector<VkCommandBuffer> m_CommandBuffers{};

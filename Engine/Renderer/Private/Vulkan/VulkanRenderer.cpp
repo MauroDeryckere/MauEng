@@ -699,7 +699,7 @@ namespace MauRen
 
 		{
 			ME_PROFILE_SCOPE("Reset command buffer")
-			vkResetCommandBuffer(m_CommandPoolManager.GetCommandBuffer(m_CurrentFrame), 0);
+			vkResetCommandPool(deviceContext->GetLogicalDevice(), m_CommandPoolManager.GetCommandPool(m_CurrentFrame), 0);
 		}
 
 		RecordCommandBuffer(m_CommandPoolManager.GetCommandBuffer(m_CurrentFrame), imageIndex, cam.GetProjectionMatrix() * cam.GetViewMatrix());
