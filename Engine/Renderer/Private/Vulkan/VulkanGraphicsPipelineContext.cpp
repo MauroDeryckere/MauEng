@@ -266,7 +266,7 @@ namespace MauRen
 		vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 
 		auto const bindingDescription{ VulkanUtils::GetVertexBindingDescription() };
-		auto const attributeDescriptions{ VulkanUtils::GetVertexAttributeDescriptions() };
+		auto const attributeDescriptions{ VulkanUtils::GetDepthPrepassVertexAttributeDescriptions() };
 
 		vertexInputInfo.vertexBindingDescriptionCount = 1;
 		vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
@@ -435,7 +435,7 @@ namespace MauRen
 		vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 
 		auto const bindingDescription{ VulkanUtils::GetVertexBindingDescription() };
-		auto const attributeDescriptions{ VulkanUtils::GetVertexAttributeDescriptions() };
+		auto const attributeDescriptions{ VulkanUtils::GetDepthPrepassVertexAttributeDescriptions() };
 
 		vertexInputInfo.vertexBindingDescriptionCount = 1;
 		vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());

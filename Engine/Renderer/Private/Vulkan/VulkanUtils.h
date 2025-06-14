@@ -213,6 +213,18 @@ namespace MauRen
 			return bindingDescription;
 		}
 
+		static std::array<VkVertexInputAttributeDescription, 1> GetDepthPrepassVertexAttributeDescriptions() noexcept
+		{
+			std::array<VkVertexInputAttributeDescription, 1> attributeDescriptions{};
+
+			attributeDescriptions[0].binding = 0;
+			attributeDescriptions[0].location = 0;
+			attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT; // vec3 position
+			attributeDescriptions[0].offset = offsetof(Vertex, position);
+
+			return attributeDescriptions;
+		}
+
 		static std::array<VkVertexInputAttributeDescription, 4> GetVertexAttributeDescriptions() noexcept
 		{
 			std::array<VkVertexInputAttributeDescription, 4> attributeDescriptions{};

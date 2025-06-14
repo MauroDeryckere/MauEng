@@ -71,7 +71,6 @@ namespace MauRen
 
 		m_SwapChainContext.Initialize(m_pWindow, &m_SurfaceContext, m_CommandPoolManager, m_DescriptorContext);
 		
-		m_CommandPoolManager.CreateCommandBuffers();
 		CreateSyncObjects();
 
 		VulkanMaterialManager::GetInstance().InitializeTextureManager(m_CommandPoolManager, m_DescriptorContext);

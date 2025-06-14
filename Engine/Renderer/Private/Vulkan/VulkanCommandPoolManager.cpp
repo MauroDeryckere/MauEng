@@ -5,6 +5,7 @@ namespace MauRen
 	void VulkanCommandPoolManager::Initialize()
 	{
 		CreateCommandPool();
+		CreateCommandBuffers();
 	}
 
 	void VulkanCommandPoolManager::Destroy()

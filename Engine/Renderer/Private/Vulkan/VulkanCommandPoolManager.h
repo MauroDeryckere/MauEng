@@ -18,8 +18,6 @@ namespace MauRen
 		// Destroys the command pool
 		void Destroy();
 
-		// Currently just creates the command buffers for all frames
-		void CreateCommandBuffers();
 		[[nodiscard]] VkCommandPool GetCommandPool(uint32_t index) noexcept;
 		[[nodiscard]] VkCommandBuffer GetCommandBuffer(uint32_t index) const noexcept;
 		[[nodiscard]] VkCommandBuffer& GetCommandBuffer(uint32_t index) noexcept;
@@ -40,6 +38,7 @@ namespace MauRen
 		std::vector<VkCommandBuffer> m_CommandBuffers{};
 
 		void CreateCommandPool();
+		void CreateCommandBuffers();
 	};
 }
 
