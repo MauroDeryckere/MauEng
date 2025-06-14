@@ -424,7 +424,6 @@ namespace MauRen
 #pragma region LIGHTING_PASS
 		{
 			ME_PROFILE_SCOPE("lighting pass")
-			// Colour
 			if (VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL != colour.layout)
 			{
 				colour.TransitionImageLayout(commandBuffer,
@@ -432,41 +431,34 @@ namespace MauRen
 					VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
 					VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT);
 			}
-
-			// GBuffer Colour
-			//if (VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL != gBufferColor.layout)
-			//{
+			if (VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL != gBufferColor.layout)
+			{
 				gBufferColor.TransitionImageLayout(commandBuffer,
 					VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
 					VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT,
 					VK_ACCESS_2_SHADER_READ_BIT);
-		//	}
-
-			//if (VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL != gBufferNormal.layout)
-			//{
+			}
+			if (VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL != gBufferNormal.layout)
+			{
 				gBufferNormal.TransitionImageLayout(commandBuffer,
 					VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
 					VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT,
 					VK_ACCESS_2_SHADER_READ_BIT);
-			//}
-
-
-			//if (VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL != gBufferMetalRough.layout)
-			//{
+			}
+			if (VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL != gBufferMetalRough.layout)
+			{
 				gBufferMetalRough.TransitionImageLayout(commandBuffer,
 					VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
 					VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT,
 					VK_ACCESS_2_SHADER_READ_BIT);
-			//}
-
-			// Depth
-			//if (VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_OPTIMAL != depth.layout)
-			//{
+			}
+			if (VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_OPTIMAL != depth.layout)
+			{
 				depth.TransitionImageLayout(commandBuffer,
 					VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_OPTIMAL,
 					VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT,
 					VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT);
-			//}
+			}
 
 			VkRenderingAttachmentInfo colorAttachment{};
 			colorAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
