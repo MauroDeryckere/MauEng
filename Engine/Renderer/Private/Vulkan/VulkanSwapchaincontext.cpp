@@ -281,13 +281,15 @@ namespace MauRen
 
 		std::vector<VkWriteDescriptorSet> descriptorWrites;
 		std::vector<VkDescriptorImageInfo> imageInfos;
+		descriptorWrites.resize(m_ColorImages.size());
+		imageInfos.resize(m_ColorImages.size());
 
 		for (uint32_t i{ 0 }; i < m_ColorImages.size(); ++i)
 		{
 			VkDescriptorImageInfo imageInfo{};
 			imageInfo.imageView = m_ColorImages[i].imageViews[0];
 			imageInfo.imageLayout = m_ColorImages[i].layout;
-			imageInfos.emplace_back(imageInfo);
+			imageInfos[i] = imageInfo;
 
 			VkWriteDescriptorSet descriptorWriteColor{};
 			descriptorWriteColor.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -296,8 +298,8 @@ namespace MauRen
 			descriptorWriteColor.dstArrayElement = 0;
 			descriptorWriteColor.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
 			descriptorWriteColor.descriptorCount = 1;
-			descriptorWriteColor.pImageInfo = &imageInfos.back();
-			descriptorWrites.emplace_back(descriptorWriteColor);
+			descriptorWriteColor.pImageInfo = &imageInfos[i];
+			descriptorWrites[i] = descriptorWriteColor;
 		}
 
 		vkUpdateDescriptorSets(deviceContext->GetLogicalDevice(), static_cast<uint32_t>(std::size(descriptorWrites)), descriptorWrites.data(), 0, nullptr);
@@ -339,13 +341,15 @@ namespace MauRen
 
 		std::vector<VkWriteDescriptorSet> descriptorWrites;
 		std::vector<VkDescriptorImageInfo> imageInfos;
+		descriptorWrites.resize(m_DepthImages.size());
+		imageInfos.resize(m_DepthImages.size());
 
 		for (uint32_t i{ 0 }; i < m_DepthImages.size(); ++i)
 		{
 			VkDescriptorImageInfo imageInfo{};
 			imageInfo.imageView = m_DepthImages[i].imageViews[0];
 			imageInfo.imageLayout = m_DepthImages[i].layout;
-			imageInfos.emplace_back(imageInfo);
+			imageInfos[i] = imageInfo;
 
 			VkWriteDescriptorSet descriptorWriteDepth{};
 			descriptorWriteDepth.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -354,8 +358,8 @@ namespace MauRen
 			descriptorWriteDepth.dstArrayElement = 0;
 			descriptorWriteDepth.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
 			descriptorWriteDepth.descriptorCount = 1;
-			descriptorWriteDepth.pImageInfo = &imageInfos.back();
-			descriptorWrites.emplace_back(descriptorWriteDepth);
+			descriptorWriteDepth.pImageInfo = &imageInfos[i];
+			descriptorWrites[i] = descriptorWriteDepth;
 		}
 
 		vkUpdateDescriptorSets(deviceContext->GetLogicalDevice(), static_cast<uint32_t>(std::size(descriptorWrites)), descriptorWrites.data(), 0, nullptr);
@@ -440,14 +444,18 @@ namespace MauRen
 
 		std::vector<VkWriteDescriptorSet> descriptorWrites;
 		std::vector<VkDescriptorImageInfo> imageInfos;
+		descriptorWrites.resize(m_GBuffers.size() * std::size(GBuffer::formats));
+		imageInfos.resize(m_GBuffers.size() * std::size(GBuffer::formats));
 
 		for (uint32_t i{ 0 }; i < m_GBuffers.size(); ++i)
 		{
+			uint32_t const baseIndex{ i * static_cast<uint32_t>(std::size(GBuffer::formats)) };
+
 			{
 				VkDescriptorImageInfo imageInfo{};
 				imageInfo.imageView = m_GBuffers[i].color.imageViews[0];
 				imageInfo.imageLayout = m_GBuffers[i].color.layout;
-				imageInfos.emplace_back(imageInfo);
+				imageInfos[baseIndex + 0] = imageInfo;
 
 				VkWriteDescriptorSet descriptorWriteColor = {};
 				descriptorWriteColor.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -456,15 +464,15 @@ namespace MauRen
 				descriptorWriteColor.dstArrayElement = 0;
 				descriptorWriteColor.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
 				descriptorWriteColor.descriptorCount = 1;
-				descriptorWriteColor.pImageInfo = &imageInfos.back();
-				descriptorWrites.emplace_back(descriptorWriteColor);
+				descriptorWriteColor.pImageInfo = &imageInfos[baseIndex + 0];
+				descriptorWrites[baseIndex + 0] = descriptorWriteColor;
 			}
 
 			{
 				VkDescriptorImageInfo imageInfo{};
 				imageInfo.imageView = m_GBuffers[i].normal.imageViews[0];
 				imageInfo.imageLayout = m_GBuffers[i].normal.layout;
-				imageInfos.emplace_back(imageInfo);
+				imageInfos[baseIndex + 1] = imageInfo;
 
 				VkWriteDescriptorSet descriptorWriteNormal = {};
 				descriptorWriteNormal.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -473,15 +481,15 @@ namespace MauRen
 				descriptorWriteNormal.dstArrayElement = 0;
 				descriptorWriteNormal.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
 				descriptorWriteNormal.descriptorCount = 1;
-				descriptorWriteNormal.pImageInfo = &imageInfos.back();
-				descriptorWrites.emplace_back(descriptorWriteNormal);
+				descriptorWriteNormal.pImageInfo = &imageInfos[baseIndex + 1];
+				descriptorWrites[baseIndex + 1] = descriptorWriteNormal;
 			}
 
 			{
 				VkDescriptorImageInfo imageInfo{};
 				imageInfo.imageView = m_GBuffers[i].metalnessRoughness.imageViews[0];
 				imageInfo.imageLayout = m_GBuffers[i].metalnessRoughness.layout;
-				imageInfos.emplace_back(imageInfo);
+				imageInfos[baseIndex + 2] = imageInfo;
 
 				VkWriteDescriptorSet descriptorWriteMetal = {};
 				descriptorWriteMetal.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -490,8 +498,8 @@ namespace MauRen
 				descriptorWriteMetal.dstArrayElement = 0;
 				descriptorWriteMetal.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
 				descriptorWriteMetal.descriptorCount = 1;
-				descriptorWriteMetal.pImageInfo = &imageInfos.back();
-				descriptorWrites.emplace_back(descriptorWriteMetal);
+				descriptorWriteMetal.pImageInfo = &imageInfos[baseIndex + 2];
+				descriptorWrites[baseIndex + 2] = descriptorWriteMetal;
 			}
 		}
 

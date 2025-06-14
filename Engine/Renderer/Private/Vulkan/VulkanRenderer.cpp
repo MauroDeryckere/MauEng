@@ -10,9 +10,6 @@
 #include "../../MauEng/Public/Components/CStaticMesh.h"
 #include "../../../MauEng/Public/Scene/Camera.h"
 
-// For some reason in release:
-// colour img is written to all the descriptor set bindings where gbuffer is used.
-
 namespace MauRen
 {
 	VulkanRenderer::VulkanRenderer(SDL_Window* pWindow, DebugRenderer& debugRenderer) :
@@ -825,7 +822,6 @@ namespace MauRen
 
 		m_FramebufferResized = false;
 
-		vkDeviceWaitIdle(deviceContext->GetLogicalDevice());
 		m_SwapChainContext.ReCreate(m_pWindow, &m_GraphicsPipelineContext, &m_SurfaceContext, m_CommandPoolManager, m_DescriptorContext);
 
 		return true;
@@ -895,7 +891,6 @@ namespace MauRen
 			VulkanBuffer::CopyBuffer(m_CommandPoolManager, stagingBuffer.buffer, m_DebugIndexBuffer.buffer, bufferSize);
 			stagingBuffer.Destroy();
 		}
-
 	}
 
 	void VulkanRenderer::RenderDebug(VkCommandBuffer commandBuffer, bool isPrepass)
