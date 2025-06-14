@@ -133,7 +133,7 @@ namespace MauRen
 		 **/
 
 		 // Check if image format supports linear blitting
-		VkFormatProperties formatProperties;
+		VkFormatProperties formatProperties{};
 		vkGetPhysicalDeviceFormatProperties(deviceContext->GetPhysicalDevice(), format, &formatProperties);
 
 		if (!(formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT))
@@ -241,7 +241,7 @@ namespace MauRen
 		viewInfo.subresourceRange.baseArrayLayer = 0;
 		viewInfo.subresourceRange.layerCount = 1;
 
-		VkImageView imageView;
+		VkImageView imageView{};
 		if (vkCreateImageView(deviceContext->GetLogicalDevice(), &viewInfo, nullptr, &imageView) != VK_SUCCESS)
 		{
 			throw std::runtime_error("Failed to create texture image view!");
@@ -302,7 +302,7 @@ namespace MauRen
 			throw std::runtime_error("Failed to create image!");
 		}
 
-		VkMemoryRequirements memRequirements;
+		VkMemoryRequirements memRequirements{};
 		vkGetImageMemoryRequirements(deviceContext->GetLogicalDevice(), image, &memRequirements);
 
 		VkMemoryAllocateInfo allocInfo{};

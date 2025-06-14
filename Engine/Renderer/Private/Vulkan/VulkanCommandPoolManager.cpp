@@ -58,7 +58,7 @@ namespace MauRen
 		allocInfo.commandPool = m_CommandPool;
 		allocInfo.commandBufferCount = 1;
 
-		VkCommandBuffer commandBuffer;
+		VkCommandBuffer commandBuffer{};
 		vkAllocateCommandBuffers(deviceContext->GetLogicalDevice(), &allocInfo, &commandBuffer);
 
 		VkCommandBufferBeginInfo beginInfo{};
