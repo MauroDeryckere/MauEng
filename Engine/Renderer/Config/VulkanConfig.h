@@ -6,9 +6,9 @@
 namespace MauRen
 {
 	#ifdef NDEBUG
-		//bool constexpr ENABLE_VULKAN_VALIDATION_LAYERS{ false };
-		bool constexpr ENABLE_VULKAN_VALIDATION_LAYERS{ true };
+		bool constexpr ENABLE_VULKAN_VALIDATION_LAYERS{ false };
 	#else
+		bool constexpr ENABLE_VULKAN_VALIDATION_LAYERS{ true };
 	#endif
 
 	// Using a unified queue may result in less overhead and a performance boost
