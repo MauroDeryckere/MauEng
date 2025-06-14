@@ -264,7 +264,7 @@ namespace MauRen
 
 	VulkanImage::VulkanImage(VkFormat imgFormat, VkImageTiling tiling, VkImageUsageFlags usage,
 	                         VkMemoryPropertyFlags properties, VkSampleCountFlagBits numSamples, uint32_t imgWidth, uint32_t imgHeight,
-	                         uint32_t imgMipLevels)
+	                         uint32_t imgMipLevels, float memoryPriority)
 	{
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 
@@ -277,6 +277,7 @@ namespace MauRen
 
 		lastStage = VK_PIPELINE_STAGE_2_NONE;
 		lastAccess = VK_ACCESS_2_NONE;
+		memPriority = std::clamp(memPriority, 0.f, 1.f);
 
 		VkImageCreateInfo imageInfo{};
 		imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -309,6 +310,12 @@ namespace MauRen
 		allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 		allocInfo.allocationSize = memRequirements.size;
 		allocInfo.memoryTypeIndex = VulkanUtils::FindMemoryType(deviceContext->GetPhysicalDevice(), memRequirements.memoryTypeBits, properties);
+
+		VkMemoryPriorityAllocateInfoEXT priorityInfo{};
+		priorityInfo.sType = VK_STRUCTURE_TYPE_MEMORY_PRIORITY_ALLOCATE_INFO_EXT;
+		priorityInfo.priority = memPriority;
+
+		allocInfo.pNext = &priorityInfo;
 
 		if (vkAllocateMemory(deviceContext->GetLogicalDevice(), &allocInfo, nullptr, &imageMemory) != VK_SUCCESS)
 		{

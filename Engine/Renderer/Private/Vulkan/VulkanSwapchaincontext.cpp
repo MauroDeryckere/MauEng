@@ -264,7 +264,9 @@ namespace MauRen
 					VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
 					deviceContext->GetSampleCount(),
 					GetExtent().width,
-					GetExtent().height
+					GetExtent().height,
+					1,
+					1.f
 				});
 			m_ColorImages.back().CreateImageView(VK_IMAGE_ASPECT_COLOR_BIT);
 
@@ -322,7 +324,8 @@ namespace MauRen
 				deviceContext->GetSampleCount(),
 				GetExtent().width,
 				GetExtent().height,
-				1
+				1,
+				1.f
 			});
 
 			m_DepthImages.back().CreateImageView(VK_IMAGE_ASPECT_DEPTH_BIT);
@@ -384,7 +387,8 @@ namespace MauRen
 				VK_SAMPLE_COUNT_1_BIT,
 				GetExtent().width,
 				GetExtent().height,
-				1
+				1,
+				1.f
 			};
 			g.color.CreateImageView(VK_IMAGE_ASPECT_COLOR_BIT);
 
@@ -405,7 +409,8 @@ namespace MauRen
 				VK_SAMPLE_COUNT_1_BIT,
 				GetExtent().width,
 				GetExtent().height,
-				1
+				1,
+				1.f
 			};
 			g.normal.CreateImageView(VK_IMAGE_ASPECT_COLOR_BIT);
 
@@ -426,7 +431,8 @@ namespace MauRen
 				VK_SAMPLE_COUNT_1_BIT,
 				GetExtent().width,
 				GetExtent().height,
-				1
+				1,
+				1.f
 			};
 			g.metalnessRoughness.CreateImageView(VK_IMAGE_ASPECT_COLOR_BIT);
 

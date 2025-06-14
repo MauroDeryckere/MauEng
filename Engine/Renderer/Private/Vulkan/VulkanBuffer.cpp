@@ -12,7 +12,7 @@ namespace MauRen
 		VulkanUtils::SafeDestroy(deviceContext->GetLogicalDevice(), bufferMemory, nullptr);
 	}
 
-	VulkanBuffer::VulkanBuffer(VkDeviceSize deviceSize, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties)
+	VulkanBuffer::VulkanBuffer(VkDeviceSize deviceSize, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, float memoryPriority)
 	{
 		if (deviceSize == 0)
 		{
@@ -21,6 +21,7 @@ namespace MauRen
 
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 		size = deviceSize;
+		memPriority = memoryPriority;
 
 		VkBufferCreateInfo bufferInfo{};
 		bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -41,6 +42,12 @@ namespace MauRen
 		allocInfo.allocationSize = memRequirements.size;
 		//allocInfo.allocationSize = size;
 		allocInfo.memoryTypeIndex = VulkanUtils::FindMemoryType(deviceContext->GetPhysicalDevice(), memRequirements.memoryTypeBits, properties);
+
+		VkMemoryPriorityAllocateInfoEXT priorityInfo{};
+		priorityInfo.sType = VK_STRUCTURE_TYPE_MEMORY_PRIORITY_ALLOCATE_INFO_EXT;
+		priorityInfo.priority = memPriority;
+
+		allocInfo.pNext = &priorityInfo;
 
 		//TODO
 		/*

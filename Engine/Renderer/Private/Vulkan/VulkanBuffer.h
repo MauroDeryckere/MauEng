@@ -13,14 +13,14 @@ namespace MauRen
 		VkBuffer buffer{ VK_NULL_HANDLE };
 		VkDeviceMemory bufferMemory{ VK_NULL_HANDLE };
 		VkDeviceSize size{ 0 };
-
+		float memPriority{ 0.f };
 		void Destroy();
 		static void CopyBuffer(VulkanCommandPoolManager const& CmPoolManager, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 
 		static void CopyBufferToImage(VulkanCommandPoolManager const& CmPoolManager, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
 
 
-		VulkanBuffer(VkDeviceSize deviceSize, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties);
+		VulkanBuffer(VkDeviceSize deviceSize, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, float memoryPriority = 0.f);
 		VulkanBuffer() = default;
 		~VulkanBuffer() = default;
 

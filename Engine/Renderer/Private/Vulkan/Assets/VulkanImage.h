@@ -24,6 +24,8 @@ namespace MauRen
 		uint32_t height{ 0 };
 		uint32_t mipLevels{ 1 };
 
+		float memPriority = 0.f;
+
 		void Destroy();
 
 		// Transition image layout using single time commands 
@@ -42,7 +44,7 @@ namespace MauRen
 		// Manual creation if necessary
 		VulkanImage() = default;
 		// Fully create image via the constructor
-		VulkanImage(VkFormat imgFormat, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkSampleCountFlagBits numSamples, uint32_t imgWidth, uint32_t imgHeight, uint32_t imgMipLevels = 1);
+		VulkanImage(VkFormat imgFormat, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkSampleCountFlagBits numSamples, uint32_t imgWidth, uint32_t imgHeight, uint32_t imgMipLevels = 1, float memoryPriority = 0.f);
 
 		~VulkanImage() = default;
 

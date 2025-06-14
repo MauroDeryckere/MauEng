@@ -83,23 +83,24 @@ namespace MauRen
 
 			m_DebugVertexBuffer = { bufferSize,
 									  VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-									  VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT };
+									  VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, .6f };
 
 			m_DebugIndexBuffer = { bufferSize,
 									  VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-									  VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT };
+									  VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+										.6f};
 		}
 
 		m_QuadVertexBuffer = { sizeof(m_QuadVertices[0]) * std::size(m_QuadVertices),
 			VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, 1.f
 		};
 
 		VulkanBuffer stagingBuffer
 		{
 			sizeof(m_QuadVertices[0]) * std::size(m_QuadVertices),
 			VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, 1.f
 		};
 
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };

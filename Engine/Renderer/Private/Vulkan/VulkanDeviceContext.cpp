@@ -248,9 +248,14 @@ namespace MauRen
 		deviceFeatures.depthClamp = VK_TRUE;
 		deviceFeatures.depthBiasClamp = VK_TRUE;
 
+		VkPhysicalDeviceMemoryPriorityFeaturesEXT memoryPriorityFeatures{};
+		memoryPriorityFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MEMORY_PRIORITY_FEATURES_EXT;
+		memoryPriorityFeatures.memoryPriority = VK_TRUE;
+
 		VkPhysicalDevicePageableDeviceLocalMemoryFeaturesEXT pageableFeatures{};
 		pageableFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PAGEABLE_DEVICE_LOCAL_MEMORY_FEATURES_EXT;
 		pageableFeatures.pageableDeviceLocalMemory = VK_TRUE;
+		pageableFeatures.pNext = &memoryPriorityFeatures;
 
 		VkPhysicalDeviceDescriptorIndexingFeatures indexingFeatures{};
 		indexingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
@@ -382,8 +387,12 @@ namespace MauRen
 		VkPhysicalDeviceFeatures deviceFeatures;
 		vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
 
+		VkPhysicalDeviceMemoryPriorityFeaturesEXT memoryPriorityFeatures{};
+		memoryPriorityFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MEMORY_PRIORITY_FEATURES_EXT;
+
 		VkPhysicalDevicePageableDeviceLocalMemoryFeaturesEXT  pageableFeatures{};
 		pageableFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PAGEABLE_DEVICE_LOCAL_MEMORY_FEATURES_EXT;
+		pageableFeatures.pNext = &memoryPriorityFeatures;
 
 		VkPhysicalDeviceDescriptorIndexingFeatures indexingFeatures{};
 		indexingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
@@ -393,13 +402,9 @@ namespace MauRen
 		vulkan13Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
 		vulkan13Features.pNext = &indexingFeatures;
 
-
 		VkPhysicalDeviceFeatures2 deviceFeatures2{};
 		deviceFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
 		deviceFeatures2.pNext = &vulkan13Features;
-
-
-
 
 		vkGetPhysicalDeviceFeatures2(device, &deviceFeatures2);
 
@@ -426,7 +431,8 @@ namespace MauRen
 							&& deviceFeatures.depthClamp
 							&& deviceFeatures.depthBiasClamp
 
-							&& pageableFeatures.pageableDeviceLocalMemory;
+							&& pageableFeatures.pageableDeviceLocalMemory
+							&& memoryPriorityFeatures.memoryPriority;
 		}
 
 		return indices.IsComplete() and extensionsSupported and swapChainAdequate;
