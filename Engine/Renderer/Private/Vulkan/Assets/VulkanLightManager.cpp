@@ -6,6 +6,7 @@
 #include "Vulkan/VulkanCommandPoolManager.h"
 #include "Vulkan/VulkanDescriptorContext.h"
 #include "Vulkan/VulkanGraphicsPipelineContext.h"
+#include "Vulkan/Passes/ClearAttachments.h"
 
 
 namespace MauRen
@@ -330,18 +331,15 @@ namespace MauRen
 		VkPhysicalDeviceProperties properties{};
 		vkGetPhysicalDeviceProperties(deviceContext->GetPhysicalDevice(), &properties);
 
-		samplerInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
+		samplerInfo.borderColor = VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK;
 		samplerInfo.unnormalizedCoordinates = VK_FALSE;
 
 		samplerInfo.compareEnable = VK_TRUE;
 		samplerInfo.compareOp = VK_COMPARE_OP_LESS;
 
 		samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
-		samplerInfo.minLod = 0.f;
-		samplerInfo.maxLod = 1.0f;
 
 		samplerInfo.anisotropyEnable = VK_FALSE;
-		samplerInfo.mipLodBias = 0.0f;
 
 		if (vkCreateSampler(deviceContext->GetLogicalDevice(), &samplerInfo, nullptr, &m_ShadowMapSampler) != VK_SUCCESS)
 		{
@@ -353,6 +351,7 @@ namespace MauRen
 
 	void VulkanLightManager::CreateDefaultShadowMap(VulkanCommandPoolManager& cmdPoolManager, VulkanDescriptorContext& descriptorContext, uint32_t width, uint32_t height)
 	{
+
 		VulkanImage shadowImage
 		{
 			VK_FORMAT_D32_SFLOAT,
@@ -364,31 +363,54 @@ namespace MauRen
 			height,
 			1
 		};
-
 		shadowImage.CreateImageView(VK_IMAGE_ASPECT_DEPTH_BIT);
 
-		// Transition to transfer dst for clearing
-		shadowImage.TransitionImageLayout(cmdPoolManager, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-
-		VkClearDepthStencilValue clearValue{};
-		clearValue.depth = 1.0f;
-		clearValue.stencil = 0;
-
-		VkImageSubresourceRange range{};
-		range.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
-		range.baseMipLevel = 0;
-		range.levelCount = 1;
-		range.baseArrayLayer = 0;
-		range.layerCount = 1;
-
 		auto cmd{ cmdPoolManager.BeginSingleTimeCommands() };
-		vkCmdClearDepthStencilImage(
-			cmd,
-			shadowImage.image,
-			shadowImage.layout,
-			&clearValue,
-			1,
-			&range);
+		shadowImage.TransitionImageLayout
+		(
+			cmd, 
+			VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, 
+			VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT, 
+			VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT | VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT
+		);
+
+		VkClearValue clear{};
+		clear.depthStencil.depth = 1.0f;
+		clear.depthStencil.stencil = 0;
+
+		ClearAttachments(cmd, {}, {}, shadowImage, clear, { SHADOW_MAP_SIZE , SHADOW_MAP_SIZE });
+
+		//VkRenderingAttachmentInfo depthAttachment{};
+		//depthAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+		//depthAttachment.imageView = shadowImage.imageViews[0];
+		//depthAttachment.imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
+		//depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+		//depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+
+		//VkRenderingInfo renderingInfo{};
+		//renderingInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
+		//renderingInfo.renderArea.offset = { 0, 0 };
+		//renderingInfo.renderArea.extent = { SHADOW_MAP_SIZE, SHADOW_MAP_SIZE };
+		//renderingInfo.layerCount = 1;
+		//renderingInfo.colorAttachmentCount = 0;
+		//renderingInfo.pColorAttachments = nullptr;
+		//renderingInfo.pDepthAttachment = &depthAttachment;
+		//renderingInfo.pStencilAttachment = nullptr;
+
+		//vkCmdBeginRendering(cmd, &renderingInfo);
+		//	VkClearAttachment clearAttachment{};
+		//	clearAttachment.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+		//	clearAttachment.clearValue.depthStencil.depth = 1.0f;
+		//	clearAttachment.clearValue.depthStencil.stencil = 0;
+
+		//	VkClearRect clearRect{};
+		//	clearRect.rect.offset = { 0, 0 };
+		//	clearRect.rect.extent = { SHADOW_MAP_SIZE, SHADOW_MAP_SIZE };
+		//	clearRect.baseArrayLayer = 0;
+		//	clearRect.layerCount = 1;
+
+		//	vkCmdClearAttachments(cmd, 1, &clearAttachment, 1, &clearRect);
+		//vkCmdEndRendering(cmd);
 
 		cmdPoolManager.EndSingleTimeCommands(cmd);
 

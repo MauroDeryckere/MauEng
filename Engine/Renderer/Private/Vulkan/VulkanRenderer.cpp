@@ -66,7 +66,7 @@ namespace MauRen
 
 		m_DescriptorContext.CreateDescriptorSets(
 			tempUniformBuffers, 0,sizeof(UniformBufferObject),
-			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VulkanMaterialManager::GetInstance().GetTextureSampler(),
+			VulkanMaterialManager::GetInstance().GetTextureSampler(),
 			tempUniformBuffersCamSett, 0, sizeof(CamSettingsUBO));
 
 		m_SwapChainContext.Initialize(m_pWindow, &m_SurfaceContext, m_CommandPoolManager, m_DescriptorContext);

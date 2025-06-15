@@ -378,8 +378,7 @@ namespace MauRen
 	}
 
 	void VulkanDescriptorContext::CreateDescriptorSets(
-		std::vector<VulkanBuffer> const& bufferInfoBuffers, VkDeviceSize offset, VkDeviceSize range, 
-		VkImageLayout imageLayout, VkSampler sampler,
+		std::vector<VulkanBuffer> const& bufferInfoBuffers, VkDeviceSize offset, VkDeviceSize range, VkSampler sampler,
 		std::vector<VulkanBuffer> const& bufferInfoBuffersCamSettings, VkDeviceSize offsetCamSettings, VkDeviceSize rangeCamSettings)
 	{
 		std::vector<VkDescriptorSetLayout> const layouts(MAX_FRAMES_IN_FLIGHT, m_DescriptorSetLayout);

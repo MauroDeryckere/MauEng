@@ -69,13 +69,6 @@ namespace MauRen
 
 	void VulkanBuffer::CopyBuffer(VulkanCommandPoolManager const& CmPoolManager, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
 	{
-		// TODO
-		/* Memory transfer operations are executed using command buffers, just like drawing commands.
-		 * Therefore we must first allocate a temporary command buffer.
-		 * You may wish to create a separate command pool for these kinds of short-lived buffers, because the implementation may be able to apply memory allocation optimizations.
-		 * You should use the VK_COMMAND_POOL_CREATE_TRANSIENT_BIT flag during command pool generation in that case.
-		 */
-
 		VkCommandBuffer commandBuffer{ CmPoolManager.BeginSingleTimeCommands() };
 
 		VkBufferCopy copyRegion{};
