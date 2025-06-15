@@ -9,9 +9,9 @@ namespace MauRen
 		VkCommandBuffer commandBuffer,
 		std::vector<VulkanImage> const& colors,
 		std::vector<VkClearValue> const& colorClearValues,
+		VkExtent2D extent  = {},
 		VulkanImage depth = {},
-		VkClearValue depthClearValue = {},
-		VkExtent2D extent  = {})
+		VkClearValue depthClearValue = {})
 	{
 		std::vector<VkRenderingAttachmentInfo> colorAttachments;
 		for (auto& img : colors)

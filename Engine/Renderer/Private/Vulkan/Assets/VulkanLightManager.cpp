@@ -378,39 +378,7 @@ namespace MauRen
 		clear.depthStencil.depth = 1.0f;
 		clear.depthStencil.stencil = 0;
 
-		ClearAttachments(cmd, {}, {}, shadowImage, clear, { SHADOW_MAP_SIZE , SHADOW_MAP_SIZE });
-
-		//VkRenderingAttachmentInfo depthAttachment{};
-		//depthAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
-		//depthAttachment.imageView = shadowImage.imageViews[0];
-		//depthAttachment.imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
-		//depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
-		//depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-
-		//VkRenderingInfo renderingInfo{};
-		//renderingInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
-		//renderingInfo.renderArea.offset = { 0, 0 };
-		//renderingInfo.renderArea.extent = { SHADOW_MAP_SIZE, SHADOW_MAP_SIZE };
-		//renderingInfo.layerCount = 1;
-		//renderingInfo.colorAttachmentCount = 0;
-		//renderingInfo.pColorAttachments = nullptr;
-		//renderingInfo.pDepthAttachment = &depthAttachment;
-		//renderingInfo.pStencilAttachment = nullptr;
-
-		//vkCmdBeginRendering(cmd, &renderingInfo);
-		//	VkClearAttachment clearAttachment{};
-		//	clearAttachment.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
-		//	clearAttachment.clearValue.depthStencil.depth = 1.0f;
-		//	clearAttachment.clearValue.depthStencil.stencil = 0;
-
-		//	VkClearRect clearRect{};
-		//	clearRect.rect.offset = { 0, 0 };
-		//	clearRect.rect.extent = { SHADOW_MAP_SIZE, SHADOW_MAP_SIZE };
-		//	clearRect.baseArrayLayer = 0;
-		//	clearRect.layerCount = 1;
-
-		//	vkCmdClearAttachments(cmd, 1, &clearAttachment, 1, &clearRect);
-		//vkCmdEndRendering(cmd);
+		ClearAttachments(cmd, {}, {}, { SHADOW_MAP_SIZE , SHADOW_MAP_SIZE }, shadowImage, clear);
 
 		cmdPoolManager.EndSingleTimeCommands(cmd);
 

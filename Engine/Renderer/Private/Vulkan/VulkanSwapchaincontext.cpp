@@ -6,6 +6,7 @@
 #include "VulkanSurfaceContext.h"
 #include "VulkanDeviceContext.h"
 #include "VulkanGraphicsPipelineContext.h"
+#include "Passes/ClearAttachments.h"
 
 namespace MauRen
 {
@@ -273,6 +274,26 @@ namespace MauRen
 			m_ColorImages.back().TransitionImageLayout
 			(
 				buffer,
+				VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+				VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
+				VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_2_COLOR_ATTACHMENT_READ_BIT
+			);
+		}
+
+		std::vector<VkClearValue> colorClears;
+		VkClearValue constexpr clearVal{ .color = {0, 0, 0, 0 } };
+		for (size_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; ++i)
+		{
+			colorClears.emplace_back(clearVal);
+		}
+
+		ClearAttachments(buffer, m_ColorImages, colorClears, GetExtent(), {}, {});
+
+		for (size_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; ++i)
+		{
+			m_ColorImages[i].TransitionImageLayout
+			(
+				buffer,
 				VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
 				VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT,
 				VK_ACCESS_2_SHADER_READ_BIT
@@ -333,14 +354,33 @@ namespace MauRen
 			m_DepthImages.back().TransitionImageLayout
 			(
 				buffer,
+				VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL,
+				VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT,
+				VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT
+			);
+		}
+
+
+		VkClearValue clearVal{ };
+		clearVal.depthStencil.depth = 1.f;
+		clearVal.depthStencil.stencil = 0.f;
+		for (size_t i{ 0 }; i < m_DepthImages.size(); ++i)
+		{
+			ClearAttachments(buffer, {}, {}, GetExtent(), m_DepthImages[i], clearVal);
+		}
+
+		for (size_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; ++i)
+		{
+			m_DepthImages[i].TransitionImageLayout
+			(
+				buffer,
 				VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_OPTIMAL,
-				VK_PIPELINE_STAGE_2_NONE,
-				VK_ACCESS_2_NONE
+				VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT,
+				VK_ACCESS_2_SHADER_READ_BIT
 			);
 		}
 
 		commandPoolManager.EndSingleTimeCommands(buffer);
-
 
 		std::vector<VkWriteDescriptorSet> descriptorWrites;
 		std::vector<VkDescriptorImageInfo> imageInfos;
@@ -395,9 +435,9 @@ namespace MauRen
 			g.color.TransitionImageLayout
 			(
 				buffer,
-				VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-				VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT,
-				VK_ACCESS_2_SHADER_READ_BIT
+				VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+				VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
+				VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_2_COLOR_ATTACHMENT_READ_BIT
 			);
 
 			g.normal = VulkanImage
@@ -417,9 +457,9 @@ namespace MauRen
 			g.normal.TransitionImageLayout
 			(
 				buffer,
-				VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-				VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT,
-				VK_ACCESS_2_SHADER_READ_BIT
+				VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+				VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
+				VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_2_COLOR_ATTACHMENT_READ_BIT
 			);
 
 			g.metalnessRoughness = VulkanImage
@@ -439,13 +479,61 @@ namespace MauRen
 			g.metalnessRoughness.TransitionImageLayout
 			(
 				buffer,
+				VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+				VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
+				VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_2_COLOR_ATTACHMENT_READ_BIT
+			);
+
+			m_GBuffers.emplace_back(g);
+		}
+
+		std::vector<VulkanImage> allColour;
+		std::vector<VkClearValue> colorClears;
+		VkClearValue constexpr clearVal{ .color = {0, 0, 0, 0 } };
+
+		for (auto& g : m_GBuffers)
+		{
+			allColour.clear();
+			colorClears.clear();
+
+			allColour.emplace_back(g.color);
+			allColour.emplace_back(g.metalnessRoughness);
+			allColour.emplace_back(g.normal);
+			colorClears.emplace_back(clearVal);
+			colorClears.emplace_back(clearVal);
+			colorClears.emplace_back(clearVal);
+
+			ClearAttachments(buffer, allColour, colorClears, GetExtent(), {}, {});
+		}
+
+
+		for (auto& g : m_GBuffers)
+		{
+			g.color.TransitionImageLayout
+			(
+				buffer,
 				VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
 				VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT,
 				VK_ACCESS_2_SHADER_READ_BIT
 			);
 
-			m_GBuffers.emplace_back(g);
+			g.normal.TransitionImageLayout
+			(
+				buffer,
+				VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+				VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT,
+				VK_ACCESS_2_SHADER_READ_BIT
+			);
+
+			g.metalnessRoughness.TransitionImageLayout
+			(
+				buffer,
+				VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+				VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT,
+				VK_ACCESS_2_SHADER_READ_BIT
+			);
 		}
+
 		commandPoolManager.EndSingleTimeCommands(buffer);
 
 		std::vector<VkWriteDescriptorSet> descriptorWrites;
