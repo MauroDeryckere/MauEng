@@ -143,7 +143,7 @@ namespace MauRen
 		auto const result{ material->Get(AI_MATKEY_NAME, matName) };
 		if (AI_SUCCESS != result)
 		{
-			matName = path + std::to_string(mesh->mMaterialIndex);
+			matStr = path + std::to_string(mesh->mMaterialIndex);
 			ME_LOG_WARN(MauCor::LogCategory::Renderer, "Setting material name manually for: {}", matStr);
 		}
 
