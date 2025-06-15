@@ -31,4 +31,32 @@ namespace MauRen
 	{
 		return m_Allocator;
 	}
+
+	VmaMemoryUsage VulkanMemoryAllocator::GetMemoryUsageFromVkProperties(VkMemoryPropertyFlags properties) noexcept
+    {
+        if ((properties & VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT) &&
+            !(properties & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT))
+        {
+            return VMA_MEMORY_USAGE_GPU_ONLY;
+        }
+        else if ((properties & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) &&
+            (properties & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT) &&
+            !(properties & VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
+        {
+            return VMA_MEMORY_USAGE_CPU_ONLY;
+        }
+        else if ((properties & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) &&
+            (properties & VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
+        {
+            return VMA_MEMORY_USAGE_CPU_TO_GPU;
+        }
+        else if ((properties & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) &&
+            (properties & VK_MEMORY_PROPERTY_HOST_CACHED_BIT))
+        {
+            return VMA_MEMORY_USAGE_GPU_TO_CPU;
+        }
+
+        // Fallback
+        return VMA_MEMORY_USAGE_UNKNOWN;
+    }
 }

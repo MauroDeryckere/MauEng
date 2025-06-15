@@ -15,6 +15,8 @@ namespace MauRen
 
 		[[nodiscard]] VmaAllocator GetAllocator() const noexcept;
 
+		[[nodiscard]] static VmaMemoryUsage GetMemoryUsageFromVkProperties(VkMemoryPropertyFlags properties) noexcept;
+
 		VulkanMemoryAllocator(VulkanMemoryAllocator const&) = delete;
 		VulkanMemoryAllocator(VulkanMemoryAllocator&&) = delete;
 		VulkanMemoryAllocator& operator=(VulkanMemoryAllocator const&) = delete;

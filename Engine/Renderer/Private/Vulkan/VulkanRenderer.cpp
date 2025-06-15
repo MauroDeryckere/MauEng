@@ -108,13 +108,13 @@ namespace MauRen
 
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 		void* mappedMemory;
-		vkMapMemory(deviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory, 0, sizeof(m_QuadVertices[0]) * std::size(m_QuadVertices), 0, &mappedMemory);
+		vmaMapMemory(VulkanMemoryAllocator::GetInstance().GetAllocator(), stagingBuffer.alloc, &mappedMemory);
 
 		// Copy the data to the buffer
 		memcpy(mappedMemory, m_QuadVertices.data(), sizeof(m_QuadVertices[0]) * std::size(m_QuadVertices));
 
 		// Unmap the memory
-		vkUnmapMemory(deviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory);
+		vmaUnmapMemory(VulkanMemoryAllocator::GetInstance().GetAllocator(), stagingBuffer.alloc);
 
 		VulkanBuffer::CopyBuffer(m_CommandPoolManager, stagingBuffer.buffer, m_QuadVertexBuffer.buffer, sizeof(m_QuadVertices[0]) * std::size(m_QuadVertices));
 		stagingBuffer.Destroy();
@@ -152,7 +152,10 @@ namespace MauRen
 
 		for (size_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; ++i)
 		{
+			m_MappedUniformBuffers[i].UnMap();
 			m_MappedUniformBuffers[i].buffer.Destroy();
+
+			m_CamSettingsMappedUniformBuffers[i].UnMap();
 			m_CamSettingsMappedUniformBuffers[i].buffer.Destroy();
 		}
 
@@ -231,7 +234,7 @@ namespace MauRen
 													nullptr });
 
 				// Persistent mapping
-				vkMapMemory(deviceContext->GetLogicalDevice(), m_MappedUniformBuffers[i].buffer.bufferMemory, 0, BUFFER_SIZE, 0, &m_MappedUniformBuffers[i].mapped);
+				vmaMapMemory(VulkanMemoryAllocator::GetInstance().GetAllocator(), m_MappedUniformBuffers[i].buffer.alloc, &m_MappedUniformBuffers[i].mapped);
 			}
 		}
 
@@ -247,7 +250,7 @@ namespace MauRen
 													nullptr });
 
 				// Persistent mapping
-				vkMapMemory(deviceContext->GetLogicalDevice(), m_CamSettingsMappedUniformBuffers[i].buffer.bufferMemory, 0, BUFFER_SIZE, 0, &m_CamSettingsMappedUniformBuffers[i].mapped);
+				vmaMapMemory(VulkanMemoryAllocator::GetInstance().GetAllocator(), m_CamSettingsMappedUniformBuffers[i].buffer.alloc, &m_CamSettingsMappedUniformBuffers[i].mapped);
 			}
 		}
 
@@ -861,13 +864,13 @@ namespace MauRen
 			};
 
 			void* mappedMemory;
-			vkMapMemory(deviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory, 0, bufferSize, 0, &mappedMemory);
+			vmaMapMemory(VulkanMemoryAllocator::GetInstance().GetAllocator(), stagingBuffer.alloc, &mappedMemory);
 
 			// Copy the data to the buffer
 			memcpy(mappedMemory, m_DebugRenderer->m_ActivePoints.data(), bufferSize);
 
 			// Unmap the memory
-			vkUnmapMemory(deviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory);
+			vmaUnmapMemory(VulkanMemoryAllocator::GetInstance().GetAllocator(), stagingBuffer.alloc);
 
 			VulkanBuffer::CopyBuffer(m_CommandPoolManager, stagingBuffer.buffer, m_DebugVertexBuffer.buffer, bufferSize);
 			stagingBuffer.Destroy();
@@ -884,13 +887,13 @@ namespace MauRen
 			};
 
 			void* mappedMemory;
-			vkMapMemory(deviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory, 0, bufferSize, 0, &mappedMemory);
+			vmaMapMemory(VulkanMemoryAllocator::GetInstance().GetAllocator(), stagingBuffer.alloc, &mappedMemory);
 
 			// Copy the data to the buffer
 			memcpy(mappedMemory, m_DebugRenderer->m_IndexBuffer.data(), bufferSize);
 
 			// Unmap the memory
-			vkUnmapMemory(deviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory);
+			vmaUnmapMemory(VulkanMemoryAllocator::GetInstance().GetAllocator(), stagingBuffer.alloc);
 
 			VulkanBuffer::CopyBuffer(m_CommandPoolManager, stagingBuffer.buffer, m_DebugIndexBuffer.buffer, bufferSize);
 			stagingBuffer.Destroy();
