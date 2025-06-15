@@ -26,8 +26,8 @@ namespace MauRen
 		auto allocator{ VulkanMemoryAllocator::GetInstance().GetAllocator() };
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 		size = deviceSize;
-		memPriority = memoryPriority;
-
+		memPriority = std::clamp(memoryPriority, 0.f, 1.f);
+		
 		VkBufferCreateInfo bufferInfo{};
 		bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 		bufferInfo.size = size;

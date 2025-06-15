@@ -230,7 +230,7 @@ namespace MauRen
 				m_MappedUniformBuffers.emplace_back(VulkanMappedBuffer{
 													VulkanBuffer{BUFFER_SIZE,
 																		VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-																		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT },
+																		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, 1.f },
 													nullptr });
 
 				// Persistent mapping

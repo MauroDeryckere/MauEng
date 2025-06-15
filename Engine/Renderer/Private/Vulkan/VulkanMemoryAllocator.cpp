@@ -14,6 +14,7 @@ namespace MauRen
 		allocatorInfo.physicalDevice = deviceContext->GetPhysicalDevice();
 		allocatorInfo.device = deviceContext->GetLogicalDevice();
 		allocatorInfo.instance = instanceContext.GetInstance();
+        allocatorInfo.flags = VMA_ALLOCATOR_CREATE_EXT_MEMORY_PRIORITY_BIT;
 
 		VmaAllocator vmaAllocator;
 		VkResult const result{ vmaCreateAllocator(&allocatorInfo, &vmaAllocator) };
