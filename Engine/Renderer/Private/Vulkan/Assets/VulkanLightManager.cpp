@@ -340,6 +340,7 @@ namespace MauRen
 		samplerInfo.compareOp = VK_COMPARE_OP_LESS;
 
 		samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
+		samplerInfo.maxLod = VK_LOD_CLAMP_NONE;
 
 		samplerInfo.anisotropyEnable = VK_FALSE;
 
