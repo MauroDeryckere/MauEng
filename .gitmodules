@@ -22,3 +22,6 @@
 [submodule "Engine/Renderer/Libs/Assimp"]
 	path = Engine/Renderer/Libs/Assimp
 	url = https://github.com/assimp/assimp.git
+[submodule "Engine/Renderer/Libs/vma"]
+	path = Engine/Renderer/Libs/vma
+	url = https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git

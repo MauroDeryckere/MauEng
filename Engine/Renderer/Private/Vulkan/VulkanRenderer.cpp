@@ -10,6 +10,8 @@
 #include "../../MauEng/Public/Components/CStaticMesh.h"
 #include "../../../MauEng/Public/Scene/Camera.h"
 
+#include "VulkanMemoryAllocator.h"
+
 namespace MauRen
 {
 	VulkanRenderer::VulkanRenderer(SDL_Window* pWindow, DebugRenderer& debugRenderer) :
@@ -38,6 +40,7 @@ namespace MauRen
 		m_DebugContext.Initialize(&m_InstanceContext);
 
 		VulkanDeviceContextManager::GetInstance().Initialize(&m_SurfaceContext, &m_InstanceContext);
+		VulkanMemoryAllocator::GetInstance().Initialize(m_InstanceContext);
 
 		m_SwapChainContext.PreInitialize(&m_SurfaceContext);
 
@@ -158,6 +161,7 @@ namespace MauRen
 		m_SwapChainContext.Destroy();
 		m_DescriptorContext.Destroy();
 
+		VulkanMemoryAllocator::GetInstance().Destroy();
 		VulkanDeviceContextManager::GetInstance().Destroy();
 
 		m_DebugContext.Destroy();
