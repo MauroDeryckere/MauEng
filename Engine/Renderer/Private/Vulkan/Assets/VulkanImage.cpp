@@ -1,6 +1,7 @@
 #include "VulkanImage.h"
 
 #include "../VulkanCommandPoolManager.h"
+#include "Vulkan/VulkanMemoryAllocator.h"
 
 namespace MauRen
 {
@@ -10,8 +11,12 @@ namespace MauRen
 
 		DestroyAllImageViews();
 
-		VulkanUtils::SafeDestroy(deviceContext->GetLogicalDevice(), image, nullptr);
-		VulkanUtils::SafeDestroy(deviceContext->GetLogicalDevice(), imageMemory, nullptr);
+		if (image != VK_NULL_HANDLE)
+		{
+			vmaDestroyImage(VulkanMemoryAllocator::GetInstance().GetAllocator(), image, alloc);
+			image = VK_NULL_HANDLE;
+			alloc = VK_NULL_HANDLE;
+		}
 	}
 
 	void VulkanImage::TransitionImageLayout(VulkanCommandPoolManager const& CmdPoolManager, VkImageLayout newLayout)
@@ -277,7 +282,7 @@ namespace MauRen
 
 		lastStage = VK_PIPELINE_STAGE_2_NONE;
 		lastAccess = VK_ACCESS_2_NONE;
-		memPriority = std::clamp(memPriority, 0.f, 1.f);
+		memPriority = std::clamp(memoryPriority, 0.f, 1.f);
 
 		VkImageCreateInfo imageInfo{};
 		imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -298,30 +303,13 @@ namespace MauRen
 		imageInfo.samples = numSamples;
 		imageInfo.flags = 0; // Optional
 
-		if (vkCreateImage(deviceContext->GetLogicalDevice(), &imageInfo, nullptr, &image) != VK_SUCCESS)
+		VmaAllocationCreateInfo allocCreateInfo{};
+		allocCreateInfo.usage = VulkanMemoryAllocator::GetMemoryUsageFromVkProperties(properties);
+		allocCreateInfo.priority = memPriority;
+
+		if (vmaCreateImage(VulkanMemoryAllocator::GetInstance().GetAllocator(), &imageInfo, &allocCreateInfo, &image, &alloc, nullptr) != VK_SUCCESS)
 		{
-			throw std::runtime_error("Failed to create image!");
+			throw std::runtime_error("Failed to create image with VMA!");
 		}
-
-		VkMemoryRequirements memRequirements{};
-		vkGetImageMemoryRequirements(deviceContext->GetLogicalDevice(), image, &memRequirements);
-
-		VkMemoryAllocateInfo allocInfo{};
-		allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-		allocInfo.allocationSize = memRequirements.size;
-		allocInfo.memoryTypeIndex = VulkanUtils::FindMemoryType(deviceContext->GetPhysicalDevice(), memRequirements.memoryTypeBits, properties);
-
-		VkMemoryPriorityAllocateInfoEXT priorityInfo{};
-		priorityInfo.sType = VK_STRUCTURE_TYPE_MEMORY_PRIORITY_ALLOCATE_INFO_EXT;
-		priorityInfo.priority = memPriority;
-
-		allocInfo.pNext = &priorityInfo;
-
-		if (vkAllocateMemory(deviceContext->GetLogicalDevice(), &allocInfo, nullptr, &imageMemory) != VK_SUCCESS)
-		{
-			throw std::runtime_error("Failed to allocate image memory!");
-		}
-
-		vkBindImageMemory(deviceContext->GetLogicalDevice(), image, imageMemory, 0);
 	}
 }
