@@ -239,9 +239,11 @@ namespace MauRen
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 
 		auto const vertShaderCode{ ReadFile("Resources/Shaders/depthPrepass.vert.spv") };
+		auto const fragShaderCode{ ReadFile("Resources/Shaders/depthPrepass.frag.spv") };
 
 		// Shader modules are linked internally, the VkShaderModule is just a wrapper so we do not need to store it.
 		VkShaderModule vertShaderModule{ CreateShaderModule(vertShaderCode) };
+		VkShaderModule fragShaderModule{ CreateShaderModule(fragShaderCode) };
 
 		VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
 		vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -249,7 +251,13 @@ namespace MauRen
 		vertShaderStageInfo.module = vertShaderModule;
 		vertShaderStageInfo.pName = "main";
 
-		std::array const shaderStages{ vertShaderStageInfo };
+		VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
+		fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+		fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+		fragShaderStageInfo.module = fragShaderModule;
+		fragShaderStageInfo.pName = "main";
+
+		std::array const shaderStages{ vertShaderStageInfo, fragShaderStageInfo };
 
 		std::array constexpr dynamicStates{
 			VK_DYNAMIC_STATE_VIEWPORT,
@@ -307,7 +315,7 @@ namespace MauRen
 		rasterizer.rasterizerDiscardEnable = VK_FALSE;
 		rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
 		rasterizer.lineWidth = 1.0f;
-		rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
+		rasterizer.cullMode = VK_CULL_MODE_NONE;
 		rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
 		rasterizer.depthBiasEnable = VK_FALSE;
 		rasterizer.depthBiasConstantFactor = 0.0f; // Optional
@@ -401,6 +409,7 @@ namespace MauRen
 		}
 
 		VulkanUtils::SafeDestroy(deviceContext->GetLogicalDevice(), vertShaderModule, nullptr);
+		VulkanUtils::SafeDestroy(deviceContext->GetLogicalDevice(), fragShaderModule, nullptr);
 	}
 
 	void VulkanGraphicsPipelineContext::CreateShadowPassPipeline(VulkanSwapchainContext* pSwapChainContext, VkDescriptorSetLayout descriptorSetLayout, uint32_t descriptorSetLayoutCount)
@@ -435,7 +444,7 @@ namespace MauRen
 		vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 
 		auto const bindingDescription{ VulkanUtils::GetVertexBindingDescription() };
-		auto const attributeDescriptions{ VulkanUtils::GetDepthPrepassVertexAttributeDescriptions() };
+		auto const attributeDescriptions{ VulkanUtils::GetShadowPassVertexAttributeDescriptions() };
 
 		vertexInputInfo.vertexBindingDescriptionCount = 1;
 		vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());

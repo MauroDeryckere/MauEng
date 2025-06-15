@@ -35,7 +35,12 @@ layout(set = 0, binding = 5) buffer readonly MeshInstanceDataBuffer
     MeshInstanceData instances[];
 };
 
+
 layout(location = 0) in vec3 inPosition;
+layout(location = 1) in vec2 inTexCoord;
+
+layout(location = 0) out vec2 outFragTexCoord;
+layout(location = 1) out flat uint outMaterialIndex;
 
 void main()
 {
@@ -43,4 +48,8 @@ void main()
     mat4 model = instance.modelMatrix;
 
     gl_Position = ubo.viewProj * model * vec4(inPosition, 1.0);
+
+    outMaterialIndex = instance.materialIndex;
+
+    outFragTexCoord = inTexCoord;
 }

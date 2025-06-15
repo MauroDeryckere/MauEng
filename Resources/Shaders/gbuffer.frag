@@ -33,7 +33,11 @@ void main()
 {
     const MaterialData material = materials[inMaterialIndex];
 
-    const vec3 albedo = texture(sampler2D(TextureBuffer[nonuniformEXT(material.albedoTextureID)], globalSampler), fragTexCoord).rgb;
+    const vec4 albedo = texture(sampler2D(TextureBuffer[nonuniformEXT(material.albedoTextureID)], globalSampler), fragTexCoord);
+ 
+    if (albedo.a < 0.95f)
+        discard;
+
     const vec4 normalTex = texture(sampler2D(TextureBuffer[nonuniformEXT(material.normalTextureID)], globalSampler), fragTexCoord);
     const vec3 metalRough = texture(sampler2D(TextureBuffer[nonuniformEXT(material.metalnessTextureID)], globalSampler), fragTexCoord).rgb;
 
@@ -49,7 +53,7 @@ void main()
     float nzSign = (n.z < 0.0 ? 0.0 : 1.0);
     vec3 mr = metalRough.rgb;
 
-    outColor = vec4(albedo, 1.0);
+    outColor = albedo;
     outNormal = n.xy * 0.5 + 0.5;
     outMetal = vec4(mr, nzSign);
 }
