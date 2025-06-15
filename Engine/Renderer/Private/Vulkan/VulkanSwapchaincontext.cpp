@@ -281,7 +281,7 @@ namespace MauRen
 		}
 
 		std::vector<VkClearValue> colorClears;
-		VkClearValue constexpr clearVal{ .color = {0, 0, 0, 0 } };
+		VkClearValue constexpr clearVal{ .color = {{0, 0, 0, 0}} };
 		for (size_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; ++i)
 		{
 			colorClears.emplace_back(clearVal);
@@ -489,7 +489,7 @@ namespace MauRen
 
 		std::vector<VulkanImage> allColour;
 		std::vector<VkClearValue> colorClears;
-		VkClearValue constexpr clearVal{ .color = {0, 0, 0, 0 } };
+		VkClearValue constexpr clearVal{ .color = {{0, 0, 0, 0}} };
 
 		for (auto& g : m_GBuffers)
 		{

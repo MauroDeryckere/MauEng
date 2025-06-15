@@ -10,8 +10,9 @@ namespace MauRen
 	//TODO separate class refactor in future
 	struct VulkanImage final
 	{
+		VmaAllocation alloc{ nullptr };
+
 		VkImage image{ VK_NULL_HANDLE };
-		VkDeviceMemory imageMemory{ VK_NULL_HANDLE };
 		VkFormat format{ VK_FORMAT_UNDEFINED };
 		VkImageLayout layout{ VK_IMAGE_LAYOUT_UNDEFINED };
 		VkPipelineStageFlags2 lastStage{ VK_PIPELINE_STAGE_2_NONE };

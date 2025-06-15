@@ -44,12 +44,15 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/Libs/Assimp)
 add_library(stb INTERFACE)
 target_include_directories(stb INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/Libs/stb)
 
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/Libs/vma)
+
 target_link_libraries(Renderer
     PRIVATE
         stb
         assimp
         MauEngCore
         Vulkan::Vulkan # Link Vulkan SDK
+        GPUOpen::VulkanMemoryAllocator
 )
 
 target_include_directories(Renderer
@@ -59,6 +62,7 @@ target_include_directories(Renderer
         ${RENDERER_PRIVATE_DIR}       # Private headers for Renderer
         ${RENDERER_SHARED_DIR}
         "../Core/Shared"
+        "${CMAKE_CURRENT_SOURCE_DIR}/Libs/vma/include"
 )
 
 # Enable precompiled header support for Engine

@@ -6,6 +6,7 @@
 #include "Vulkan/VulkanCommandPoolManager.h"
 #include "Vulkan/VulkanDescriptorContext.h"
 #include "Vulkan/VulkanGraphicsPipelineContext.h"
+#include "Vulkan/VulkanMemoryAllocator.h"
 #include "Vulkan/Passes/ClearAttachments.h"
 
 
@@ -31,6 +32,7 @@ namespace MauRen
 
 		for (auto& l : m_LightBuffers)
 		{
+			l.UnMap();
 			l.buffer.Destroy();
 		}
 
@@ -338,6 +340,7 @@ namespace MauRen
 		samplerInfo.compareOp = VK_COMPARE_OP_LESS;
 
 		samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
+		samplerInfo.maxLod = VK_LOD_CLAMP_NONE;
 
 		samplerInfo.anisotropyEnable = VK_FALSE;
 
@@ -425,7 +428,7 @@ namespace MauRen
 												nullptr });
 
 			// Persistent mapping
-			vkMapMemory(deviceContext->GetLogicalDevice(), m_LightBuffers[i].buffer.bufferMemory, 0, BUFFER_SIZE, 0, &m_LightBuffers[i].mapped);
+			vmaMapMemory(VulkanMemoryAllocator::GetInstance().GetAllocator(), m_LightBuffers[i].buffer.alloc, &m_LightBuffers[i].mapped);
 		}
 	}
 }

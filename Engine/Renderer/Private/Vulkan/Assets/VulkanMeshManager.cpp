@@ -6,6 +6,7 @@
 #include "VulkanMaterialManager.h"
 
 #include "Assets/ModelLoader.h"
+#include "Vulkan/VulkanMemoryAllocator.h"
 
 namespace MauRen
 {
@@ -32,16 +33,20 @@ namespace MauRen
 
 	bool VulkanMeshManager::Destroy()
 	{
+		m_VertexBuffer.UnMap();
 		m_VertexBuffer.buffer.Destroy();
+		m_IndexBuffer.UnMap();
 		m_IndexBuffer.buffer.Destroy();
 
 		for (auto& d : m_DrawCommandBuffers)
 		{
+			d.UnMap();
 			d.buffer.Destroy();
 		}
 
 		for(auto& m : m_MeshInstanceDataBuffers)
 		{
+			m.UnMap();
 			m.buffer.Destroy();
 		}
 
@@ -205,7 +210,7 @@ namespace MauRen
 												nullptr });
 
 			// Persistent mapping
-			vkMapMemory(deviceContext->GetLogicalDevice(), m_MeshInstanceDataBuffers[i].buffer.bufferMemory, 0, BUFFER_SIZE, 0, &m_MeshInstanceDataBuffers[i].mapped);
+			vmaMapMemory(VulkanMemoryAllocator::GetInstance().GetAllocator(), m_MeshInstanceDataBuffers[i].buffer.alloc, &m_MeshInstanceDataBuffers[i].mapped);
 		}
 	}
 
@@ -224,7 +229,7 @@ namespace MauRen
 												nullptr });
 
 			// Persistent mapping
-			vkMapMemory(deviceContext->GetLogicalDevice(), m_DrawCommandBuffers[i].buffer.bufferMemory, 0, BUFFER_SIZE, 0, &m_DrawCommandBuffers[i].mapped);
+			vmaMapMemory(VulkanMemoryAllocator::GetInstance().GetAllocator(), m_DrawCommandBuffers[i].buffer.alloc, &m_DrawCommandBuffers[i].mapped);
 		}
 	}
 
@@ -242,7 +247,7 @@ namespace MauRen
 												nullptr });
 
 			// Persistent mapping
-			vkMapMemory(deviceContext->GetLogicalDevice(), m_VertexBuffer.buffer.bufferMemory, 0, BUFFER_SIZE, 0, &m_VertexBuffer.mapped);
+			vmaMapMemory(VulkanMemoryAllocator::GetInstance().GetAllocator(), m_VertexBuffer.buffer.alloc, &m_VertexBuffer.mapped);
 		}
 
 		{
@@ -255,7 +260,7 @@ namespace MauRen
 												nullptr });
 
 			// Persistent mapping
-			vkMapMemory(deviceContext->GetLogicalDevice(), m_IndexBuffer.buffer.bufferMemory, 0, BUFFER_SIZE, 0, &m_IndexBuffer.mapped);
+			vmaMapMemory(VulkanMemoryAllocator::GetInstance().GetAllocator(), m_IndexBuffer.buffer.alloc, &m_IndexBuffer.mapped);
 		}
 	}
 }

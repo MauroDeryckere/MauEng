@@ -19,6 +19,9 @@
 	#include "Vulkan/VulkanUtils.h"
 
 	#include "Vulkan/VulkanDeviceContextManager.h"
+
+	#include "vk_mem_alloc.h"
+
 #endif
 
 #endif

@@ -11,9 +11,11 @@ namespace MauRen
 	struct VulkanBuffer final
 	{
 		VkBuffer buffer{ VK_NULL_HANDLE };
-		VkDeviceMemory bufferMemory{ VK_NULL_HANDLE };
 		VkDeviceSize size{ 0 };
 		float memPriority{ 0.f };
+
+		VmaAllocation alloc{ nullptr };
+
 		void Destroy();
 		static void CopyBuffer(VulkanCommandPoolManager const& CmPoolManager, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 
@@ -34,6 +36,8 @@ namespace MauRen
 	{
 		VulkanBuffer buffer{  };
 		void* mapped{ nullptr };
+
+		void UnMap();
 	};
 
 }

@@ -6,6 +6,7 @@
 #include "Assets/Material.h"
 
 #include "../VulkanDeviceContextManager.h"
+#include "Vulkan/VulkanMemoryAllocator.h"
 
 namespace MauRen
 {
@@ -32,6 +33,7 @@ namespace MauRen
 	{
 		for (auto & m : m_MaterialDataBuffers)
 		{
+			m.UnMap();
 			m.buffer.Destroy();
 		}
 		
@@ -156,7 +158,7 @@ namespace MauRen
 												nullptr });
 
 			// Persistent mapping
-			vkMapMemory(deviceContext->GetLogicalDevice(), m_MaterialDataBuffers[i].buffer.bufferMemory, 0, BUFFER_SIZE, 0, &m_MaterialDataBuffers[i].mapped);
+			vmaMapMemory(VulkanMemoryAllocator::GetInstance().GetAllocator(), m_MaterialDataBuffers[i].buffer.alloc, &m_MaterialDataBuffers[i].mapped);
 		}
 	}
 

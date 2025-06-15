@@ -7,6 +7,7 @@
 
 
 #include "Assets/ImageLoader.h"
+#include "Vulkan/VulkanMemoryAllocator.h"
 
 namespace MauRen
 {
@@ -200,9 +201,9 @@ namespace MauRen
 									 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT };
 
 		void* data;
-		vkMapMemory(deviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory, 0, imageSize, 0, &data);
+		vmaMapMemory(VulkanMemoryAllocator::GetInstance().GetAllocator(), stagingBuffer.alloc, &data);
 		memcpy(data, img.pixels, static_cast<size_t>(imageSize));
-		vkUnmapMemory(deviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory);
+		vmaUnmapMemory(VulkanMemoryAllocator::GetInstance().GetAllocator(), stagingBuffer.alloc);
 
 		VulkanImage texImage
 		{
@@ -252,9 +253,9 @@ namespace MauRen
 									 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT };
 
 		void* data;
-		vkMapMemory(deviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory, 0, imageSize, 0, &data);
+		vmaMapMemory(VulkanMemoryAllocator::GetInstance().GetAllocator(), stagingBuffer.alloc, &data);
 		memcpy(data, img.pixels, static_cast<size_t>(imageSize));
-		vkUnmapMemory(deviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory);
+		vmaUnmapMemory(VulkanMemoryAllocator::GetInstance().GetAllocator(), stagingBuffer.alloc);
 
 		VulkanImage texImage
 		{
@@ -298,9 +299,9 @@ namespace MauRen
 									 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT };
 
 		void* data;
-		vkMapMemory(deviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory, 0, imageSize, 0, &data);
+		vmaMapMemory(VulkanMemoryAllocator::GetInstance().GetAllocator(), stagingBuffer.alloc, &data);
 		memcpy(data, &pixel, static_cast<size_t>(imageSize));
-		vkUnmapMemory(deviceContext->GetLogicalDevice(), stagingBuffer.bufferMemory);
+		vmaUnmapMemory(VulkanMemoryAllocator::GetInstance().GetAllocator(), stagingBuffer.alloc);
 
 
 		VulkanImage texImage
