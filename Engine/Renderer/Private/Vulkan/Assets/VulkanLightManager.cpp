@@ -385,7 +385,7 @@ namespace MauRen
 
 		cmdPoolManager.EndSingleTimeCommands(cmd);
 
-		shadowImage.TransitionImageLayout(cmdPoolManager, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		shadowImage.TransitionImageLayout(cmdPoolManager, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT, VK_ACCESS_2_SHADER_READ_BIT);
 
 		m_ShadowMaps.emplace_back(shadowImage);
 
@@ -410,7 +410,7 @@ namespace MauRen
 
 		m_ShadowMaps.emplace_back(shadowImage);
 
-		m_ShadowMaps.back().TransitionImageLayout(cmdPoolManager, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		m_ShadowMaps.back().TransitionImageLayout(cmdPoolManager, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT, VK_ACCESS_2_SHADER_READ_BIT);
 	}
 
 	void VulkanLightManager::InitLightBuffers()

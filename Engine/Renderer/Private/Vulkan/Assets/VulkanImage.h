@@ -30,7 +30,8 @@ namespace MauRen
 		void Destroy();
 
 		// Transition image layout using single time commands 
-		void TransitionImageLayout(VulkanCommandPoolManager const& CmdPoolManager, VkImageLayout newLayout);
+		void TransitionImageLayout(VulkanCommandPoolManager const& CmdPoolManager, VkImageLayout newLayout, VkPipelineStageFlags2 dstStageMask,
+			VkAccessFlags2 dstAccessMask);
 		// Transition image layout using pre-existing command buffer & memeory bariers.
 		void TransitionImageLayout( VkCommandBuffer cmdBuffer, 
 									VkImageLayout newLayout, 

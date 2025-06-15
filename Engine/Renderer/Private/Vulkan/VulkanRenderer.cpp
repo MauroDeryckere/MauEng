@@ -283,10 +283,13 @@ namespace MauRen
 		{
 			ME_PROFILE_SCOPE("Depth Prepass")
 			// Depth
-			depth.TransitionImageLayout(commandBuffer,
-				VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL,
-				VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT,
-				VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT);
+			if (VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL != depth.layout)
+			{
+				depth.TransitionImageLayout(commandBuffer,
+					VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL,
+					VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT,
+					VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT);
+			}
 
 			VkRenderingAttachmentInfo depthAttachment{};
 			depthAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
@@ -517,12 +520,6 @@ namespace MauRen
 					VK_ACCESS_2_SHADER_READ_BIT);
 			}
 
-			//if (imageIndex != m_CurrentFrame)
-			//{
-			//	ME_LOG_ERROR(MauCor::LogCategory::Renderer, "THEYRE DIFFERENT");
-			//}
-			//ME_LOG_ERROR(MauCor::LogCategory::Renderer, "ImageID: {} Curr Frame: {}", imageIndex, m_CurrentFrame);
-
 			// Swapchain Colour
 			auto& swapColor{ m_SwapChainContext.GetSwapchainImages()[imageIndex] };
 			if (VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL != swapColor.layout)
@@ -573,7 +570,7 @@ namespace MauRen
 				depth.TransitionImageLayout(commandBuffer,
 					VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL,
 					VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT,
-					VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT);
+					VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT);
 			}
 
 			VkRenderingAttachmentInfo colorAttachment{};
