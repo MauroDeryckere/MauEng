@@ -2,7 +2,7 @@
 #define MAUCOR_EVENTMANAGER_H
 
 #include "Singleton.h"
-#include <queue>
+#include <vector>
 
 namespace MauCor
 {
@@ -23,7 +23,6 @@ namespace MauCor
 		friend class Singleton<EventManager>;
 		EventManager() = default;
 		virtual ~EventManager() override = default;
-
 		std::vector<std::unique_ptr<IDeferredEvent>> m_EventQueue;
 	};
 }

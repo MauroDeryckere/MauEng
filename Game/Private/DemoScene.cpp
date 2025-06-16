@@ -10,41 +10,41 @@ namespace MauGam
 
 		using namespace MauEng;
 
-		auto const handle{ m_DelegateTest.Subscribe([this](TestEvent const& event) { OnDelegate(event); }) };
+		auto const handle{ m_DelegateTest.Get()->Subscribe([this](TestEvent const& event) { OnDelegate(event); }) };
 		TestEvent event{};
-		m_DelegateTest.Broadcast(event);
-		m_DelegateTest.UnSubscribe(handle);
-		m_DelegateTest.Broadcast(event);
+		m_DelegateTest.Get()->Broadcast(event);
+		m_DelegateTest.Get()->UnSubscribe(handle);
+		m_DelegateTest.Get()->Broadcast(event);
 
 		event.i = 20;
-		auto const handle02{ m_DelegateTest.Subscribe([this](TestEvent const& event) { OnDelegate(event); }, this) };
-		m_DelegateTest.Broadcast(event);
-		m_DelegateTest.UnSubscribeAllByOwner(handle02.owner);
-		m_DelegateTest.Broadcast(event);
+		auto const handle02{ m_DelegateTest.Get()->Subscribe([this](TestEvent const& event) { OnDelegate(event); }, this) };
+		m_DelegateTest.Get()->Broadcast(event);
+		m_DelegateTest.Get()->UnSubscribeAllByOwner(handle02.owner);
+		m_DelegateTest.Get()->Broadcast(event);
 
 		event.i = 30;
-		m_DelegateTest.Subscribe([this](TestEvent const& event) { OnDelegate(event); }, this);
-		m_DelegateTest.Broadcast(event);
-		m_DelegateTest.UnSubscribeAllByOwner(this);
-		m_DelegateTest.Broadcast(event);
+		m_DelegateTest.Get()->Subscribe([this](TestEvent const& event) { OnDelegate(event); }, this);
+		m_DelegateTest.Get()->Broadcast(event);
+		m_DelegateTest.Get()->UnSubscribeAllByOwner(this);
+		m_DelegateTest.Get()->Broadcast(event);
 
 		event.i = 40;
-		m_DelegateTest.Subscribe(&DemoScene::OnDelegate, this);
-		m_DelegateTest.Broadcast(event);
-		m_DelegateTest.UnSubscribeAllByOwner(this);
-		m_DelegateTest.Broadcast(event);
+		m_DelegateTest.Get()->Subscribe(&DemoScene::OnDelegate, this);
+		m_DelegateTest.Get()->Broadcast(event);
+		m_DelegateTest.Get()->UnSubscribeAllByOwner(this);
+		m_DelegateTest.Get()->Broadcast(event);
 
 		event.i = 50;
-		m_DelegateTest.Subscribe(&DemoScene::OnDelegateConst, this);
-		m_DelegateTest.Broadcast(event);
-		m_DelegateTest.UnSubscribeAllByOwner(this);
-		m_DelegateTest.Broadcast(event);
+		m_DelegateTest.Get()->Subscribe(&DemoScene::OnDelegateConst, this);
+		m_DelegateTest.Get()->Broadcast(event);
+		m_DelegateTest.Get()->UnSubscribeAllByOwner(this);
+		m_DelegateTest.Get()->Broadcast(event);
 
 		event.i = 60;
-		m_DelegateTest.Subscribe(&DemoScene::OnDelegateConst, this);
-		m_DelegateTest.QueueBroadcast(event);
-	//	m_DelegateTest.UnSubscribeAllByOwner(this);
-	//	m_DelegateTest.QueueBroadcast(event);
+		m_DelegateTest.Get()->Subscribe(&DemoScene::OnDelegateConst, this);
+		m_DelegateTest.Get()->QueueBroadcast(event);
+		//m_DelegateTest.Get()->UnSubscribeAllByOwner(this);
+		//m_DelegateTest.Get()->QueueBroadcast(event);
 
 		switch (m_Demo)
 		{

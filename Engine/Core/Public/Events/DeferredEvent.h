@@ -1,9 +1,6 @@
 #ifndef MAUCOR_DEFERREDEVENT_H
 #define MAUCOR_DEFERREDEVENT_H
 
-#include "../Shared/AssertsInternal.h"
-#include "Delegate.h"
-
 namespace MauCor
 {
 	class IDeferredEvent

@@ -13,8 +13,10 @@
 
 //TODO extra safety check to make sure we dont usub from inside an event or this messes up order or is this just implied to be unsafe
 //TODO consider weak ptr for T* somehow as extra safety
+
 namespace MauCor
 {
+
 	struct ListenerHandle final
 	{
 		uint32_t id{ 0 };
@@ -35,9 +37,8 @@ namespace MauCor
 	template<typename EventType, typename Callable>
 	concept EventCallable = std::invocable<Callable, EventType const&>;
 
-
 	template<typename EventType>
-	class Delegate final
+	class DelegateInternal final : public std::enable_shared_from_this<DelegateInternal<EventType>>
 	{
 	public:
 		template<typename Callable>
@@ -84,7 +85,7 @@ namespace MauCor
 		bool UnSubscribeAllByOwner(void const* owner) noexcept
 		{
 			ME_CORE_ASSERT(nullptr != owner, "Trying to unsubscribe all listeners by owner but owner is null");
-
+			
 			if (!owner)
 			{
 				return false;
@@ -113,11 +114,14 @@ namespace MauCor
 		void QueueBroadcast(EventType const& event) const noexcept
 		{
 			auto& e{ EventManager::GetInstance() };
+
 			for (auto&& l : m_Listeners)
 			{
 				if (l->IsValid())
 				{
-					e.Enqueue(std::make_unique<DeferredEvent>(this, event));
+					auto self{ this->weak_from_this() };
+
+					e.Enqueue(std::make_unique<DeferredEvent>(self, event));
 				}
 			}
 		}
@@ -126,19 +130,20 @@ namespace MauCor
 		class DeferredEvent final : public IDeferredEvent
 		{
 		public:
-			using DelegateType = MauCor::Delegate<EventType>;
+			using DelegateType = const MauCor::DelegateInternal<EventType>;
 
-			DeferredEvent(DelegateType const* delegate, EventType const& event) :
+			DeferredEvent(std::weak_ptr<DelegateType> delegate, EventType const& event) :
 				IDeferredEvent{ },
 				m_pDelegate{ delegate },
-				m_Event{ event } {
-			}
+				m_Event{ event } { }
 			virtual ~DeferredEvent() override = default;
 
 			virtual void Dispatch() override
 			{
-				ME_CORE_ASSERT(m_pDelegate);
-				m_pDelegate->Broadcast(m_Event);
+				if (auto ptr{ m_pDelegate.lock() })
+				{
+					ptr->Broadcast(m_Event);
+				}
 			}
 
 			DeferredEvent(DeferredEvent const&) = delete;
@@ -147,7 +152,7 @@ namespace MauCor
 			DeferredEvent& operator=(DeferredEvent&&) = delete;
 
 		private:
-			DelegateType const* m_pDelegate;
+			std::weak_ptr<DelegateType> m_pDelegate;
 			EventType m_Event;
 		};
 
@@ -238,6 +243,11 @@ namespace MauCor
 
 			bool IsValid() const noexcept override { return m_Object != nullptr; }
 
+			MemberFunHandlerConst(MemberFunHandlerConst const&) = delete;
+			MemberFunHandlerConst(MemberFunHandlerConst&&) = delete;
+			MemberFunHandlerConst& operator=(MemberFunHandlerConst const&) = delete;
+			MemberFunHandlerConst& operator=(MemberFunHandlerConst&&) = delete;
+
 		private:
 			T const* m_Object;
 			MemFnType m_MemFn;
@@ -246,6 +256,24 @@ namespace MauCor
 		std::vector<std::unique_ptr<IListenerHandler>> m_Listeners;
 		uint32_t m_NextListenerId{ 0 };
 	};
+
+	template<typename EventType>
+	class Delegate final
+	{
+	public:
+		Delegate() : m_pDelegate{ std::make_shared<DelegateInternal<EventType>>() } { }
+		~Delegate() = default;
+
+		[[nodiscard]] DelegateInternal<EventType>* Get() const noexcept { return m_pDelegate.get(); }
+
+		Delegate(Delegate const&) = default;
+		Delegate(Delegate&&) = default;
+		Delegate& operator=(Delegate const&) = default;
+		Delegate& operator=(Delegate&&) = default;
+	private:
+		std::shared_ptr<DelegateInternal<EventType>> m_pDelegate;
+	};
+
 }
 
 #endif
