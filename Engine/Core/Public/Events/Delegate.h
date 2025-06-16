@@ -13,9 +13,6 @@
 
 //TODO consider weak ptr for T* or an IsAlive call
 
-//TODO extra safety check to make sure we dont usub from inside an event or this messes up order or is this just implied to be unsafe
-// Unsub immediate and unsub (end of frame)
-
 namespace MauCor
 {
 	struct ListenerHandle final
@@ -83,8 +80,11 @@ namespace MauCor
 			auto& e{ EventManager::GetInstance() };
 
 			m_HandleUnSubs.emplace_back(handle);
-			auto self{ this->weak_from_this() };
-			e.EnqueueUnSub(std::make_unique<DelegateDelayedUnSub>(self));
+			if (not e.HasUnSubForDelegate(this))
+			{
+				auto self{ this->weak_from_this() };
+				e.EnqueueUnSub(this, std::make_unique<DelegateDelayedUnSub>(self));
+			}
 		}
 
 		// Unsubscribe by handle (immediate)
@@ -118,10 +118,13 @@ namespace MauCor
 			}
 
 			auto& e{ EventManager::GetInstance() };
-
 			m_OwnerUnSubs.emplace_back(owner);
-			auto self{ this->weak_from_this() };
-			e.EnqueueUnSub(std::make_unique<DelegateDelayedUnSub>(self));
+
+			if (not e.HasUnSubForDelegate(this))
+			{
+				auto self{ this->weak_from_this() };
+				e.EnqueueUnSub(this, std::make_unique<DelegateDelayedUnSub>(self));
+			}
 		}
 
 		// Unsubscribe by owner (immediate)

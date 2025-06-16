@@ -20,16 +20,22 @@ namespace MauCor
 		m_EventQueue.push(std::move(event));
 	}
 
-	void EventManager::EnqueueUnSub(std::unique_ptr<IDelegateDelayedUnSubscription>&& unSub) noexcept
+	void EventManager::EnqueueUnSub(void const* delegate, std::unique_ptr<IDelegateDelayedUnSubscription>&& unSub) noexcept
 	{
-		m_UnSubs.emplace_back(std::move(unSub));
+		m_UnSubs[delegate] = std::move(unSub);
+	}
+
+	bool EventManager::HasUnSubForDelegate(void const* delegate) const noexcept
+	{
+		auto it{ m_UnSubs.find(delegate) };
+		return it != end(m_UnSubs);
 	}
 
 	void EventManager::ProcessUnsubscribes() noexcept
 	{
 		for (auto&& u : m_UnSubs)
 		{
-			u->Invoke();
+			u.second->Invoke();
 		}
 
 		m_UnSubs.clear();
