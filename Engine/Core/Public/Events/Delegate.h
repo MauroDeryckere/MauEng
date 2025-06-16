@@ -5,10 +5,14 @@
 #include <memory>
 #include <functional>
 
+//#include "DeferredEvent.h"
+#include "DeferredEvent.h"
+#include "EventManager.h"
+
 #include "../Shared/AssertsInternal.h"
 
 //TODO extra safety check to make sure we dont usub from inside an event or this messes up order or is this just implied to be unsafe
-
+//TODO consider weak ptr for T* somehow as extra safety
 namespace MauCor
 {
 	struct ListenerHandle final
@@ -30,6 +34,7 @@ namespace MauCor
 
 	template<typename EventType, typename Callable>
 	concept EventCallable = std::invocable<Callable, EventType const&>;
+
 
 	template<typename EventType>
 	class Delegate final
@@ -104,7 +109,48 @@ namespace MauCor
 			}
 		}
 
+		//Broadcast event for end of the frame
+		void QueueBroadcast(EventType const& event) const noexcept
+		{
+			auto& e{ EventManager::GetInstance() };
+			for (auto&& l : m_Listeners)
+			{
+				if (l->IsValid())
+				{
+					e.Enqueue(std::make_unique<DeferredEvent>(this, event));
+				}
+			}
+		}
+
 	private:
+		class DeferredEvent final : public IDeferredEvent
+		{
+		public:
+			using DelegateType = MauCor::Delegate<EventType>;
+
+			DeferredEvent(DelegateType const* delegate, EventType const& event) :
+				IDeferredEvent{ },
+				m_pDelegate{ delegate },
+				m_Event{ event } {
+			}
+			virtual ~DeferredEvent() override = default;
+
+			virtual void Dispatch() override
+			{
+				ME_CORE_ASSERT(m_pDelegate);
+				m_pDelegate->Broadcast(m_Event);
+			}
+
+			DeferredEvent(DeferredEvent const&) = delete;
+			DeferredEvent(DeferredEvent&&) = delete;
+			DeferredEvent& operator=(DeferredEvent const&) = delete;
+			DeferredEvent& operator=(DeferredEvent&&) = delete;
+
+		private:
+			DelegateType const* m_pDelegate;
+			EventType m_Event;
+		};
+
 		class IListenerHandler
 		{
 		public:

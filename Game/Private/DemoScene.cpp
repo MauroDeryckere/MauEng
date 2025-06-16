@@ -40,6 +40,12 @@ namespace MauGam
 		m_DelegateTest.UnSubscribeAllByOwner(this);
 		m_DelegateTest.Broadcast(event);
 
+		event.i = 60;
+		m_DelegateTest.Subscribe(&DemoScene::OnDelegateConst, this);
+		m_DelegateTest.QueueBroadcast(event);
+	//	m_DelegateTest.UnSubscribeAllByOwner(this);
+	//	m_DelegateTest.QueueBroadcast(event);
+
 		switch (m_Demo)
 		{
 		case EDemo::Sponza:
