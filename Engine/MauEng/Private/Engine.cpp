@@ -88,7 +88,7 @@ namespace MauEng
 		auto& time{ Time::GetInstance() };
 		auto& sceneManager{ SceneManager::GetInstance() };
 		auto& inputManager{ InputManager::GetInstance() };
-
+		auto& eventManager{ MauCor::EventManager::GetInstance() };
 		bool doContinue{ true };
 
 		while (doContinue)
@@ -145,6 +145,7 @@ namespace MauEng
 			if (not IsMinimised)
 			{
 				sceneManager.Tick();
+				eventManager.ProcessEvents();
 				sceneManager.Render({m_Window->width, m_Window->height});
 			}
 

@@ -22,4 +22,6 @@
 
 #include "Math/Rotator.h"
 
+#include "Events/Delegate.h"
+
 #endif

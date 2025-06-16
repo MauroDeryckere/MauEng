@@ -5,6 +5,10 @@
 
 namespace MauGam
 {
+	struct TestEvent
+	{
+		int i = 10;
+	};
 	class DemoScene final : public MauEng::Scene
 	{
 	public:
@@ -14,6 +18,8 @@ namespace MauGam
 		virtual void Tick() override;
 		virtual void OnRender() const override;
 	private:
+		MauCor::Delegate<TestEvent> m_DelegateTest{};
+
 		enum class EDemo : uint8_t
 		{
 			Sponza,
@@ -32,7 +38,7 @@ namespace MauGam
 			COUNT
 		};
 
-		EDemo m_Demo{ EDemo::Sponza };
+		EDemo m_Demo{ EDemo::Chess };
 
 		ELightMode m_LightMode{ ELightMode::PointAndDir };
 
@@ -70,6 +76,9 @@ namespace MauGam
 		void RenderDebugDemo() const;
 
 		void OutputKeybinds();
+
+		void OnDelegate(TestEvent const& event);
+		void OnDelegateConst(TestEvent const& event) const;
 	};
 }
 
