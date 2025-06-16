@@ -46,23 +46,15 @@ namespace MauCor
 		template<typename T>
 		ListenerHandle const& Subscribe(void (T::* memFunc)(EventType const&), T* instance, void* owner = nullptr)
 		{
-			auto callable{ [instance, memFunc](EventType const& e)
-				{
-					(instance->*memFunc)(e);
-				} };
-
-			return Subscribe(callable, owner ? owner : instance);
+			m_Listeners.emplace_back(std::make_unique<MemberFunHandler<T>>(ListenerHandle{ ++m_NextListenerId, owner ? owner : instance }, instance, memFunc));
+			return m_Listeners.back()->GetHandle();
 		}
 
 		template<typename T>
 		ListenerHandle const& Subscribe(void (T::* memFunc)(EventType const&) const, T const* instance, void* owner = nullptr)
 		{
-			auto callable{ [instance, memFunc](EventType const& e)
-				{
-					(instance->*memFunc)(e);
-				} };
-
-			return Subscribe(callable, owner ? owner : const_cast<void*>(static_cast<void const*>(instance)));
+			m_Listeners.emplace_back(std::make_unique<MemberFunHandlerConst<T>>(ListenerHandle{ ++m_NextListenerId, owner ? owner : const_cast<void*>(static_cast<void const*>(instance)) }, instance, memFunc));
+			return m_Listeners.back()->GetHandle();
 		}
 
 		// Unsubscribe by handle
@@ -153,6 +145,56 @@ namespace MauCor
 
 		private:
 			std::function<void(EventType const&)> m_Callback;
+		};
+
+		template<typename T>
+		class MemberFunHandler final : public IListenerHandler
+		{
+		public:
+			using MemFnType = void (T::*)(EventType const&);
+
+			explicit MemberFunHandler(ListenerHandle const& handle, T* obj, MemFnType fn) :
+				IListenerHandler{ handle },
+				m_pObject{ obj },
+				m_MemFn{ fn } { }
+
+			~MemberFunHandler() override = default;
+
+			virtual void Invoke(EventType const& e) const noexcept override { (m_pObject->*m_MemFn)(e); }
+			//TODO weakptr support
+			[[nodiscard]] virtual bool IsValid() const noexcept override { return m_pObject != nullptr; }
+
+			MemberFunHandler(MemberFunHandler const&) = delete;
+			MemberFunHandler(MemberFunHandler&&) = delete;
+			MemberFunHandler& operator=(MemberFunHandler const&) = delete;
+			MemberFunHandler& operator=(MemberFunHandler&&) = delete;
+
+		private:
+			T* m_pObject;
+			MemFnType m_MemFn;
+		};
+
+		template<typename T>
+		class MemberFunHandlerConst final : public IListenerHandler
+		{
+		public:
+			using MemFnType = void (T::*)(EventType const&) const;
+
+			MemberFunHandlerConst(ListenerHandle const& handle, T const* obj, MemFnType fn) :
+				IListenerHandler{ handle },
+				m_Object{ obj },
+				m_MemFn{ fn } { }
+
+			void Invoke(EventType const& e) const noexcept override
+			{
+				(m_Object->*m_MemFn)(e);
+			}
+
+			bool IsValid() const noexcept override { return m_Object != nullptr; }
+
+		private:
+			T const* m_Object;
+			MemFnType m_MemFn;
 		};
 
 		std::vector<std::unique_ptr<IListenerHandler>> m_Listeners;
