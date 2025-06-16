@@ -2,7 +2,7 @@
 #define MAUCOR_EVENTMANAGER_H
 
 #include "Singleton.h"
-#include <vector>
+#include <queue>
 
 namespace MauCor
 {
@@ -14,6 +14,8 @@ namespace MauCor
 		void ProcessEvents() noexcept;
 		void Enqueue(std::unique_ptr<IDeferredEvent>&& event) noexcept;
 
+		void ProcessUnsubscribes() noexcept;
+
 		EventManager(EventManager const&) = delete;
 		EventManager(EventManager&&) = delete;
 		EventManager& operator=(EventManager const&) = delete;
@@ -23,7 +25,7 @@ namespace MauCor
 		friend class Singleton<EventManager>;
 		EventManager() = default;
 		virtual ~EventManager() override = default;
-		std::vector<std::unique_ptr<IDeferredEvent>> m_EventQueue;
+		std::queue<std::unique_ptr<IDeferredEvent>> m_EventQueue;
 	};
 }
 

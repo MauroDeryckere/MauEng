@@ -5,18 +5,18 @@
 #include <memory>
 #include <functional>
 
-//#include "DeferredEvent.h"
 #include "DeferredEvent.h"
 #include "EventManager.h"
 
 #include "../Shared/AssertsInternal.h"
 
+//TODO consider weak ptr for T* or an IsAlive call
+
 //TODO extra safety check to make sure we dont usub from inside an event or this messes up order or is this just implied to be unsafe
-//TODO consider weak ptr for T* somehow as extra safety
+// Unsub immediate and unsub (end of frame)
 
 namespace MauCor
 {
-
 	struct ListenerHandle final
 	{
 		uint32_t id{ 0 };
@@ -24,9 +24,7 @@ namespace MauCor
 
 		bool constexpr operator==(ListenerHandle const& other) const noexcept
 		{
-			return
-			id == other.id
-			and owner == other.owner;
+			return id == other.id and owner == other.owner;
 		}
 		bool constexpr operator!=(ListenerHandle const& other) const noexcept
 		{
@@ -73,7 +71,7 @@ namespace MauCor
 				}) == 1;
 		}
 
-		//Unsubscribe by owner
+		// Unsubscribe by owner
 		// Owner should not be a nullptr
 		bool UnSubscribeAllByOwner(ListenerHandle const& handle) noexcept
 		{
@@ -98,7 +96,7 @@ namespace MauCor
 		}
 
 
-		// Broadcast immediately
+		// Broadcast immediately (blocking broadcast)
 		void Broadcast(EventType const& event) const noexcept
 		{
 			for (auto&& l : m_Listeners)
@@ -110,7 +108,7 @@ namespace MauCor
 			}
 		}
 
-		//Broadcast event for end of the frame
+		//Broadcast event for end of the frame (non blocking broadcast)
 		void QueueBroadcast(EventType const& event) const noexcept
 		{
 			auto& e{ EventManager::GetInstance() };
@@ -212,7 +210,6 @@ namespace MauCor
 			~MemberFunHandler() override = default;
 
 			virtual void Invoke(EventType const& e) const noexcept override { (m_pObject->*m_MemFn)(e); }
-			//TODO weakptr support
 			[[nodiscard]] virtual bool IsValid() const noexcept override { return m_pObject != nullptr; }
 
 			MemberFunHandler(MemberFunHandler const&) = delete;

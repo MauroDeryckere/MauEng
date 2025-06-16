@@ -6,17 +6,21 @@ namespace MauCor
 {
 	void EventManager::ProcessEvents() noexcept
 	{
-		for (auto&& e : m_EventQueue)
+		while (!m_EventQueue.empty())
 		{
-			e->Dispatch();
+			m_EventQueue.front()->Dispatch();
+			m_EventQueue.pop();
 		}
-
-		m_EventQueue.clear();
 	}
 
 	void EventManager::Enqueue(std::unique_ptr<IDeferredEvent>&& event) noexcept
 	{
-		m_EventQueue.emplace_back(std::move(event));
+		m_EventQueue.push(std::move(event));
+	}
+
+	void EventManager::ProcessUnsubscribes() noexcept
+	{
+
 	}
 }
 
