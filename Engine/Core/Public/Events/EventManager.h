@@ -7,14 +7,14 @@
 namespace MauCor
 {
 	class IDeferredEvent;
+	class IDelegateDelayedUnSubscription;
 
 	class EventManager final : public MauCor::Singleton<EventManager>
 	{
 	public:
 		void ProcessEvents() noexcept;
 		void Enqueue(std::unique_ptr<IDeferredEvent>&& event) noexcept;
-
-		void ProcessUnsubscribes() noexcept;
+		void EnqueueUnSub(std::unique_ptr<IDelegateDelayedUnSubscription>&& unSub) noexcept;
 
 		EventManager(EventManager const&) = delete;
 		EventManager(EventManager&&) = delete;
@@ -26,6 +26,10 @@ namespace MauCor
 		EventManager() = default;
 		virtual ~EventManager() override = default;
 		std::queue<std::unique_ptr<IDeferredEvent>> m_EventQueue;
+
+		std::vector<std::unique_ptr<IDelegateDelayedUnSubscription>> m_UnSubs;
+
+		void ProcessUnsubscribes() noexcept;
 	};
 }
 

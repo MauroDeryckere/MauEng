@@ -6,8 +6,9 @@
 #include <functional>
 
 #include "DeferredEvent.h"
+#include "Delegate.h"
 #include "EventManager.h"
-
+#include "DelegateDelayedUnSubscription.h"
 #include "../Shared/AssertsInternal.h"
 
 //TODO consider weak ptr for T* or an IsAlive call
@@ -61,9 +62,34 @@ namespace MauCor
 			return m_Listeners.back()->GetHandle();
 		}
 
-		// Unsubscribe by handle
+		void ProcessAllUnSubs() noexcept
+		{
+			for (auto& u : m_OwnerUnSubs)
+			{
+				UnSubscribeAllByOwnerImmediate(u);
+			}
+			for (auto& u : m_HandleUnSubs)
+			{
+				UnSubscribeImmediate(u);
+			}
+
+			m_OwnerUnSubs.clear();
+			m_HandleUnSubs.clear();
+		}
+
+		// Unsubscribe by handle (delayed)
+		void UnSubscribe(ListenerHandle const& handle) noexcept
+		{
+			auto& e{ EventManager::GetInstance() };
+
+			m_HandleUnSubs.emplace_back(handle);
+			auto self{ this->weak_from_this() };
+			e.EnqueueUnSub(std::make_unique<DelegateDelayedUnSub>(self));
+		}
+
+		// Unsubscribe by handle (immediate)
 		// Returns if any listeners were removed
-		bool UnSubscribe(ListenerHandle const& handle) noexcept
+		bool UnSubscribeImmediate(ListenerHandle const& handle) noexcept
 		{
 			return std::erase_if(m_Listeners, [&](auto const& listener)
 				{
@@ -71,16 +97,36 @@ namespace MauCor
 				}) == 1;
 		}
 
-		// Unsubscribe by owner
-		// Owner should not be a nullptr
-		bool UnSubscribeAllByOwner(ListenerHandle const& handle) noexcept
+		void UnSubscribeAllByOwner(ListenerHandle const& handle) noexcept
 		{
-			return UnSubscribeAllByOwner(handle.owner);
+			UnSubscribeAllByOwner(handle.owner);
 		}
 
-		// Unsubscribe by owner
+		// Unsubscribe by owner (immediate)
 		// Owner should not be a nullptr
-		bool UnSubscribeAllByOwner(void const* owner) noexcept
+		bool UnSubscribeAllByOwnerImmediate(ListenerHandle const& handle) noexcept
+		{
+			return UnSubscribeAllByOwnerImmediate(handle.owner);
+		}
+
+		void UnSubscribeAllByOwner(void const* owner) noexcept
+		{
+			ME_CORE_ASSERT(nullptr != owner, "Trying to unsubscribe all listeners by owner but owner is null");
+			if (!owner)
+			{
+				return;
+			}
+
+			auto& e{ EventManager::GetInstance() };
+
+			m_OwnerUnSubs.emplace_back(owner);
+			auto self{ this->weak_from_this() };
+			e.EnqueueUnSub(std::make_unique<DelegateDelayedUnSub>(self));
+		}
+
+		// Unsubscribe by owner (immediate)
+		// Owner should not be a nullptr
+		bool UnSubscribeAllByOwnerImmediate(void const* owner) noexcept
 		{
 			ME_CORE_ASSERT(nullptr != owner, "Trying to unsubscribe all listeners by owner but owner is null");
 			
@@ -113,15 +159,8 @@ namespace MauCor
 		{
 			auto& e{ EventManager::GetInstance() };
 
-			for (auto&& l : m_Listeners)
-			{
-				if (l->IsValid())
-				{
-					auto self{ this->weak_from_this() };
-
-					e.Enqueue(std::make_unique<DeferredEvent>(self, event));
-				}
-			}
+			auto self{ this->weak_from_this() };
+			e.Enqueue(std::make_unique<DeferredEvent>(self, event));
 		}
 
 	private:
@@ -152,6 +191,34 @@ namespace MauCor
 		private:
 			std::weak_ptr<DelegateType> m_pDelegate;
 			EventType m_Event;
+		};
+
+		class DelegateDelayedUnSub final : public IDelegateDelayedUnSubscription
+		{
+		public:
+			using DelegateType = MauCor::DelegateInternal<EventType>;
+
+			explicit DelegateDelayedUnSub(std::weak_ptr<DelegateType> delegate) :
+				IDelegateDelayedUnSubscription{ },
+				m_pDelegate{ delegate } {}
+
+			virtual ~DelegateDelayedUnSub() override = default;
+
+			void Invoke() override
+			{
+				if (auto ptr{ m_pDelegate.lock() })
+				{
+					ptr->ProcessAllUnSubs();
+				}
+			}
+
+			DelegateDelayedUnSub(DelegateDelayedUnSub const&) = delete;
+			DelegateDelayedUnSub(DelegateDelayedUnSub&&) = delete;
+			DelegateDelayedUnSub& operator=(DelegateDelayedUnSub const&) = delete;
+			DelegateDelayedUnSub& operator=(DelegateDelayedUnSub&&) = delete;
+
+		private:
+			std::weak_ptr<DelegateType> m_pDelegate;
 		};
 
 		class IListenerHandler
@@ -252,6 +319,9 @@ namespace MauCor
 
 		std::vector<std::unique_ptr<IListenerHandler>> m_Listeners;
 		uint32_t m_NextListenerId{ 0 };
+
+		std::vector<void const*> m_OwnerUnSubs;
+		std::vector<ListenerHandle> m_HandleUnSubs;
 	};
 
 	template<typename EventType>
