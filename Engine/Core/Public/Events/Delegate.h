@@ -11,7 +11,9 @@
 #include "DelegateDelayedUnSubscription.h"
 #include "../Shared/AssertsInternal.h"
 
-//TODO consider weak ptr for T* or an IsAlive call
+// TODO consider weak ptr for T* or an IsAlive call in memnber function handler
+// Because this could be an issue when its an end of frame event, and the object has been destroyed when the event fires (object destroys sgould be delayed until after anyway though)
+// But if object that isnt managed by engine (?)
 
 namespace MauCor
 {
@@ -343,7 +345,6 @@ namespace MauCor
 	private:
 		std::shared_ptr<DelegateInternal<EventType>> m_pDelegate;
 	};
-
 }
 
 #endif
