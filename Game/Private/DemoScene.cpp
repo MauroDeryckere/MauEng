@@ -10,6 +10,10 @@ namespace MauGam
 
 		using namespace MauEng;
 
+		m_DelegateTest.Subscribe([this](TestEvent const& event) { OnDelegate(event); });
+		TestEvent event{};
+		m_DelegateTest.Broadcast(event);
+
 		switch (m_Demo)
 		{
 		case EDemo::Sponza:
@@ -30,14 +34,25 @@ namespace MauGam
 					enttSponza.AddComponent<CStaticMesh>("Resources/Models/Sponza/glTF/Sponza.gltf");
 				}
 
+
+
 				{
 					Entity enttDirLight{ CreateEntity() };
 					auto& cLight{ enttDirLight.AddComponent<CLight>() };
-					cLight.lumen_lux = 2000.f;
-					cLight.direction_position = { 0, -1, -1 };
+					cLight.lumen_lux = 100;
+					cLight.direction_position = { -1, -.5, -1 };
 					cLight.castShadows = false;
-					cLight.lightColour = { 1, 1, .9 };
+					cLight.lightColour = { 1, 0.956, 0.84 };
 				}
+
+				//{
+				//	Entity enttPLight{ CreateEntity() };
+				//	auto& cLight{ enttPLight.AddComponent<CLight>() };
+				//	cLight.type = ELightType::POINT;
+				//	cLight.lumen_lux = 1'000'000.f;
+				//	cLight.direction_position = { 10, 40, 10 };
+				//	cLight.lightColour = { 1, 0, 0 };
+				//}
 
 			}
 			break;
@@ -63,7 +78,7 @@ namespace MauGam
 				{
 					Entity enttDirLight{ CreateEntity() };
 					auto& cLight{ enttDirLight.AddComponent<CLight>() };
-					cLight.lumen_lux = 2000.f;
+					cLight.lumen_lux = 100;
 					cLight.direction_position = { -1, -1, -.5 };
 					cLight.castShadows = false;
 					cLight.lightColour = { 1, 1, .9 };
@@ -101,7 +116,7 @@ namespace MauGam
 				{
 					Entity enttDirLight{ CreateEntity() };
 					auto& cLight{ enttDirLight.AddComponent<CLight>() };
-					cLight.lumen_lux = 20.f;
+					cLight.lumen_lux = 100;
 					cLight.direction_position = { 0, -1, 0 };
 					cLight.castShadows = false;
 					cLight.lightColour = { 1, 1, 1 };
@@ -824,5 +839,10 @@ namespace MauGam
 		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "WASD | ARROWS: Move Camera");
 		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "Mouse movement: Rotate Camera");
 		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "Left control: \"Sprint\"");
+	}
+
+	void DemoScene::OnDelegate(TestEvent const& event)
+	{
+		ME_LOG_DEBUG(MauCor::LogCategory::Core, "Event test: {}", event.i);
 	}
 }

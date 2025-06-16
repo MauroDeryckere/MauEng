@@ -128,8 +128,6 @@ namespace MauRen
 
 		samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
 		samplerInfo.minLod = 0.f;
-		//samplerInfo.minLod = static_cast<float>(m_TextureImage.mipLevels / 2);
-		//samplerInfo.maxLod = static_cast<float>(m_TextureImage.mipLevels);
 		samplerInfo.maxLod = VK_LOD_CLAMP_NONE;
 		samplerInfo.mipLodBias = 0.0f; // Optional
 
