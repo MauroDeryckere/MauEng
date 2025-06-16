@@ -5,6 +5,10 @@
 #include <memory>
 #include <functional>
 
+#include "../Shared/AssertsInternal.h"
+
+//TODO extra safety check to make sure we dont usub from inside an event or this messes up order or is this just implied to be unsafe
+
 namespace MauCor
 {
 	struct ListenerHandle final
@@ -39,6 +43,8 @@ namespace MauCor
 			return m_Listeners.back()->GetHandle();
 		}
 
+		// Unsubscribe by handle
+		// Returns if any listeners were removed
 		bool UnSubscribe(ListenerHandle const& handle) noexcept
 		{
 			return std::erase_if(m_Listeners, [&](auto const& listener)
@@ -46,6 +52,31 @@ namespace MauCor
 					return listener->GetHandle() == handle;
 				}) == 1;
 		}
+
+		//Unsubscribe by owner
+		// Owner should not be a nullptr
+		bool UnSubscribeAllByOwner(ListenerHandle const& handle) noexcept
+		{
+			return UnSubscribeAllByOwner(handle.owner);
+		}
+
+		// Unsubscribe by owner
+		// Owner should not be a nullptr
+		bool UnSubscribeAllByOwner(void const* owner) noexcept
+		{
+			ME_CORE_ASSERT(nullptr != owner, "Trying to unsubscribe all listeners by owner but owner is null");
+
+			if (!owner)
+			{
+				return false;
+			}
+
+			return std::erase_if(m_Listeners, [&](auto const& listener)
+				{
+					return listener->GetHandle().owner == owner;
+				}) > 0;
+		}
+
 
 		// Broadcast immediately
 		void Broadcast(EventType const& event) const noexcept
@@ -63,7 +94,7 @@ namespace MauCor
 		class IListenerHandler
 		{
 		public:
-			IListenerHandler(ListenerHandle const& handle) : m_ListenerHandle{ handle } { }
+			explicit IListenerHandler(ListenerHandle const& handle) : m_ListenerHandle{ handle } { }
 			virtual ~IListenerHandler() = default;
 
 			virtual void Invoke(EventType const&) const noexcept = 0;
@@ -84,15 +115,14 @@ namespace MauCor
 		public:
 			template<typename Callable>
 			requires EventCallable<EventType, Callable>
-			explicit CallableHandler(ListenerHandle const& handle, Callable&& cb)
-			:
-			IListenerHandler{ handle },
-			m_Callback{ std::forward<Callable>(cb) } { }
+			explicit CallableHandler(ListenerHandle const& handle, Callable&& cb) :
+				IListenerHandler{ handle },
+				m_Callback{ std::forward<Callable>(cb) } { }
+
+			~CallableHandler() override = default;
 
 			virtual void Invoke(EventType const& e) const noexcept override { m_Callback(e); }
 			[[nodiscard]] virtual bool IsValid() const noexcept override { return true; }
-
-			~CallableHandler() override = default;
 
 			CallableHandler(CallableHandler const&) = delete;
 			CallableHandler(CallableHandler&&) = delete;

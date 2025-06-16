@@ -16,6 +16,19 @@ namespace MauGam
 		m_DelegateTest.UnSubscribe(handle);
 		m_DelegateTest.Broadcast(event);
 
+		event.i = 20;
+		auto const handle02{ m_DelegateTest.Subscribe([this](TestEvent const& event) { OnDelegate(event); }, this) };
+		m_DelegateTest.Broadcast(event);
+		m_DelegateTest.UnSubscribeAllByOwner(handle02.owner);
+		m_DelegateTest.Broadcast(event);
+
+		event.i = 30;
+		m_DelegateTest.Subscribe([this](TestEvent const& event) { OnDelegate(event); }, this);
+		m_DelegateTest.Broadcast(event);
+		m_DelegateTest.UnSubscribeAllByOwner(this);
+		m_DelegateTest.Broadcast(event);
+
+
 		switch (m_Demo)
 		{
 		case EDemo::Sponza:
