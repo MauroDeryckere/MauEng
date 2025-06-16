@@ -10,8 +10,10 @@ namespace MauGam
 
 		using namespace MauEng;
 
-		m_DelegateTest.Subscribe([this](TestEvent const& event) { OnDelegate(event); });
+		auto const handle{ m_DelegateTest.Subscribe([this](TestEvent const& event) { OnDelegate(event); }) };
 		TestEvent event{};
+		m_DelegateTest.Broadcast(event);
+		m_DelegateTest.UnSubscribe(handle);
 		m_DelegateTest.Broadcast(event);
 
 		switch (m_Demo)
