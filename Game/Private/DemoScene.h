@@ -78,6 +78,7 @@ namespace MauGam
 		void OutputKeybinds();
 
 		void OnDelegate(TestEvent const& event);
+		void OnDelegateConst(TestEvent const& event) const;
 	};
 }
 

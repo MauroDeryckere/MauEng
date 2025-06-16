@@ -34,6 +34,12 @@ namespace MauGam
 		m_DelegateTest.UnSubscribeAllByOwner(this);
 		m_DelegateTest.Broadcast(event);
 
+		event.i = 50;
+		m_DelegateTest.Subscribe(&DemoScene::OnDelegateConst, this);
+		m_DelegateTest.Broadcast(event);
+		m_DelegateTest.UnSubscribeAllByOwner(this);
+		m_DelegateTest.Broadcast(event);
+
 		switch (m_Demo)
 		{
 		case EDemo::Sponza:
@@ -864,5 +870,10 @@ namespace MauGam
 	void DemoScene::OnDelegate(TestEvent const& event)
 	{
 		ME_LOG_DEBUG(MauCor::LogCategory::Core, "Event test: {}", event.i);
+	}
+
+	void DemoScene::OnDelegateConst(TestEvent const& event) const
+	{
+		ME_LOG_DEBUG(MauCor::LogCategory::Core, "Event test (const): {}", event.i);
 	}
 }

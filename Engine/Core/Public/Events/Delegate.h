@@ -54,6 +54,17 @@ namespace MauCor
 			return Subscribe(callable, owner ? owner : instance);
 		}
 
+		template<typename T>
+		ListenerHandle const& Subscribe(void (T::* memFunc)(EventType const&) const, T const* instance, void* owner = nullptr)
+		{
+			auto callable{ [instance, memFunc](EventType const& e)
+				{
+					(instance->*memFunc)(e);
+				} };
+
+			return Subscribe(callable, owner ? owner : const_cast<void*>(static_cast<void const*>(instance)));
+		}
+
 		// Unsubscribe by handle
 		// Returns if any listeners were removed
 		bool UnSubscribe(ListenerHandle const& handle) noexcept
