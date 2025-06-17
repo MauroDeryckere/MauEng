@@ -89,6 +89,12 @@ namespace MauCor
 			}
 		}
 
+		// Unsubscribe by owner (delayed)
+		void UnSubscribe(void const* owner) noexcept
+		{
+			UnSubscribeAllByOwner(owner);
+		}
+
 		// Unsubscribe by handle (immediate)
 		// Returns if any listeners were removed
 		bool UnSubscribeImmediate(ListenerHandle const& handle) noexcept
@@ -99,6 +105,14 @@ namespace MauCor
 				}) == 1;
 		}
 
+		// Unsubscribe by owner (immediate)
+		// Returns if any listeners were removed
+		bool UnSubscribeImmediate(void const* owner) noexcept
+		{
+			return UnSubscribeAllByOwnerImmediate(owner);
+		}
+
+		// Unsubscribe by owner (delayed)
 		void UnSubscribeAllByOwner(ListenerHandle const& handle) noexcept
 		{
 			UnSubscribeAllByOwner(handle.owner);
@@ -378,16 +392,36 @@ namespace MauCor
 		[[nodiscard]] DelegateInternal<EventType>* Get() const noexcept { return m_pDelegate.get(); }
 
 		// Subsrcibes
+		//Subscribe using const member function
+		template<typename T>
+		ListenerHandle const& Subscribe(DelegateBindingConstMemFn<T> const& binding) noexcept
+		{
+			return Get()->Subscribe(binding.m_MemFn, binding.m_Instance, binding.m_Owner);
+		}
+		template<typename T>
+		ListenerHandle const& Subscribe(DelegateBindingMemFn<T> const& binding) noexcept
+		{
+			return Get()->Subscribe(binding.m_MemFn, binding.m_Instance, binding.m_Owner);
+		}
+		template<typename Callable>
+		requires EventCallable<EventType, Callable>
+		ListenerHandle const& Subscribe(DelegateBindingCallable<Callable> const& binding) noexcept
+		{
+			return Get()->Subscribe(std::move(binding.m_Callable), binding.m_Owner);
+		}
+
 		template<typename T>
 		ListenerHandle const& operator+=(DelegateBindingConstMemFn<T> const& binding) noexcept
 		{
 			return Get()->Subscribe(binding.m_MemFn, binding.m_Instance, binding.m_Owner);
 		}
+		//Subscribe using member function
 		template<typename T>
 		ListenerHandle const& operator+=(DelegateBindingMemFn<T> const& binding) noexcept
 		{
 			return Get()->Subscribe(binding.m_MemFn, binding.m_Instance, binding.m_Owner);
 		}
+		//Subscribe using callable 
 		template<typename Callable>
 		requires EventCallable<EventType, Callable>
 		ListenerHandle const& operator+=(DelegateBindingCallable<Callable> const& binding) noexcept
@@ -395,9 +429,85 @@ namespace MauCor
 			return Get()->Subscribe(std::move(binding.m_Callable), binding.m_Owner);
 		}
 
-		// Unsubs
 
-		// Broadcasts
+		// UnSubs (delayed)
+		bool UnSubscribe(void const* owner) noexcept
+		{
+			return Get()->UnSubscribe(owner);
+		}
+		bool UnSubscribe(ListenerHandle const& handle) noexcept
+		{
+			return Get()->UnSubscribe(handle);
+		}
+		bool UnSubscribeAllByOwner(void const* owner) noexcept
+		{
+			return Get()->UnSubscribeAllByOwner(owner);
+		}
+		bool UnSubscribeAllByOwner(ListenerHandle const& handle) noexcept
+		{
+			return Get()->UnSubscribeAllByOwner(handle);
+		}
+		// Unsubcribe (delayed)
+		void operator-=(void const* owner) noexcept
+		{
+			Get()->UnSubscribe(owner);
+		}
+		// Unsubcribe (delayed)
+		void operator-=(ListenerHandle const& handle) noexcept
+		{
+			Get()->UnSubscribe(handle);
+		}
+
+		// UnSubs (immediate)
+		bool UnSubscribeImmediate(void const* owner) noexcept
+		{
+			return Get()->UnSubscribeImmediate(owner);
+		}
+		bool UnSubscribeImmediate(ListenerHandle const& handle) noexcept
+		{
+			return Get()->UnSubscribeImmediate(handle);
+		}
+		bool UnSubscribeAllByOwnerImmediate(void const* owner) noexcept
+		{
+			return Get()->UnSubscribeAllByOwnerImmediate(owner);
+		}
+		bool UnSubscribeAllByOwnerImmediate(ListenerHandle const& handle) noexcept
+		{
+			return Get()->UnSubscribeAllByOwnerImmediate(handle);
+		}
+		// Unsubscribe (immediate)
+		bool operator/=(void const* owner) noexcept
+		{
+			return Get()->UnSubscribeImmediate(owner);
+		}
+		// Unsubscribe (immediate)
+		bool operator/=(ListenerHandle const& handle) noexcept
+		{
+			return Get()->UnSubscribeImmediate(handle);
+		}
+
+
+		// Broadcasts immediately
+		void Broadcast(EventType const& event) const noexcept
+		{
+			Get()->Broadcast(event);
+		}
+		// Queue broadcast for end of frame
+		void QueueBroadcast(EventType const& event) const noexcept
+		{
+			Get()->QueueBroadcast(event);
+		}
+
+		// Broadcasts immediately
+		void operator<(EventType const& event) noexcept
+		{
+			Broadcast(event);
+		}
+		// queue Broadcast
+		void operator<<(EventType const& event) noexcept
+		{
+			QueueBroadcast(event);
+		}
 
 		Delegate(Delegate const&) = default;
 		Delegate(Delegate&&) = default;
