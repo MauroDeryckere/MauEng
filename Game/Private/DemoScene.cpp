@@ -47,6 +47,8 @@ namespace MauGam
 		m_DelegateTest += MauCor::Bind(&DemoScene::OnDelegateConst, this);
 		m_DelegateTest << event;
 
+		m_DelegateTest.Clear();
+
 		switch (m_Demo)
 		{
 		case EDemo::Sponza:

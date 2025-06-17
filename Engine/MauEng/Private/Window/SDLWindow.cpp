@@ -7,7 +7,7 @@ namespace MauEng
 {
 	SDLWindow::SDLWindow()
 	{
-		if (not SDL_Init(SDL_INIT_VIDEO))
+		if (not SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD))
 		{
 			throw std::runtime_error("Failed to initialize SDL: " + std::string(SDL_GetError()));
 		}

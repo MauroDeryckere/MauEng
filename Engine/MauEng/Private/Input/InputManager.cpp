@@ -22,8 +22,8 @@ namespace MauEng
 			}
 			else if (evType == SDL_EVENT_MOUSE_WHEEL)
 			{
-				float scrollX{ event.wheel.x };
-				float scrollY{ event.wheel.y };
+				float const scrollX{ event.wheel.x };
+				float const scrollY{ event.wheel.y };
 
 				m_MouseScrollX = scrollX;
 				m_MouseScrollY = scrollY;
@@ -53,10 +53,10 @@ namespace MauEng
 
 		float x{ m_MouseX };
 		float y{ m_MouseY };
-		SDL_MouseButtonFlags mouseButtonState{ SDL_GetMouseState(&x, &y) };
+		SDL_MouseButtonFlags const mouseButtonState{ SDL_GetMouseState(&x, &y) };
 
 		auto const& actions{ m_MappedMouseActions[static_cast<size_t>(KeyInfo::ActionType::Held)] };
-		auto handleMouseBtnHeld = [&](int const mask, uint8_t const button)
+		auto handleMouseBtnHeld{ [&](int const mask, uint8_t const button)
 			{
 				if (mouseButtonState & mask)
 				{
@@ -69,7 +69,7 @@ namespace MauEng
 						}
 					}
 				}
-			};
+			} };
 
 		handleMouseBtnHeld(SDL_BUTTON_LMASK, SDL_BUTTON_LEFT);
 		handleMouseBtnHeld(SDL_BUTTON_RMASK, SDL_BUTTON_RIGHT);
@@ -80,7 +80,7 @@ namespace MauEng
 
 	void InputManager::HandleKeyboardHeld()
 	{
-		ME_PROFILE_FUNCTION();
+		ME_PROFILE_FUNCTION()
 
 		auto const& actions{ m_MappedKeyboardActions[static_cast<size_t>(KeyInfo::ActionType::Held)] };
 		int numKeys{ };
@@ -281,4 +281,18 @@ namespace MauEng
 	{
 		return m_ExecutedActions.contains(actionName);
 	}
+
+	void InputManager::Clear() noexcept
+	{
+		m_MappedKeyboardActions.clear();
+		m_ActionToKeyboardKey.clear();
+
+		m_MappedMouseActions.clear();
+		m_ActionToMouseButton.clear();
+
+		m_ExecutedActions.clear();
+
+		ResetState();
+	}
+
 }

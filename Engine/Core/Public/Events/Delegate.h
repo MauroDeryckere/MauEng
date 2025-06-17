@@ -70,6 +70,15 @@ namespace MauCor
 
 		void ProcessAllUnSubs() noexcept
 		{
+			if (m_ShouldClear)
+			{
+				m_OwnerUnSubs.clear();
+				m_HandleUnSubs.clear();
+				m_Listeners.clear();
+
+				m_ShouldClear = false;
+			}
+
 			for (auto& u : m_OwnerUnSubs)
 			{
 				UnSubscribeAllByOwnerImmediate(u);
@@ -187,6 +196,18 @@ namespace MauCor
 
 			auto self{ this->weak_from_this() };
 			e.Enqueue(std::make_unique<DeferredEvent>(self, event));
+		}
+
+		void Clear() noexcept
+		{
+			m_ShouldClear = true;
+			auto& e{ EventManager::GetInstance() };
+
+			if (not e.HasUnSubForDelegate(this))
+			{
+				auto self{ this->weak_from_this() };
+				e.EnqueueUnSub(this, std::make_unique<DelegateDelayedUnSub>(self));
+			}
 		}
 
 	private:
@@ -348,6 +369,8 @@ namespace MauCor
 
 		std::vector<void const*> m_OwnerUnSubs;
 		std::vector<ListenerHandle> m_HandleUnSubs;
+
+		bool m_ShouldClear { false };
 	};
 
 	template<typename EventType>
@@ -514,6 +537,11 @@ namespace MauCor
 		void operator<<(EventType const& event) noexcept
 		{
 			QueueBroadcast(event);
+		}
+
+		void Clear() noexcept
+		{
+			Get()->Clear();
 		}
 
 		Delegate(Delegate const&) = default;

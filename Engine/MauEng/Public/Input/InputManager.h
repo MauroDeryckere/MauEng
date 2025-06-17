@@ -27,6 +27,8 @@ namespace MauEng
 		void UnBindAllActions(KeyInfo const& keyInfo) noexcept;
 		void UnBindAllActions(MouseInfo const& mouseInfo) noexcept;
 
+		void Clear() noexcept;
+
 		[[nodiscard]] bool IsActionExecuted(std::string const& actionName) const noexcept;
 
 		[[nodiscard]] std::pair<float, float> GetMousePosition() const noexcept
