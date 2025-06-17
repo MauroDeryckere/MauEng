@@ -333,10 +333,71 @@ namespace MauCor
 	class Delegate final
 	{
 	public:
+		template<typename T>
+		struct DelegateBindingConstMemFn final
+		{
+			using MemFnType = void (T::*)(EventType const&) const;
+
+			DelegateBindingConstMemFn(void (T::* memFunc)(EventType const&) const, T const* instance, void* owner = nullptr) :
+				m_Instance{ instance }, m_MemFn{ memFunc }, m_Owner{ owner } {}
+
+			T const* m_Instance;
+			MemFnType m_MemFn;
+			void* m_Owner;
+		};
+
+		template<typename T>
+		struct DelegateBindingMemFn final
+		{
+			using MemFnType = void (T::*)(EventType const&);
+
+			DelegateBindingMemFn(void (T::* memFunc)(EventType const&), T* instance, void* owner = nullptr) :
+				m_Instance{ instance }, m_MemFn{ memFunc }, m_Owner{ owner } {
+			}
+
+			T* m_Instance;
+			MemFnType m_MemFn;
+			void* m_Owner;
+		};
+
+		template<typename Callable>
+		struct DelegateBindingCallable final
+		{
+			DelegateBindingCallable(Callable&& callable, void* owner = nullptr) :
+				m_Callable{ std::move(callable) }, m_Owner{ owner } { }
+
+			Callable m_Callable;
+			void* m_Owner;
+			
+		};
+
+
 		Delegate() : m_pDelegate{ std::make_shared<DelegateInternal<EventType>>() } { }
 		~Delegate() = default;
 
 		[[nodiscard]] DelegateInternal<EventType>* Get() const noexcept { return m_pDelegate.get(); }
+
+		// Subsrcibes
+		template<typename T>
+		ListenerHandle const& operator+=(DelegateBindingConstMemFn<T> const& binding) noexcept
+		{
+			return Get()->Subscribe(binding.m_MemFn, binding.m_Instance, binding.m_Owner);
+		}
+		template<typename T>
+		ListenerHandle const& operator+=(DelegateBindingMemFn<T> const& binding) noexcept
+		{
+			return Get()->Subscribe(binding.m_MemFn, binding.m_Instance, binding.m_Owner);
+		}
+		template<typename Callable>
+		requires EventCallable<EventType, Callable>
+		ListenerHandle const& operator+=(DelegateBindingCallable<Callable> const& binding) noexcept
+		{
+			return Get()->Subscribe(std::move(binding.m_Callable), binding.m_Owner);
+		}
+
+		// Unsubs
+
+		// Broadcasts
 
 		Delegate(Delegate const&) = default;
 		Delegate(Delegate&&) = default;
@@ -345,6 +406,24 @@ namespace MauCor
 	private:
 		std::shared_ptr<DelegateInternal<EventType>> m_pDelegate;
 	};
+
+	template<typename T, typename EventType>
+	auto Bind(void (T::* memFn)(EventType const&) const, T const* instance, void* owner = nullptr)
+	{
+		return typename Delegate<EventType>::template DelegateBindingConstMemFn<T>(memFn, instance, owner);
+	}
+	template<typename T, typename EventType>
+	auto Bind(void (T::* memFn)(EventType const&), T* instance, void* owner = nullptr)
+	{
+		return typename Delegate<EventType>::template DelegateBindingMemFn<T>(memFn, instance, owner);
+	}
+
+	template<typename EventType, typename Callable>
+	requires EventCallable<EventType, Callable>
+	auto Bind(Callable&& callable, void* owner = nullptr)
+	{
+		return typename Delegate<EventType>::template DelegateBindingCallable<Callable>(std::move(callable), owner);
+	}
 }
 
 #endif

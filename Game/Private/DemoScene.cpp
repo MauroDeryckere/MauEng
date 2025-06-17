@@ -10,7 +10,10 @@ namespace MauGam
 
 		using namespace MauEng;
 
-		auto const handle{ m_DelegateTest.Get()->Subscribe([this](TestEvent const& event) { OnDelegate(event); }) };
+		auto const handle{ m_DelegateTest += MauCor::Bind<TestEvent>
+		(
+			[this](TestEvent const& event) { OnDelegate(event); }
+		) };
 		TestEvent event{};
 		m_DelegateTest.Get()->Broadcast(event);
 		m_DelegateTest.Get()->UnSubscribe(handle);
@@ -18,7 +21,7 @@ namespace MauGam
 		m_DelegateTest.Get()->Broadcast(event);
 
 		event.i = 20;
-		auto const handle02{ m_DelegateTest.Get()->Subscribe([this](TestEvent const& event) { OnDelegate(event); }, this) };
+		auto const handle02{ m_DelegateTest += MauCor::Bind<TestEvent>([this](TestEvent const& event) { OnDelegate(event); }, this) };
 		m_DelegateTest.Get()->Broadcast(event);
 		m_DelegateTest.Get()->UnSubscribeAllByOwnerImmediate(handle02.owner);
 		m_DelegateTest.Get()->Broadcast(event);
@@ -30,19 +33,20 @@ namespace MauGam
 		m_DelegateTest.Get()->Broadcast(event);
 
 		event.i = 40;
-		m_DelegateTest.Get()->Subscribe(&DemoScene::OnDelegate, this);
+		m_DelegateTest += MauCor::Bind(&DemoScene::OnDelegate, this);
 		m_DelegateTest.Get()->Broadcast(event);
 		m_DelegateTest.Get()->UnSubscribeAllByOwnerImmediate(this);
 		m_DelegateTest.Get()->Broadcast(event);
 
 		event.i = 50;
-		m_DelegateTest.Get()->Subscribe(&DemoScene::OnDelegateConst, this);
+		//m_DelegateTest.Get()->Subscribe(&DemoScene::OnDelegateConst, this);
+		m_DelegateTest += MauCor::Bind(&DemoScene::OnDelegateConst, this);
 		m_DelegateTest.Get()->Broadcast(event);
 		m_DelegateTest.Get()->UnSubscribeAllByOwnerImmediate(this);
 		m_DelegateTest.Get()->Broadcast(event);
 
 		event.i = 60;
-		m_DelegateTest.Get()->Subscribe(&DemoScene::OnDelegateConst, this);
+		m_DelegateTest += MauCor::Bind(&DemoScene::OnDelegateConst, this);
 		m_DelegateTest.Get()->QueueBroadcast(event);
 		//m_DelegateTest.Get()->UnSubscribeAllByOwner(this);
 		//m_DelegateTest.Get()->QueueBroadcast(event);
