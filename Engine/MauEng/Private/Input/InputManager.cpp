@@ -230,12 +230,51 @@ namespace MauEng
 	{
 		auto const type{ static_cast<uint32_t>(keyInfo.type) };
 
-		//m_MappedKeyboardActions[type].erase(keyInfo.key);
+		auto const it{ m_MappedKeyboardActions[type].find(keyInfo.key) };
+
+		if (it == end(m_MappedKeyboardActions[type]))
+		{
+			return;
+		}
+
+		// erase in m_ActionToKeyboardKey
+		for (auto&& a : it->second)
+		{
+			std::erase_if(m_ActionToKeyboardKey[a],
+				[&keyInfo](uint32_t k)
+				{
+					return k == keyInfo.key;
+				});
+		}
+
+		// erase in mapped
+		m_MappedKeyboardActions[type].erase(it);
 	}
 
 	void InputManager::UnBindAllActions(MouseInfo const& mouseInfo) noexcept
 	{
 		auto const type{ static_cast<uint32_t>(mouseInfo.type) };
+
+		auto const it{ m_MappedMouseActions[type].find(mouseInfo.button) };
+
+		if (it == end(m_MappedMouseActions[type]))
+		{
+			return;
+		}
+
+		// erase in m_ActionToMouseButton
+		for (auto&& a : it->second)
+		{
+			std::erase_if(m_ActionToMouseButton[a],
+				[&mouseInfo](uint8_t b)
+				{
+					return b == mouseInfo.button;
+				});
+		}
+
+		// erase in mapped
+		m_MappedMouseActions[type].erase(it);
+
 	}
 
 	bool InputManager::IsActionExecuted(std::string const& actionName) const noexcept

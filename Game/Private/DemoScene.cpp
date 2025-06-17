@@ -339,7 +339,7 @@ namespace MauGam
 
 		auto& input{ INPUT_MANAGER };
 		input.BindAction("PrintInfo", MauEng::KeyInfo{ SDLK_SPACE, MauEng::KeyInfo::ActionType::Up });
-		//input.UnBindAction("PrintInfo");
+
 		input.BindAction("ToggleLightDebugRendering", MauEng::KeyInfo{ SDLK_F2, MauEng::KeyInfo::ActionType::Up });
 		input.BindAction("ToggleLights", MauEng::KeyInfo{ SDLK_F3, MauEng::KeyInfo::ActionType::Up });
 		input.BindAction("ToggleShadows", MauEng::KeyInfo{ SDLK_F4, MauEng::KeyInfo::ActionType::Up });
@@ -367,6 +367,11 @@ namespace MauGam
 		input.BindAction("Sprint", MauEng::KeyInfo{ SDLK_LCTRL, MauEng::KeyInfo::ActionType::Held });
 
 		input.BindAction("Rotate", MauEng::MouseInfo{ {}, MauEng::MouseInfo::ActionType::Moved });
+
+		//Unbind tests
+		//input.UnBindAction("PrintInfo");
+		//input.UnBindAllActions(MauEng::KeyInfo{ SDLK_UP,MauEng::KeyInfo::ActionType::Held });
+		//input.UnBindAllActions(MauEng::MouseInfo{ {},MauEng::MouseInfo::ActionType::Moved });
 	}
 
 	void DemoScene::HandleInput()
