@@ -9,6 +9,8 @@
 #include <unordered_map>
 #include <set>
 
+#include "SDL3/SDL_events.h"
+
 namespace MauEng
 {
 	// Keyboard only for now, no mapping contexts, just simple keybinding
@@ -18,9 +20,12 @@ namespace MauEng
 		// Internal function to process all input, returns if the application should close based on the processed input
 		[[nodiscard]] bool ProcessInput() noexcept;
 
-		bool BindAction(std::string const& actionName, KeyInfo const& keyInfo) noexcept;
-		bool BindAction(std::string const& actionName, MouseInfo const& mouseInfo) noexcept;
-		// TODO unbinding
+		void BindAction(std::string const& actionName, KeyInfo const& keyInfo) noexcept;
+		void BindAction(std::string const& actionName, MouseInfo const& mouseInfo) noexcept;
+
+		void UnBindAction(std::string const& actionName) noexcept;
+		void UnBindAllActions(KeyInfo const& keyInfo) noexcept;
+		void UnBindAllActions(MouseInfo const& mouseInfo) noexcept;
 
 		[[nodiscard]] bool IsActionExecuted(std::string const& actionName) const noexcept;
 
@@ -49,15 +54,16 @@ namespace MauEng
 		InputManager();
 		virtual ~InputManager() override = default;
 
-		// Tolerance for the mouse moved state
-		//float const MovementTolerance{ 1.f };
-
 		// All executed actions this frame
-		std::set<std::string> m_ExecutedActions;
+		std::unordered_set<std::string> m_ExecutedActions;
 
+		// ActionType[]
 		// State of key <keyID, actions[ actionname ] >
 		std::vector<std::unordered_map<uint32_t, std::vector<std::string>>> m_MappedKeyboardActions;
 		std::vector<std::unordered_map<uint8_t, std::vector<std::string>>> m_MappedMouseActions;
+
+		std::unordered_map<std::string, std::vector<uint32_t>> m_ActionToKeyboardKey;
+		std::unordered_map<std::string, std::vector<uint8_t>> m_ActionToMouseButton;
 
 		float m_MouseX{ 0.f };
 		float m_MouseY{ 0.f };
@@ -67,8 +73,12 @@ namespace MauEng
 		float m_MouseScrollX{ 0.f };
 		float m_MouseScrollY{ 0.f };
 
+
+		void HandleMouseAction(SDL_Event const& event, Uint32 const evType, MouseInfo::ActionType const actType);
 		void HandleMouseHeldAndMovement();
 		void HandleKeyboardHeld();
+
+		void ResetState();
 	};
 }
 

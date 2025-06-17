@@ -15,12 +15,19 @@
 // Because this could be an issue when its an end of frame event, and the object has been destroyed when the event fires (object destroys sgould be delayed until after anyway though)
 // But if object that isnt managed by engine (?)
 
+// Delegate is in class A
+// class B is subscribed & is deleted
+// Scenario1: did not unsub, event fires -> PROBLEM
+// Scenario2: did unsub but Queued broadcast -> PROBLEM
+
+// Fix would be some form of a dynamic/ management system for this
+
 namespace MauCor
 {
 	struct ListenerHandle final
 	{
 		uint32_t id{ 0 };
-		void* owner{ nullptr };
+		void* const owner{ nullptr };
 
 		bool constexpr operator==(ListenerHandle const& other) const noexcept
 		{
