@@ -20,6 +20,8 @@ namespace MauEng
 		// Internal function to process all input, returns if the application should close based on the processed input
 		[[nodiscard]] bool ProcessInput() noexcept;
 
+		void Destroy();
+
 		void BindAction(std::string const& actionName, KeyInfo const& keyInfo) noexcept;
 		void BindAction(std::string const& actionName, MouseInfo const& mouseInfo) noexcept;
 
@@ -66,6 +68,14 @@ namespace MauEng
 
 		std::unordered_map<std::string, std::vector<uint32_t>> m_ActionToKeyboardKey;
 		std::unordered_map<std::string, std::vector<uint8_t>> m_ActionToMouseButton;
+
+		struct Gamepad final
+		{
+			SDL_Gamepad* gamepad;
+			uint32_t playerID;
+		};
+		std::vector<uint32_t> m_AvailablePlayerIDs { 3, 2, 1, 0 };
+		std::vector<Gamepad> m_Gamepads;
 
 		float m_MouseX{ 0.f };
 		float m_MouseY{ 0.f };

@@ -50,6 +50,7 @@ namespace MauEng
 
 		SDL_GL_SetSwapInterval(0);
 
+		// Also initializes input manager
 		auto& inputManager{ InputManager::GetInstance() };
 
 		if constexpr(ENABLE_PROFILER)
@@ -60,8 +61,13 @@ namespace MauEng
 
 	Engine::~Engine()
 	{
+		auto& inputManager{ InputManager::GetInstance() };
+		inputManager.Destroy();
+
 		// Cleanup all core dependences & singletons
 		InternalServiceLocator::GetRenderer().Destroy();
+
+		m_Window->Destroy();
 	}
 
 	void Engine::Run(std::function<void()> const& load)

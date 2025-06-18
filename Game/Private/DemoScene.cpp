@@ -14,7 +14,9 @@ namespace MauGam
 		(
 			[this](TestEvent const& event) { OnDelegate(event); }
 		) };
+
 		TestEvent event{};
+
 		m_DelegateTest.Get()->Broadcast(event);
 		m_DelegateTest -= handle;
 		m_DelegateTest < event;

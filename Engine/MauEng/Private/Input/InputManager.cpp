@@ -9,6 +9,41 @@ namespace MauEng
 	{
 		m_MappedKeyboardActions.resize(static_cast<size_t>(KeyInfo::ActionType::COUNT));
 		m_MappedMouseActions.resize(static_cast<size_t>(MouseInfo::ActionType::COUNT));
+
+		int numGamepads{ 0 };
+		SDL_JoystickID* gamepadIDs{ SDL_GetGamepads(&numGamepads) };
+		if (gamepadIDs)
+		{
+			for (int i{ 0 }; i < numGamepads; ++i)
+			{
+				if (m_AvailablePlayerIDs.empty())
+				{
+					break;
+				}
+
+				SDL_JoystickID const instanceID{ gamepadIDs[i] };
+				if (SDL_IsGamepad(instanceID))
+				{
+					SDL_Gamepad* gamepad{ SDL_OpenGamepad(instanceID) };
+					ME_ENGINE_ASSERT(gamepad);
+
+					if (gamepad)
+					{
+						m_Gamepads.emplace_back(gamepad, m_AvailablePlayerIDs.back());
+						m_AvailablePlayerIDs.pop_back();
+
+						ME_LOG_INFO(
+							MauCor::LogCategory::Engine,
+							"Connected controller at input system init: {} player ID: {}",
+							SDL_GetGamepadName(gamepad),
+							m_Gamepads.back().playerID
+						);
+					}
+				}
+			}
+		}
+
+		SDL_free(gamepadIDs);
 	}
 
 	void InputManager::HandleMouseAction(SDL_Event const& event, Uint32 const evType, MouseInfo::ActionType const actType)
@@ -159,12 +194,89 @@ namespace MauEng
 					}
 				}
 			}
+
+			// Gamepad
+			if (event.type == SDL_EVENT_GAMEPAD_ADDED)
+			{
+				if (not m_AvailablePlayerIDs.empty())
+				{
+					auto const id{ event.gdevice.which };
+
+					bool alreadyExists{ false };
+					for (auto& p : m_Gamepads)
+					{
+						auto const connectedId{ SDL_GetGamepadID(p.gamepad) };
+
+						if (connectedId == id)
+						{
+							alreadyExists = true;
+							break;
+						}
+					}
+
+					if (SDL_IsGamepad(id) and not alreadyExists)
+					{
+						SDL_Gamepad* gamepad{ SDL_OpenGamepad(id) };
+						if (gamepad)
+						{
+							m_Gamepads.emplace_back(gamepad, m_AvailablePlayerIDs.back());
+							m_AvailablePlayerIDs.pop_back();
+
+							ME_LOG_INFO(
+								MauCor::LogCategory::Engine,
+								"Connected controller: {} player ID: {}",
+								SDL_GetGamepadName(gamepad),
+								m_Gamepads.back().playerID
+							);
+						}
+					}
+				}
+			}
+			else if (event.type == SDL_EVENT_GAMEPAD_REMOVED)
+			{
+				auto const removedId{ event.gdevice.which };
+
+				for (uint32_t i {0}; i < m_Gamepads.size(); ++i)
+				{
+					auto& p{ m_Gamepads[i] };
+
+					auto const id{ SDL_GetGamepadID(p.gamepad) };
+					if (id == removedId)
+					{
+						ME_LOG_INFO(
+							MauCor::LogCategory::Engine,
+							"Disconnected controller: {} player ID: {}",
+							SDL_GetGamepadName(p.gamepad),
+							m_Gamepads.back().playerID
+						);
+
+						SDL_CloseGamepad(p.gamepad);
+						m_AvailablePlayerIDs.emplace_back(p.playerID);
+
+						std::swap(m_Gamepads[i], m_Gamepads.back());
+						m_Gamepads.pop_back();
+
+						break;
+					}
+				}
+
+			}
+
 		}
 
 		HandleMouseHeldAndMovement();
 		HandleKeyboardHeld();
 
 		return true;
+	}
+
+	void InputManager::Destroy()
+	{
+		for (auto& p : m_Gamepads)
+		{
+			SDL_CloseGamepad(p.gamepad);
+			m_AvailablePlayerIDs.emplace_back(p.playerID);
+		}
 	}
 
 	void InputManager::BindAction(std::string const& actionName, KeyInfo const& keyInfo) noexcept
