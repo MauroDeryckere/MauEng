@@ -29,6 +29,9 @@ namespace MauEng
 		void UnBindAllActions(KeyInfo const& keyInfo) noexcept;
 		void UnBindAllActions(MouseInfo const& mouseInfo) noexcept;
 
+		[[nodiscard]] bool HasControllerForPlayerID(uint32_t playerID) const noexcept;
+		[[nodiscard]] uint32_t NumConnectedControllers() const noexcept;
+
 		void Clear() noexcept;
 
 		[[nodiscard]] bool IsActionExecuted(std::string const& actionName) const noexcept;
@@ -73,7 +76,10 @@ namespace MauEng
 		{
 			SDL_Gamepad* gamepad;
 			uint32_t playerID;
+
+			bool markedForRemove = false;
 		};
+
 		std::vector<uint32_t> m_AvailablePlayerIDs { 3, 2, 1, 0 };
 		std::vector<Gamepad> m_Gamepads;
 

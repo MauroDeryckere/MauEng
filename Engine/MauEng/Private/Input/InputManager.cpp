@@ -144,6 +144,29 @@ namespace MauEng
 		m_MouseDeltaY = 0.f;
 		m_MouseScrollX = 0.f;
 		m_MouseScrollY = 0.f;
+
+		for (size_t i = 0; i < m_Gamepads.size(); )
+		{
+			auto& p = m_Gamepads[i];
+			if (p.markedForRemove)
+			{
+				ME_LOG_INFO(
+					MauCor::LogCategory::Engine,
+					"Disconnected controller: {} player ID: {}",
+					SDL_GetGamepadName(p.gamepad),
+					m_Gamepads[i].playerID
+				);
+
+				SDL_CloseGamepad(p.gamepad);
+				m_AvailablePlayerIDs.emplace_back(p.playerID);
+				std::swap(p, m_Gamepads.back());
+				m_Gamepads.pop_back();
+
+				// Don't increment i; we need to process the swapped-in item
+				continue;
+			}
+			++i;
+		}
 	}
 
 	bool InputManager::ProcessInput() noexcept
@@ -243,25 +266,11 @@ namespace MauEng
 					auto const id{ SDL_GetGamepadID(p.gamepad) };
 					if (id == removedId)
 					{
-						ME_LOG_INFO(
-							MauCor::LogCategory::Engine,
-							"Disconnected controller: {} player ID: {}",
-							SDL_GetGamepadName(p.gamepad),
-							m_Gamepads.back().playerID
-						);
-
-						SDL_CloseGamepad(p.gamepad);
-						m_AvailablePlayerIDs.emplace_back(p.playerID);
-
-						std::swap(m_Gamepads[i], m_Gamepads.back());
-						m_Gamepads.pop_back();
-
+						p.markedForRemove = true;
 						break;
 					}
 				}
-
 			}
-
 		}
 
 		HandleMouseHeldAndMovement();
@@ -277,6 +286,8 @@ namespace MauEng
 			SDL_CloseGamepad(p.gamepad);
 			m_AvailablePlayerIDs.emplace_back(p.playerID);
 		}
+
+		m_Gamepads.clear();
 	}
 
 	void InputManager::BindAction(std::string const& actionName, KeyInfo const& keyInfo) noexcept
@@ -386,7 +397,18 @@ namespace MauEng
 
 		// erase in mapped
 		m_MappedMouseActions[type].erase(it);
+	}
 
+	bool InputManager::HasControllerForPlayerID(uint32_t playerID) const noexcept
+	{
+		return std::ranges::any_of(
+			m_Gamepads,
+			[playerID](const auto& entry) { return entry.playerID == playerID; });
+	}
+
+	uint32_t InputManager::NumConnectedControllers() const noexcept
+	{
+		return static_cast<uint32_t>(m_Gamepads.size());
 	}
 
 	bool InputManager::IsActionExecuted(std::string const& actionName) const noexcept
