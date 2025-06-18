@@ -747,6 +747,9 @@ namespace MauRen
 		VkResult const queuePresentResult{ vkQueuePresentKHR(deviceContext->GetPresentQueue(), &presentInfo) };
 		if (VK_ERROR_OUT_OF_DATE_KHR == queuePresentResult || VK_SUBOPTIMAL_KHR == queuePresentResult || m_FramebufferResized)
 		{
+			auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+
+			vkDeviceWaitIdle(deviceContext->GetLogicalDevice());
 			RecreateSwapchain();
 		}
 		
