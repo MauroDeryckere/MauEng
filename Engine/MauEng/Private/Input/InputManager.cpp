@@ -175,6 +175,8 @@ namespace MauEng
 
 	void InputManager::HandleGamepadAxisState()
 	{
+		ME_PROFILE_FUNCTION()
+
 		for (auto& g : m_Gamepads)
 		{
 			for (uint32_t axis{ 0 }; axis < SDL_GAMEPAD_AXIS_COUNT; ++axis)
@@ -268,6 +270,8 @@ namespace MauEng
 
 	void InputManager::ResetState()
 	{
+		ME_PROFILE_FUNCTION()
+
 		for (auto& actions : m_ExecutedActions)
 		{
 			actions.clear();
@@ -827,7 +831,7 @@ namespace MauEng
 		m_JoystickDeadzone = newDeadzone;
 	}
 
-	void InputManager::SetTriggerkDeadzone(float newDeadzone) noexcept
+	void InputManager::SetTriggerDeadzone(float newDeadzone) noexcept
 	{
 		ME_ENGINE_ASSERT(newDeadzone >= 0.f && newDeadzone < 1.F);
 		m_TriggerDeadzone = newDeadzone;

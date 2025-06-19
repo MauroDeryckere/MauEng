@@ -60,7 +60,7 @@ namespace MauEng
 		[[nodiscard]] float GetDeltaRightTrigger(uint32_t playerID = 0) const noexcept;
 
 		void SetJoystickDeadzone(float newDeadzone) noexcept;
-		void SetTriggerkDeadzone(float newDeadzone) noexcept;
+		void SetTriggerDeadzone(float newDeadzone) noexcept;
 
 		InputManager(InputManager const&) = delete;
 		InputManager(InputManager&&) = delete;
