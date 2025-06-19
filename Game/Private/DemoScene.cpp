@@ -353,12 +353,15 @@ namespace MauGam
 		input.BindAction("ToggleDebugRenderMode", MauEng::KeyInfo{ SDLK_F8, MauEng::KeyInfo::ActionType::Up });
 		input.BindAction("RandomizeLightColours", MauEng::KeyInfo{ SDLK_F9, MauEng::KeyInfo::ActionType::Up });
 		input.BindAction("ToggleCamSettings", MauEng::KeyInfo{ SDLK_F10, MauEng::KeyInfo::ActionType::Up });
+		input.BindAction("ToggleCamSettings", MauEng::GamepadInfo{ SDL_GAMEPAD_BUTTON_SOUTH, MauEng::GamepadInfo::ActionType::Up });
+
 		input.BindAction("ToggleToneMap", MauEng::KeyInfo{ SDLK_F11, MauEng::KeyInfo::ActionType::Up });
 
 		input.BindAction("LowerCustomExposure", MauEng::KeyInfo{ SDLK_E, MauEng::KeyInfo::ActionType::Up });
 		input.BindAction("HigherCustomExposure", MauEng::KeyInfo{ SDLK_R, MauEng::KeyInfo::ActionType::Up });
+		
 
-
+		//input.BindAction("MoveUp", MauEng::MouseInfo{ SDL_BUTTON_LEFT, MauEng::MouseInfo::ActionType::Down });
 		input.BindAction("MoveUp", MauEng::KeyInfo{ SDLK_UP, MauEng::KeyInfo::ActionType::Held });
 		input.BindAction("MoveLeft", MauEng::KeyInfo{ SDLK_LEFT, MauEng::KeyInfo::ActionType::Held });
 		input.BindAction("MoveRight", MauEng::KeyInfo{ SDLK_RIGHT, MauEng::KeyInfo::ActionType::Held });
@@ -367,6 +370,11 @@ namespace MauGam
 		input.BindAction("MoveLeft", MauEng::KeyInfo{ SDLK_A, MauEng::KeyInfo::ActionType::Held });
 		input.BindAction("MoveRight", MauEng::KeyInfo{ SDLK_D, MauEng::KeyInfo::ActionType::Held });
 		input.BindAction("MoveDown", MauEng::KeyInfo{ SDLK_S, MauEng::KeyInfo::ActionType::Held });
+
+		input.BindAction("MoveUp", MauEng::GamepadInfo{ SDL_GAMEPAD_BUTTON_DPAD_UP, MauEng::GamepadInfo::ActionType::Held });
+		input.BindAction("MoveLeft", MauEng::GamepadInfo{ SDL_GAMEPAD_BUTTON_DPAD_LEFT, MauEng::GamepadInfo::ActionType::Held });
+		input.BindAction("MoveRight", MauEng::GamepadInfo{ SDL_GAMEPAD_BUTTON_DPAD_RIGHT, MauEng::GamepadInfo::ActionType::Held });
+		input.BindAction("MoveDown", MauEng::GamepadInfo{ SDL_GAMEPAD_BUTTON_DPAD_DOWN, MauEng::GamepadInfo::ActionType::Held });
 
 		input.BindAction("Sprint", MauEng::KeyInfo{ SDLK_LCTRL, MauEng::KeyInfo::ActionType::Held });
 

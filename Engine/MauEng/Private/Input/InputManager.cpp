@@ -10,6 +10,19 @@ namespace MauEng
 		m_MappedKeyboardActions.resize(static_cast<size_t>(KeyInfo::ActionType::COUNT));
 		m_MappedMouseActions.resize(static_cast<size_t>(MouseInfo::ActionType::COUNT));
 
+		m_ActionToGamepad.resize(4);
+		m_MappedGamepadActions.resize(4);
+		for (auto& actions: m_MappedGamepadActions)
+		{
+			actions.resize(static_cast<size_t>(GamepadInfo::ActionType::COUNT));
+		}
+		m_ExecutedActions.resize(4);
+
+		if constexpr (SKIP_CONTROLLER_INPUT_PLAYER_ID_0)
+		{
+			m_AvailablePlayerIDs.pop_back();
+		}
+
 		int numGamepads{ 0 };
 		SDL_JoystickID* gamepadIDs{ SDL_GetGamepads(&numGamepads) };
 		if (gamepadIDs)
@@ -31,6 +44,9 @@ namespace MauEng
 					{
 						m_Gamepads.emplace_back(gamepad, m_AvailablePlayerIDs.back());
 						m_AvailablePlayerIDs.pop_back();
+
+						bool const result{ SDL_SetGamepadPlayerIndex(gamepad, static_cast<int>(m_Gamepads.back().playerID)) };
+						ME_ENGINE_ASSERT(result);
 
 						ME_LOG_INFO(
 							MauCor::LogCategory::Engine,
@@ -76,7 +92,7 @@ namespace MauEng
 			{
 				for (auto const& action : it->second)
 				{
-					m_ExecutedActions.emplace(action);
+					m_ExecutedActions[0].emplace(action);
 				}
 			}
 		}
@@ -100,7 +116,7 @@ namespace MauEng
 					{
 						for (auto const& action : it->second)
 						{
-							m_ExecutedActions.emplace(action);
+							m_ExecutedActions[0].emplace(action);
 						}
 					}
 				}
@@ -129,7 +145,28 @@ namespace MauEng
 				{
 					for (auto const& action : keys.second)
 					{
-						m_ExecutedActions.emplace(action);
+						m_ExecutedActions[0].emplace(action);
+					}
+				}
+			}
+		}
+	}
+
+	void InputManager::HandleGamepadHeld()
+	{
+		ME_PROFILE_FUNCTION()
+
+		for (auto& g : m_Gamepads)
+		{
+			auto const& actions{ m_MappedGamepadActions[g.playerID][static_cast<size_t>(GamepadInfo::ActionType::Held)] };
+			for (auto const& buttons : actions)
+			{
+				SDL_GamepadButton const button{ static_cast<SDL_GamepadButton>(buttons.first) };
+				if (SDL_GetGamepadButton(g.gamepad, button))
+				{
+					for (auto const& action : buttons.second)
+					{
+						m_ExecutedActions[g.playerID].emplace(action);
 					}
 				}
 			}
@@ -138,7 +175,10 @@ namespace MauEng
 
 	void InputManager::ResetState()
 	{
-		m_ExecutedActions.clear();
+		for (auto& actions : m_ExecutedActions)
+		{
+			actions.clear();
+		}
 
 		m_MouseDeltaX = 0.f;
 		m_MouseDeltaY = 0.f;
@@ -156,6 +196,9 @@ namespace MauEng
 					SDL_GetGamepadName(p.gamepad),
 					m_Gamepads[i].playerID
 				);
+
+				bool const result{ SDL_SetGamepadPlayerIndex(p.gamepad, -1) };
+				ME_ENGINE_ASSERT(result);
 
 				SDL_CloseGamepad(p.gamepad);
 				m_AvailablePlayerIDs.emplace_back(p.playerID);
@@ -193,6 +236,7 @@ namespace MauEng
 			HandleMouseAction(event, SDL_EVENT_WINDOW_MOUSE_LEAVE, MouseInfo::ActionType::LeftWindow);
 
 			// Keyboard
+			//Down this frame
 			if (event.type == SDL_EVENT_KEY_DOWN && !event.key.repeat)
 			{
 				auto const& actions{ m_MappedKeyboardActions[static_cast<size_t>(KeyInfo::ActionType::Down)] };
@@ -201,10 +245,11 @@ namespace MauEng
 				{
 					for (auto const& action : it->second)
 					{
-						m_ExecutedActions.emplace(action);
+						m_ExecutedActions[0].emplace(action);
 					}
 				}
 			}
+			//Up this frame
 			else if (event.type == SDL_EVENT_KEY_UP)
 			{
 				auto const& actions{ m_MappedKeyboardActions[static_cast<size_t>(KeyInfo::ActionType::Up)] };
@@ -213,7 +258,7 @@ namespace MauEng
 				{
 					for (auto const& action : it->second)
 					{
-						m_ExecutedActions.emplace(action);
+						m_ExecutedActions[0].emplace(action);
 					}
 				}
 			}
@@ -245,6 +290,9 @@ namespace MauEng
 							m_Gamepads.emplace_back(gamepad, m_AvailablePlayerIDs.back());
 							m_AvailablePlayerIDs.pop_back();
 
+							bool const result{ SDL_SetGamepadPlayerIndex(gamepad, static_cast<int>(m_Gamepads.back().playerID)) };
+							ME_ENGINE_ASSERT(result);
+
 							ME_LOG_INFO(
 								MauCor::LogCategory::Engine,
 								"Connected controller: {} player ID: {}",
@@ -271,10 +319,52 @@ namespace MauEng
 					}
 				}
 			}
+
+			if (event.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN && !event.key.repeat)
+			{
+				auto const id{ event.gdevice.which };
+				auto const playerID{ SDL_GetGamepadPlayerIndexForID(id) };
+
+				ME_ENGINE_ASSERT(playerID != -1);
+				if (playerID != -1)
+				{
+					ME_ENGINE_ASSERT(playerID <= 3 && playerID >= 0);
+					auto const& actions{ m_MappedGamepadActions[playerID][static_cast<size_t>(GamepadInfo::ActionType::Down)] };
+					auto const it{ actions.find(static_cast<uint32_t>(event.gbutton.button)) };
+					if (it != end(actions))
+					{
+						for (auto const& action : it->second)
+						{
+							m_ExecutedActions[playerID].emplace(action);
+						}
+					}
+				}
+			}
+			else if (event.type == SDL_EVENT_GAMEPAD_BUTTON_UP)
+			{
+				auto const id{ event.gdevice.which };
+				auto const playerID{ SDL_GetGamepadPlayerIndexForID(id) };
+
+				ME_ENGINE_ASSERT(playerID != -1);
+				if (playerID != -1)
+				{
+					ME_ENGINE_ASSERT(playerID <= 3 && playerID >= 0);
+					auto const& actions{ m_MappedGamepadActions[playerID][static_cast<size_t>(GamepadInfo::ActionType::Up)] };
+					auto const it{ actions.find(static_cast<uint32_t>(event.gbutton.button)) };
+					if (it != end(actions))
+					{
+						for (auto const& action : it->second)
+						{
+							m_ExecutedActions[playerID].emplace(action);
+						}
+					}
+				}
+			}
 		}
 
 		HandleMouseHeldAndMovement();
 		HandleKeyboardHeld();
+		HandleGamepadHeld();
 
 		return true;
 	}
@@ -306,47 +396,91 @@ namespace MauEng
 		m_ActionToMouseButton[actionName].emplace_back(mouseInfo.button);
 	}
 
-	void InputManager::UnBindAction(std::string const& actionName) noexcept
+	void InputManager::BindAction(std::string const& actionName, GamepadInfo const& gamepadInfo, uint32_t playerID) noexcept
 	{
+		ME_ENGINE_ASSERT(playerID <= 3, "Player ID out of bounds");
+
+		auto& actionVecTypeVec{ m_MappedGamepadActions[playerID][static_cast<size_t>(gamepadInfo.type)] };
+		actionVecTypeVec[gamepadInfo.button].emplace_back(actionName);
+
+		m_ActionToGamepad[playerID][actionName].emplace_back(gamepadInfo.button);
+	}
+
+	void InputManager::UnBindAction(std::string const& actionName, uint32_t playerID) noexcept
+	{
+		//TODO controller
+
+
+		// Keyboard is always playerID 0
+		if (0 == playerID)
 		{
-			auto const it{ m_ActionToMouseButton.find(actionName) };
-			if (it != end(m_ActionToMouseButton))
 			{
-				for (auto&& b : it->second)
+				auto const it{ m_ActionToMouseButton.find(actionName) };
+				if (it != end(m_ActionToMouseButton))
 				{
-					for (auto& mappedMouse : m_MappedMouseActions)
+					for (auto&& b : it->second)
 					{
-						// need to find the string and erase then
-						std::erase_if(mappedMouse[b], 
-							[&actionName](std::string const& a)
-							{
-								return a == actionName;
-							});
+						for (auto& mappedMouse : m_MappedMouseActions)
+						{
+							// need to find the string and erase then
+							std::erase_if(mappedMouse[b],
+								[&actionName](std::string const& a)
+								{
+									return a == actionName;
+								});
+						}
 					}
+					m_ActionToMouseButton.erase(it);
 				}
-				m_ActionToMouseButton.erase(it);
+			}
+
+			{
+				auto const it{ m_ActionToKeyboardKey.find(actionName) };
+				if (it != end(m_ActionToKeyboardKey))
+				{
+					for (auto&& b : it->second)
+					{
+						for (auto& mappedKeyboard : m_MappedKeyboardActions)
+						{
+							std::erase_if(mappedKeyboard[b],
+								[&actionName](std::string const& a)
+								{
+									return a == actionName;
+								});
+						}
+					}
+					m_ActionToKeyboardKey.erase(it);
+				}
 			}
 		}
 
+
+	}
+
+	void InputManager::UnBindAllActions(uint32_t playerID) noexcept
+	{
+		ME_ENGINE_ASSERT(playerID <= 3, "PlayerID out of bounds");
+
+		if (0 == playerID)
 		{
-			auto const it{ m_ActionToKeyboardKey.find(actionName) };
-			if (it != end(m_ActionToKeyboardKey))
+			for (auto& m : m_MappedKeyboardActions)
 			{
-				for (auto&& b : it->second)
-				{
-					for (auto& mappedKeyboard : m_MappedKeyboardActions)
-					{
-						std::erase_if(mappedKeyboard[b],
-							[&actionName](std::string const& a)
-							{
-								return a == actionName;
-							});
-					}
-				}
-				m_ActionToKeyboardKey.erase(it);
+				m.clear();
 			}
+			m_ActionToKeyboardKey.clear();
+
+			for (auto& m : m_MappedMouseActions)
+			{
+				m.clear();
+			}
+			m_ActionToMouseButton.clear();
 		}
 
+		for (auto& m : m_MappedGamepadActions[playerID])
+		{
+			m.clear();
+		}
+		m_ActionToGamepad[playerID].clear();
 	}
 
 	void InputManager::UnBindAllActions(KeyInfo const& keyInfo) noexcept
@@ -411,9 +545,11 @@ namespace MauEng
 		return static_cast<uint32_t>(m_Gamepads.size());
 	}
 
-	bool InputManager::IsActionExecuted(std::string const& actionName) const noexcept
+	bool InputManager::IsActionExecuted(std::string const& actionName, uint32_t playerID) const noexcept
 	{
-		return m_ExecutedActions.contains(actionName);
+		ME_ASSERT(playerID <= 3, "Engine only supports 4 players");
+		ME_ASSERT(playerID < m_ExecutedActions.size(), "No player created for requested playerID");
+		return m_ExecutedActions[playerID].contains(actionName);
 	}
 
 	void InputManager::Clear() noexcept
@@ -424,7 +560,18 @@ namespace MauEng
 		m_MappedMouseActions.clear();
 		m_ActionToMouseButton.clear();
 
-		m_ExecutedActions.clear();
+		for (auto& actions : m_MappedGamepadActions)
+		{
+			actions.clear();
+		}
+		for (auto& actions : m_ActionToGamepad)
+		{
+			actions.clear();
+		}
+		for (auto& actions : m_ExecutedActions)
+		{
+			actions.clear();
+		}
 
 		ResetState();
 	}

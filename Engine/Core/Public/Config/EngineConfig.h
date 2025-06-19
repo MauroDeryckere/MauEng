@@ -17,6 +17,8 @@ namespace MauEng
 	auto constexpr LOG_COLOR_FATAL{ "\033[1;31m" };
 
 
+	bool constexpr SKIP_CONTROLLER_INPUT_PLAYER_ID_0{ false };
+
 #define ENABLE_FILE_LOGGING 0
 #define ENABLE_DEBUG_RENDERING 0
 #define ENABLE_ASSERTS 0
