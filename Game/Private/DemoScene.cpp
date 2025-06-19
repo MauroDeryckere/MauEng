@@ -380,6 +380,9 @@ namespace MauGam
 		input.BindAction("MoveGamepadX", MauEng::GamepadInfo{ .input= { .axis=SDL_GAMEPAD_AXIS_LEFTX }, .type = MauEng::GamepadInfo::ActionType::AxisHeld });
 		input.BindAction("MoveGamepadY", MauEng::GamepadInfo{ .input = { .axis = SDL_GAMEPAD_AXIS_LEFTY }, .type = MauEng::GamepadInfo::ActionType::AxisHeld });
 
+		input.BindAction("AxisReleasedTest", MauEng::GamepadInfo{ .input = { .axis = SDL_GAMEPAD_AXIS_LEFT_TRIGGER }, .type = MauEng::GamepadInfo::ActionType::AxisReleased });
+		input.BindAction("AxisStartHeldTest", MauEng::GamepadInfo{ .input = { .axis = SDL_GAMEPAD_AXIS_LEFT_TRIGGER }, .type = MauEng::GamepadInfo::ActionType::AxisStartHeld });
+
 		input.BindAction("Sprint", MauEng::KeyInfo{ SDLK_LCTRL, MauEng::KeyInfo::ActionType::Held });
 
 		input.BindAction("Rotate", MauEng::MouseInfo{ {}, MauEng::MouseInfo::ActionType::Moved });
@@ -709,6 +712,16 @@ namespace MauGam
 			m_CameraManager.GetActiveCamera().Translate({ 0.f, 0.f, -y * movementSpeed * TIME.ElapsedSec() * (isSprinting ? sprintModifier : 1) });
 			m_CameraManager.GetActiveCamera().Translate({ x * movementSpeed * TIME.ElapsedSec() * (isSprinting ? sprintModifier : 1), 0.f, 0.f });
 
+		}
+
+		if (input.IsActionExecuted("AxisReleasedTest"))
+		{
+			ME_LOG_DEBUG(MauCor::LogCategory::Game, "Left trigger axis released");
+		}
+
+		if (input.IsActionExecuted("AxisStartHeldTest"))
+		{
+			ME_LOG_DEBUG(MauCor::LogCategory::Game, "Left trigger axis start hold");
 		}
 	}
 

@@ -16,6 +16,8 @@ namespace MauEng
 			// Action Type axis -> axis in input field
 			AxisHeld,
 			AxisMoved,
+			AxisReleased,
+			AxisStartHeld,
 
 			COUNT
 		};

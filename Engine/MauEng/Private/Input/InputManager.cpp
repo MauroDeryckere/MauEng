@@ -175,7 +175,7 @@ namespace MauEng
 
 	void InputManager::HandleGamepadAxisState()
 	{
-		// TODO need to handle held
+		// TODO need to handle released and start hold
 
 		for (auto& g : m_Gamepads)
 		{
@@ -203,6 +203,22 @@ namespace MauEng
 
 				if (norm != 0.f)
 				{
+					if (not m_GamepadAxes[g.playerID].held[axis])
+					{
+						// broadaast start held
+						auto const& actions{ m_MappedGamepadActions[g.playerID][static_cast<size_t>(GamepadInfo::ActionType::AxisStartHeld)] };
+						auto const it{ actions.find(axis) };
+						if (it != end(actions))
+						{
+							for (auto const& action : it->second)
+							{
+								m_ExecutedActions[g.playerID].emplace(action);
+							}
+						}
+					}
+
+					m_GamepadAxes[g.playerID].held[axis] = true;
+
 					auto const& actions{ m_MappedGamepadActions[g.playerID][static_cast<size_t>(GamepadInfo::ActionType::AxisHeld)] };
 					// held action
 					auto const it{ actions.find(axis) };
@@ -213,6 +229,23 @@ namespace MauEng
 							m_ExecutedActions[g.playerID].emplace(action);
 						}
 					}
+				}
+				else
+				{
+					if (m_GamepadAxes[g.playerID].held[axis])
+					{
+						// broadaast start held
+						auto const& actions{ m_MappedGamepadActions[g.playerID][static_cast<size_t>(GamepadInfo::ActionType::AxisReleased)] };
+						auto const it{ actions.find(axis) };
+						if (it != end(actions))
+						{
+							for (auto const& action : it->second)
+							{
+								m_ExecutedActions[g.playerID].emplace(action);
+							}
+						}
+					}
+					m_GamepadAxes[g.playerID].held[axis] = false;
 				}
 
 				m_GamepadAxes[g.playerID].delta[axis] = norm - m_GamepadAxes[g.playerID].current[axis];
@@ -491,7 +524,10 @@ namespace MauEng
 		ME_ENGINE_ASSERT(playerID <= 3, "Player ID out of bounds");
 
 		uint32_t btnAxis{ 0 };
-		if (gamepadInfo.type == GamepadInfo::ActionType::AxisHeld or gamepadInfo.type == GamepadInfo::ActionType::AxisMoved)
+		if (gamepadInfo.type == GamepadInfo::ActionType::AxisHeld 
+		or  gamepadInfo.type == GamepadInfo::ActionType::AxisMoved
+		or  gamepadInfo.type == GamepadInfo::ActionType::AxisReleased
+		or  gamepadInfo.type == GamepadInfo::ActionType::AxisStartHeld)
 		{
 			btnAxis = gamepadInfo.input.axis;
 		}

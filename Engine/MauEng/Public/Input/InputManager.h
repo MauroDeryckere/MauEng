@@ -114,11 +114,12 @@ namespace MauEng
 			// normalized [-1.0, 1.0]
 			std::array<float, SDL_GAMEPAD_AXIS_COUNT> current{};
 			std::array<float, SDL_GAMEPAD_AXIS_COUNT> delta{};
+			std::array<bool, SDL_GAMEPAD_AXIS_COUNT> held{};
 		};
 
 		std::array<GamepadAxisState, 4> m_GamepadAxes{};
 
-		float m_Deadzone;
+		float m_Deadzone{ .1f };
 
 
 		void HandleMouseAction(SDL_Event const& event, Uint32 const evType, MouseInfo::ActionType const actType);
