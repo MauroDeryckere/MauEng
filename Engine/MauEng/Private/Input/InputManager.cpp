@@ -408,8 +408,28 @@ namespace MauEng
 
 	void InputManager::UnBindAction(std::string const& actionName, uint32_t playerID) noexcept
 	{
-		//TODO controller
+		ME_ENGINE_ASSERT(playerID <= 3, "PlayerID out of bounds");
 
+		// gamepad
+		{
+			auto const it{ m_ActionToGamepad[playerID].find(actionName) };
+			if (it != end(m_ActionToGamepad[playerID]))
+			{
+				for (auto&& b : it->second)
+				{
+					for (auto& mappedGamepad : m_MappedGamepadActions[playerID])
+					{
+						// need to find the string and erase then
+						std::erase_if(mappedGamepad[b],
+							[&actionName](std::string const& a)
+							{
+								return a == actionName;
+							});
+					}
+				}
+				m_ActionToGamepad[playerID].erase(it);
+			}
+		}
 
 		// Keyboard is always playerID 0
 		if (0 == playerID)

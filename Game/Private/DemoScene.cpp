@@ -354,6 +354,7 @@ namespace MauGam
 		input.BindAction("RandomizeLightColours", MauEng::KeyInfo{ SDLK_F9, MauEng::KeyInfo::ActionType::Up });
 		input.BindAction("ToggleCamSettings", MauEng::KeyInfo{ SDLK_F10, MauEng::KeyInfo::ActionType::Up });
 		input.BindAction("ToggleCamSettings", MauEng::GamepadInfo{ SDL_GAMEPAD_BUTTON_SOUTH, MauEng::GamepadInfo::ActionType::Up });
+		//input.UnBindAction("ToggleCamSettings");
 
 		input.BindAction("ToggleToneMap", MauEng::KeyInfo{ SDLK_F11, MauEng::KeyInfo::ActionType::Up });
 
