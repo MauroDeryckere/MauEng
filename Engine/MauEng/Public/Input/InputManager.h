@@ -31,10 +31,9 @@ namespace MauEng
 
 		void UnBindAllActions(uint32_t playerID = 0) noexcept;
 
-		//TODO does not consider the actiontype
 		void UnBindAllActions(KeyInfo const& keyInfo) noexcept;
 		void UnBindAllActions(MouseInfo const& mouseInfo) noexcept;
-		// TODO gamepad variation of unbind all actions
+		void UnBindAllActions(GamepadInfo const& gamepadInfo, uint32_t playerID = 0) noexcept;
 
 
 		[[nodiscard]] bool HasControllerForPlayerID(uint32_t playerID) const noexcept;
@@ -109,7 +108,7 @@ namespace MauEng
 
 		float m_MouseScrollX{ 0.f };
 		float m_MouseScrollY{ 0.f };
-
+		
 		struct GamepadAxisState final
 		{
 			// normalized [-1.0, 1.0]

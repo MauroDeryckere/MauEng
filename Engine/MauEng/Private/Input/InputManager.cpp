@@ -212,7 +212,7 @@ namespace MauEng
 						norm = sign * ((std::abs(norm) - m_TriggerDeadzone) / (1.f - m_TriggerDeadzone));
 					}
 				}
-
+				
 				if (norm != 0.f)
 				{
 					if (not m_GamepadAxes[g.playerID].held[axis])
@@ -676,6 +676,47 @@ namespace MauEng
 		m_MappedKeyboardActions[type].erase(it);
 	}
 
+	void InputManager::UnBindAllActions(GamepadInfo const& gamepadInfo, uint32_t playerID) noexcept
+	{
+		ME_ENGINE_ASSERT(playerID <= 3);
+
+		auto const type{ static_cast<uint32_t>(gamepadInfo.type) };
+
+		auto& mappedActions{ m_MappedGamepadActions[playerID][type] };
+
+		uint32_t btnAxis{ 0 };
+		if (gamepadInfo.type == GamepadInfo::ActionType::AxisHeld
+			or gamepadInfo.type == GamepadInfo::ActionType::AxisMoved
+			or gamepadInfo.type == GamepadInfo::ActionType::AxisReleased
+			or gamepadInfo.type == GamepadInfo::ActionType::AxisStartHeld)
+		{
+			btnAxis = gamepadInfo.input.axis;
+		}
+		else
+		{
+			btnAxis = gamepadInfo.input.button;
+		}
+
+		auto const it{ mappedActions.find(btnAxis) };
+
+		if (it == end(mappedActions))
+		{
+			return;
+		}
+
+		// erase in m_ActionToGamepad
+		for (auto&& a : it->second)
+		{
+			std::erase_if(m_ActionToGamepad[playerID][a],
+				[btnAxis](uint8_t b)
+				{
+					return b == btnAxis;
+				});
+		}
+
+		// erase in mapped
+		mappedActions.erase(it);
+	}
 	void InputManager::UnBindAllActions(MouseInfo const& mouseInfo) noexcept
 	{
 		auto const type{ static_cast<uint32_t>(mouseInfo.type) };
