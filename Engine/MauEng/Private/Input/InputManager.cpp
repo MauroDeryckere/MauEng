@@ -173,6 +173,54 @@ namespace MauEng
 		}
 	}
 
+	void InputManager::HandleGamepadAxisState()
+	{
+		// TODO need to handle held
+
+		for (auto& g : m_Gamepads)
+		{
+			for (uint32_t axis{ 0 }; axis < SDL_GAMEPAD_AXIS_COUNT; ++axis)
+			{
+				float const raw{ static_cast<float>(SDL_GetGamepadAxis(g.gamepad, static_cast<SDL_GamepadAxis>(axis))) };
+				float norm{ raw / 32767.0f };
+
+				if (axis == SDL_GAMEPAD_AXIS_LEFTX
+				or  axis == SDL_GAMEPAD_AXIS_LEFTY
+				or  axis == SDL_GAMEPAD_AXIS_RIGHTX
+				or  axis == SDL_GAMEPAD_AXIS_RIGHTY)
+				{
+					if (std::abs(norm) <= m_Deadzone)
+					{
+						norm = 0.f;
+					}
+					else
+					{
+						// normalise so the deadzone doesnt disrupt the -1;1 range
+						float const sign{ (norm > 0.f) ? 1.f : -1.f };
+						norm = sign * ((std::abs(norm) - m_Deadzone) / (1.f - m_Deadzone));
+					}
+				}
+
+				if (norm != 0.f)
+				{
+					auto const& actions{ m_MappedGamepadActions[g.playerID][static_cast<size_t>(GamepadInfo::ActionType::AxisHeld)] };
+					// held action
+					auto const it{ actions.find(axis) };
+					if (it != end(actions))
+					{
+						for (auto const& action : it->second)
+						{
+							m_ExecutedActions[g.playerID].emplace(action);
+						}
+					}
+				}
+
+				m_GamepadAxes[g.playerID].delta[axis] = norm - m_GamepadAxes[g.playerID].current[axis];
+				m_GamepadAxes[g.playerID].current[axis] = norm;
+			}
+		}
+	}
+
 	void InputManager::ResetState()
 	{
 		for (auto& actions : m_ExecutedActions)
@@ -184,6 +232,14 @@ namespace MauEng
 		m_MouseDeltaY = 0.f;
 		m_MouseScrollX = 0.f;
 		m_MouseScrollY = 0.f;
+
+		for (auto& a : m_GamepadAxes)
+		{
+			for (auto& d : a.delta)
+			{
+				d = 0.f;
+			}
+		}
 
 		for (size_t i = 0; i < m_Gamepads.size(); )
 		{
@@ -360,11 +416,45 @@ namespace MauEng
 					}
 				}
 			}
+			else if (event.type == SDL_EVENT_GAMEPAD_AXIS_MOTION)
+			{
+				auto const id{ event.gdevice.which };
+				auto const playerID{ SDL_GetGamepadPlayerIndexForID(id) };
+
+				ME_ENGINE_ASSERT(playerID != -1);
+				if (playerID != -1)
+				{
+					ME_ENGINE_ASSERT(playerID <= 3 && playerID >= 0);
+					auto const& actions{ m_MappedGamepadActions[playerID][static_cast<size_t>(GamepadInfo::ActionType::AxisMoved)] };
+					auto const it{ actions.find(static_cast<uint32_t>(event.gaxis.axis)) };
+					
+					if (it != end(actions))
+					{
+						for (auto const& action : it->second)
+						{
+							if (event.gaxis.axis == SDL_GAMEPAD_AXIS_LEFTX
+								or event.gaxis.axis == SDL_GAMEPAD_AXIS_LEFTY
+								or event.gaxis.axis == SDL_GAMEPAD_AXIS_RIGHTX
+								or event.gaxis.axis == SDL_GAMEPAD_AXIS_RIGHTY)
+							{
+								float const raw{ static_cast<float>(event.gaxis.value)};
+								float const norm{ raw / 32767.0f };
+
+								if (std::abs(norm) >= m_Deadzone)
+								{
+									m_ExecutedActions[playerID].emplace(action);
+								}
+							}
+						}
+					}
+				}
+			}
 		}
 
 		HandleMouseHeldAndMovement();
 		HandleKeyboardHeld();
 		HandleGamepadHeld();
+		HandleGamepadAxisState();
 
 		return true;
 	}
@@ -400,10 +490,20 @@ namespace MauEng
 	{
 		ME_ENGINE_ASSERT(playerID <= 3, "Player ID out of bounds");
 
-		auto& actionVecTypeVec{ m_MappedGamepadActions[playerID][static_cast<size_t>(gamepadInfo.type)] };
-		actionVecTypeVec[gamepadInfo.button].emplace_back(actionName);
+		uint32_t btnAxis{ 0 };
+		if (gamepadInfo.type == GamepadInfo::ActionType::AxisHeld or gamepadInfo.type == GamepadInfo::ActionType::AxisMoved)
+		{
+			btnAxis = gamepadInfo.input.axis;
+		}
+		else
+		{
+			btnAxis = gamepadInfo.input.button;
+		}
 
-		m_ActionToGamepad[playerID][actionName].emplace_back(gamepadInfo.button);
+		auto& actionVecTypeVec{ m_MappedGamepadActions[playerID][static_cast<size_t>(gamepadInfo.type)] };
+		actionVecTypeVec[btnAxis].emplace_back(actionName);
+
+		m_ActionToGamepad[playerID][actionName].emplace_back(btnAxis);
 	}
 
 	void InputManager::UnBindAction(std::string const& actionName, uint32_t playerID) noexcept
@@ -567,9 +667,75 @@ namespace MauEng
 
 	bool InputManager::IsActionExecuted(std::string const& actionName, uint32_t playerID) const noexcept
 	{
-		ME_ASSERT(playerID <= 3, "Engine only supports 4 players");
-		ME_ASSERT(playerID < m_ExecutedActions.size(), "No player created for requested playerID");
+		ME_ENGINE_ASSERT(playerID <= 3, "Engine only supports 4 players");
+		ME_ENGINE_ASSERT(playerID < m_ExecutedActions.size(), "No player created for requested playerID");
 		return m_ExecutedActions[playerID].contains(actionName);
+	}
+
+	std::pair<float, float> InputManager::GetLeftJoystick(uint32_t playerID) const noexcept
+	{
+		ME_ENGINE_ASSERT(playerID <= 3, "Engine only supports 4 players");
+
+		const auto& axes{ m_GamepadAxes[playerID].current };
+		return { axes[SDL_GAMEPAD_AXIS_LEFTX], axes[SDL_GAMEPAD_AXIS_LEFTY] };
+	}
+
+	std::pair<float, float> InputManager::GetDeltaLeftJoystick(uint32_t playerID) const noexcept
+	{
+		ME_ENGINE_ASSERT(playerID <= 3, "Engine only supports 4 players");
+
+		const auto& deltas{ m_GamepadAxes[playerID].delta };
+		return { deltas[SDL_GAMEPAD_AXIS_LEFTX], deltas[SDL_GAMEPAD_AXIS_LEFTY] };
+	}
+
+	std::pair<float, float> InputManager::GetRightJoystick(uint32_t playerID) const noexcept
+	{
+		ME_ENGINE_ASSERT(playerID <= 3, "Engine only supports 4 players");
+
+		const auto& axes{ m_GamepadAxes[playerID].current };
+		return { axes[SDL_GAMEPAD_AXIS_RIGHTX], axes[SDL_GAMEPAD_AXIS_RIGHTY] };
+	}
+
+	std::pair<float, float> InputManager::GetDeltaRightJoystick(uint32_t playerID) const noexcept
+	{
+		ME_ENGINE_ASSERT(playerID <= 3, "Engine only supports 4 players");
+
+		const auto& deltas{ m_GamepadAxes[playerID].delta };
+		return { deltas[SDL_GAMEPAD_AXIS_RIGHTX], deltas[SDL_GAMEPAD_AXIS_RIGHTY] };
+	}
+
+	float InputManager::GetLeftTrigger(uint32_t playerID) const noexcept
+	{
+		ME_ENGINE_ASSERT(playerID <= 3, "Engine only supports 4 players");
+
+		return m_GamepadAxes[playerID].current[SDL_GAMEPAD_AXIS_LEFT_TRIGGER];
+	}
+
+	float InputManager::GetDeltaLeftTrigger(uint32_t playerID) const noexcept
+	{
+		ME_ENGINE_ASSERT(playerID <= 3, "Engine only supports 4 players");
+
+		return m_GamepadAxes[playerID].delta[SDL_GAMEPAD_AXIS_LEFT_TRIGGER];
+	}
+
+	float InputManager::GetRightTrigger(uint32_t playerID) const noexcept
+	{
+		ME_ENGINE_ASSERT(playerID <= 3, "Engine only supports 4 players");
+
+		return m_GamepadAxes[playerID].current[SDL_GAMEPAD_AXIS_RIGHT_TRIGGER];
+	}
+
+	float InputManager::GetDeltaRightTrigger(uint32_t playerID) const noexcept
+	{
+		ME_ENGINE_ASSERT(playerID <= 3, "Engine only supports 4 players");
+
+		return m_GamepadAxes[playerID].delta[SDL_GAMEPAD_AXIS_RIGHT_TRIGGER];
+	}
+
+	void InputManager::SetDeadzone(float newDeadzone) noexcept
+	{
+		ME_ENGINE_ASSERT(newDeadzone >= 0.f && newDeadzone < 1.F);
+		m_Deadzone = newDeadzone;
 	}
 
 	void InputManager::Clear() noexcept

@@ -48,6 +48,20 @@ namespace MauEng
 		[[nodiscard]] std::pair<float, float> GetDeltaMouseMovement() const noexcept { return { m_MouseDeltaX, m_MouseDeltaY }; }
 		[[nodiscard]] std::pair<float, float> GetDeltaMouseScroll() const noexcept { return { m_MouseScrollX, m_MouseScrollY }; }
 
+		[[nodiscard]] std::pair<float, float> GetLeftJoystick(uint32_t playerID = 0) const noexcept;
+		[[nodiscard]] std::pair<float, float> GetDeltaLeftJoystick(uint32_t playerID = 0) const noexcept;
+
+		[[nodiscard]] std::pair<float, float> GetRightJoystick(uint32_t playerID = 0) const noexcept;
+		[[nodiscard]] std::pair<float, float> GetDeltaRightJoystick(uint32_t playerID = 0) const noexcept;
+
+		[[nodiscard]] float GetLeftTrigger(uint32_t playerID = 0) const noexcept;
+		[[nodiscard]] float GetDeltaLeftTrigger(uint32_t playerID = 0) const noexcept;
+
+		[[nodiscard]] float GetRightTrigger(uint32_t playerID = 0) const noexcept;
+		[[nodiscard]] float GetDeltaRightTrigger(uint32_t playerID = 0) const noexcept;
+
+		void SetDeadzone(float newDeadzone) noexcept;
+
 		InputManager(InputManager const&) = delete;
 		InputManager(InputManager&&) = delete;
 		InputManager& operator=(InputManager const&) = delete;
@@ -95,11 +109,24 @@ namespace MauEng
 		float m_MouseScrollX{ 0.f };
 		float m_MouseScrollY{ 0.f };
 
+		struct GamepadAxisState final
+		{
+			// normalized [-1.0, 1.0]
+			std::array<float, SDL_GAMEPAD_AXIS_COUNT> current{};
+			std::array<float, SDL_GAMEPAD_AXIS_COUNT> delta{};
+		};
+
+		std::array<GamepadAxisState, 4> m_GamepadAxes{};
+
+		float m_Deadzone;
+
 
 		void HandleMouseAction(SDL_Event const& event, Uint32 const evType, MouseInfo::ActionType const actType);
 		void HandleMouseHeldAndMovement();
 		void HandleKeyboardHeld();
 		void HandleGamepadHeld();
+		void HandleGamepadAxisState();
+
 		void ResetState();
 	};
 }

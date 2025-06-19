@@ -5,7 +5,6 @@
 
 namespace MauEng
 {
-	//TODO joystick / trigger
 	struct GamepadInfo final
 	{
 		enum class ActionType : uint8_t
@@ -14,14 +13,22 @@ namespace MauEng
 			Up,
 			Held,
 
+			// Action Type axis -> axis in input field
+			AxisHeld,
+			AxisMoved,
+
 			COUNT
 		};
 
-		SDL_GamepadButton button{};
-		//TODO
-		//SDL_GamepadAxis axis;
+		union ButtonAxis
+		{
+			SDL_GamepadButton button{ SDL_GAMEPAD_BUTTON_INVALID };
+			SDL_GamepadAxis axis;
+		};
 
-		ActionType type{ };
+		ButtonAxis input{};
+
+		ActionType type{};
 	};
 
 }

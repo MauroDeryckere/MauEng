@@ -377,6 +377,9 @@ namespace MauGam
 		input.BindAction("MoveRight", MauEng::GamepadInfo{ SDL_GAMEPAD_BUTTON_DPAD_RIGHT, MauEng::GamepadInfo::ActionType::Held });
 		input.BindAction("MoveDown", MauEng::GamepadInfo{ SDL_GAMEPAD_BUTTON_DPAD_DOWN, MauEng::GamepadInfo::ActionType::Held });
 
+		input.BindAction("MoveGamepadX", MauEng::GamepadInfo{ .input= { .axis=SDL_GAMEPAD_AXIS_LEFTX }, .type = MauEng::GamepadInfo::ActionType::AxisHeld });
+		input.BindAction("MoveGamepadY", MauEng::GamepadInfo{ .input = { .axis = SDL_GAMEPAD_AXIS_LEFTY }, .type = MauEng::GamepadInfo::ActionType::AxisHeld });
+
 		input.BindAction("Sprint", MauEng::KeyInfo{ SDLK_LCTRL, MauEng::KeyInfo::ActionType::Held });
 
 		input.BindAction("Rotate", MauEng::MouseInfo{ {}, MauEng::MouseInfo::ActionType::Moved });
@@ -697,6 +700,16 @@ namespace MauGam
 			OutputKeybinds();
 		}
 
+		if (input.IsActionExecuted("MoveGamepadX") or input.IsActionExecuted("MoveGamepadY"))
+		{
+			auto const& lJoy{ input.GetLeftJoystick() };
+			auto const& x{ lJoy.first };
+			auto const& y{ lJoy.second };
+
+			m_CameraManager.GetActiveCamera().Translate({ 0.f, 0.f, -y * movementSpeed * TIME.ElapsedSec() * (isSprinting ? sprintModifier : 1) });
+			m_CameraManager.GetActiveCamera().Translate({ x * movementSpeed * TIME.ElapsedSec() * (isSprinting ? sprintModifier : 1), 0.f, 0.f });
+
+		}
 	}
 
 	void DemoScene::RenderDebugDemo() const
