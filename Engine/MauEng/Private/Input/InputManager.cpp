@@ -175,8 +175,6 @@ namespace MauEng
 
 	void InputManager::HandleGamepadAxisState()
 	{
-		// TODO need to handle released and start hold
-
 		for (auto& g : m_Gamepads)
 		{
 			for (uint32_t axis{ 0 }; axis < SDL_GAMEPAD_AXIS_COUNT; ++axis)
@@ -189,7 +187,7 @@ namespace MauEng
 				or  axis == SDL_GAMEPAD_AXIS_RIGHTX
 				or  axis == SDL_GAMEPAD_AXIS_RIGHTY)
 				{
-					if (std::abs(norm) <= m_Deadzone)
+					if (std::abs(norm) <= m_JoystickDeadzone)
 					{
 						norm = 0.f;
 					}
@@ -197,7 +195,21 @@ namespace MauEng
 					{
 						// normalise so the deadzone doesnt disrupt the -1;1 range
 						float const sign{ (norm > 0.f) ? 1.f : -1.f };
-						norm = sign * ((std::abs(norm) - m_Deadzone) / (1.f - m_Deadzone));
+						norm = sign * ((std::abs(norm) - m_JoystickDeadzone) / (1.f - m_JoystickDeadzone));
+					}
+				}
+				else if ( axis == SDL_GAMEPAD_AXIS_LEFT_TRIGGER 
+					   or axis == SDL_GAMEPAD_AXIS_RIGHT_TRIGGER)
+				{
+					if (std::abs(norm) <= m_TriggerDeadzone)
+					{
+						norm = 0.f;
+					}
+					else
+					{
+						// normalise so the deadzone doesnt disrupt the -1;1 range
+						float const sign{ (norm > 0.f) ? 1.f : -1.f };
+						norm = sign * ((std::abs(norm) - m_TriggerDeadzone) / (1.f - m_TriggerDeadzone));
 					}
 				}
 
@@ -473,7 +485,7 @@ namespace MauEng
 								float const raw{ static_cast<float>(event.gaxis.value)};
 								float const norm{ raw / 32767.0f };
 
-								if (std::abs(norm) >= m_Deadzone)
+								if (std::abs(norm) >= m_JoystickDeadzone)
 								{
 									m_ExecutedActions[playerID].emplace(action);
 								}
@@ -768,10 +780,16 @@ namespace MauEng
 		return m_GamepadAxes[playerID].delta[SDL_GAMEPAD_AXIS_RIGHT_TRIGGER];
 	}
 
-	void InputManager::SetDeadzone(float newDeadzone) noexcept
+	void InputManager::SetJoystickDeadzone(float newDeadzone) noexcept
 	{
 		ME_ENGINE_ASSERT(newDeadzone >= 0.f && newDeadzone < 1.F);
-		m_Deadzone = newDeadzone;
+		m_JoystickDeadzone = newDeadzone;
+	}
+
+	void InputManager::SetTriggerkDeadzone(float newDeadzone) noexcept
+	{
+		ME_ENGINE_ASSERT(newDeadzone >= 0.f && newDeadzone < 1.F);
+		m_TriggerDeadzone = newDeadzone;
 	}
 
 	void InputManager::Clear() noexcept

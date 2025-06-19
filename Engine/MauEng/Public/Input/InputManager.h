@@ -60,7 +60,8 @@ namespace MauEng
 		[[nodiscard]] float GetRightTrigger(uint32_t playerID = 0) const noexcept;
 		[[nodiscard]] float GetDeltaRightTrigger(uint32_t playerID = 0) const noexcept;
 
-		void SetDeadzone(float newDeadzone) noexcept;
+		void SetJoystickDeadzone(float newDeadzone) noexcept;
+		void SetTriggerkDeadzone(float newDeadzone) noexcept;
 
 		InputManager(InputManager const&) = delete;
 		InputManager(InputManager&&) = delete;
@@ -119,7 +120,8 @@ namespace MauEng
 
 		std::array<GamepadAxisState, 4> m_GamepadAxes{};
 
-		float m_Deadzone{ .1f };
+		float m_JoystickDeadzone{ .1f };
+		float m_TriggerDeadzone{ .1f };
 
 
 		void HandleMouseAction(SDL_Event const& event, Uint32 const evType, MouseInfo::ActionType const actType);
