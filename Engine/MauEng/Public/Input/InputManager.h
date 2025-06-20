@@ -29,6 +29,8 @@ namespace MauEng
 		void UnBindAllActions(GamepadInfo const& gamepadInfo, std::string const& mappingContext = "DEFAULT") noexcept;
 		void UnBindAllActions(std::string const& mappingContext = "DEFAULT") noexcept;
 
+		void EraseMappingContext(std::string const& mappingContext, std::string const& newMappingContextIfErasedIsActive) noexcept;
+
 		[[nodiscard]] bool HasControllerForPlayerID(uint32_t playerID) const noexcept;
 		[[nodiscard]] uint32_t NumConnectedControllers() const noexcept;
 

@@ -580,6 +580,9 @@ namespace MauEng
 			m_KeyboardContexts[mappingContext] = {};
 			m_KeyboardContexts[mappingContext].mappedKeyboardActions.resize(static_cast<size_t>(KeyInfo::ActionType::COUNT));
 			m_KeyboardContexts[mappingContext].mappedMouseActions.resize(static_cast<size_t>(MouseInfo::ActionType::COUNT));
+
+			m_GamepadContexts[mappingContext] = {};
+			m_GamepadContexts[mappingContext].mappedGamepadActions.resize(static_cast<size_t>(GamepadInfo::ActionType::COUNT));
 		}
 
 		auto& actionTypeVec{ m_KeyboardContexts[mappingContext].mappedKeyboardActions[static_cast<size_t>(keyInfo.type)] };
@@ -598,6 +601,9 @@ namespace MauEng
 			m_KeyboardContexts[mappingContext] = {};
 			m_KeyboardContexts[mappingContext].mappedKeyboardActions.resize(static_cast<size_t>(KeyInfo::ActionType::COUNT));
 			m_KeyboardContexts[mappingContext].mappedMouseActions.resize(static_cast<size_t>(MouseInfo::ActionType::COUNT));
+
+			m_GamepadContexts[mappingContext] = {};
+			m_GamepadContexts[mappingContext].mappedGamepadActions.resize(static_cast<size_t>(GamepadInfo::ActionType::COUNT));
 		}
 
 		auto& actionTypeVec{ m_KeyboardContexts[mappingContext].mappedMouseActions[static_cast<size_t>(mouseInfo.type)] };
@@ -627,6 +633,10 @@ namespace MauEng
 			ME_LOG_WARN(MauCor::LogCategory::Engine, "Creating new mapping context in SetMappingContext; was not created yet");
 			m_GamepadContexts[mappingContext] = {};
 			m_GamepadContexts[mappingContext].mappedGamepadActions.resize(static_cast<size_t>(GamepadInfo::ActionType::COUNT));
+
+			m_KeyboardContexts[mappingContext] = {};
+			m_KeyboardContexts[mappingContext].mappedKeyboardActions.resize(static_cast<size_t>(KeyInfo::ActionType::COUNT));
+			m_KeyboardContexts[mappingContext].mappedMouseActions.resize(static_cast<size_t>(MouseInfo::ActionType::COUNT));
 		}
 
 		auto& actionVecTypeVec{ m_GamepadContexts[mappingContext].mappedGamepadActions[static_cast<size_t>(gamepadInfo.type)] };
@@ -830,6 +840,43 @@ namespace MauEng
 				}
 
 				it->second.actionToGamepad.clear();
+			}
+		}
+	}
+
+	void InputManager::EraseMappingContext(std::string const& mappingContext,
+		std::string const& newMappingContextIfErasedIsActive) noexcept
+	{
+		{
+			auto const it{ m_KeyboardContexts.find(mappingContext) };
+			if (it != end(m_KeyboardContexts))
+			{
+				m_KeyboardContexts.erase(it);
+			}
+		}
+		{
+			auto const it{ m_GamepadContexts.find(mappingContext) };
+			if (it != end(m_GamepadContexts))
+			{
+				m_GamepadContexts.erase(it);
+			}
+		}
+
+		ME_ASSERT(m_GamepadContexts.contains(newMappingContextIfErasedIsActive));
+		for (auto& c : m_ActiveGamepadMappingContexts)
+		{
+			if (c == mappingContext)
+			{
+				c = newMappingContextIfErasedIsActive;
+			}
+		}
+
+		ME_ASSERT(m_KeyboardContexts.contains(newMappingContextIfErasedIsActive));
+		for (auto& c : m_ActiveKeyboardMouseContexts)
+		{
+			if (c == mappingContext)
+			{
+				c = newMappingContextIfErasedIsActive;
 			}
 		}
 	}
