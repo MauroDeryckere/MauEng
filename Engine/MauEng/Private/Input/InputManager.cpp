@@ -867,7 +867,20 @@ namespace MauEng
 			}
 		}
 
-		ME_ASSERT(m_GamepadContexts.contains(newMappingContextIfErasedIsActive));
+		{
+			if (!m_GamepadContexts.contains(newMappingContextIfErasedIsActive))
+			{
+				m_GamepadContexts[newMappingContextIfErasedIsActive] = {};
+				m_GamepadContexts[newMappingContextIfErasedIsActive].mappedGamepadActions.resize(static_cast<size_t>(GamepadInfo::ActionType::COUNT));
+			}
+			if (!m_KeyboardContexts.contains(newMappingContextIfErasedIsActive))
+			{
+				m_KeyboardContexts[newMappingContextIfErasedIsActive] = {};
+				m_KeyboardContexts[newMappingContextIfErasedIsActive].mappedKeyboardActions.resize(static_cast<size_t>(KeyInfo::ActionType::COUNT));
+				m_KeyboardContexts[newMappingContextIfErasedIsActive].mappedMouseActions.resize(static_cast<size_t>(MouseInfo::ActionType::COUNT));
+			}
+		}
+
 		for (auto& c : m_ActiveGamepadMappingContexts)
 		{
 			if (c == mappingContext)
@@ -876,7 +889,6 @@ namespace MauEng
 			}
 		}
 
-		ME_ASSERT(m_KeyboardContexts.contains(newMappingContextIfErasedIsActive));
 		for (auto& c : m_ActiveKeyboardMouseContexts)
 		{
 			if (c == mappingContext)
