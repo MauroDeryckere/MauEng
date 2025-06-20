@@ -550,7 +550,12 @@ namespace MauEng
 
 	void InputManager::SetMappingContext(std::string const& mappingContext, uint32_t playerID) noexcept
 	{
-		//keyboard
+		SetKeyboardMappingContext(mappingContext, playerID);
+		SetGamepadMappingContext(mappingContext, playerID);
+	}
+
+	void InputManager::SetKeyboardMappingContext(std::string const& mappingContext, uint32_t playerID) noexcept
+	{
 		{
 			auto const it{ m_KeyboardContexts.find(mappingContext) };
 			if (it == end(m_KeyboardContexts))
@@ -562,7 +567,10 @@ namespace MauEng
 			}
 			m_ActiveKeyboardMouseContexts[playerID] = mappingContext;
 		}
+	}
 
+	void InputManager::SetGamepadMappingContext(std::string const& mappingContext, uint32_t playerID) noexcept
+	{
 		{
 			auto const it{ m_GamepadContexts.find(mappingContext) };
 			if (it == end(m_GamepadContexts))
@@ -575,6 +583,18 @@ namespace MauEng
 		}
 	}
 
+	std::string const& InputManager::GetKeyboardMappingContext(uint32_t playerID) const noexcept
+	{
+		ME_ASSERT(playerID < m_ActiveKeyboardMouseContexts.size());
+		return m_ActiveKeyboardMouseContexts[playerID];
+	}
+
+	std::string const& InputManager::GetGamepadMappingContext(uint32_t playerID) const noexcept
+	{
+		ME_ASSERT(playerID < m_ActiveGamepadMappingContexts.size());
+		return m_ActiveGamepadMappingContexts[playerID];
+	}
+
 	void InputManager::BindAction(std::string const& actionName, KeyInfo const& keyInfo, std::string const& mappingContext) noexcept
 	{
 		//keyboard
@@ -585,9 +605,6 @@ namespace MauEng
 			m_KeyboardContexts[mappingContext] = {};
 			m_KeyboardContexts[mappingContext].mappedKeyboardActions.resize(static_cast<size_t>(KeyInfo::ActionType::COUNT));
 			m_KeyboardContexts[mappingContext].mappedMouseActions.resize(static_cast<size_t>(MouseInfo::ActionType::COUNT));
-
-			m_GamepadContexts[mappingContext] = {};
-			m_GamepadContexts[mappingContext].mappedGamepadActions.resize(static_cast<size_t>(GamepadInfo::ActionType::COUNT));
 		}
 
 		auto& actionTypeVec{ m_KeyboardContexts[mappingContext].mappedKeyboardActions[static_cast<size_t>(keyInfo.type)] };
@@ -606,9 +623,6 @@ namespace MauEng
 			m_KeyboardContexts[mappingContext] = {};
 			m_KeyboardContexts[mappingContext].mappedKeyboardActions.resize(static_cast<size_t>(KeyInfo::ActionType::COUNT));
 			m_KeyboardContexts[mappingContext].mappedMouseActions.resize(static_cast<size_t>(MouseInfo::ActionType::COUNT));
-
-			m_GamepadContexts[mappingContext] = {};
-			m_GamepadContexts[mappingContext].mappedGamepadActions.resize(static_cast<size_t>(GamepadInfo::ActionType::COUNT));
 		}
 
 		auto& actionTypeVec{ m_KeyboardContexts[mappingContext].mappedMouseActions[static_cast<size_t>(mouseInfo.type)] };
@@ -638,10 +652,6 @@ namespace MauEng
 			ME_LOG_WARN(MauCor::LogCategory::Engine, "Creating new mapping context in SetMappingContext; was not created yet");
 			m_GamepadContexts[mappingContext] = {};
 			m_GamepadContexts[mappingContext].mappedGamepadActions.resize(static_cast<size_t>(GamepadInfo::ActionType::COUNT));
-
-			m_KeyboardContexts[mappingContext] = {};
-			m_KeyboardContexts[mappingContext].mappedKeyboardActions.resize(static_cast<size_t>(KeyInfo::ActionType::COUNT));
-			m_KeyboardContexts[mappingContext].mappedMouseActions.resize(static_cast<size_t>(MouseInfo::ActionType::COUNT));
 		}
 
 		auto& actionVecTypeVec{ m_GamepadContexts[mappingContext].mappedGamepadActions[static_cast<size_t>(gamepadInfo.type)] };
@@ -852,44 +862,51 @@ namespace MauEng
 	void InputManager::EraseMappingContext(std::string const& mappingContext,
 		std::string const& newMappingContextIfErasedIsActive) noexcept
 	{
+		EraseKeyboardMappingContext(mappingContext, newMappingContextIfErasedIsActive);
+		EraseGamepadMappingContext(mappingContext, newMappingContextIfErasedIsActive);
+	}
+
+	void InputManager::EraseKeyboardMappingContext(std::string const& mappingContext,
+		std::string const& newMappingContextIfErasedIsActive) noexcept
+	{
+		auto const it{ m_KeyboardContexts.find(mappingContext) };
+		if (it != end(m_KeyboardContexts))
 		{
-			auto const it{ m_KeyboardContexts.find(mappingContext) };
-			if (it != end(m_KeyboardContexts))
-			{
-				m_KeyboardContexts.erase(it);
-			}
-		}
-		{
-			auto const it{ m_GamepadContexts.find(mappingContext) };
-			if (it != end(m_GamepadContexts))
-			{
-				m_GamepadContexts.erase(it);
-			}
+			m_KeyboardContexts.erase(it);
 		}
 
+		if (!m_KeyboardContexts.contains(newMappingContextIfErasedIsActive))
 		{
-			if (!m_GamepadContexts.contains(newMappingContextIfErasedIsActive))
-			{
-				m_GamepadContexts[newMappingContextIfErasedIsActive] = {};
-				m_GamepadContexts[newMappingContextIfErasedIsActive].mappedGamepadActions.resize(static_cast<size_t>(GamepadInfo::ActionType::COUNT));
-			}
-			if (!m_KeyboardContexts.contains(newMappingContextIfErasedIsActive))
-			{
-				m_KeyboardContexts[newMappingContextIfErasedIsActive] = {};
-				m_KeyboardContexts[newMappingContextIfErasedIsActive].mappedKeyboardActions.resize(static_cast<size_t>(KeyInfo::ActionType::COUNT));
-				m_KeyboardContexts[newMappingContextIfErasedIsActive].mappedMouseActions.resize(static_cast<size_t>(MouseInfo::ActionType::COUNT));
-			}
+			m_KeyboardContexts[newMappingContextIfErasedIsActive] = {};
+			m_KeyboardContexts[newMappingContextIfErasedIsActive].mappedKeyboardActions.resize(static_cast<size_t>(KeyInfo::ActionType::COUNT));
+			m_KeyboardContexts[newMappingContextIfErasedIsActive].mappedMouseActions.resize(static_cast<size_t>(MouseInfo::ActionType::COUNT));
 		}
 
-		for (auto& c : m_ActiveGamepadMappingContexts)
+		for (auto& c : m_ActiveKeyboardMouseContexts)
 		{
 			if (c == mappingContext)
 			{
 				c = newMappingContextIfErasedIsActive;
 			}
 		}
+	}
 
-		for (auto& c : m_ActiveKeyboardMouseContexts)
+	void InputManager::EraseGamepadMappingContext(std::string const& mappingContext,
+		std::string const& newMappingContextIfErasedIsActive) noexcept
+	{
+		auto const it{ m_GamepadContexts.find(mappingContext) };
+		if (it != end(m_GamepadContexts))
+		{
+			m_GamepadContexts.erase(it);
+		}
+
+		if (!m_GamepadContexts.contains(newMappingContextIfErasedIsActive))
+		{
+			m_GamepadContexts[newMappingContextIfErasedIsActive] = {};
+			m_GamepadContexts[newMappingContextIfErasedIsActive].mappedGamepadActions.resize(static_cast<size_t>(GamepadInfo::ActionType::COUNT));
+		}
+
+		for (auto& c : m_ActiveGamepadMappingContexts)
 		{
 			if (c == mappingContext)
 			{

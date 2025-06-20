@@ -18,6 +18,11 @@ namespace MauEng
 	{
 	public:
 		void SetMappingContext(std::string const& mappingContext, uint32_t playerID = 0) noexcept;
+		void SetKeyboardMappingContext(std::string const& mappingContext, uint32_t playerID = 0) noexcept;
+		void SetGamepadMappingContext(std::string const& mappingContext, uint32_t playerID = 0) noexcept;
+
+		[[nodiscard]] std::string const& GetKeyboardMappingContext(uint32_t playerID = 0) const noexcept;
+		[[nodiscard]] std::string const& GetGamepadMappingContext(uint32_t playerID = 0) const noexcept;
 
 		void BindAction(std::string const& actionName, KeyInfo const& keyInfo, std::string const& mappingContext = "DEFAULT") noexcept;
 		void BindAction(std::string const& actionName, MouseInfo const& mouseInfo, std::string const& mappingContext = "DEFAULT") noexcept;
@@ -30,6 +35,9 @@ namespace MauEng
 		void UnBindAllActions(std::string const& mappingContext = "DEFAULT") noexcept;
 
 		void EraseMappingContext(std::string const& mappingContext, std::string const& newMappingContextIfErasedIsActive) noexcept;
+		void EraseKeyboardMappingContext(std::string const& mappingContext, std::string const& newMappingContextIfErasedIsActive) noexcept;
+		void EraseGamepadMappingContext(std::string const& mappingContext, std::string const& newMappingContextIfErasedIsActive) noexcept;
+
 
 		[[nodiscard]] bool HasControllerForPlayerID(uint32_t playerID) const noexcept;
 		[[nodiscard]] uint32_t NumConnectedControllers() const noexcept;
