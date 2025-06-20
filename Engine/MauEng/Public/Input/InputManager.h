@@ -14,26 +14,29 @@
 
 namespace MauEng
 {
-	// Keyboard only for now, no mapping contexts, just simple keybinding
 	class InputManager final : public MauCor::Singleton<InputManager>
 	{
 	public:
-		// Internal function to process all input, returns if the application should close based on the processed input
-		[[nodiscard]] bool ProcessInput() noexcept;
+		void SetMappingContext(std::string const& mappingContext, uint32_t playerID = 0) noexcept;
+		void SetKeyboardMappingContext(std::string const& mappingContext, uint32_t playerID = 0) noexcept;
+		void SetGamepadMappingContext(std::string const& mappingContext, uint32_t playerID = 0) noexcept;
 
-		void Destroy();
+		[[nodiscard]] std::string const& GetKeyboardMappingContext(uint32_t playerID = 0) const noexcept;
+		[[nodiscard]] std::string const& GetGamepadMappingContext(uint32_t playerID = 0) const noexcept;
 
-		void BindAction(std::string const& actionName, KeyInfo const& keyInfo) noexcept;
-		void BindAction(std::string const& actionName, MouseInfo const& mouseInfo) noexcept;
-		void BindAction(std::string const& actionName, GamepadInfo const& gamepadInfo, uint32_t playerID = 0) noexcept;
+		void BindAction(std::string const& actionName, KeyInfo const& keyInfo, std::string const& mappingContext = "DEFAULT") noexcept;
+		void BindAction(std::string const& actionName, MouseInfo const& mouseInfo, std::string const& mappingContext = "DEFAULT") noexcept;
+		void BindAction(std::string const& actionName, GamepadInfo const& gamepadInfo, std::string const& mappingContext = "DEFAULT") noexcept;
+		void UnBindAction(std::string const& actionName, std::string const& mappingContext = "DEFAULT") noexcept;
 
-		void UnBindAction(std::string const& actionName, uint32_t playerID = 0) noexcept;
+		void UnBindAllActions(KeyInfo const& keyInfo, std::string const& mappingContext = "DEFAULT") noexcept;
+		void UnBindAllActions(MouseInfo const& mouseInfo, std::string const& mappingContext = "DEFAULT") noexcept;
+		void UnBindAllActions(GamepadInfo const& gamepadInfo, std::string const& mappingContext = "DEFAULT") noexcept;
+		void UnBindAllActions(std::string const& mappingContext = "DEFAULT") noexcept;
 
-		void UnBindAllActions(uint32_t playerID = 0) noexcept;
-
-		void UnBindAllActions(KeyInfo const& keyInfo) noexcept;
-		void UnBindAllActions(MouseInfo const& mouseInfo) noexcept;
-		void UnBindAllActions(GamepadInfo const& gamepadInfo, uint32_t playerID = 0) noexcept;
+		void EraseMappingContext(std::string const& mappingContext, std::string const& newMappingContextIfErasedIsActive) noexcept;
+		void EraseKeyboardMappingContext(std::string const& mappingContext, std::string const& newMappingContextIfErasedIsActive) noexcept;
+		void EraseGamepadMappingContext(std::string const& mappingContext, std::string const& newMappingContextIfErasedIsActive) noexcept;
 
 
 		[[nodiscard]] bool HasControllerForPlayerID(uint32_t playerID) const noexcept;
@@ -72,23 +75,43 @@ namespace MauEng
 		InputManager();
 		virtual ~InputManager() override = default;
 
+		// make sure user cant call destroy or process input
+		friend class Engine;
+		// Internal function to process all input, returns if the application should close based on the processed input
+		[[nodiscard]] bool ProcessInput() noexcept;
+		void Destroy();
+
 		// All executed actions this frame
 		std::vector<std::unordered_set<std::string>> m_ExecutedActions{};
 
-		// ActionType[]
-		// State of key <keyID, actions[ actionname ] >
-		std::vector<std::unordered_map<uint32_t, std::vector<std::string>>> m_MappedKeyboardActions;
-		std::vector<std::unordered_map<uint8_t, std::vector<std::string>>> m_MappedMouseActions;
+		struct KeyboardMouseMappingContext final
+		{
+			// ActionType[]
+			// State of key <keyID, actions[ actionname ] >
+			std::vector<std::unordered_map<uint32_t, std::vector<std::string>>> mappedKeyboardActions;
+			std::vector<std::unordered_map<uint8_t, std::vector<std::string>>> mappedMouseActions;
 
-		std::unordered_map<std::string, std::vector<uint32_t>> m_ActionToKeyboardKey;
-		std::unordered_map<std::string, std::vector<uint8_t>> m_ActionToMouseButton;
+			std::unordered_map<std::string, std::vector<uint32_t>> actionToKeyboardKey;
+			std::unordered_map<std::string, std::vector<uint8_t>> actionToMouseButton;
+		};
+		struct GamepadMappingContext final
+		{
+			//ActionType[]
+			// State of key <keyID, actions[ actionname ] >
+			std::vector<std::unordered_map<uint32_t, std::vector<std::string>>> mappedGamepadActions;
+			std::unordered_map<std::string, std::vector<uint32_t>> actionToGamepad;
+		};
 
-		//PlayerID[]
-		//ActionType[]
-		// State of key <keyID, actions[ actionname ] >
-		std::vector<std::vector<std::unordered_map<uint32_t, std::vector<std::string>>>> m_MappedGamepadActions;
+		std::vector<std::string> m_ActiveKeyboardMouseContexts{
+			"DEFAULT", "DEFAULT", "DEFAULT", "DEFAULT"
+		};
 
-		std::vector<std::unordered_map<std::string, std::vector<uint32_t>>> m_ActionToGamepad;
+		std::vector<std::string> m_ActiveGamepadMappingContexts{
+			"DEFAULT", "DEFAULT", "DEFAULT", "DEFAULT"
+		};
+
+		std::unordered_map<std::string, KeyboardMouseMappingContext> m_KeyboardContexts{};
+		std::unordered_map<std::string, GamepadMappingContext> m_GamepadContexts{};
 
 		struct Gamepad final
 		{
