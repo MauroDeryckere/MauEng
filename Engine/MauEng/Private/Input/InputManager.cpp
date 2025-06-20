@@ -1012,6 +1012,26 @@ namespace MauEng
 			actions.clear();
 		}
 
+		m_GamepadContexts.clear();
+		m_KeyboardContexts.clear();
+
+		m_KeyboardContexts["DEFAULT"] = {};
+		m_KeyboardContexts["DEFAULT"].mappedKeyboardActions.resize(static_cast<size_t>(KeyInfo::ActionType::COUNT));
+		m_KeyboardContexts["DEFAULT"].mappedMouseActions.resize(static_cast<size_t>(MouseInfo::ActionType::COUNT));
+		m_ActiveKeyboardMouseContexts.resize(4);
+		for (auto& a : m_ActiveKeyboardMouseContexts)
+		{
+			a = "DEFAULT";
+		}
+
+		m_GamepadContexts["DEFAULT"] = {};
+		m_GamepadContexts["DEFAULT"].mappedGamepadActions.resize(static_cast<size_t>(GamepadInfo::ActionType::COUNT));
+		m_ActiveGamepadMappingContexts.resize(4);
+		for (auto& a : m_ActiveGamepadMappingContexts)
+		{
+			a = "DEFAULT";
+		}
+
 		ResetState();
 	}
 
