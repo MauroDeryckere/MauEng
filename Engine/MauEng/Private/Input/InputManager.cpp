@@ -88,8 +88,9 @@ namespace MauEng
 				m_MouseScrollY = scrollY;
 			}
 
-			for (auto const& p : m_ActiveKeyboardMouseContexts)
+			for (uint32_t i{ 0 }; i < m_ActiveKeyboardMouseContexts.size(); ++i)
 			{
+				auto& p{ m_ActiveKeyboardMouseContexts[i] };
 				auto const& actions{ m_KeyboardContexts[p].mappedMouseActions[static_cast<size_t>(actType)] };
 				auto const it
 				{ actions.find(
@@ -102,7 +103,7 @@ namespace MauEng
 				{
 					for (auto const& action : it->second)
 					{
-						m_ExecutedActions[0].emplace(action);
+						m_ExecutedActions[i].emplace(action);
 					}
 				}
 			}
@@ -122,15 +123,16 @@ namespace MauEng
 			{
 				if (mouseButtonState & mask)
 				{
-					for (auto& p : m_ActiveKeyboardMouseContexts)
+					for (uint32_t i{ 0 }; i < m_ActiveKeyboardMouseContexts.size(); ++i)
 					{
+						auto& p{ m_ActiveKeyboardMouseContexts[i] };
 						auto const& actions{ m_KeyboardContexts[p].mappedMouseActions[static_cast<size_t>(KeyInfo::ActionType::Held)] };
 						auto const it{ actions.find(button) };
 						if (it != end(actions))
 						{
 							for (auto const& action : it->second)
 							{
-								m_ExecutedActions[0].emplace(action);
+								m_ExecutedActions[i].emplace(action);
 							}
 						}
 					}
@@ -152,8 +154,9 @@ namespace MauEng
 		bool const* keyState{ SDL_GetKeyboardState(&numKeys) };
 		if (numKeys > 0 && keyState)
 		{
-			for (auto& p : m_ActiveKeyboardMouseContexts)
+			for (uint32_t i{ 0 }; i < m_ActiveKeyboardMouseContexts.size(); ++i)
 			{
+				auto& p{ m_ActiveKeyboardMouseContexts[i] };
 				auto const& actions{ m_KeyboardContexts[p].mappedKeyboardActions[static_cast<size_t>(KeyInfo::ActionType::Held)] };
 				for (auto const& keys : actions)
 				{
@@ -162,7 +165,7 @@ namespace MauEng
 					{
 						for (auto const& action : keys.second)
 						{
-							m_ExecutedActions[0].emplace(action);
+							m_ExecutedActions[i].emplace(action);
 						}
 					}
 				}
@@ -362,15 +365,16 @@ namespace MauEng
 			//Down this frame
 			if (event.type == SDL_EVENT_KEY_DOWN && !event.key.repeat)
 			{
-				for (auto& p : m_ActiveKeyboardMouseContexts)
+				for (uint32_t i{ 0 }; i < m_ActiveKeyboardMouseContexts.size(); ++i)
 				{
+					auto& p{ m_ActiveKeyboardMouseContexts[i] };
 					auto const& actions{ m_KeyboardContexts[p].mappedKeyboardActions[static_cast<size_t>(KeyInfo::ActionType::Down)] };
 					auto const it{ actions.find(static_cast<uint32_t>(event.key.key)) };
 					if (it != end(actions))
 					{
 						for (auto const& action : it->second)
 						{
-							m_ExecutedActions[0].emplace(action);
+							m_ExecutedActions[i].emplace(action);
 						}
 					}
 				}
@@ -378,15 +382,16 @@ namespace MauEng
 			//Up this frame
 			else if (event.type == SDL_EVENT_KEY_UP)
 			{
-				for (auto& p : m_ActiveKeyboardMouseContexts)
+				for (uint32_t i{ 0 }; i < m_ActiveKeyboardMouseContexts.size(); ++i)
 				{
+					auto& p{ m_ActiveKeyboardMouseContexts[i] };
 					auto const& actions{ m_KeyboardContexts[p].mappedKeyboardActions[static_cast<size_t>(KeyInfo::ActionType::Up)] };
 					auto it{ actions.find(static_cast<uint32_t>(event.key.key)) };
 					if (it != end(actions))
 					{
 						for (auto const& action : it->second)
 						{
-							m_ExecutedActions[0].emplace(action);
+							m_ExecutedActions[i].emplace(action);
 						}
 					}
 				}
