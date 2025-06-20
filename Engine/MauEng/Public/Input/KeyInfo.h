@@ -19,7 +19,7 @@ namespace MauEng
 			COUNT
 		};
 
-		SDL_Keycode key{};
+		uint32_t key{};
 		ActionType type{};
 
 	};

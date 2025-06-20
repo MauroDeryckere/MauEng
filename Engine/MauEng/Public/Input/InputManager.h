@@ -5,9 +5,12 @@
 
 #include "KeyInfo.h"
 #include "MouseInfo.h"
+#include "GamepadInfo.h"
 
 #include <unordered_map>
 #include <set>
+
+#include "SDL3/SDL_events.h"
 
 namespace MauEng
 {
@@ -18,26 +21,46 @@ namespace MauEng
 		// Internal function to process all input, returns if the application should close based on the processed input
 		[[nodiscard]] bool ProcessInput() noexcept;
 
-		bool BindAction(std::string const& actionName, KeyInfo const& keyInfo) noexcept;
-		bool BindAction(std::string const& actionName, MouseInfo const& mouseInfo) noexcept;
-		// TODO unbinding
+		void Destroy();
 
-		[[nodiscard]] bool IsActionExecuted(std::string const& actionName) const noexcept;
+		void BindAction(std::string const& actionName, KeyInfo const& keyInfo) noexcept;
+		void BindAction(std::string const& actionName, MouseInfo const& mouseInfo) noexcept;
+		void BindAction(std::string const& actionName, GamepadInfo const& gamepadInfo, uint32_t playerID = 0) noexcept;
 
-		[[nodiscard]] std::pair<float, float> GetMousePosition() const noexcept
-		{
-			return { m_MouseX, m_MouseY };
-		}
+		void UnBindAction(std::string const& actionName, uint32_t playerID = 0) noexcept;
 
-		[[nodiscard]] std::pair<float, float> GetDeltaMouseMovement() const noexcept
-		{
-			return { m_MouseDeltaX, m_MouseDeltaY };
-		}
+		void UnBindAllActions(uint32_t playerID = 0) noexcept;
 
-		[[nodiscard]] std::pair<float, float> GetDeltaMouseScroll() const noexcept
-		{
-			return { m_MouseScrollX, m_MouseScrollY };
-		}
+		void UnBindAllActions(KeyInfo const& keyInfo) noexcept;
+		void UnBindAllActions(MouseInfo const& mouseInfo) noexcept;
+		void UnBindAllActions(GamepadInfo const& gamepadInfo, uint32_t playerID = 0) noexcept;
+
+
+		[[nodiscard]] bool HasControllerForPlayerID(uint32_t playerID) const noexcept;
+		[[nodiscard]] uint32_t NumConnectedControllers() const noexcept;
+
+		void Clear() noexcept;
+
+		[[nodiscard]] bool IsActionExecuted(std::string const& actionName, uint32_t playerID = 0) const noexcept;
+
+		[[nodiscard]] std::pair<float, float> GetMousePosition() const noexcept { return { m_MouseX, m_MouseY }; }
+		[[nodiscard]] std::pair<float, float> GetDeltaMouseMovement() const noexcept { return { m_MouseDeltaX, m_MouseDeltaY }; }
+		[[nodiscard]] std::pair<float, float> GetDeltaMouseScroll() const noexcept { return { m_MouseScrollX, m_MouseScrollY }; }
+
+		[[nodiscard]] std::pair<float, float> GetLeftJoystick(uint32_t playerID = 0) const noexcept;
+		[[nodiscard]] std::pair<float, float> GetDeltaLeftJoystick(uint32_t playerID = 0) const noexcept;
+
+		[[nodiscard]] std::pair<float, float> GetRightJoystick(uint32_t playerID = 0) const noexcept;
+		[[nodiscard]] std::pair<float, float> GetDeltaRightJoystick(uint32_t playerID = 0) const noexcept;
+
+		[[nodiscard]] float GetLeftTrigger(uint32_t playerID = 0) const noexcept;
+		[[nodiscard]] float GetDeltaLeftTrigger(uint32_t playerID = 0) const noexcept;
+
+		[[nodiscard]] float GetRightTrigger(uint32_t playerID = 0) const noexcept;
+		[[nodiscard]] float GetDeltaRightTrigger(uint32_t playerID = 0) const noexcept;
+
+		void SetJoystickDeadzone(float newDeadzone) noexcept;
+		void SetTriggerDeadzone(float newDeadzone) noexcept;
 
 		InputManager(InputManager const&) = delete;
 		InputManager(InputManager&&) = delete;
@@ -49,15 +72,34 @@ namespace MauEng
 		InputManager();
 		virtual ~InputManager() override = default;
 
-		// Tolerance for the mouse moved state
-		//float const MovementTolerance{ 1.f };
-
 		// All executed actions this frame
-		std::set<std::string> m_ExecutedActions;
+		std::vector<std::unordered_set<std::string>> m_ExecutedActions{};
 
+		// ActionType[]
 		// State of key <keyID, actions[ actionname ] >
 		std::vector<std::unordered_map<uint32_t, std::vector<std::string>>> m_MappedKeyboardActions;
 		std::vector<std::unordered_map<uint8_t, std::vector<std::string>>> m_MappedMouseActions;
+
+		std::unordered_map<std::string, std::vector<uint32_t>> m_ActionToKeyboardKey;
+		std::unordered_map<std::string, std::vector<uint8_t>> m_ActionToMouseButton;
+
+		//PlayerID[]
+		//ActionType[]
+		// State of key <keyID, actions[ actionname ] >
+		std::vector<std::vector<std::unordered_map<uint32_t, std::vector<std::string>>>> m_MappedGamepadActions;
+
+		std::vector<std::unordered_map<std::string, std::vector<uint32_t>>> m_ActionToGamepad;
+
+		struct Gamepad final
+		{
+			SDL_Gamepad* gamepad{ nullptr };
+			uint32_t playerID{ UINT32_MAX };
+
+			bool markedForRemove{ false };
+		};
+
+		std::vector<uint32_t> m_AvailablePlayerIDs { 3, 2, 1, 0 };
+		std::vector<Gamepad> m_Gamepads{};
 
 		float m_MouseX{ 0.f };
 		float m_MouseY{ 0.f };
@@ -66,9 +108,28 @@ namespace MauEng
 
 		float m_MouseScrollX{ 0.f };
 		float m_MouseScrollY{ 0.f };
+		
+		struct GamepadAxisState final
+		{
+			// normalized [-1.0, 1.0]
+			std::array<float, SDL_GAMEPAD_AXIS_COUNT> current{};
+			std::array<float, SDL_GAMEPAD_AXIS_COUNT> delta{};
+			std::array<bool, SDL_GAMEPAD_AXIS_COUNT> held{};
+		};
 
+		std::array<GamepadAxisState, 4> m_GamepadAxes{};
+
+		float m_JoystickDeadzone{ .1f };
+		float m_TriggerDeadzone{ .1f };
+
+
+		void HandleMouseAction(SDL_Event const& event, Uint32 const evType, MouseInfo::ActionType const actType);
 		void HandleMouseHeldAndMovement();
 		void HandleKeyboardHeld();
+		void HandleGamepadHeld();
+		void HandleGamepadAxisState();
+
+		void ResetState();
 	};
 }
 

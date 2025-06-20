@@ -59,6 +59,8 @@ namespace MauRen
 
 	bool constexpr DEBUG_OUT_MAT{ true };
 
+	uint32_t constexpr  DEBUG_RENDER_LINES{ 10'000 };
+
 	uint32_t constexpr MAX_LIGHTS{ 128 };
 
 	uint32_t constexpr SHADOW_MAP_SIZE{ 1024 * 4 };

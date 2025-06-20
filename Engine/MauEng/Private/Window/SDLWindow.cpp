@@ -7,7 +7,7 @@ namespace MauEng
 {
 	SDLWindow::SDLWindow()
 	{
-		if (not SDL_Init(SDL_INIT_VIDEO))
+		if (not SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD))
 		{
 			throw std::runtime_error("Failed to initialize SDL: " + std::string(SDL_GetError()));
 		}
@@ -28,16 +28,22 @@ namespace MauEng
 
 	SDLWindow::~SDLWindow()
 	{
-		if (window)
-		{
-			SDL_DestroyWindow(window);
-			SDL_Quit();
-		}	
+		Destroy();
 	}
 
 	void SDLWindow::Initialize()
 	{
 		SDL_SetEventFilter(HandleWindowEvent, this);
+	}
+
+	void SDLWindow::Destroy()
+	{
+		if (window)
+		{
+			SDL_DestroyWindow(window);
+			SDL_Quit();
+			window = nullptr;
+		}
 	}
 
 	bool SDLWindow::HandleWindowEvent(void* userdata, SDL_Event* event)

@@ -82,17 +82,35 @@ namespace MauRen
 
 		if (m_DebugRenderer)
 		{
-			size_t bufferSize = sizeof(m_DebugRenderer->m_ActivePoints[0]) * m_DebugRenderer->MAX_LINES;
+			{
+				size_t constexpr bufferSize = sizeof(DebugVertex) * DEBUG_RENDER_LINES;
 
-			m_DebugVertexBuffer = { bufferSize,
-									  VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-									  VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, .6f };
+				m_DebugVertexBuffer = (VulkanMappedBuffer{
+													VulkanBuffer{bufferSize,
+																		VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+																		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT },
+													nullptr });
 
-			m_DebugIndexBuffer = { bufferSize,
-									  VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-									  VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-										.6f};
+				// Persistent mapping
+				vmaMapMemory(VulkanMemoryAllocator::GetInstance().GetAllocator(), m_DebugVertexBuffer.buffer.alloc, &m_DebugVertexBuffer.mapped);
+			}
+
+			{
+				size_t constexpr bufferSize = sizeof(uint32_t) * DEBUG_RENDER_LINES;
+
+				m_DebugIndexBuffer = (VulkanMappedBuffer{
+													VulkanBuffer{bufferSize,
+																		VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+																		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT },
+													nullptr });
+
+				// Persistent mapping
+				vmaMapMemory(VulkanMemoryAllocator::GetInstance().GetAllocator(), m_DebugIndexBuffer.buffer.alloc, &m_DebugIndexBuffer.mapped);
+			}
+			
 		}
+
+
 
 		m_QuadVertexBuffer = { sizeof(m_QuadVertices[0]) * std::size(m_QuadVertices),
 			VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
@@ -140,8 +158,10 @@ namespace MauRen
 
 		if (m_DebugRenderer)
 		{
-			m_DebugVertexBuffer.Destroy();
-			m_DebugIndexBuffer.Destroy();
+			m_DebugVertexBuffer.UnMap();
+			m_DebugVertexBuffer.buffer.Destroy();
+			m_DebugIndexBuffer.UnMap();
+			m_DebugIndexBuffer.buffer.Destroy();
 		}
 
 		m_QuadVertexBuffer.Destroy();
@@ -659,7 +679,6 @@ namespace MauRen
 		UpdateUniformBuffer(m_CurrentFrame, cam.GetViewMatrix(), cam.GetProjectionMatrix());
 		UpdateCamSettings(cam, m_CurrentFrame);
 		UpdateDebugVertexBuffer();
-
 		VulkanMeshManager::GetInstance().PreDraw(1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame], m_CurrentFrame);
 		VulkanLightManager::GetInstance().PreDraw(1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame], m_CurrentFrame);
 	}
@@ -747,6 +766,9 @@ namespace MauRen
 		VkResult const queuePresentResult{ vkQueuePresentKHR(deviceContext->GetPresentQueue(), &presentInfo) };
 		if (VK_ERROR_OUT_OF_DATE_KHR == queuePresentResult || VK_SUBOPTIMAL_KHR == queuePresentResult || m_FramebufferResized)
 		{
+			auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+
+			vkDeviceWaitIdle(deviceContext->GetLogicalDevice());
 			RecreateSwapchain();
 		}
 		
@@ -833,8 +855,6 @@ namespace MauRen
 
 	void VulkanRenderer::UpdateDebugVertexBuffer()
 	{
-		//TODO use VulkanMappedBuffer
-
 		ME_PROFILE_FUNCTION()
 
 		if (!m_DebugRenderer)
@@ -842,58 +862,21 @@ namespace MauRen
 			return;
 		}
 
-		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
-
 		if (m_DebugRenderer->m_ActivePoints.empty())
 		{
 			return;
 		}
 
-		// Map the vertex buffer memory
 		{
-			size_t const bufferSize{ sizeof(m_DebugRenderer->m_ActivePoints[0]) * m_DebugRenderer->m_ActivePoints.size() };
-
-			VulkanBuffer stagingBuffer
-			{
-				bufferSize,
-				VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT // Make it accessible to CPU
-			};
-
-			void* mappedMemory;
-			vmaMapMemory(VulkanMemoryAllocator::GetInstance().GetAllocator(), stagingBuffer.alloc, &mappedMemory);
-
-			// Copy the data to the buffer
-			memcpy(mappedMemory, m_DebugRenderer->m_ActivePoints.data(), bufferSize);
-
-			// Unmap the memory
-			vmaUnmapMemory(VulkanMemoryAllocator::GetInstance().GetAllocator(), stagingBuffer.alloc);
-
-			VulkanBuffer::CopyBuffer(m_CommandPoolManager, stagingBuffer.buffer, m_DebugVertexBuffer.buffer, bufferSize);
-			stagingBuffer.Destroy();
+			ME_PROFILE_SCOPE("debug vert buffer copy")
+			size_t bufferSize = sizeof(DebugVertex) * DEBUG_RENDER_LINES;
+			memcpy(m_DebugVertexBuffer.mapped, m_DebugRenderer->m_ActivePoints.data(), bufferSize);
 		}
 
 		{
-			size_t const bufferSize{ sizeof(m_DebugRenderer->m_IndexBuffer[0]) * m_DebugRenderer->m_IndexBuffer.size() };
-
-			VulkanBuffer stagingBuffer
-			{
-				bufferSize,
-				VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT // Make it accessible to CPU
-			};
-
-			void* mappedMemory;
-			vmaMapMemory(VulkanMemoryAllocator::GetInstance().GetAllocator(), stagingBuffer.alloc, &mappedMemory);
-
-			// Copy the data to the buffer
-			memcpy(mappedMemory, m_DebugRenderer->m_IndexBuffer.data(), bufferSize);
-
-			// Unmap the memory
-			vmaUnmapMemory(VulkanMemoryAllocator::GetInstance().GetAllocator(), stagingBuffer.alloc);
-
-			VulkanBuffer::CopyBuffer(m_CommandPoolManager, stagingBuffer.buffer, m_DebugIndexBuffer.buffer, bufferSize);
-			stagingBuffer.Destroy();
+			ME_PROFILE_SCOPE("debug index buffer copy")
+			size_t bufferSize = sizeof(uint32_t) * DEBUG_RENDER_LINES;
+			memcpy(m_DebugIndexBuffer.mapped, m_DebugRenderer->m_IndexBuffer.data(), bufferSize);
 		}
 	}
 
@@ -916,8 +899,8 @@ namespace MauRen
 		}
 
 		VkDeviceSize constexpr offset{ 0 };
-		vkCmdBindVertexBuffers(commandBuffer, 0, 1, &m_DebugVertexBuffer.buffer, &offset);
-		vkCmdBindIndexBuffer(commandBuffer, m_DebugIndexBuffer.buffer, offset, VK_INDEX_TYPE_UINT32);
+		vkCmdBindVertexBuffers(commandBuffer, 0, 1, &m_DebugVertexBuffer.buffer.buffer, &offset);
+		vkCmdBindIndexBuffer(commandBuffer, m_DebugIndexBuffer.buffer.buffer, offset, VK_INDEX_TYPE_UINT32);
 		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(m_DebugRenderer->m_IndexBuffer.size()), 1, 0, 0, 0);
 
 	}

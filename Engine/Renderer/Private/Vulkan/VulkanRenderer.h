@@ -122,8 +122,8 @@ namespace MauRen
 
 		std::vector<VulkanMappedBuffer> m_CamSettingsMappedUniformBuffers{};
 
-		VulkanBuffer m_DebugVertexBuffer{};
-		VulkanBuffer m_DebugIndexBuffer{};
+		VulkanMappedBuffer m_DebugVertexBuffer{};
+		VulkanMappedBuffer m_DebugIndexBuffer{};
 
 		std::array<VkClearValue, 2> static constexpr CLEAR_VALUES
 		{

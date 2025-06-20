@@ -19,6 +19,7 @@ namespace MauEng
 		SDLWindow();
 		~SDLWindow();
 		void Initialize();
+		void Destroy();
 
 		static bool HandleWindowEvent(void* userdata, SDL_Event* event);
 

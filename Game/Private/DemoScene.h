@@ -9,6 +9,7 @@ namespace MauGam
 	{
 		int i = 10;
 	};
+
 	class DemoScene final : public MauEng::Scene
 	{
 	public:
@@ -38,7 +39,7 @@ namespace MauGam
 			COUNT
 		};
 
-		EDemo m_Demo{ EDemo::Chess };
+		EDemo m_Demo{ EDemo::FlightHelmet };
 
 		ELightMode m_LightMode{ ELightMode::PointAndDir };
 

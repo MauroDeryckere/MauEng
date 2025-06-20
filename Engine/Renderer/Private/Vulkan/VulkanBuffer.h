@@ -17,6 +17,7 @@ namespace MauRen
 		VmaAllocation alloc{ nullptr };
 
 		void Destroy();
+		static void CopyBuffer(VkCommandBuffer commandBuffer, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 		static void CopyBuffer(VulkanCommandPoolManager const& CmPoolManager, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 
 		static void CopyBufferToImage(VulkanCommandPoolManager const& CmPoolManager, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);

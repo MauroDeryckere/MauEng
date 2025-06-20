@@ -16,6 +16,16 @@ namespace MauRen
 		alloc = nullptr;
 	}
 
+	void VulkanBuffer::CopyBuffer(VkCommandBuffer commandBuffer, VkBuffer srcBuffer, VkBuffer dstBuffer,
+		VkDeviceSize size)
+	{
+		VkBufferCopy copyRegion{};
+		copyRegion.srcOffset = 0; // Optional
+		copyRegion.dstOffset = 0; // Optional
+		copyRegion.size = size;
+		vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
+	}
+
 	VulkanBuffer::VulkanBuffer(VkDeviceSize deviceSize, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, float memoryPriority)
 	{
 		if (deviceSize == 0)

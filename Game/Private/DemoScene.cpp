@@ -14,7 +14,9 @@ namespace MauGam
 		(
 			[this](TestEvent const& event) { OnDelegate(event); }
 		) };
+
 		TestEvent event{};
+
 		m_DelegateTest.Get()->Broadcast(event);
 		m_DelegateTest -= handle;
 		m_DelegateTest < event;
@@ -46,6 +48,8 @@ namespace MauGam
 		event.i = 60;
 		m_DelegateTest += MauCor::Bind(&DemoScene::OnDelegateConst, this);
 		m_DelegateTest << event;
+
+		m_DelegateTest.Clear();
 
 		switch (m_Demo)
 		{
@@ -339,6 +343,7 @@ namespace MauGam
 
 		auto& input{ INPUT_MANAGER };
 		input.BindAction("PrintInfo", MauEng::KeyInfo{ SDLK_SPACE, MauEng::KeyInfo::ActionType::Up });
+
 		input.BindAction("ToggleLightDebugRendering", MauEng::KeyInfo{ SDLK_F2, MauEng::KeyInfo::ActionType::Up });
 		input.BindAction("ToggleLights", MauEng::KeyInfo{ SDLK_F3, MauEng::KeyInfo::ActionType::Up });
 		input.BindAction("ToggleShadows", MauEng::KeyInfo{ SDLK_F4, MauEng::KeyInfo::ActionType::Up });
@@ -348,12 +353,16 @@ namespace MauGam
 		input.BindAction("ToggleDebugRenderMode", MauEng::KeyInfo{ SDLK_F8, MauEng::KeyInfo::ActionType::Up });
 		input.BindAction("RandomizeLightColours", MauEng::KeyInfo{ SDLK_F9, MauEng::KeyInfo::ActionType::Up });
 		input.BindAction("ToggleCamSettings", MauEng::KeyInfo{ SDLK_F10, MauEng::KeyInfo::ActionType::Up });
+		input.BindAction("ToggleCamSettings", MauEng::GamepadInfo{ SDL_GAMEPAD_BUTTON_SOUTH, MauEng::GamepadInfo::ActionType::Up });
+		//input.UnBindAction("ToggleCamSettings");
+
 		input.BindAction("ToggleToneMap", MauEng::KeyInfo{ SDLK_F11, MauEng::KeyInfo::ActionType::Up });
 
 		input.BindAction("LowerCustomExposure", MauEng::KeyInfo{ SDLK_E, MauEng::KeyInfo::ActionType::Up });
 		input.BindAction("HigherCustomExposure", MauEng::KeyInfo{ SDLK_R, MauEng::KeyInfo::ActionType::Up });
+		
 
-
+		//input.BindAction("MoveUp", MauEng::MouseInfo{ SDL_BUTTON_LEFT, MauEng::MouseInfo::ActionType::Down });
 		input.BindAction("MoveUp", MauEng::KeyInfo{ SDLK_UP, MauEng::KeyInfo::ActionType::Held });
 		input.BindAction("MoveLeft", MauEng::KeyInfo{ SDLK_LEFT, MauEng::KeyInfo::ActionType::Held });
 		input.BindAction("MoveRight", MauEng::KeyInfo{ SDLK_RIGHT, MauEng::KeyInfo::ActionType::Held });
@@ -363,9 +372,25 @@ namespace MauGam
 		input.BindAction("MoveRight", MauEng::KeyInfo{ SDLK_D, MauEng::KeyInfo::ActionType::Held });
 		input.BindAction("MoveDown", MauEng::KeyInfo{ SDLK_S, MauEng::KeyInfo::ActionType::Held });
 
+		input.BindAction("MoveUp", MauEng::GamepadInfo{ SDL_GAMEPAD_BUTTON_DPAD_UP, MauEng::GamepadInfo::ActionType::Held });
+		input.BindAction("MoveLeft", MauEng::GamepadInfo{ SDL_GAMEPAD_BUTTON_DPAD_LEFT, MauEng::GamepadInfo::ActionType::Held });
+		input.BindAction("MoveRight", MauEng::GamepadInfo{ SDL_GAMEPAD_BUTTON_DPAD_RIGHT, MauEng::GamepadInfo::ActionType::Held });
+		input.BindAction("MoveDown", MauEng::GamepadInfo{ SDL_GAMEPAD_BUTTON_DPAD_DOWN, MauEng::GamepadInfo::ActionType::Held });
+
+		input.BindAction("MoveGamepadX", MauEng::GamepadInfo{ .input= { .axis=SDL_GAMEPAD_AXIS_LEFTX }, .type = MauEng::GamepadInfo::ActionType::AxisHeld });
+		input.BindAction("MoveGamepadY", MauEng::GamepadInfo{ .input = { .axis = SDL_GAMEPAD_AXIS_LEFTY }, .type = MauEng::GamepadInfo::ActionType::AxisHeld });
+
+		input.BindAction("AxisReleasedTest", MauEng::GamepadInfo{ .input = { .axis = SDL_GAMEPAD_AXIS_LEFT_TRIGGER }, .type = MauEng::GamepadInfo::ActionType::AxisReleased });
+		input.BindAction("AxisStartHeldTest", MauEng::GamepadInfo{ .input = { .axis = SDL_GAMEPAD_AXIS_LEFT_TRIGGER }, .type = MauEng::GamepadInfo::ActionType::AxisStartHeld });
+
 		input.BindAction("Sprint", MauEng::KeyInfo{ SDLK_LCTRL, MauEng::KeyInfo::ActionType::Held });
 
 		input.BindAction("Rotate", MauEng::MouseInfo{ {}, MauEng::MouseInfo::ActionType::Moved });
+
+		//Unbind tests
+		//input.UnBindAction("PrintInfo");
+		//input.UnBindAllActions(MauEng::KeyInfo{ SDLK_UP,MauEng::KeyInfo::ActionType::Held });
+		//input.UnBindAllActions(MauEng::MouseInfo{ {},MauEng::MouseInfo::ActionType::Moved });
 	}
 
 	void DemoScene::HandleInput()
@@ -678,6 +703,26 @@ namespace MauGam
 			OutputKeybinds();
 		}
 
+		if (input.IsActionExecuted("MoveGamepadX") or input.IsActionExecuted("MoveGamepadY"))
+		{
+			auto const& lJoy{ input.GetLeftJoystick() };
+			auto const& x{ lJoy.first };
+			auto const& y{ lJoy.second };
+
+			m_CameraManager.GetActiveCamera().Translate({ 0.f, 0.f, -y * movementSpeed * TIME.ElapsedSec() * (isSprinting ? sprintModifier : 1) });
+			m_CameraManager.GetActiveCamera().Translate({ x * movementSpeed * TIME.ElapsedSec() * (isSprinting ? sprintModifier : 1), 0.f, 0.f });
+
+		}
+
+		if (input.IsActionExecuted("AxisReleasedTest"))
+		{
+			ME_LOG_DEBUG(MauCor::LogCategory::Game, "Left trigger axis released");
+		}
+
+		if (input.IsActionExecuted("AxisStartHeldTest"))
+		{
+			ME_LOG_DEBUG(MauCor::LogCategory::Game, "Left trigger axis start hold");
+		}
 	}
 
 	void DemoScene::RenderDebugDemo() const

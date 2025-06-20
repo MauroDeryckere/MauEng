@@ -53,7 +53,7 @@ namespace MauRen
 		std::vector<uint32_t> m_IndexBuffer;
 
 
-		uint32_t const MAX_LINES{ 100'000 };
+		uint32_t const MAX_LINES{ DEBUG_RENDER_LINES };
 
 		template<typename TransformFunc>
 		void AddDebugLines(

@@ -15,12 +15,19 @@
 // Because this could be an issue when its an end of frame event, and the object has been destroyed when the event fires (object destroys sgould be delayed until after anyway though)
 // But if object that isnt managed by engine (?)
 
+// Delegate is in class A
+// class B is subscribed & is deleted
+// Scenario1: did not unsub, event fires -> PROBLEM
+// Scenario2: did unsub but Queued broadcast -> PROBLEM
+
+// Fix would be some form of a dynamic/ management system for this
+
 namespace MauCor
 {
 	struct ListenerHandle final
 	{
 		uint32_t id{ 0 };
-		void* owner{ nullptr };
+		void* const owner{ nullptr };
 
 		bool constexpr operator==(ListenerHandle const& other) const noexcept
 		{
@@ -63,6 +70,15 @@ namespace MauCor
 
 		void ProcessAllUnSubs() noexcept
 		{
+			if (m_ShouldClear)
+			{
+				m_OwnerUnSubs.clear();
+				m_HandleUnSubs.clear();
+				m_Listeners.clear();
+
+				m_ShouldClear = false;
+			}
+
 			for (auto& u : m_OwnerUnSubs)
 			{
 				UnSubscribeAllByOwnerImmediate(u);
@@ -180,6 +196,18 @@ namespace MauCor
 
 			auto self{ this->weak_from_this() };
 			e.Enqueue(std::make_unique<DeferredEvent>(self, event));
+		}
+
+		void Clear() noexcept
+		{
+			m_ShouldClear = true;
+			auto& e{ EventManager::GetInstance() };
+
+			if (not e.HasUnSubForDelegate(this))
+			{
+				auto self{ this->weak_from_this() };
+				e.EnqueueUnSub(this, std::make_unique<DelegateDelayedUnSub>(self));
+			}
 		}
 
 	private:
@@ -341,6 +369,8 @@ namespace MauCor
 
 		std::vector<void const*> m_OwnerUnSubs;
 		std::vector<ListenerHandle> m_HandleUnSubs;
+
+		bool m_ShouldClear { false };
 	};
 
 	template<typename EventType>
@@ -507,6 +537,11 @@ namespace MauCor
 		void operator<<(EventType const& event) noexcept
 		{
 			QueueBroadcast(event);
+		}
+
+		void Clear() noexcept
+		{
+			Get()->Clear();
 		}
 
 		Delegate(Delegate const&) = default;
