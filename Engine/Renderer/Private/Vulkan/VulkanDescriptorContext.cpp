@@ -214,7 +214,7 @@ namespace MauRen
 		VkDescriptorSetLayoutBinding LightBufferBinding{};
 		LightBufferBinding.binding = LIGHT_BUFFER_SLOT;
 		LightBufferBinding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-		LightBufferBinding.descriptorCount = MAX_SHADOW_MAPS;
+		LightBufferBinding.descriptorCount = 1;
 		LightBufferBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_VERTEX_BIT;
 		LightBufferBinding.pImmutableSamplers = nullptr;
 
@@ -369,8 +369,8 @@ namespace MauRen
 		poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
 		poolInfo.pPoolSizes = poolSizes.data();
 		poolInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-		poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT;
-
+		poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT | VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+		
 		if (vkCreateDescriptorPool(deviceContext->GetLogicalDevice(), &poolInfo, nullptr, &m_DescriptorPool) != VK_SUCCESS) {
 
 			throw std::runtime_error("Failed to create descriptor pool!");

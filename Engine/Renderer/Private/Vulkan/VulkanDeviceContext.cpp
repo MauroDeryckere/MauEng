@@ -148,6 +148,9 @@ namespace MauRen
 
 			LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Renderer, "Selected GPU: {}  (score: {} )" , selectedProps.deviceName, bestScore);
 
+			uint32_t const maxDescUbos{ selectedProps.limits.maxDescriptorSetUniformBuffers };
+			LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Renderer, "Max per UBOS: {}", maxDescUbos);
+
 			// for bindless
 			uint32_t const maxSampledImages{ selectedProps.limits.maxPerStageDescriptorSampledImages };
 			const_cast<uint32_t&>(MAX_SAMPLED_IMAGES) = maxSampledImages;
