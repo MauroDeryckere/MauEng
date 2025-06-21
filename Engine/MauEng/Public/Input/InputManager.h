@@ -60,6 +60,8 @@ namespace MauEng
 		void BindAction(std::string const& actionName, MouseInfo const& mouseInfo, std::string const& mappingContext = "DEFAULT") noexcept;
 		void BindAction(std::string const& actionName, GamepadInfo const& gamepadInfo, std::string const& mappingContext = "DEFAULT") noexcept;
 		void UnBindAction(std::string const& actionName, std::string const& mappingContext = "DEFAULT") noexcept;
+		void UnBindActionGamepad(std::string const& actionName, std::string const& mappingContext = "DEFAULT") noexcept;
+		void UnBindActionKeyboard(std::string const& actionName, std::string const& mappingContext = "DEFAULT") noexcept;
 
 		void UnBindAllActions(KeyInfo const& keyInfo, std::string const& mappingContext = "DEFAULT") noexcept;
 		void UnBindAllActions(MouseInfo const& mouseInfo, std::string const& mappingContext = "DEFAULT") noexcept;
