@@ -1,6 +1,7 @@
 #include "DemoScene.h"
 
 #include <random>
+#include "CustomPlayerClass.h"
 
 namespace MauGam
 {
@@ -342,6 +343,9 @@ namespace MauGam
 		ME_PROFILE_FUNCTION()
 
 		auto& input{ INPUT_MANAGER };
+		input.DestroyPlayer(0u);
+		input.CreatePlayer<PlayerClass>();
+
 		auto const player{ *input.GetPlayer() };
 
 		input.BindAction("PrintInfo", MauEng::KeyInfo{ SDLK_SPACE, MauEng::KeyInfo::ActionType::Up });

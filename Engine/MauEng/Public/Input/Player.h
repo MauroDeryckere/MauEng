@@ -41,7 +41,6 @@ namespace MauEng
 
 		explicit Player(uint32_t id) :
 			m_PlayerID{ id } { }
-		Player() = default;
 
 		virtual ~Player() = default;
 

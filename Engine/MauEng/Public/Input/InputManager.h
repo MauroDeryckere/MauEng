@@ -24,6 +24,7 @@ namespace MauEng
 			return CreatePlayer<Player>();
 		}
 		template<typename PlayerClass, typename... Args>
+		requires std::constructible_from<PlayerClass, uint32_t, Args...>
 		Player* CreatePlayer(Args&&... args)
 		{
 			if (m_Players.size() <= 4)
