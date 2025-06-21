@@ -187,7 +187,13 @@ namespace MauRen
 		glm::vec3 const direction{ glm::normalize(end - start) };
 		float constexpr arrowheadAngle{ glm::pi<float>() / 6.0f };
 
-		glm::vec3 const right{ glm::normalize(glm::cross(direction, glm::vec3{ 0.0f, 1.0f, 0.0f })) * arrowHeadLength };
+		glm::vec3 up{ 0.0f, 1.0f, 0.0f };
+		if (glm::abs(glm::dot(direction, up)) > 0.99f)
+		{
+			up = glm::vec3{ 1.0f, 0.0f, 0.0f };
+		}
+
+		glm::vec3 const right{ glm::normalize(glm::cross(direction, up)) * arrowHeadLength };
 
 		glm::quat const rotationRight(glm::angleAxis(arrowheadAngle, right));
 		glm::quat const rotationLeft(glm::angleAxis(-arrowheadAngle, right));

@@ -869,13 +869,16 @@ namespace MauRen
 
 		{
 			ME_PROFILE_SCOPE("debug vert buffer copy")
-			size_t bufferSize = sizeof(DebugVertex) * DEBUG_RENDER_LINES;
+
+			size_t vertexCount = m_DebugRenderer->m_ActivePoints.size();
+			size_t bufferSize = sizeof(DebugVertex) * vertexCount;
 			memcpy(m_DebugVertexBuffer.mapped, m_DebugRenderer->m_ActivePoints.data(), bufferSize);
 		}
 
 		{
 			ME_PROFILE_SCOPE("debug index buffer copy")
-			size_t bufferSize = sizeof(uint32_t) * DEBUG_RENDER_LINES;
+			size_t indexCount = m_DebugRenderer->m_IndexBuffer.size();
+			size_t bufferSize = sizeof(uint32_t) * indexCount;
 			memcpy(m_DebugIndexBuffer.mapped, m_DebugRenderer->m_IndexBuffer.data(), bufferSize);
 		}
 	}
