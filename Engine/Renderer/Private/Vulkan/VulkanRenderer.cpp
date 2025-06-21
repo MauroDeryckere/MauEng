@@ -83,7 +83,7 @@ namespace MauRen
 		if (m_DebugRenderer)
 		{
 			{
-				size_t constexpr bufferSize = sizeof(DebugVertex) * DEBUG_RENDER_LINES;
+				size_t constexpr bufferSize = sizeof(DebugVertex) * 100;
 
 				m_DebugVertexBuffer = (VulkanMappedBuffer{
 													VulkanBuffer{bufferSize,
@@ -96,7 +96,7 @@ namespace MauRen
 			}
 
 			{
-				size_t constexpr bufferSize = sizeof(uint32_t) * DEBUG_RENDER_LINES;
+				size_t constexpr bufferSize = sizeof(uint32_t) * 100;
 
 				m_DebugIndexBuffer = (VulkanMappedBuffer{
 													VulkanBuffer{bufferSize,
@@ -867,18 +867,34 @@ namespace MauRen
 			return;
 		}
 
+		size_t const vertexCount{ m_DebugRenderer->m_ActivePoints.size() };
+		size_t const indexCount{ m_DebugRenderer->m_IndexBuffer.size() };
+
+		if (sizeof(DebugVertex) * vertexCount >= m_DebugVertexBuffer.buffer.size)
+		{
+			m_DebugVertexBuffer.UnMap();
+			m_DebugVertexBuffer.buffer.Resize(sizeof(DebugVertex) * vertexCount * 2, m_DebugVertexBuffer.buffer._usage, m_DebugVertexBuffer.buffer._properties, m_DebugVertexBuffer.buffer.memPriority);
+			
+			vmaMapMemory(VulkanMemoryAllocator::GetInstance().GetAllocator(), m_DebugVertexBuffer.buffer.alloc, &m_DebugVertexBuffer.mapped);
+		}
+		if (sizeof(uint32_t) * indexCount >= m_DebugIndexBuffer.buffer.size)
+		{
+			m_DebugIndexBuffer.UnMap();
+			m_DebugIndexBuffer.buffer.Resize(sizeof(uint32_t) * indexCount * 2, m_DebugIndexBuffer.buffer._usage, m_DebugIndexBuffer.buffer._properties, m_DebugIndexBuffer.buffer.memPriority);
+
+			vmaMapMemory(VulkanMemoryAllocator::GetInstance().GetAllocator(), m_DebugIndexBuffer.buffer.alloc, &m_DebugIndexBuffer.mapped);
+		}
+
 		{
 			ME_PROFILE_SCOPE("debug vert buffer copy")
 
-			size_t vertexCount = m_DebugRenderer->m_ActivePoints.size();
-			size_t bufferSize = sizeof(DebugVertex) * vertexCount;
+			size_t const bufferSize{ sizeof(DebugVertex) * vertexCount };
 			memcpy(m_DebugVertexBuffer.mapped, m_DebugRenderer->m_ActivePoints.data(), bufferSize);
 		}
 
 		{
 			ME_PROFILE_SCOPE("debug index buffer copy")
-			size_t indexCount = m_DebugRenderer->m_IndexBuffer.size();
-			size_t bufferSize = sizeof(uint32_t) * indexCount;
+			size_t const bufferSize{ sizeof(uint32_t) * indexCount };
 			memcpy(m_DebugIndexBuffer.mapped, m_DebugRenderer->m_IndexBuffer.data(), bufferSize);
 		}
 	}

@@ -16,6 +16,20 @@ namespace MauRen
 		alloc = nullptr;
 	}
 
+	void VulkanBuffer::Resize(VkDeviceSize newSize, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, float memoryPriority)
+	{
+		Destroy();
+
+		VulkanBuffer newBuffer{ newSize, usage, properties, memoryPriority };
+
+		buffer = newBuffer.buffer;
+		size = newBuffer.size;
+		memPriority = newBuffer.memPriority;
+		alloc = newBuffer.alloc;
+		_usage = newBuffer._usage;
+		_properties = newBuffer._properties;
+	}
+
 	void VulkanBuffer::CopyBuffer(VkCommandBuffer commandBuffer, VkBuffer srcBuffer, VkBuffer dstBuffer,
 		VkDeviceSize size)
 	{
@@ -37,7 +51,9 @@ namespace MauRen
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 		size = deviceSize;
 		memPriority = std::clamp(memoryPriority, 0.f, 1.f);
-		
+		_usage = usage;
+		_properties = properties;
+
 		VkBufferCreateInfo bufferInfo{};
 		bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 		bufferInfo.size = size;

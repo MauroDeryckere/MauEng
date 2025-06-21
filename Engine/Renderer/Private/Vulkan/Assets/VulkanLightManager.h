@@ -64,8 +64,8 @@ namespace MauRen
 			uint32_t lightIndex;
 		};
 
-		glm::vec3 m_SceneAABBMin;
-		glm::vec3 m_SceneAABBMax;
+		glm::vec3 m_SceneAABBMin{};
+		glm::vec3 m_SceneAABBMax{};
 
 		bool m_HasAABBBOverride;
 

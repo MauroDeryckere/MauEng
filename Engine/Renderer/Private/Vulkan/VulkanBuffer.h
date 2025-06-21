@@ -14,9 +14,18 @@ namespace MauRen
 		VkDeviceSize size{ 0 };
 		float memPriority{ 0.f };
 
+		VkBufferUsageFlags _usage{};
+		VkMemoryPropertyFlags _properties{};
+
 		VmaAllocation alloc{ nullptr };
 
 		void Destroy();
+
+		void Resize(VkDeviceSize newSize,
+					VkBufferUsageFlags usage,
+					VkMemoryPropertyFlags properties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+					float memoryPriority = 0.f);
+
 		static void CopyBuffer(VkCommandBuffer commandBuffer, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 		static void CopyBuffer(VulkanCommandPoolManager const& CmPoolManager, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 
