@@ -107,4 +107,9 @@ namespace MauEng
 	{
 		return INPUT_MANAGER.GetDeltaMouseScroll();
 	}
+
+	void Player::Tick()
+	{
+
+	}
 }

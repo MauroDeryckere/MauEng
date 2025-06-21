@@ -19,11 +19,29 @@ namespace MauEng
 	class InputManager final : public MauCor::Singleton<InputManager>
 	{
 	public:
-		Player const& CreatePlayer();
-		std::vector<Player> const& GetPlayers() const noexcept;
+		Player* CreatePlayer()
+		{
+			return CreatePlayer<Player>();
+		}
+		template<typename PlayerClass, typename... Args>
+		Player* CreatePlayer(Args&&... args)
+		{
+			if (m_Players.size() <= 4)
+			{
+				auto const ID{ m_AvailablePlayerIDs.back() };
+				m_AvailablePlayerIDs.pop_back();
+
+				return m_Players.emplace_back(std::make_unique<PlayerClass>(ID, std::forward<Args>(args)...)).get();
+			}
+
+			throw std::exception("could not create player");
+		}
+		[[nodiscard]] std::vector<Player const*> const GetPlayers() const noexcept;
+		[[nodiscard]] std::vector<Player*> GetPlayers() noexcept;
+		[[nodiscard]] Player* GetPlayer(uint32_t playerID = 0) const;
 
 		bool DestroyPlayer(uint32_t playerID);
-		bool DestroyPlayer(Player const& player);
+		bool DestroyPlayer(Player* player);
 
 		[[nodiscard]] uint32_t NumPlayers() const noexcept;
 
@@ -156,7 +174,7 @@ namespace MauEng
 		float m_JoystickDeadzone{ .1f };
 		float m_TriggerDeadzone{ .1f };
 
-		std::vector<Player> m_Players{};
+		std::vector<std::unique_ptr<Player>> m_Players{};
 
 		void HandleMouseAction(SDL_Event const& event, Uint32 const evType, MouseInfo::ActionType const actType);
 		void HandleMouseHeldAndMovement();

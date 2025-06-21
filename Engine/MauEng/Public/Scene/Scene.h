@@ -5,6 +5,7 @@
 //TODO fix
 //#include "ECSWorld.h"
 
+#include "ServiceLocator.h"
 #include "../../ECS/Public/ECSWorld.h"
 #include "../../ECS/Public/Entity.h"
 
@@ -23,10 +24,7 @@ namespace MauEng
 		virtual void OnLoad(){}
 
 		// Called each frame
-		virtual void Tick()
-		{
-			m_CameraManager.Tick();
-		}
+		virtual void Tick();
 
 		// Called to render the scene
 		virtual void OnRender() const;

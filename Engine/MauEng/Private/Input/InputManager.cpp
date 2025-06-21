@@ -29,7 +29,7 @@ namespace MauEng
 			m_AvailablePlayerIDs_Gamepads.pop_back();
 		}
 
-		CreatePlayer();
+		CreatePlayer<Player>();
 
 		m_ExecutedActions.resize(4);
 
@@ -550,30 +550,44 @@ namespace MauEng
 		m_Gamepads.clear();
 	}
 
-	Player const& InputManager::CreatePlayer()
+	std::vector<Player const*> const InputManager::GetPlayers() const noexcept
 	{
-		ME_ENGINE_ASSERT(m_Players.size() <= 4);
-
-		if (m_Players.size() <= 4)
+		std::vector<Player const*> temp;
+		for (auto& p : m_Players)
 		{
-			auto const ID{ m_AvailablePlayerIDs.back() };
-			m_AvailablePlayerIDs.pop_back();
-			
-			Player p{ ID };
-			return m_Players.emplace_back(p);
+			temp.emplace_back(p.get());
 		}
-
-		throw std::exception("could not create player");
+		return temp;
 	}
 
-	std::vector<Player> const& InputManager::GetPlayers() const noexcept
+	std::vector<Player*> InputManager::GetPlayers() noexcept
 	{
-		return m_Players;
+		std::vector<Player*> temp;
+		for (auto& p : m_Players)
+		{
+			temp.emplace_back(p.get());
+		}
+		return temp;
+	}
+
+	Player* InputManager::GetPlayer(uint32_t playerID) const
+	{
+		ME_ENGINE_ASSERT(playerID <= 3);
+
+		for (auto& p : m_Players)
+		{
+			if (p->PlayerID() == playerID)
+			{
+				return p.get();
+			}
+		}
+
+		throw std::exception("player doesnt exist (was not created)");
 	}
 
 	bool InputManager::DestroyPlayer(uint32_t playerID)
 	{
-		if (1 == std::erase_if(m_Players, [playerID](Player const& p) { return p.PlayerID() == playerID; }))
+		if (1 == std::erase_if(m_Players, [playerID](auto& p) { return p->PlayerID() == playerID; }))
 		{
 			m_AvailablePlayerIDs.emplace_back(playerID);
 			return true;
@@ -582,9 +596,9 @@ namespace MauEng
 		return false;
 	}
 
-	bool InputManager::DestroyPlayer(Player const& player)
+	bool InputManager::DestroyPlayer(Player* player)
 	{
-		return DestroyPlayer(player.m_PlayerID);
+		return DestroyPlayer(player->PlayerID());
 	}
 
 	uint32_t InputManager::NumPlayers() const noexcept

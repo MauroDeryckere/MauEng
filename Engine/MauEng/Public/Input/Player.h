@@ -5,7 +5,7 @@ namespace MauEng
 {
 	uint32_t constexpr INVALID_PLAYER_ID{ UINT32_MAX };
 
-	class Player final
+	class Player
 	{
 	public:
 		[[nodiscard]] uint32_t PlayerID() const noexcept { return m_PlayerID; }
@@ -37,12 +37,21 @@ namespace MauEng
 		[[nodiscard]] std::pair<float, float> GetDeltaMouseMovement() const noexcept;
 		[[nodiscard]] std::pair<float, float> GetDeltaMouseScroll() const noexcept;
 
-	private:
-		friend class InputManager;
+		virtual void Tick();
+
 		explicit Player(uint32_t id) :
 			m_PlayerID{ id } { }
 		Player() = default;
 
+		virtual ~Player() = default;
+
+		Player(Player const&) = default;
+		Player(Player&&) = default;
+		Player& operator=(Player const&) = default;
+		Player& operator=(Player&&) = default;
+	protected:
+
+	private:
 		uint32_t m_PlayerID{ INVALID_PLAYER_ID };
 	};
 }
