@@ -52,6 +52,7 @@ namespace MauEng
 
 		// Also initializes input manager
 		auto& inputManager{ InputManager::GetInstance() };
+		inputManager.Init();
 
 		if constexpr(ENABLE_PROFILER)
 		{

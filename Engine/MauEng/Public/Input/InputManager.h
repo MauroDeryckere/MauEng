@@ -28,7 +28,6 @@ namespace MauEng
 		}
 		template<typename PlayerClass, typename... Args>
 		requires std::constructible_from<PlayerClass, uint32_t, Args...> && std::derived_from<PlayerClass, Player>
-		[[nodiscard]]
 		Player* CreatePlayer(Args&&... args)
 		{
 			if (m_Players.size() <= 4)
@@ -111,6 +110,7 @@ namespace MauEng
 		friend class Singleton<InputManager>;
 		InputManager();
 		virtual ~InputManager() override = default;
+		void Init() noexcept;
 
 		// make sure user cant call destroy or process input
 		friend class Engine;

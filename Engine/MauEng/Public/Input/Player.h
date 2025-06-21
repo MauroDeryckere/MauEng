@@ -1,12 +1,10 @@
 #ifndef MAUENG_PLAYER_H
 #define MAUENG_PLAYER_H
 
-//#include "Events/Delegate.h"
+#include "events/inputEvent.h"
 
 namespace MauEng
 {
-
-
 	uint32_t constexpr INVALID_PLAYER_ID{ UINT32_MAX };
 
 	class Player
@@ -43,16 +41,16 @@ namespace MauEng
 
 		virtual void Tick();
 
-		explicit Player(uint32_t id) :
-			m_PlayerID{ id } { }
+		virtual void OnActionExecuted(InputEvent const& event) noexcept { }
 
-		virtual ~Player() = default;
+		explicit Player(uint32_t id);
+		virtual ~Player();
 
-		Player(Player const&) = default;
-		Player(Player&&) = default;
-		Player& operator=(Player const&) = default;
-		Player& operator=(Player&&) = default;
 	protected:
+		Player(Player const&) = delete;
+		Player(Player&&) = delete;
+		Player& operator=(Player const&) = delete;
+		Player& operator=(Player&&) = delete;
 
 	private:
 		uint32_t m_PlayerID{ INVALID_PLAYER_ID };

@@ -346,12 +346,12 @@ namespace MauGam
 		input.DestroyPlayer(0u);
 		input.CreatePlayer<PlayerClass>();
 
-		auto const player{ *input.GetPlayer() };
+		auto const player{ input.GetPlayer() };
 
 		input.BindAction("PrintInfo", MauEng::KeyInfo{ SDLK_SPACE, MauEng::KeyInfo::ActionType::Up });
 
 		input.BindAction("PrintInfo", MauEng::KeyInfo{ SDLK_V, MauEng::KeyInfo::ActionType::Up }, "SECONDCONTEXTTEST");
-		player.SetMappingContext("SECONDCONTEXTTEST");
+		player->SetMappingContext("SECONDCONTEXTTEST");
 
 		input.EraseMappingContext("SECONDCONTEXTTEST", "DEFAULT");
 
@@ -414,34 +414,34 @@ namespace MauGam
 		auto constexpr sprintModifier{ 6.f };
 		auto constexpr movementSpeed{ 20.f };
 
-		auto const player{ *input.GetPlayer() };
+		auto const player{ input.GetPlayer() };
 
-		if (player.IsActionExecuted("Sprint"))
+		if (player->IsActionExecuted("Sprint"))
 		{
 			isSprinting = true;
 		}
 
-		if (player.IsActionExecuted("MoveUp"))
+		if (player->IsActionExecuted("MoveUp"))
 		{
 			m_CameraManager.GetActiveCamera().Translate({ 0.f, 0.f, movementSpeed * TIME.ElapsedSec() * (isSprinting ? sprintModifier : 1) });
 		}
-		if (player.IsActionExecuted("MoveDown"))
+		if (player->IsActionExecuted("MoveDown"))
 		{
 			m_CameraManager.GetActiveCamera().Translate({ 0.f, 0.f, -movementSpeed * TIME.ElapsedSec() * (isSprinting ? sprintModifier : 1) });
 		}
-		if (player.IsActionExecuted("MoveLeft"))
+		if (player->IsActionExecuted("MoveLeft"))
 		{
 			m_CameraManager.GetActiveCamera().Translate({ -movementSpeed * TIME.ElapsedSec() * (isSprinting ? sprintModifier : 1), 0.f, 0.f });
 		}
-		if (player.IsActionExecuted("MoveRight"))
+		if (player->IsActionExecuted("MoveRight"))
 		{
 			m_CameraManager.GetActiveCamera().Translate({ movementSpeed * TIME.ElapsedSec() * (isSprinting ? sprintModifier : 1), 0.f, 0.f });
 		}
 
 		float constexpr mouseRotSpeed{ 60 };
-		if (player.IsActionExecuted("Rotate"))
+		if (player->IsActionExecuted("Rotate"))
 		{
-			auto const mouseMovement{ player.GetDeltaMouseMovement() };
+			auto const mouseMovement{ player->GetDeltaMouseMovement() };
 			float const rot{ mouseRotSpeed * TIME.ElapsedSec() };
 
 			m_CameraManager.GetActiveCamera().RotateX(mouseMovement.first * rot);
@@ -449,7 +449,7 @@ namespace MauGam
 		}
 
 		float constexpr LIGHT_ADJUSTMENT{ 200.f };
-		if (player.IsActionExecuted("DownLightIntensity"))
+		if (player->IsActionExecuted("DownLightIntensity"))
 		{
 			auto view{ GetECSWorld().View<MauEng::CLight>() };
 			view.Each([LIGHT_ADJUSTMENT](MauEng::CLight& light)
@@ -459,7 +459,7 @@ namespace MauGam
 				});
 		}
 
-		if (player.IsActionExecuted("UpLightIntensity"))
+		if (player->IsActionExecuted("UpLightIntensity"))
 		{
 			auto view{ GetECSWorld().View<MauEng::CLight>() };
 			view.Each([LIGHT_ADJUSTMENT](MauEng::CLight& light)
@@ -479,7 +479,7 @@ namespace MauGam
 				});
 		}
 
-		if (player.IsActionExecuted("ToggleShadows"))
+		if (player->IsActionExecuted("ToggleShadows"))
 		{
 			m_CastShadows = not m_CastShadows;
 			ME_LOG_INFO(MauCor::LogCategory::Game, "Shadows: {}", m_CastShadows);
@@ -491,7 +491,7 @@ namespace MauGam
 				});
 		}
 		
-		if (player.IsActionExecuted("ToggleLights"))
+		if (player->IsActionExecuted("ToggleLights"))
 		{
 			uint8_t currModeID{ static_cast<uint8_t>(m_LightMode) };
 			++currModeID;
@@ -550,19 +550,19 @@ namespace MauGam
 				});
 		}
 
-		if (player.IsActionExecuted("ToggleLightDebugRendering"))
+		if (player->IsActionExecuted("ToggleLightDebugRendering"))
 		{
 			m_DebugRenderLight = not m_DebugRenderLight;
 			ME_LOG_INFO(MauCor::LogCategory::Game, "Debug render light: {}", m_DebugRenderLight);
 		}
 
-		if (player.IsActionExecuted("ToggleRotation"))
+		if (player->IsActionExecuted("ToggleRotation"))
 		{
 			m_Rotate = not m_Rotate;
 			ME_LOG_INFO(MauCor::LogCategory::Game, "Scene rotation: {}", m_Rotate);
 		}
 
-		if (player.IsActionExecuted("ToggleDebugRenderMode"))
+		if (player->IsActionExecuted("ToggleDebugRenderMode"))
 		{
 			uint8_t currModeID{ static_cast<uint8_t>(m_DebugRenderMode) };
 			++currModeID;
@@ -603,7 +603,7 @@ namespace MauGam
 			ME_LOG_INFO(MauCor::LogCategory::Game, "Debug Render Mode: {}", debModeStr);
 		}
 
-		if (player.IsActionExecuted("RandomizeLightColours"))
+		if (player->IsActionExecuted("RandomizeLightColours"))
 		{
 			ME_LOG_INFO(MauCor::LogCategory::Game, "Randomizing light colours");
 
@@ -635,7 +635,7 @@ namespace MauGam
 
 		}
 
-		if (player.IsActionExecuted("ToggleCamSettings"))
+		if (player->IsActionExecuted("ToggleCamSettings"))
 		{
 			uint8_t currModeID{ static_cast<uint8_t>(m_CamSettings) };
 			++currModeID;
@@ -666,7 +666,7 @@ namespace MauGam
 			ME_LOG_INFO(MauCor::LogCategory::Game, "Cam Settings: {}", camSettStr);
 		}
 
-		if (player.IsActionExecuted("ToggleToneMap"))
+		if (player->IsActionExecuted("ToggleToneMap"))
 		{
 			uint8_t currModeID{ static_cast<uint8_t>(m_CameraManager.GetActiveCamera().GetToneMapper()) };
 			++currModeID;
@@ -691,7 +691,7 @@ namespace MauGam
 			ME_LOG_INFO(MauCor::LogCategory::Game, "Cam Tone mapper: {}", camSettStr);
 		}
 
-		if (player.IsActionExecuted("LowerCustomExposure"))
+		if (player->IsActionExecuted("LowerCustomExposure"))
 		{
 			float curr = GetCameraManager().GetActiveCamera().GetExposureOverride();
 			curr *= pow(2.0f, -1.0f / 3.0f); // LOWER exposure by 1/3 stop
@@ -701,7 +701,7 @@ namespace MauGam
 			ME_LOG_INFO(MauCor::LogCategory::Game, "New exposure: {}", curr);
 		}
 
-		if (player.IsActionExecuted("HigherCustomExposure"))
+		if (player->IsActionExecuted("HigherCustomExposure"))
 		{
 			float curr = GetCameraManager().GetActiveCamera().GetExposureOverride();
 			curr *= pow(2.0f, 1.0f / 3.0f); // INCREASE exposure by 1/3 stop
@@ -711,14 +711,14 @@ namespace MauGam
 			ME_LOG_INFO(MauCor::LogCategory::Game, "New exposure: {}", curr);
 		}
 
-		if (player.IsActionExecuted("PrintInfo"))
+		if (player->IsActionExecuted("PrintInfo"))
 		{
 			OutputKeybinds();
 		}
 
-		if (player.IsActionExecuted("MoveGamepadX") or player.IsActionExecuted("MoveGamepadY"))
+		if (player->IsActionExecuted("MoveGamepadX") or player->IsActionExecuted("MoveGamepadY"))
 		{
-			auto const& lJoy{ player.GetLeftJoystick() };
+			auto const& lJoy{ player->GetLeftJoystick() };
 			auto const& x{ lJoy.first };
 			auto const& y{ lJoy.second };
 
@@ -727,12 +727,12 @@ namespace MauGam
 
 		}
 
-		if (player.IsActionExecuted("AxisReleasedTest"))
+		if (player->IsActionExecuted("AxisReleasedTest"))
 		{
 			ME_LOG_DEBUG(MauCor::LogCategory::Game, "Left trigger axis released");
 		}
 
-		if (player.IsActionExecuted("AxisStartHeldTest"))
+		if (player->IsActionExecuted("AxisStartHeldTest"))
 		{
 			ME_LOG_DEBUG(MauCor::LogCategory::Game, "Left trigger axis start hold");
 		}

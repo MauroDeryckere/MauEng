@@ -33,8 +33,6 @@ namespace MauEng
 			m_AvailablePlayerIDs_Gamepads.pop_back();
 		}
 
-		CreatePlayer<Player>();
-
 		m_ExecutedActions.resize(4);
 
 		int numGamepads{ 0 };
@@ -74,6 +72,11 @@ namespace MauEng
 		}
 
 		SDL_free(gamepadIDs);
+	}
+
+	void InputManager::Init() noexcept
+	{
+		CreatePlayer<Player>();
 	}
 
 	void InputManager::HandleMouseAction(SDL_Event const& event, Uint32 const evType, MouseInfo::ActionType const actType)
@@ -557,6 +560,8 @@ namespace MauEng
 
 	void InputManager::Destroy()
 	{
+		m_Players.clear();
+
 		for (auto& p : m_Gamepads)
 		{
 			SDL_CloseGamepad(p.gamepad);
