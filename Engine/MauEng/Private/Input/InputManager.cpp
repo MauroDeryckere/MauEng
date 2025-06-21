@@ -7,6 +7,10 @@ namespace MauEng
 {
 	InputManager::InputManager()
 	{
+		m_InputDelegateImmediate += MauCor::Bind<InputEvent>(
+			[this](InputEvent const& e) 
+			{ m_ExecutedActions[e.playerID].emplace(e.action); });
+
 		m_KeyboardContexts["DEFAULT"] = {};
 		m_KeyboardContexts["DEFAULT"].mappedKeyboardActions.resize(static_cast<size_t>(KeyInfo::ActionType::COUNT));
 		m_KeyboardContexts["DEFAULT"].mappedMouseActions.resize(static_cast<size_t>(MouseInfo::ActionType::COUNT));
@@ -105,7 +109,8 @@ namespace MauEng
 				{
 					for (auto const& action : it->second)
 					{
-						m_ExecutedActions[i].emplace(action);
+						m_InputDelegateImmediate < InputEvent{i, action};
+						m_InputDelegateDelayed << InputEvent{i, action};
 					}
 				}
 			}
@@ -134,7 +139,8 @@ namespace MauEng
 						{
 							for (auto const& action : it->second)
 							{
-								m_ExecutedActions[i].emplace(action);
+								m_InputDelegateImmediate < InputEvent{ i, action };
+								m_InputDelegateDelayed << InputEvent{ i, action };
 							}
 						}
 					}
@@ -167,7 +173,8 @@ namespace MauEng
 					{
 						for (auto const& action : keys.second)
 						{
-							m_ExecutedActions[i].emplace(action);
+							m_InputDelegateImmediate < InputEvent{ i, action };
+							m_InputDelegateDelayed << InputEvent{ i, action };
 						}
 					}
 				}
@@ -189,7 +196,8 @@ namespace MauEng
 				{
 					for (auto const& action : buttons.second)
 					{
-						m_ExecutedActions[g.playerID].emplace(action);
+						m_InputDelegateImmediate < InputEvent{ g.playerID, action };
+						m_InputDelegateDelayed << InputEvent{ g.playerID, action };
 					}
 				}
 			}
@@ -249,7 +257,8 @@ namespace MauEng
 						{
 							for (auto const& action : it->second)
 							{
-								m_ExecutedActions[g.playerID].emplace(action);
+								m_InputDelegateImmediate < InputEvent{ g.playerID, action };
+								m_InputDelegateDelayed << InputEvent{ g.playerID, action };
 							}
 						}
 					}
@@ -263,7 +272,8 @@ namespace MauEng
 					{
 						for (auto const& action : it->second)
 						{
-							m_ExecutedActions[g.playerID].emplace(action);
+							m_InputDelegateImmediate < InputEvent{ g.playerID, action };
+							m_InputDelegateDelayed << InputEvent{ g.playerID, action };
 						}
 					}
 				}
@@ -278,7 +288,8 @@ namespace MauEng
 						{
 							for (auto const& action : it->second)
 							{
-								m_ExecutedActions[g.playerID].emplace(action);
+								m_InputDelegateImmediate < InputEvent{ g.playerID, action };
+								m_InputDelegateDelayed << InputEvent{ g.playerID, action };
 							}
 						}
 					}
@@ -376,7 +387,8 @@ namespace MauEng
 					{
 						for (auto const& action : it->second)
 						{
-							m_ExecutedActions[i].emplace(action);
+							m_InputDelegateImmediate < InputEvent{ i, action };
+							m_InputDelegateDelayed << InputEvent{ i, action };
 						}
 					}
 				}
@@ -393,7 +405,8 @@ namespace MauEng
 					{
 						for (auto const& action : it->second)
 						{
-							m_ExecutedActions[i].emplace(action);
+							m_InputDelegateImmediate < InputEvent{ i, action };
+							m_InputDelegateDelayed << InputEvent{ i, action };
 						}
 					}
 				}
@@ -471,7 +484,8 @@ namespace MauEng
 					{
 						for (auto const& action : it->second)
 						{
-							m_ExecutedActions[playerID].emplace(action);
+							m_InputDelegateImmediate < InputEvent{ static_cast<uint32_t>(playerID), action };
+							m_InputDelegateDelayed << InputEvent{ static_cast<uint32_t>(playerID), action };
 						}
 					}
 				}
@@ -491,7 +505,8 @@ namespace MauEng
 					{
 						for (auto const& action : it->second)
 						{
-							m_ExecutedActions[playerID].emplace(action);
+							m_InputDelegateImmediate < InputEvent{ static_cast<uint32_t>(playerID), action };
+							m_InputDelegateDelayed << InputEvent{ static_cast<uint32_t>(playerID), action };
 						}
 					}
 				}
@@ -522,7 +537,8 @@ namespace MauEng
 
 								if (std::abs(norm) >= m_JoystickDeadzone)
 								{
-									m_ExecutedActions[playerID].emplace(action);
+									m_InputDelegateImmediate < InputEvent{ static_cast<uint32_t>(playerID), action };
+									m_InputDelegateDelayed << InputEvent{ static_cast<uint32_t>(playerID), action };
 								}
 							}
 						}

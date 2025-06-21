@@ -1,8 +1,12 @@
 #ifndef MAUENG_PLAYER_H
 #define MAUENG_PLAYER_H
 
+//#include "Events/Delegate.h"
+
 namespace MauEng
 {
+
+
 	uint32_t constexpr INVALID_PLAYER_ID{ UINT32_MAX };
 
 	class Player

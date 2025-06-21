@@ -137,6 +137,7 @@ namespace MauEng
 			}
 
 			doContinue = inputManager.ProcessInput();
+			eventManager.ProcessEvents();
 
 			while (time.IsLag())
 			{
@@ -151,7 +152,6 @@ namespace MauEng
 			if (not IsMinimised)
 			{
 				sceneManager.Tick();
-				eventManager.ProcessEvents();
 				sceneManager.Render({m_Window->width, m_Window->height});
 			}
 

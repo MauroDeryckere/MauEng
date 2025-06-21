@@ -14,6 +14,9 @@
 
 #include "Player.h"
 
+#include "Events/Delegate.h"
+#include "Events/InputEvent.h"
+
 namespace MauEng
 {
 	class InputManager final : public MauCor::Singleton<InputManager>
@@ -99,6 +102,10 @@ namespace MauEng
 		InputManager& operator=(InputManager const&) = delete;
 		InputManager& operator=(InputManager&&) = delete;
 
+		// all executed actions are broadcasted immediate here
+		MauCor::Delegate<InputEvent> m_InputDelegateImmediate{};
+		// all executed actions are broadcasted delayed here
+		MauCor::Delegate<InputEvent> m_InputDelegateDelayed{};
 	private:
 		friend class Singleton<InputManager>;
 		InputManager();
