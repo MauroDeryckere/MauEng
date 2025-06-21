@@ -64,7 +64,7 @@ namespace MauRen
 		VulkanMeshManager() = default;
 		virtual ~VulkanMeshManager() override = default;
 
-		VulkanCommandPoolManager const* m_CmdPoolManager;
+		VulkanCommandPoolManager const* m_CmdPoolManager{ nullptr };
 
 		// 1:1 copy w/ GPU buffers
 		std::vector<MeshInstanceData> m_MeshInstanceData;

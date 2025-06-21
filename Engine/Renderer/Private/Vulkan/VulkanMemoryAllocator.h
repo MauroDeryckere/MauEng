@@ -26,7 +26,7 @@ namespace MauRen
 		VulkanMemoryAllocator() = default;
 		virtual ~VulkanMemoryAllocator() override = default;
 
-		VmaAllocator m_Allocator;
+		VmaAllocator m_Allocator{ nullptr };
 
 	};
 }

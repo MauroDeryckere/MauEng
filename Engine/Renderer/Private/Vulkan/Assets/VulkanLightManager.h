@@ -67,7 +67,7 @@ namespace MauRen
 		glm::vec3 m_SceneAABBMin{};
 		glm::vec3 m_SceneAABBMax{};
 
-		bool m_HasAABBBOverride;
+		bool m_HasAABBBOverride{ false };
 
 		VkSampler m_ShadowMapSampler{ VK_NULL_HANDLE };
 

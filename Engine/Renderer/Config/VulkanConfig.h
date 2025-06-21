@@ -28,7 +28,6 @@ namespace MauRen
 		VK_KHR_SWAPCHAIN_EXTENSION_NAME,
 		"VK_EXT_pageable_device_local_memory",
 		"VK_EXT_memory_priority"
-
 		// These are in the 1.3 core and don't need to be enabled separately anymore
 		//VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME,
 		//"VK_KHR_create_renderpass2",

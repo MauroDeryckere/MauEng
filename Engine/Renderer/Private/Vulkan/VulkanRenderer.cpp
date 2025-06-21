@@ -921,6 +921,5 @@ namespace MauRen
 		vkCmdBindVertexBuffers(commandBuffer, 0, 1, &m_DebugVertexBuffer.buffer.buffer, &offset);
 		vkCmdBindIndexBuffer(commandBuffer, m_DebugIndexBuffer.buffer.buffer, offset, VK_INDEX_TYPE_UINT32);
 		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(m_DebugRenderer->m_IndexBuffer.size()), 1, 0, 0, 0);
-
 	}
 }

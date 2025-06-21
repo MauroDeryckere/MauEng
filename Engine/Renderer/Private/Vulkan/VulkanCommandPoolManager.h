@@ -31,8 +31,8 @@ namespace MauRen
 		VulkanCommandPoolManager& operator=(VulkanCommandPoolManager&&) = delete;
 
 	private:
-		std::vector<VkCommandPool> m_CommandPools;
-		VkCommandPool m_SingleTimeCommandPool;
+		std::vector<VkCommandPool> m_CommandPools{};
+		VkCommandPool m_SingleTimeCommandPool{ VK_NULL_HANDLE };
 
 		// Are automatically freed when their pool is destroyed
 		std::vector<VkCommandBuffer> m_CommandBuffers{};
