@@ -113,7 +113,7 @@ namespace MauEng
 					for (auto const& action : it->second)
 					{
 						m_InputDelegateImmediate < InputEvent{i, action};
-						m_InputDelegateDelayed << InputEvent{i, action};
+						m_InputDelegateDelayed[i] << InputEvent{i, action};
 					}
 				}
 			}
@@ -143,7 +143,7 @@ namespace MauEng
 							for (auto const& action : it->second)
 							{
 								m_InputDelegateImmediate < InputEvent{ i, action };
-								m_InputDelegateDelayed << InputEvent{ i, action };
+								m_InputDelegateDelayed[i] << InputEvent{ i, action };
 							}
 						}
 					}
@@ -177,7 +177,7 @@ namespace MauEng
 						for (auto const& action : keys.second)
 						{
 							m_InputDelegateImmediate < InputEvent{ i, action };
-							m_InputDelegateDelayed << InputEvent{ i, action };
+							m_InputDelegateDelayed[i] << InputEvent{ i, action };
 						}
 					}
 				}
@@ -200,7 +200,7 @@ namespace MauEng
 					for (auto const& action : buttons.second)
 					{
 						m_InputDelegateImmediate < InputEvent{ g.playerID, action };
-						m_InputDelegateDelayed << InputEvent{ g.playerID, action };
+						m_InputDelegateDelayed[g.playerID] << InputEvent{ g.playerID, action };
 					}
 				}
 			}
@@ -261,7 +261,7 @@ namespace MauEng
 							for (auto const& action : it->second)
 							{
 								m_InputDelegateImmediate < InputEvent{ g.playerID, action };
-								m_InputDelegateDelayed << InputEvent{ g.playerID, action };
+								m_InputDelegateDelayed[g.playerID] << InputEvent{ g.playerID, action };
 							}
 						}
 					}
@@ -276,7 +276,7 @@ namespace MauEng
 						for (auto const& action : it->second)
 						{
 							m_InputDelegateImmediate < InputEvent{ g.playerID, action };
-							m_InputDelegateDelayed << InputEvent{ g.playerID, action };
+							m_InputDelegateDelayed[g.playerID] << InputEvent{ g.playerID, action };
 						}
 					}
 				}
@@ -292,7 +292,7 @@ namespace MauEng
 							for (auto const& action : it->second)
 							{
 								m_InputDelegateImmediate < InputEvent{ g.playerID, action };
-								m_InputDelegateDelayed << InputEvent{ g.playerID, action };
+								m_InputDelegateDelayed[g.playerID] << InputEvent{ g.playerID, action };
 							}
 						}
 					}
@@ -391,7 +391,7 @@ namespace MauEng
 						for (auto const& action : it->second)
 						{
 							m_InputDelegateImmediate < InputEvent{ i, action };
-							m_InputDelegateDelayed << InputEvent{ i, action };
+							m_InputDelegateDelayed[i] << InputEvent{ i, action };
 						}
 					}
 				}
@@ -409,7 +409,7 @@ namespace MauEng
 						for (auto const& action : it->second)
 						{
 							m_InputDelegateImmediate < InputEvent{ i, action };
-							m_InputDelegateDelayed << InputEvent{ i, action };
+							m_InputDelegateDelayed[i] << InputEvent{ i, action };
 						}
 					}
 				}
@@ -488,7 +488,7 @@ namespace MauEng
 						for (auto const& action : it->second)
 						{
 							m_InputDelegateImmediate < InputEvent{ static_cast<uint32_t>(playerID), action };
-							m_InputDelegateDelayed << InputEvent{ static_cast<uint32_t>(playerID), action };
+							m_InputDelegateDelayed[playerID] << InputEvent{ static_cast<uint32_t>(playerID), action };
 						}
 					}
 				}
@@ -509,7 +509,7 @@ namespace MauEng
 						for (auto const& action : it->second)
 						{
 							m_InputDelegateImmediate < InputEvent{ static_cast<uint32_t>(playerID), action };
-							m_InputDelegateDelayed << InputEvent{ static_cast<uint32_t>(playerID), action };
+							m_InputDelegateDelayed[playerID] << InputEvent{ static_cast<uint32_t>(playerID), action };
 						}
 					}
 				}
@@ -541,7 +541,7 @@ namespace MauEng
 								if (std::abs(norm) >= m_JoystickDeadzone)
 								{
 									m_InputDelegateImmediate < InputEvent{ static_cast<uint32_t>(playerID), action };
-									m_InputDelegateDelayed << InputEvent{ static_cast<uint32_t>(playerID), action };
+									m_InputDelegateDelayed[playerID] << InputEvent{ static_cast<uint32_t>(playerID), action };
 								}
 							}
 						}

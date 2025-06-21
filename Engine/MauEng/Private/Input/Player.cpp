@@ -8,12 +8,12 @@ namespace MauEng
 	{
 		ME_ENGINE_ASSERT(m_PlayerID != INVALID_PLAYER_ID);
 
-		INPUT_MANAGER.m_InputDelegateDelayed += MauCor::Bind(&Player::OnActionExecuted, this, this);
+		INPUT_MANAGER.m_InputDelegateDelayed[m_PlayerID] += MauCor::Bind(&Player::OnActionExecuted, this, this);
 	}
 	Player::~Player()
 	{
 		// necessary unless we add a dynamic system to track this
-		INPUT_MANAGER.m_InputDelegateDelayed -= this;
+		INPUT_MANAGER.m_InputDelegateDelayed[m_PlayerID] -= this;
 	}
 
 	bool Player::IsGamepadConnected() const noexcept

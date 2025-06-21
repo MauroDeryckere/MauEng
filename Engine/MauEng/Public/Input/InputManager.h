@@ -105,7 +105,7 @@ namespace MauEng
 		// all executed actions are broadcasted immediate here
 		MauCor::Delegate<InputEvent> m_InputDelegateImmediate{};
 		// all executed actions are broadcasted delayed here
-		MauCor::Delegate<InputEvent> m_InputDelegateDelayed{};
+		std::array<MauCor::Delegate<InputEvent>, 4> m_InputDelegateDelayed{};
 	private:
 		friend class Singleton<InputManager>;
 		InputManager();

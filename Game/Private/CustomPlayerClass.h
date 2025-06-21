@@ -15,6 +15,7 @@ namespace MauGam
 
 	protected:
 		void Tick() override;
+		virtual void OnActionExecuted(MauEng::InputEvent const& event) noexcept override;
 
 	private:
 	};

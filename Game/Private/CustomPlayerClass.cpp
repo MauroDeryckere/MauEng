@@ -13,4 +13,9 @@ namespace MauGam
 		}
 		exexOnce = true;
 	}
+
+	void PlayerClass::OnActionExecuted(MauEng::InputEvent const& event) noexcept
+	{
+		ME_LOG_DEBUG(MauCor::LogCategory::Game, "Action executed for player class! Action: {}, Player ID: {}", event.action, PlayerID());
+	}
 }
