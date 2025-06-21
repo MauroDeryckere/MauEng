@@ -26,8 +26,10 @@ namespace MauEng
 
 		if constexpr (SKIP_CONTROLLER_INPUT_PLAYER_ID_0)
 		{
-			m_AvailablePlayerIDs.pop_back();
+			m_AvailablePlayerIDs_Gamepads.pop_back();
 		}
+
+		CreatePlayer();
 
 		m_ExecutedActions.resize(4);
 
@@ -37,7 +39,7 @@ namespace MauEng
 		{
 			for (int i{ 0 }; i < numGamepads; ++i)
 			{
-				if (m_AvailablePlayerIDs.empty())
+				if (m_AvailablePlayerIDs_Gamepads.empty())
 				{
 					break;
 				}
@@ -50,8 +52,8 @@ namespace MauEng
 
 					if (gamepad)
 					{
-						m_Gamepads.emplace_back(gamepad, m_AvailablePlayerIDs.back());
-						m_AvailablePlayerIDs.pop_back();
+						m_Gamepads.emplace_back(gamepad, m_AvailablePlayerIDs_Gamepads.back());
+						m_AvailablePlayerIDs_Gamepads.pop_back();
 
 						bool const result{ SDL_SetGamepadPlayerIndex(gamepad, static_cast<int>(m_Gamepads.back().playerID)) };
 						ME_ENGINE_ASSERT(result);
@@ -198,7 +200,7 @@ namespace MauEng
 	{
 		ME_PROFILE_FUNCTION()
 
-		for (auto& g : m_Gamepads)
+		for (auto const& g : m_Gamepads)
 		{
 			for (uint32_t axis{ 0 }; axis < SDL_GAMEPAD_AXIS_COUNT; ++axis)
 			{
@@ -327,7 +329,7 @@ namespace MauEng
 				ME_ENGINE_ASSERT(result);
 
 				SDL_CloseGamepad(p.gamepad);
-				m_AvailablePlayerIDs.emplace_back(p.playerID);
+				m_AvailablePlayerIDs_Gamepads.emplace_back(p.playerID);
 				std::swap(p, m_Gamepads.back());
 				m_Gamepads.pop_back();
 
@@ -400,7 +402,7 @@ namespace MauEng
 			// Gamepad
 			if (event.type == SDL_EVENT_GAMEPAD_ADDED)
 			{
-				if (not m_AvailablePlayerIDs.empty())
+				if (not m_AvailablePlayerIDs_Gamepads.empty())
 				{
 					auto const id{ event.gdevice.which };
 
@@ -421,8 +423,8 @@ namespace MauEng
 						SDL_Gamepad* gamepad{ SDL_OpenGamepad(id) };
 						if (gamepad)
 						{
-							m_Gamepads.emplace_back(gamepad, m_AvailablePlayerIDs.back());
-							m_AvailablePlayerIDs.pop_back();
+							m_Gamepads.emplace_back(gamepad, m_AvailablePlayerIDs_Gamepads.back());
+							m_AvailablePlayerIDs_Gamepads.pop_back();
 
 							bool const result{ SDL_SetGamepadPlayerIndex(gamepad, static_cast<int>(m_Gamepads.back().playerID)) };
 							ME_ENGINE_ASSERT(result);
@@ -542,10 +544,52 @@ namespace MauEng
 		for (auto& p : m_Gamepads)
 		{
 			SDL_CloseGamepad(p.gamepad);
-			m_AvailablePlayerIDs.emplace_back(p.playerID);
+			m_AvailablePlayerIDs_Gamepads.emplace_back(p.playerID);
 		}
 
 		m_Gamepads.clear();
+	}
+
+	Player const& InputManager::CreatePlayer()
+	{
+		ME_ENGINE_ASSERT(m_Players.size() <= 4);
+
+		if (m_Players.size() <= 4)
+		{
+			auto const ID{ m_AvailablePlayerIDs.back() };
+			m_AvailablePlayerIDs.pop_back();
+			
+			Player p{ ID };
+			return m_Players.emplace_back(p);
+		}
+
+		throw std::exception("could not create player");
+	}
+
+	std::vector<Player> const& InputManager::GetPlayers() const noexcept
+	{
+		return m_Players;
+	}
+
+	bool InputManager::DestroyPlayer(uint32_t playerID)
+	{
+		if (1 == std::erase_if(m_Players, [playerID](Player const& p) { return p.PlayerID() == playerID; }))
+		{
+			m_AvailablePlayerIDs.emplace_back(playerID);
+			return true;
+		}
+
+		return false;
+	}
+
+	bool InputManager::DestroyPlayer(Player const& player)
+	{
+		return DestroyPlayer(player.m_PlayerID);
+	}
+
+	uint32_t InputManager::NumPlayers() const noexcept
+	{
+		return static_cast<uint32_t>(m_Players.size());
 	}
 
 	void InputManager::SetMappingContext(std::string const& mappingContext, uint32_t playerID) noexcept
@@ -948,7 +992,7 @@ namespace MauEng
 		m_KeyboardContexts[mappingContext].mappedMouseActions[type].erase(it);
 	}
 
-	bool InputManager::HasControllerForPlayerID(uint32_t playerID) const noexcept
+	bool InputManager::HasGamepadForPlayerID(uint32_t playerID) const noexcept
 	{
 		return std::ranges::any_of(
 			m_Gamepads,

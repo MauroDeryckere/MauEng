@@ -12,11 +12,21 @@
 
 #include "SDL3/SDL_events.h"
 
+#include "Player.h"
+
 namespace MauEng
 {
 	class InputManager final : public MauCor::Singleton<InputManager>
 	{
 	public:
+		Player const& CreatePlayer();
+		std::vector<Player> const& GetPlayers() const noexcept;
+
+		bool DestroyPlayer(uint32_t playerID);
+		bool DestroyPlayer(Player const& player);
+
+		[[nodiscard]] uint32_t NumPlayers() const noexcept;
+
 		void SetMappingContext(std::string const& mappingContext, uint32_t playerID = 0) noexcept;
 		void SetKeyboardMappingContext(std::string const& mappingContext, uint32_t playerID = 0) noexcept;
 		void SetGamepadMappingContext(std::string const& mappingContext, uint32_t playerID = 0) noexcept;
@@ -39,7 +49,7 @@ namespace MauEng
 		void EraseGamepadMappingContext(std::string const& mappingContext, std::string const& newMappingContextIfErasedIsActive) noexcept;
 
 
-		[[nodiscard]] bool HasControllerForPlayerID(uint32_t playerID) const noexcept;
+		[[nodiscard]] bool HasGamepadForPlayerID(uint32_t playerID) const noexcept;
 		[[nodiscard]] uint32_t NumConnectedControllers() const noexcept;
 
 		void Clear() noexcept;
@@ -122,6 +132,7 @@ namespace MauEng
 		};
 
 		std::vector<uint32_t> m_AvailablePlayerIDs { 3, 2, 1, 0 };
+		std::vector<uint32_t> m_AvailablePlayerIDs_Gamepads { 3, 2, 1, 0 };
 		std::vector<Gamepad> m_Gamepads{};
 
 		float m_MouseX{ 0.f };
@@ -145,6 +156,7 @@ namespace MauEng
 		float m_JoystickDeadzone{ .1f };
 		float m_TriggerDeadzone{ .1f };
 
+		std::vector<Player> m_Players{};
 
 		void HandleMouseAction(SDL_Event const& event, Uint32 const evType, MouseInfo::ActionType const actType);
 		void HandleMouseHeldAndMovement();
