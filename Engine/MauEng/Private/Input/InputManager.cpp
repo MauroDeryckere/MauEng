@@ -84,7 +84,7 @@ namespace MauEng
 		CreatePlayer<Player>();
 	}
 
-	void InputManager::HandleMouseAction(SDL_Event const& event, Uint32 const evType, MouseInfo::ActionType const actType)
+	void InputManager::HandleMouseAction(SDL_Event const& event, Uint32 const evType, MouseInfo::ActionType const actType, std::array<std::unordered_map<std::string, KeyboardMouseMappingContext>::iterator, 4> const& contexts)
 	{
 		if (event.type == evType)
 		{
@@ -104,28 +104,35 @@ namespace MauEng
 
 			for (uint32_t i{ 0 }; i < m_ActiveKeyboardMouseContexts.size(); ++i)
 			{
-				auto& p{ m_ActiveKeyboardMouseContexts[i] };
-				auto const& actions{ m_KeyboardContexts[p].mappedMouseActions[static_cast<size_t>(actType)] };
-				auto const it
-				{ actions.find(
-						evType == SDL_EVENT_MOUSE_WHEEL || evType == SDL_EVENT_MOUSE_MOTION || evType == SDL_EVENT_WINDOW_MOUSE_ENTER || evType == SDL_EVENT_WINDOW_MOUSE_LEAVE
-						? 0
-						: event.button.button)
-				};
-
-				if (it != end(actions))
+				auto const& actions{ contexts[i]->second.mappedMouseActions[static_cast<size_t>(actType)]};
+				if (evType == SDL_EVENT_MOUSE_WHEEL || evType == SDL_EVENT_MOUSE_MOTION || evType == SDL_EVENT_WINDOW_MOUSE_ENTER || evType == SDL_EVENT_WINDOW_MOUSE_LEAVE)
 				{
-					for (auto const& action : it->second)
+					for (auto const& buttonActions : actions)
 					{
-						m_InputDelegateImmediate < InputEvent{i, action};
-						m_InputDelegateDelayed[i] << InputEvent{i, action};
+						for (auto const& a : buttonActions.second)
+						{
+							m_InputDelegateImmediate < InputEvent{ i, a };
+							m_InputDelegateDelayed[i] << InputEvent{ i, a };
+						}
+					}
+				}
+				else
+				{
+					auto const it{ actions.find(event.button.button) };
+					if (it != end(actions))
+					{
+						for (auto const& action : it->second)
+						{
+							m_InputDelegateImmediate < InputEvent{ i, action };
+							m_InputDelegateDelayed[i] << InputEvent{ i, action };
+						}
 					}
 				}
 			}
 		}
 	}
 
-	void InputManager::HandleMouseHeldAndMovement()
+	void InputManager::HandleMouseHeldAndMovement(std::array<std::unordered_map<std::string, KeyboardMouseMappingContext>::iterator, 4> const& contexts)
 	{
 		ME_PROFILE_FUNCTION()
 
@@ -133,15 +140,13 @@ namespace MauEng
 		float y{ m_MouseY };
 		SDL_MouseButtonFlags const mouseButtonState{ SDL_GetMouseState(&x, &y) };
 
-
 		auto handleMouseBtnHeld{ [&](int const mask, uint8_t const button)
 			{
 				if (mouseButtonState & mask)
 				{
 					for (uint32_t i{ 0 }; i < m_ActiveKeyboardMouseContexts.size(); ++i)
 					{
-						auto& p{ m_ActiveKeyboardMouseContexts[i] };
-						auto const& actions{ m_KeyboardContexts[p].mappedMouseActions[static_cast<size_t>(KeyInfo::ActionType::Held)] };
+						auto const& actions{ contexts[i]->second.mappedMouseActions[static_cast<size_t>(KeyInfo::ActionType::Held)] };
 						auto const it{ actions.find(button) };
 						if (it != end(actions))
 						{
@@ -162,7 +167,7 @@ namespace MauEng
 		handleMouseBtnHeld(SDL_BUTTON_MMASK, SDL_BUTTON_MIDDLE);
 	}
 
-	void InputManager::HandleKeyboardHeld()
+	void InputManager::HandleKeyboardHeld(std::array<std::unordered_map<std::string, KeyboardMouseMappingContext>::iterator, 4> const& contexts)
 	{
 		ME_PROFILE_FUNCTION()
 
@@ -172,8 +177,7 @@ namespace MauEng
 		{
 			for (uint32_t i{ 0 }; i < m_ActiveKeyboardMouseContexts.size(); ++i)
 			{
-				auto& p{ m_ActiveKeyboardMouseContexts[i] };
-				auto const& actions{ m_KeyboardContexts[p].mappedKeyboardActions[static_cast<size_t>(KeyInfo::ActionType::Held)] };
+				auto const& actions{ contexts[i]->second.mappedKeyboardActions[static_cast<size_t>(KeyInfo::ActionType::Held)]};
 				for (auto const& keys : actions)
 				{
 					SDL_Scancode scancode{ SDL_GetScancodeFromKey(static_cast<SDL_Keycode>(keys.first), NULL) };
@@ -190,13 +194,13 @@ namespace MauEng
 		}
 	}
 
-	void InputManager::HandleGamepadHeld()
+	void InputManager::HandleGamepadHeld(std::array<std::unordered_map<std::string, GamepadMappingContext>::iterator, 4> const& contexts)
 	{
 		ME_PROFILE_FUNCTION()
 
 		for (auto& g : m_Gamepads)
 		{
-			auto const& actions{ m_GamepadContexts[m_ActiveGamepadMappingContexts[g.playerID]].mappedGamepadActions[static_cast<size_t>(GamepadInfo::ActionType::Held)] };
+			auto const& actions{ contexts[g.playerID]->second.mappedGamepadActions[static_cast<size_t>(GamepadInfo::ActionType::Held)]};
 			for (auto const& buttons : actions)
 			{
 				SDL_GamepadButton const button{ static_cast<SDL_GamepadButton>(buttons.first) };
@@ -212,7 +216,7 @@ namespace MauEng
 		}
 	}
 
-	void InputManager::HandleGamepadAxisState()
+	void InputManager::HandleGamepadAxisState(std::array<std::unordered_map<std::string, GamepadMappingContext>::iterator, 4> const& contexts)
 	{
 		ME_PROFILE_FUNCTION()
 
@@ -259,7 +263,7 @@ namespace MauEng
 					if (not m_GamepadAxes[g.playerID].held[axis])
 					{
 						// broadaast start held
-						auto const& actions{ m_GamepadContexts[m_ActiveGamepadMappingContexts[g.playerID]].mappedGamepadActions[static_cast<size_t>(GamepadInfo::ActionType::AxisStartHeld)] };
+						auto const& actions{ contexts[g.playerID]->second.mappedGamepadActions[static_cast<size_t>(GamepadInfo::ActionType::AxisStartHeld)] };
 						auto const it{ actions.find(axis) };
 						if (it != end(actions))
 						{
@@ -273,7 +277,7 @@ namespace MauEng
 
 					m_GamepadAxes[g.playerID].held[axis] = true;
 
-					auto const& actions{ m_GamepadContexts[m_ActiveGamepadMappingContexts[g.playerID]].mappedGamepadActions[static_cast<size_t>(GamepadInfo::ActionType::AxisHeld)] };
+					auto const& actions{ contexts[g.playerID]->second.mappedGamepadActions[static_cast<size_t>(GamepadInfo::ActionType::AxisHeld)] };
 					// held action
 					auto const it{ actions.find(axis) };
 					if (it != end(actions))
@@ -290,7 +294,7 @@ namespace MauEng
 					if (m_GamepadAxes[g.playerID].held[axis])
 					{
 						// broadaast start held
-						auto const& actions{ m_GamepadContexts[m_ActiveGamepadMappingContexts[g.playerID]].mappedGamepadActions[static_cast<size_t>(GamepadInfo::ActionType::AxisReleased)] };
+						auto const& actions{ contexts[g.playerID]->second.mappedGamepadActions[static_cast<size_t>(GamepadInfo::ActionType::AxisReleased)] };
 						auto const it{ actions.find(axis) };
 						if (it != end(actions))
 						{
@@ -365,8 +369,14 @@ namespace MauEng
 
 		ResetState();
 
-		// TODO Do all lookups here once so we dont do it per event in the loop
-
+		// Do all lookups here once so we dont do it per event in the loop
+		std::array<std::unordered_map<std::string, KeyboardMouseMappingContext>::iterator, 4 > keyboardContexts{};
+		std::array<std::unordered_map<std::string, GamepadMappingContext>::iterator, 4 > gamepadContexts{};
+		for (uint32_t i{ 0 }; i < 4; ++i)
+		{
+			keyboardContexts[i] = m_KeyboardContexts.find(m_ActiveKeyboardMouseContexts[i]);
+			gamepadContexts[i] = m_GamepadContexts.find(m_ActiveGamepadMappingContexts[i]);
+		}
 
 		SDL_Event event;
 		while (SDL_PollEvent(&event))
@@ -378,12 +388,12 @@ namespace MauEng
 			}
 
 			// Mouse
-			HandleMouseAction(event, SDL_EVENT_MOUSE_BUTTON_DOWN, MouseInfo::ActionType::Down);
-			HandleMouseAction(event, SDL_EVENT_MOUSE_BUTTON_UP, MouseInfo::ActionType::Up);
-			HandleMouseAction(event, SDL_EVENT_MOUSE_WHEEL, MouseInfo::ActionType::Scrolled);
-			HandleMouseAction(event, SDL_EVENT_MOUSE_MOTION, MouseInfo::ActionType::Moved);
-			HandleMouseAction(event, SDL_EVENT_WINDOW_MOUSE_ENTER, MouseInfo::ActionType::EnteredWindow);
-			HandleMouseAction(event, SDL_EVENT_WINDOW_MOUSE_LEAVE, MouseInfo::ActionType::LeftWindow);
+			HandleMouseAction(event, SDL_EVENT_MOUSE_BUTTON_DOWN, MouseInfo::ActionType::Down, keyboardContexts);
+			HandleMouseAction(event, SDL_EVENT_MOUSE_BUTTON_UP, MouseInfo::ActionType::Up, keyboardContexts);
+			HandleMouseAction(event, SDL_EVENT_MOUSE_WHEEL, MouseInfo::ActionType::Scrolled, keyboardContexts);
+			HandleMouseAction(event, SDL_EVENT_MOUSE_MOTION, MouseInfo::ActionType::Moved, keyboardContexts);
+			HandleMouseAction(event, SDL_EVENT_WINDOW_MOUSE_ENTER, MouseInfo::ActionType::EnteredWindow, keyboardContexts);
+			HandleMouseAction(event, SDL_EVENT_WINDOW_MOUSE_LEAVE, MouseInfo::ActionType::LeftWindow, keyboardContexts);
 
 			// Keyboard
 			//Down this frame
@@ -391,8 +401,7 @@ namespace MauEng
 			{
 				for (uint32_t i{ 0 }; i < m_ActiveKeyboardMouseContexts.size(); ++i)
 				{
-					auto& p{ m_ActiveKeyboardMouseContexts[i] };
-					auto const& actions{ m_KeyboardContexts[p].mappedKeyboardActions[static_cast<size_t>(KeyInfo::ActionType::Down)] };
+					auto const& actions{ keyboardContexts[i]->second.mappedKeyboardActions[static_cast<size_t>(KeyInfo::ActionType::Down)]};
 					auto const it{ actions.find(static_cast<uint32_t>(event.key.key)) };
 					if (it != end(actions))
 					{
@@ -409,8 +418,7 @@ namespace MauEng
 			{
 				for (uint32_t i{ 0 }; i < m_ActiveKeyboardMouseContexts.size(); ++i)
 				{
-					auto& p{ m_ActiveKeyboardMouseContexts[i] };
-					auto const& actions{ m_KeyboardContexts[p].mappedKeyboardActions[static_cast<size_t>(KeyInfo::ActionType::Up)] };
+					auto const& actions{ keyboardContexts[i]->second.mappedKeyboardActions[static_cast<size_t>(KeyInfo::ActionType::Up)] };
 					auto it{ actions.find(static_cast<uint32_t>(event.key.key)) };
 					if (it != end(actions))
 					{
@@ -489,7 +497,7 @@ namespace MauEng
 				if (playerID != -1)
 				{
 					ME_ENGINE_ASSERT(playerID <= 3 && playerID >= 0);
-					auto const& actions{ m_GamepadContexts[m_ActiveGamepadMappingContexts[playerID]].mappedGamepadActions[static_cast<size_t>(GamepadInfo::ActionType::Down)] };
+					auto const& actions{ gamepadContexts[playerID]->second.mappedGamepadActions[static_cast<size_t>(GamepadInfo::ActionType::Down)] };
 					auto const it{ actions.find(static_cast<uint32_t>(event.gbutton.button)) };
 					if (it != end(actions))
 					{
@@ -510,7 +518,7 @@ namespace MauEng
 				if (playerID != -1)
 				{
 					ME_ENGINE_ASSERT(playerID <= 3 && playerID >= 0);
-					auto const& actions{ m_GamepadContexts[m_ActiveGamepadMappingContexts[playerID]].mappedGamepadActions[static_cast<size_t>(GamepadInfo::ActionType::Up)] };
+					auto const& actions{ gamepadContexts[playerID]->second.mappedGamepadActions[static_cast<size_t>(GamepadInfo::ActionType::Up)] };
 					auto const it{ actions.find(static_cast<uint32_t>(event.gbutton.button)) };
 					if (it != end(actions))
 					{
@@ -531,7 +539,7 @@ namespace MauEng
 				if (playerID != -1)
 				{
 					ME_ENGINE_ASSERT(playerID <= 3 && playerID >= 0);
-					auto const& actions{ m_GamepadContexts[m_ActiveGamepadMappingContexts[playerID]].mappedGamepadActions[static_cast<size_t>(GamepadInfo::ActionType::AxisMoved)] };
+					auto const& actions{ gamepadContexts[playerID]->second.mappedGamepadActions[static_cast<size_t>(GamepadInfo::ActionType::AxisMoved)] };
 					auto const it{ actions.find(static_cast<uint32_t>(event.gaxis.axis)) };
 					
 					if (it != end(actions))
@@ -558,10 +566,10 @@ namespace MauEng
 			}
 		}
 
-		HandleMouseHeldAndMovement();
-		HandleKeyboardHeld();
-		HandleGamepadHeld();
-		HandleGamepadAxisState();
+		HandleMouseHeldAndMovement(keyboardContexts);
+		HandleKeyboardHeld(keyboardContexts);
+		HandleGamepadHeld(gamepadContexts);
+		HandleGamepadAxisState(gamepadContexts);
 
 		return true;
 	}

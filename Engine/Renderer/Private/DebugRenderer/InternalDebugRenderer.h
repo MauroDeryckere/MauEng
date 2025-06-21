@@ -49,8 +49,8 @@ namespace MauRen
 
 		// Currently index buffer is not really being used optimally,
 		// this can be improved but may not be worth spending a lot of time on since its used for debug only.
-		std::vector<DebugVertex> m_ActivePoints;
-		std::vector<uint32_t> m_IndexBuffer;
+		std::vector<DebugVertex> m_ActivePoints{};
+		std::vector<uint32_t> m_IndexBuffer{};
 
 
 		uint32_t const MAX_LINES{ DEBUG_RENDER_LINES };

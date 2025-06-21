@@ -187,11 +187,11 @@ namespace MauEng
 
 		std::vector<std::unique_ptr<Player>> m_Players{};
 
-		void HandleMouseAction(SDL_Event const& event, Uint32 const evType, MouseInfo::ActionType const actType);
-		void HandleMouseHeldAndMovement();
-		void HandleKeyboardHeld();
-		void HandleGamepadHeld();
-		void HandleGamepadAxisState();
+		void HandleMouseAction(SDL_Event const& event, Uint32 const evType, MouseInfo::ActionType const actType, std::array<std::unordered_map<std::string, KeyboardMouseMappingContext>::iterator, 4> const& contexts);
+		void HandleMouseHeldAndMovement(std::array<std::unordered_map<std::string, KeyboardMouseMappingContext>::iterator, 4> const& contexts);
+		void HandleKeyboardHeld(std::array<std::unordered_map<std::string, KeyboardMouseMappingContext>::iterator, 4> const& contexts);
+		void HandleGamepadHeld(std::array<std::unordered_map<std::string, GamepadMappingContext>::iterator, 4> const& contexts);
+		void HandleGamepadAxisState(std::array<std::unordered_map<std::string, GamepadMappingContext>::iterator, 4> const& contexts);
 
 		void ResetState();
 	};
