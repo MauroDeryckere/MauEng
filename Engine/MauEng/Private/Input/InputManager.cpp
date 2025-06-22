@@ -610,7 +610,7 @@ namespace MauEng
 		return temp;
 	}
 
-	Player* InputManager::GetPlayer(uint32_t playerID) const
+	Player* InputManager::GetPlayer(uint32_t playerID) const noexcept
 	{
 		ME_ENGINE_ASSERT(playerID <= 3);
 		// only max 4 elements, lookup like this is fine
@@ -622,10 +622,11 @@ namespace MauEng
 			}
 		}
 
-		throw std::exception("player doesnt exist (was not created)");
+		ME_LOG_ERROR(MauCor::LogCategory::Engine, "Trying to get a player for playerID {}, but player does not exist (nullptr return)", playerID);
+		return nullptr;
 	}
 
-	bool InputManager::DestroyPlayer(uint32_t playerID)
+	bool InputManager::DestroyPlayer(uint32_t playerID) noexcept
 	{
 		if (1 == std::erase_if(m_Players, [playerID](auto& p) { return p->PlayerID() == playerID; }))
 		{
@@ -633,10 +634,11 @@ namespace MauEng
 			return true;
 		}
 
+		ME_LOG_ERROR(MauCor::LogCategory::Engine, "Trying to destroy player for playerID {} but player does not exist", playerID);
 		return false;
 	}
 
-	bool InputManager::DestroyPlayer(Player* player)
+	bool InputManager::DestroyPlayer(Player const* player) noexcept
 	{
 		return DestroyPlayer(player->PlayerID());
 	}

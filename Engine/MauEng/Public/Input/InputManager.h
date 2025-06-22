@@ -47,10 +47,12 @@ namespace MauEng
 
 		[[nodiscard]] std::vector<Player const*> const GetPlayers() const noexcept;
 		[[nodiscard]] std::vector<Player*> GetPlayers() noexcept;
-		[[nodiscard]] Player* GetPlayer(uint32_t playerID = 0) const;
 
-		bool DestroyPlayer(uint32_t playerID);
-		bool DestroyPlayer(Player* player);
+		//Returns nullptr if it does not exist
+		[[nodiscard]] Player* GetPlayer(uint32_t playerID = 0) const noexcept;
+
+		bool DestroyPlayer(uint32_t playerID) noexcept;
+		bool DestroyPlayer(Player const* player) noexcept;
 
 		[[nodiscard]] uint32_t NumPlayers() const noexcept;
 
