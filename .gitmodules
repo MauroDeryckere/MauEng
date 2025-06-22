@@ -25,6 +25,3 @@
 [submodule "Engine/Renderer/Libs/vma"]
 	path = Engine/Renderer/Libs/vma
 	url = https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git
-[submodule "Engin/Core/Libs/UUID"]
-	path = Engin/Core/Libs/UUID
-	url = https://github.com/MauroDeryckere/UUID
