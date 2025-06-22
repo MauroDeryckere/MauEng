@@ -37,7 +37,10 @@ namespace MauEng
 
 	void SceneManager::UpdateCamerasAspectRatio(float aspectRatio) noexcept
 	{
-		m_Scene->GetCameraManager().GetActiveCamera()->SetAspectRatio(aspectRatio);
+		for (auto& c : m_Scene->GetCameraManager())
+		{
+			c.second.SetAspectRatio(aspectRatio);
+		}
 	}
 
 	SceneManager::~SceneManager()
