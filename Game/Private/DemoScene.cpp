@@ -8,6 +8,8 @@ namespace MauGam
 	DemoScene::DemoScene()
 	{
 		ME_PROFILE_FUNCTION()
+
+		ME_LOG(Debug, "A Custom Category Test", "TEST");
 	}
 
 	void DemoScene::OnLoad()
@@ -934,11 +936,11 @@ namespace MauGam
 
 	void DemoScene::OnDelegate(TestEvent const& event)
 	{
-		ME_LOG_DEBUG(MauCor::LogCategory::Core, "Event test: {}", event.i);
+		ME_LOG_DEBUG(MauCor::LogCategory::Game, "Event test: {}", event.i);
 	}
 
 	void DemoScene::OnDelegateConst(TestEvent const& event) const
 	{
-		ME_LOG_DEBUG(MauCor::LogCategory::Core, "Event test (const): {}", event.i);
+		ME_LOG_DEBUG(MauCor::LogCategory::Game, "Event test (const): {}", event.i);
 	}
 }

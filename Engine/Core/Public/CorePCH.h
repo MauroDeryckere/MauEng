@@ -24,4 +24,6 @@
 
 #include "Events/Delegate.h"
 
+#include "uuid.h"
+
 #endif

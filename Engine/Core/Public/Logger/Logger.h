@@ -36,15 +36,27 @@ namespace MauCor
 			}
 
 			std::scoped_lock lock{ m_Mutex };
+			LogInternalEnumBased(priority, category, fmt::format(fmtStr, std::forward<Args>(args)...));
+		}
+		template<typename... Args>
+		void Log(LogPriority priority, std::string const& category, fmt::format_string<Args...> fmtStr, Args... args)
+		{
+			if (priority < m_LogPriority)
+			{
+				return;
+			}
+
+			std::scoped_lock lock{ m_Mutex };
 			LogInternal(priority, category, fmt::format(fmtStr, std::forward<Args>(args)...));
 		}
+
 
 		void SetPriorityLevel(LogPriority priority) noexcept;
 
 	protected:
 		Logger() = default;
 
-		virtual void LogInternal(LogPriority priority, LogCategory category, std::string const& message) = 0;
+		virtual void LogInternal(LogPriority priority, std::string const& category, std::string const& message) = 0;
 		static constexpr char const* PriorityToString(LogPriority priority) noexcept
 		{
 			switch (priority)
@@ -96,6 +108,11 @@ namespace MauCor
 		std::string Format(char const* fmt, Args&&... args)
 		{
 			return std::vformat(fmt, std::make_format_args(std::forward<Args>(args)...));
+		}
+
+		void LogInternalEnumBased(LogPriority priority, LogCategory category, std::string const& message)
+		{
+			LogInternal(priority, CategoryToString(category), message);
 		}
 	};
 }

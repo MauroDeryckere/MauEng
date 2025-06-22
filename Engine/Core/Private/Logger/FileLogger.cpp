@@ -18,14 +18,14 @@ namespace MauCor
 		}
 	}
 
-	void FileLogger::LogInternal(LogPriority priority, LogCategory category, std::string const& message)
+	void FileLogger::LogInternal(LogPriority priority, std::string const& category, std::string const& message)
 	{
 		if (m_LogFile.is_open())
 		{
 			auto const now{ std::chrono::system_clock::now() };
 			std::string const timestamp{ std::format("{:%Y-%m-%d %H:%M:%S}", std::chrono::zoned_time{ std::chrono::current_zone(), now }) };
 
-			m_LogFile << fmt::format("[{}] [{}] [{}] {}\n", timestamp, PriorityToString(priority), CategoryToString(category), message);
+			m_LogFile << fmt::format("[{}] [{}] [{}] {}\n", timestamp, PriorityToString(priority), category, message);
 
 			if (m_LogFile.tellp() >= MAX_FILE_SIZE_BEFORE_ROTATE)
 			{

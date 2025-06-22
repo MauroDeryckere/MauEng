@@ -22,4 +22,11 @@ namespace MauCor
 	};
 }
 
+MauCor::LogPriority constexpr Trace{ MauCor::LogPriority::Trace };
+MauCor::LogPriority constexpr Info{ MauCor::LogPriority::Info };
+MauCor::LogPriority constexpr Debug{ MauCor::LogPriority::Debug };
+MauCor::LogPriority constexpr Warn{ MauCor::LogPriority::Warn };
+MauCor::LogPriority constexpr Error{ MauCor::LogPriority::Error };
+MauCor::LogPriority constexpr Fatal{ MauCor::LogPriority::Fatal };
+
 #endif
