@@ -1,6 +1,8 @@
 #ifndef MAUENG_ENGINECONFIG_H
 #define MAUENG_ENGINECONFIG_H
 
+#include "Logger/LogCategories.h"
+
 namespace MauEng
 {
 	// Debug output colours
@@ -61,6 +63,21 @@ namespace MauEng
 		#define USE_OPTICK 0
 	#endif
 #endif
+
+//#define DIST_BUILD
+
+#define LOG_STRIP_LEVEL MauCor::LogPriority::Trace
+
+#ifdef DIST_BUILD
+	#undef LOG_STRIP_LEVEL
+	#define LOG_STRIP_LEVEL MauCor::LogPriority::Error
+#else
+	#ifndef _DEBUG
+		#undef LOG_STRIP_LEVEL
+		#define LOG_STRIP_LEVEL MauCor::LogPriority::Warn
+	#endif
+#endif
+
 
 	bool constexpr LIMIT_FPS{ true };
 	inline bool LOG_FPS{ true };

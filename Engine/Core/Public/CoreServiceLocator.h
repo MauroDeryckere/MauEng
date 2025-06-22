@@ -29,9 +29,12 @@ namespace MauCor
 
 #pragma region EasyAccessHelpers
 #define LOGGER MauCor::CoreServiceLocator::GetLogger()
-
 	#define ME_LOG(priority, category, fmtStr, ...) \
-				LOGGER.Log(priority, category, fmtStr, __VA_ARGS__)
+			do { \
+				if constexpr (priority >= LOG_STRIP_LEVEL) { \
+					LOGGER.Log(priority, category, fmtStr, ##__VA_ARGS__); \
+				} \
+			} while (false)
 
 	#define ME_LOG_TRACE(category, fmtStr, ...) ME_LOG(MauCor::LogPriority::Trace, category, fmtStr, __VA_ARGS__)
 	#define ME_LOG_INFO(category, fmtStr, ...) ME_LOG(MauCor::LogPriority::Info, category, fmtStr, __VA_ARGS__)
