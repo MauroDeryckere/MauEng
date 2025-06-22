@@ -38,6 +38,9 @@ target_compile_definitions(MauEngCore PUBLIC
     $<$<BOOL:${MAUENG_USE_OPTICK}>:MAUENG_USE_OPTICK>
 )
 
+set(MAU_UUID_BUILD_TESTS OFF)
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/Libs/UUID")
+
 # Tests & similar
 set(DSDL_TESTS OFF)
 set(DSDL_TEST_LIBRARY OFF)
@@ -91,6 +94,7 @@ target_link_libraries(MauEngCore
         SDL3::SDL3
         fmt::fmt # While it is not necessary to link against this publicly, users could prefer using this so might as well keep it public 
         OptickCore
+        MAU_UUID
     PRIVATE
 )
 

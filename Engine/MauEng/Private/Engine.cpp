@@ -20,14 +20,12 @@
 #include "Logger/logger.h"
 
 #include "Input/KeyInfo.h"
-
 namespace MauEng
 {
 	Engine::Engine():
 		m_Window{ std::make_unique<SDLWindow>() }
 	{
 		// Initialize all core dependences & singletons
-
 		if constexpr (ENABLE_FILE_LOGGING)
 		{
 			MauCor::CoreServiceLocator::RegisterLogger(MauCor::CreateFileLogger("Log.txt"));
