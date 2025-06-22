@@ -8,6 +8,13 @@ namespace MauGam
 	DemoScene::DemoScene()
 	{
 		ME_PROFILE_FUNCTION()
+	}
+
+	void DemoScene::OnLoad()
+	{
+		ME_PROFILE_FUNCTION()
+
+		Scene::OnLoad();
 
 		using namespace MauEng;
 
@@ -55,205 +62,198 @@ namespace MauGam
 		switch (m_Demo)
 		{
 		case EDemo::Sponza:
+		{
+			m_CameraManager.GetActiveCamera()->SetPosition({ 0, 20, 10 });
+			m_CameraManager.GetActiveCamera()->SetFOV(60.f);
+
+			m_CameraManager.GetActiveCamera()->Focus({ 1,1, 3 });
+			m_CameraManager.GetActiveCamera()->SetFar(1000);
+
 			{
-				m_CameraManager.GetActiveCamera()->SetPosition({ 0, 20, 10 });
-				m_CameraManager.GetActiveCamera()->SetFOV(60.f);
+				Entity enttSponza{ CreateEntity() };
 
-				m_CameraManager.GetActiveCamera()->Focus({ 1,1, 3 });
-				m_CameraManager.GetActiveCamera()->SetFar(1000);
+				auto& transform{ enttSponza.GetComponent<CTransform>() };
+				float constexpr SCALE{ 10.f };
+				transform.Scale({ SCALE, SCALE, SCALE });
 
-				{
-					Entity enttSponza{ CreateEntity() };
-
-					auto& transform{ enttSponza.GetComponent<CTransform>() };
-					float constexpr SCALE{ 10.f };
-					transform.Scale({ SCALE, SCALE, SCALE });
-
-					enttSponza.AddComponent<CStaticMesh>("Resources/Models/Sponza/glTF/Sponza.gltf");
-				}
-
-
-
-				{
-					Entity enttDirLight{ CreateEntity() };
-					auto& cLight{ enttDirLight.AddComponent<CLight>() };
-					cLight.lumen_lux = 100;
-					cLight.direction_position = { -1, -.5, -1 };
-					cLight.castShadows = false;
-					cLight.lightColour = { 1, 0.956, 0.84 };
-				}
-
-				//{
-				//	Entity enttPLight{ CreateEntity() };
-				//	auto& cLight{ enttPLight.AddComponent<CLight>() };
-				//	cLight.type = ELightType::POINT;
-				//	cLight.lumen_lux = 1'000'000.f;
-				//	cLight.direction_position = { 10, 40, 10 };
-				//	cLight.lightColour = { 1, 0, 0 };
-				//}
-
+				enttSponza.AddComponent<CStaticMesh>("Resources/Models/Sponza/glTF/Sponza.gltf");
 			}
-			break;
+
+
+
+			{
+				Entity enttDirLight{ CreateEntity() };
+				auto& cLight{ enttDirLight.AddComponent<CLight>() };
+				cLight.lumen_lux = 100;
+				cLight.direction_position = { -1, -.5, -1 };
+				cLight.castShadows = false;
+				cLight.lightColour = { 1, 0.956, 0.84 };
+			}
+
+			//{
+			//	Entity enttPLight{ CreateEntity() };
+			//	auto& cLight{ enttPLight.AddComponent<CLight>() };
+			//	cLight.type = ELightType::POINT;
+			//	cLight.lumen_lux = 1'000'000.f;
+			//	cLight.direction_position = { 10, 40, 10 };
+			//	cLight.lightColour = { 1, 0, 0 };
+			//}
+
+		}
+		break;
 		case EDemo::Chess:
+		{
+			m_CameraManager.GetActiveCamera()->SetPosition({ -75, 65, -75 });
+			m_CameraManager.GetActiveCamera()->SetFOV(60.f);
+
+			m_CameraManager.GetActiveCamera()->Focus({ 0,10, 0 });
+			m_CameraManager.GetActiveCamera()->SetFar(500);
+
+			SetSceneAABBOverride({ -100, -100, -100 }, { 100, 100, 100 });
+
 			{
-				m_CameraManager.GetActiveCamera()->SetPosition({ -75, 65, -75 });
-				m_CameraManager.GetActiveCamera()->SetFOV(60.f);
+				Entity enttGame{ CreateEntity() };
 
-				m_CameraManager.GetActiveCamera()->Focus({ 0,10, 0 });
-				m_CameraManager.GetActiveCamera()->SetFar(500);
+				auto& transform{ enttGame.GetComponent<CTransform>() };
+				transform.Scale({ 100, 100, 100 });
 
-				SetSceneAABBOverride({ -100, -100, -100 }, { 100, 100, 100 });
-
-				{
-					Entity enttGame{ CreateEntity() };
-
-					auto& transform{ enttGame.GetComponent<CTransform>() };
-					transform.Scale({ 100, 100, 100 });
-
-					enttGame.AddComponent<CStaticMesh>("Resources/Models/ABeautifulGame/GLTF/ABeautifulGame.gltf");
-				}
-
-				{
-					Entity enttDirLight{ CreateEntity() };
-					auto& cLight{ enttDirLight.AddComponent<CLight>() };
-					cLight.lumen_lux = 100;
-					cLight.direction_position = { -1, -1, -.5 };
-					cLight.castShadows = false;
-					cLight.lightColour = { 1, 1, .9 };
-				}
-
-				{
-					Entity enttPLight{ CreateEntity() };
-					auto& cLight{ enttPLight.AddComponent<CLight>() };
-					cLight.type = ELightType::POINT;
-					cLight.lumen_lux = 1'000'000.f;
-					cLight.direction_position = { 10, 40, 10 };
-					cLight.lightColour = { 1, 0, 0 };
-				}
+				enttGame.AddComponent<CStaticMesh>("Resources/Models/ABeautifulGame/GLTF/ABeautifulGame.gltf");
 			}
-			break;
+
+			{
+				Entity enttDirLight{ CreateEntity() };
+				auto& cLight{ enttDirLight.AddComponent<CLight>() };
+				cLight.lumen_lux = 100;
+				cLight.direction_position = { -1, -1, -.5 };
+				cLight.castShadows = false;
+				cLight.lightColour = { 1, 1, .9 };
+			}
+
+			{
+				Entity enttPLight{ CreateEntity() };
+				auto& cLight{ enttPLight.AddComponent<CLight>() };
+				cLight.type = ELightType::POINT;
+				cLight.lumen_lux = 1'000'000.f;
+				cLight.direction_position = { 10, 40, 10 };
+				cLight.lightColour = { 1, 0, 0 };
+			}
+		}
+		break;
 		case EDemo::FlightHelmet:
+		{
+			m_CameraManager.GetActiveCamera()->SetPosition({ 0, 50, -100 });
+			m_CameraManager.GetActiveCamera()->SetFOV(60.f);
+
+			m_CameraManager.GetActiveCamera()->Focus({ 1,1, 3 });
+			m_CameraManager.GetActiveCamera()->SetFar(1000);
+
+			m_CamSettings = ECamSettings::INDOOR;
+			m_CameraManager.GetActiveCamera()->SetCamSettingsIndoor();
+
 			{
-				m_CameraManager.GetActiveCamera()->SetPosition({ 0, 50, -100 });
-				m_CameraManager.GetActiveCamera()->SetFOV(60.f);
+				Entity enttHelmet{ CreateEntity() };
 
-				m_CameraManager.GetActiveCamera()->Focus({ 1,1, 3 });
-				m_CameraManager.GetActiveCamera()->SetFar(1000);
-
-				m_CamSettings = ECamSettings::INDOOR;
-				m_CameraManager.GetActiveCamera()->SetCamSettingsIndoor();
-
-				{
-					Entity enttHelmet{ CreateEntity() };
-
-					auto& transform{ enttHelmet.GetComponent<CTransform>() };
-					transform.Scale({ 100.f, 100.f, 100.f });
-					enttHelmet.AddComponent<CStaticMesh>("Resources/Models/FlightHelmet/glTF/FlightHelmet.gltf");
-				}
-
-				{
-					Entity enttDirLight{ CreateEntity() };
-					auto& cLight{ enttDirLight.AddComponent<CLight>() };
-					cLight.lumen_lux = 100;
-					cLight.direction_position = { 0, -1, 0 };
-					cLight.castShadows = false;
-					cLight.lightColour = { 1, 1, 1 };
-				}
-
-				{
-					Entity enttPLight{ CreateEntity() };
-					auto& cLight{ enttPLight.AddComponent<CLight>() };
-					cLight.type = ELightType::POINT;
-					cLight.lumen_lux = 1'000'000.f;
-					cLight.direction_position = { 50.f, 50, -20 };
-					cLight.lightColour = { 1, 0, 0 };
-				}
-
-				{
-					Entity enttPLight{ CreateEntity() };
-					auto& cLight{ enttPLight.AddComponent<CLight>() };
-					cLight.type = ELightType::POINT;
-					cLight.lumen_lux = 1'000'000.f;
-					cLight.direction_position = { -50.f, 50, -20 };
-					cLight.lightColour = { 0, 0, 1 };
-				}
-				SetSceneAABBOverride({ -100, -100, -100 }, { 100, 100, 100 });
+				auto& transform{ enttHelmet.GetComponent<CTransform>() };
+				transform.Scale({ 100.f, 100.f, 100.f });
+				enttHelmet.AddComponent<CStaticMesh>("Resources/Models/FlightHelmet/glTF/FlightHelmet.gltf");
 			}
-			break;
+
+			{
+				Entity enttDirLight{ CreateEntity() };
+				auto& cLight{ enttDirLight.AddComponent<CLight>() };
+				cLight.lumen_lux = 100;
+				cLight.direction_position = { 0, -1, 0 };
+				cLight.castShadows = false;
+				cLight.lightColour = { 1, 1, 1 };
+			}
+
+			{
+				Entity enttPLight{ CreateEntity() };
+				auto& cLight{ enttPLight.AddComponent<CLight>() };
+				cLight.type = ELightType::POINT;
+				cLight.lumen_lux = 1'000'000.f;
+				cLight.direction_position = { 50.f, 50, -20 };
+				cLight.lightColour = { 1, 0, 0 };
+			}
+
+			{
+				Entity enttPLight{ CreateEntity() };
+				auto& cLight{ enttPLight.AddComponent<CLight>() };
+				cLight.type = ELightType::POINT;
+				cLight.lumen_lux = 1'000'000.f;
+				cLight.direction_position = { -50.f, 50, -20 };
+				cLight.lightColour = { 0, 0, 1 };
+			}
+			SetSceneAABBOverride({ -100, -100, -100 }, { 100, 100, 100 });
+		}
+		break;
 		case EDemo::InstanceTest:
+		{
+			m_CameraManager.GetActiveCamera()->SetPosition({ -50, 50, -50 });
+			m_CameraManager.GetActiveCamera()->SetFOV(60.f);
+
+			m_CameraManager.GetActiveCamera()->Focus({ 0, 0, 0 });
+			m_CameraManager.GetActiveCamera()->SetFar(1000);
+
+			m_CameraManager.GetActiveCamera()->SetCamSettingsSunny16();
+
+
+			uint32_t constexpr NUM_INSTANCES{ 100'000 };
+			// Random device for seed 
+			std::random_device rd;
+			// Mersenne Twister generator
+			std::mt19937 gen(rd());
+			// Random translation range
+			std::uniform_real_distribution<float> dis(-300.0f, 300);
+
+			float constexpr FISH_SCALE_MIN{ 10.f };
+			float constexpr FISH_SCALE_MAX{ 20.f };
+			std::uniform_real_distribution<float> disScale(FISH_SCALE_MIN, FISH_SCALE_MAX);
+
+			for (size_t i{ 0 }; i < NUM_INSTANCES; i++)
 			{
-				m_CameraManager.GetActiveCamera()->SetPosition({ -50, 50, -50 });
-				m_CameraManager.GetActiveCamera()->SetFOV(60.f);
-
-				m_CameraManager.GetActiveCamera()->Focus({ 0, 0, 0 });
-				m_CameraManager.GetActiveCamera()->SetFar(1000);
-
-				m_CameraManager.GetActiveCamera()->SetCamSettingsSunny16();
-
-
-				uint32_t constexpr NUM_INSTANCES{ 100'000 };
-				// Random device for seed 
-				std::random_device rd;
-				// Mersenne Twister generator
-				std::mt19937 gen(rd());
-				// Random translation range
-				std::uniform_real_distribution<float> dis(-300.0f, 300);
-
-				float constexpr FISH_SCALE_MIN{ 10.f };
-				float constexpr FISH_SCALE_MAX{ 20.f };
-				std::uniform_real_distribution<float> disScale(FISH_SCALE_MIN, FISH_SCALE_MAX);
-
-				for (size_t i{ 0 }; i < NUM_INSTANCES; i++)
-				{
-					float const fishScale{ disScale(gen)};
-					Entity entFish{ CreateEntity() };
-					auto& transform{ entFish.GetComponent<CTransform>() };
-					transform.Translate({ dis(gen), dis(gen), dis(gen) });
-					transform.Scale({ fishScale, fishScale, fishScale });
-					entFish.AddComponent<CStaticMesh>("Resources/Models/BarramundiFish/glTF/BarramundiFish.gltf");
-				}
-
-				{
-					Entity enttDirLight{ CreateEntity() };
-					auto& cLight{ enttDirLight.AddComponent<CLight>() };
-					cLight.lumen_lux = 20'000.f;
-					cLight.direction_position = { -1, -1, -1 };
-					cLight.castShadows = false;
-					cLight.lightColour = { 0.2f, 0.2f, 1 };
-				}
+				float const fishScale{ disScale(gen) };
+				Entity entFish{ CreateEntity() };
+				auto& transform{ entFish.GetComponent<CTransform>() };
+				transform.Translate({ dis(gen), dis(gen), dis(gen) });
+				transform.Scale({ fishScale, fishScale, fishScale });
+				entFish.AddComponent<CStaticMesh>("Resources/Models/BarramundiFish/glTF/BarramundiFish.gltf");
 			}
-			break;
+
+			{
+				Entity enttDirLight{ CreateEntity() };
+				auto& cLight{ enttDirLight.AddComponent<CLight>() };
+				cLight.lumen_lux = 20'000.f;
+				cLight.direction_position = { -1, -1, -1 };
+				cLight.castShadows = false;
+				cLight.lightColour = { 0.2f, 0.2f, 1 };
+			}
+		}
+		break;
 		case EDemo::DebugRendering:
+		{
+			m_CameraManager.GetActiveCamera()->SetPosition({ -100, 100, -100 });
+			m_CameraManager.GetActiveCamera()->SetFOV(60.f);
+
+			m_CameraManager.GetActiveCamera()->Focus({ 1,1, 3 });
+			m_CameraManager.GetActiveCamera()->SetFar(800);
+
+
 			{
-				m_CameraManager.GetActiveCamera()->SetPosition({ -100, 100, -100 });
-				m_CameraManager.GetActiveCamera()->SetFOV(60.f);
-
-				m_CameraManager.GetActiveCamera()->Focus({ 1,1, 3 });
-				m_CameraManager.GetActiveCamera()->SetFar(800);
-
-
-				{
-					Entity enttDirLight{ CreateEntity() };
-					auto& cLight{ enttDirLight.AddComponent<CLight>() };
-					cLight.lumen_lux = 500.f;
-					cLight.direction_position = { -1, -1, .1f };
-					cLight.castShadows = false;
-					cLight.lightColour = { .7, .7, 1 };
-				}
-
-				SetSceneAABBOverride({ -300, -300, -300 }, { 300, 300, 300 });
+				Entity enttDirLight{ CreateEntity() };
+				auto& cLight{ enttDirLight.AddComponent<CLight>() };
+				cLight.lumen_lux = 500.f;
+				cLight.direction_position = { -1, -1, .1f };
+				cLight.castShadows = false;
+				cLight.lightColour = { .7, .7, 1 };
 			}
-			break;
+
+			SetSceneAABBOverride({ -300, -300, -300 }, { 300, 300, 300 });
+		}
+		break;
 		}
 
 		SetupInput();
-	}
-
-	void DemoScene::OnLoad()
-	{
-		ME_PROFILE_FUNCTION()
-
-		Scene::OnLoad();
 		OutputKeybinds();
 	}
 
