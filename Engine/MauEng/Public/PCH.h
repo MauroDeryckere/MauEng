@@ -11,4 +11,6 @@
 #include "Components/CTransform.h"
 #include "Components/CLight.h"
 
+#include "uuid.h"
+
 #endif
