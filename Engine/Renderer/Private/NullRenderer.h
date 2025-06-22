@@ -23,7 +23,7 @@ namespace MauRen
 		virtual void Init() override {}
 		virtual void Destroy() override {}
 
-		virtual void Render(MauEng::Camera const&) override {}
+		virtual void Render(MauEng::Camera const*) override {}
 		virtual void ResizeWindow() override {}
 
 		virtual void QueueDraw(glm::mat4 const&, MauEng::CStaticMesh const&) override {}

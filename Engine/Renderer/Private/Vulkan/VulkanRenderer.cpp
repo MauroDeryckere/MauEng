@@ -192,7 +192,7 @@ namespace MauRen
 		m_InstanceContext.Destroy();
 	}
 
-	void VulkanRenderer::Render(MauEng::Camera const& cam)
+	void VulkanRenderer::Render(MauEng::Camera const* cam)
 	{
 		DrawFrame(cam);
 
@@ -670,20 +670,20 @@ namespace MauRen
 		}
 	}
 
-	void VulkanRenderer::PreDraw(MauEng::Camera const& cam, uint32_t image)
+	void VulkanRenderer::PreDraw(MauEng::Camera const* cam, uint32_t image)
 	{
 		ME_PROFILE_FUNCTION()
 
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 
-		UpdateUniformBuffer(m_CurrentFrame, cam.GetViewMatrix(), cam.GetProjectionMatrix());
+		UpdateUniformBuffer(m_CurrentFrame, cam->GetViewMatrix(), cam->GetProjectionMatrix());
 		UpdateCamSettings(cam, m_CurrentFrame);
 		UpdateDebugVertexBuffer();
 		VulkanMeshManager::GetInstance().PreDraw(1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame], m_CurrentFrame);
 		VulkanLightManager::GetInstance().PreDraw(1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame], m_CurrentFrame);
 	}
 
-	void VulkanRenderer::DrawFrame(MauEng::Camera const& cam)
+	void VulkanRenderer::DrawFrame(MauEng::Camera const* cam)
 	{
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 
@@ -725,7 +725,7 @@ namespace MauRen
 			vkResetCommandPool(deviceContext->GetLogicalDevice(), m_CommandPoolManager.GetCommandPool(m_CurrentFrame), 0);
 		}
 
-		RecordCommandBuffer(m_CommandPoolManager.GetCommandBuffer(m_CurrentFrame), imageIndex, cam.GetProjectionMatrix() * cam.GetViewMatrix());
+		RecordCommandBuffer(m_CommandPoolManager.GetCommandBuffer(m_CurrentFrame), imageIndex, cam->GetProjectionMatrix() * cam->GetViewMatrix());
 
 		VkSubmitInfo submitInfo{};
 		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -800,20 +800,20 @@ namespace MauRen
 		memcpy(m_MappedUniformBuffers[currentImage].mapped, &ubo, sizeof(ubo));
 	}
 
-	void VulkanRenderer::UpdateCamSettings(MauEng::Camera const& cam, uint32_t currentImage)
+	void VulkanRenderer::UpdateCamSettings(MauEng::Camera const* cam, uint32_t currentImage)
 	{
 		ME_PROFILE_FUNCTION()
 
 		CamSettingsUBO const ubo
 		{
-			.aperture = cam.GetAperture(),
-			.ISO = cam.GetISO(),
-			.shutterSpeed = cam.GetShutterSpeed(),
-			.exposureOverride = cam.GetExposureOverride(),
+			.aperture = cam->GetAperture(),
+			.ISO = cam->GetISO(),
+			.shutterSpeed = cam->GetShutterSpeed(),
+			.exposureOverride = cam->GetExposureOverride(),
 
-			.mapper = static_cast<uint32_t>(cam.GetToneMapper()),
+			.mapper = static_cast<uint32_t>(cam->GetToneMapper()),
 			.isAutoExposure = 0,
-			.enableExposure = static_cast<uint32_t>(cam.IsExposureEnabled())
+			.enableExposure = static_cast<uint32_t>(cam->IsExposureEnabled())
 		};
 
 		memcpy(m_CamSettingsMappedUniformBuffers[currentImage].mapped, &ubo, sizeof(ubo));

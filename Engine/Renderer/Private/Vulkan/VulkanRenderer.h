@@ -47,7 +47,7 @@ namespace MauRen
 		virtual void Init() override;
 		virtual void Destroy() override;
 
-		virtual void Render(MauEng::Camera const& cam) override;
+		virtual void Render(MauEng::Camera const* cam) override;
 		virtual void ResizeWindow() override;
 
 		virtual uint32_t CreateLight() override;
@@ -151,12 +151,12 @@ namespace MauRen
 		void CreateSyncObjects();
 
 		// Before command buffer recording, update descriptor set, ...
-		void PreDraw(MauEng::Camera const& cam, uint32_t image);
+		void PreDraw(MauEng::Camera const* cam, uint32_t image);
 
-		void DrawFrame(MauEng::Camera const& cam);
+		void DrawFrame(MauEng::Camera const* cam);
 		void RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex, glm::mat4 const& viewProj);
 		void UpdateUniformBuffer(uint32_t currentImage, glm::mat4 const& view, glm::mat4 const& proj);
-		void UpdateCamSettings(MauEng::Camera const& cam, uint32_t currentImage);
+		void UpdateCamSettings(MauEng::Camera const* cam, uint32_t currentImage);
 
 		// Recreate the swapchain on e.g a window resize
 		bool RecreateSwapchain();

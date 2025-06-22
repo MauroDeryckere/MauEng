@@ -56,11 +56,11 @@ namespace MauGam
 		{
 		case EDemo::Sponza:
 			{
-				m_CameraManager.GetActiveCamera().SetPosition({ 0, 20, 10 });
-				m_CameraManager.GetActiveCamera().SetFOV(60.f);
+				m_CameraManager.GetActiveCamera()->SetPosition({ 0, 20, 10 });
+				m_CameraManager.GetActiveCamera()->SetFOV(60.f);
 
-				m_CameraManager.GetActiveCamera().Focus({ 1,1, 3 });
-				m_CameraManager.GetActiveCamera().SetFar(1000);
+				m_CameraManager.GetActiveCamera()->Focus({ 1,1, 3 });
+				m_CameraManager.GetActiveCamera()->SetFar(1000);
 
 				{
 					Entity enttSponza{ CreateEntity() };
@@ -96,11 +96,11 @@ namespace MauGam
 			break;
 		case EDemo::Chess:
 			{
-				m_CameraManager.GetActiveCamera().SetPosition({ -75, 65, -75 });
-				m_CameraManager.GetActiveCamera().SetFOV(60.f);
+				m_CameraManager.GetActiveCamera()->SetPosition({ -75, 65, -75 });
+				m_CameraManager.GetActiveCamera()->SetFOV(60.f);
 
-				m_CameraManager.GetActiveCamera().Focus({ 0,10, 0 });
-				m_CameraManager.GetActiveCamera().SetFar(500);
+				m_CameraManager.GetActiveCamera()->Focus({ 0,10, 0 });
+				m_CameraManager.GetActiveCamera()->SetFar(500);
 
 				SetSceneAABBOverride({ -100, -100, -100 }, { 100, 100, 100 });
 
@@ -134,14 +134,14 @@ namespace MauGam
 			break;
 		case EDemo::FlightHelmet:
 			{
-				m_CameraManager.GetActiveCamera().SetPosition({ 0, 50, -100 });
-				m_CameraManager.GetActiveCamera().SetFOV(60.f);
+				m_CameraManager.GetActiveCamera()->SetPosition({ 0, 50, -100 });
+				m_CameraManager.GetActiveCamera()->SetFOV(60.f);
 
-				m_CameraManager.GetActiveCamera().Focus({ 1,1, 3 });
-				m_CameraManager.GetActiveCamera().SetFar(1000);
+				m_CameraManager.GetActiveCamera()->Focus({ 1,1, 3 });
+				m_CameraManager.GetActiveCamera()->SetFar(1000);
 
 				m_CamSettings = ECamSettings::INDOOR;
-				m_CameraManager.GetActiveCamera().SetCamSettingsIndoor();
+				m_CameraManager.GetActiveCamera()->SetCamSettingsIndoor();
 
 				{
 					Entity enttHelmet{ CreateEntity() };
@@ -182,13 +182,13 @@ namespace MauGam
 			break;
 		case EDemo::InstanceTest:
 			{
-				m_CameraManager.GetActiveCamera().SetPosition({ -50, 50, -50 });
-				m_CameraManager.GetActiveCamera().SetFOV(60.f);
+				m_CameraManager.GetActiveCamera()->SetPosition({ -50, 50, -50 });
+				m_CameraManager.GetActiveCamera()->SetFOV(60.f);
 
-				m_CameraManager.GetActiveCamera().Focus({ 0, 0, 0 });
-				m_CameraManager.GetActiveCamera().SetFar(1000);
+				m_CameraManager.GetActiveCamera()->Focus({ 0, 0, 0 });
+				m_CameraManager.GetActiveCamera()->SetFar(1000);
 
-				m_CameraManager.GetActiveCamera().SetCamSettingsSunny16();
+				m_CameraManager.GetActiveCamera()->SetCamSettingsSunny16();
 
 
 				uint32_t constexpr NUM_INSTANCES{ 100'000 };
@@ -225,11 +225,11 @@ namespace MauGam
 			break;
 		case EDemo::DebugRendering:
 			{
-				m_CameraManager.GetActiveCamera().SetPosition({ -100, 100, -100 });
-				m_CameraManager.GetActiveCamera().SetFOV(60.f);
+				m_CameraManager.GetActiveCamera()->SetPosition({ -100, 100, -100 });
+				m_CameraManager.GetActiveCamera()->SetFOV(60.f);
 
-				m_CameraManager.GetActiveCamera().Focus({ 1,1, 3 });
-				m_CameraManager.GetActiveCamera().SetFar(800);
+				m_CameraManager.GetActiveCamera()->Focus({ 1,1, 3 });
+				m_CameraManager.GetActiveCamera()->SetFar(800);
 
 
 				{
@@ -423,19 +423,19 @@ namespace MauGam
 
 		if (player->IsActionExecuted("MoveUp"))
 		{
-			m_CameraManager.GetActiveCamera().Translate({ 0.f, 0.f, movementSpeed * TIME.ElapsedSec() * (isSprinting ? sprintModifier : 1) });
+			m_CameraManager.GetActiveCamera()->Translate({ 0.f, 0.f, movementSpeed * TIME.ElapsedSec() * (isSprinting ? sprintModifier : 1) });
 		}
 		if (player->IsActionExecuted("MoveDown"))
 		{
-			m_CameraManager.GetActiveCamera().Translate({ 0.f, 0.f, -movementSpeed * TIME.ElapsedSec() * (isSprinting ? sprintModifier : 1) });
+			m_CameraManager.GetActiveCamera()->Translate({ 0.f, 0.f, -movementSpeed * TIME.ElapsedSec() * (isSprinting ? sprintModifier : 1) });
 		}
 		if (player->IsActionExecuted("MoveLeft"))
 		{
-			m_CameraManager.GetActiveCamera().Translate({ -movementSpeed * TIME.ElapsedSec() * (isSprinting ? sprintModifier : 1), 0.f, 0.f });
+			m_CameraManager.GetActiveCamera()->Translate({ -movementSpeed * TIME.ElapsedSec() * (isSprinting ? sprintModifier : 1), 0.f, 0.f });
 		}
 		if (player->IsActionExecuted("MoveRight"))
 		{
-			m_CameraManager.GetActiveCamera().Translate({ movementSpeed * TIME.ElapsedSec() * (isSprinting ? sprintModifier : 1), 0.f, 0.f });
+			m_CameraManager.GetActiveCamera()->Translate({ movementSpeed * TIME.ElapsedSec() * (isSprinting ? sprintModifier : 1), 0.f, 0.f });
 		}
 
 		float constexpr mouseRotSpeed{ 60 };
@@ -444,8 +444,8 @@ namespace MauGam
 			auto const mouseMovement{ player->GetDeltaMouseMovement() };
 			float const rot{ mouseRotSpeed * TIME.ElapsedSec() };
 
-			m_CameraManager.GetActiveCamera().RotateX(mouseMovement.first * rot);
-			m_CameraManager.GetActiveCamera().RotateY(-mouseMovement.second * rot);
+			m_CameraManager.GetActiveCamera()->RotateX(mouseMovement.first * rot);
+			m_CameraManager.GetActiveCamera()->RotateY(-mouseMovement.second * rot);
 		}
 
 		float constexpr LIGHT_ADJUSTMENT{ 200.f };
@@ -646,20 +646,20 @@ namespace MauGam
 			switch (m_CamSettings) {
 			case ECamSettings::NoExposure:
 				camSettStr = "No Exposure";
-				GetCameraManager().GetActiveCamera().DisableExposure();
+				GetCameraManager().GetActiveCamera()->DisableExposure();
 				break;
 			case ECamSettings::SUNNY16:
 				camSettStr = "Sunny 16";
-				GetCameraManager().GetActiveCamera().SetCamSettingsSunny16();
+				GetCameraManager().GetActiveCamera()->SetCamSettingsSunny16();
 				break;
 			case ECamSettings::INDOOR:
 				camSettStr = "Indoor";
-				GetCameraManager().GetActiveCamera().SetCamSettingsIndoor();
+				GetCameraManager().GetActiveCamera()->SetCamSettingsIndoor();
 				break;
 			case ECamSettings::CUSTOM:
 				camSettStr = "Custom";
-				GetCameraManager().GetActiveCamera().EnableExposure();
-				GetCameraManager().GetActiveCamera().SetExposureOverride(1.f);
+				GetCameraManager().GetActiveCamera()->EnableExposure();
+				GetCameraManager().GetActiveCamera()->SetExposureOverride(1.f);
 				break;
 			}
 
@@ -668,13 +668,13 @@ namespace MauGam
 
 		if (player->IsActionExecuted("ToggleToneMap"))
 		{
-			uint8_t currModeID{ static_cast<uint8_t>(m_CameraManager.GetActiveCamera().GetToneMapper()) };
+			uint8_t currModeID{ static_cast<uint8_t>(m_CameraManager.GetActiveCamera()->GetToneMapper()) };
 			++currModeID;
 			currModeID %= static_cast<uint8_t>(MauEng::Camera::ToneMapper::COUNT);
-			m_CameraManager.GetActiveCamera().SetToneMapper(static_cast<MauEng::Camera::ToneMapper>(currModeID));
+			m_CameraManager.GetActiveCamera()->SetToneMapper(static_cast<MauEng::Camera::ToneMapper>(currModeID));
 
 			std::string camSettStr{ "NONE" };
-			switch (m_CameraManager.GetActiveCamera().GetToneMapper()) {
+			switch (m_CameraManager.GetActiveCamera()->GetToneMapper()) {
 			case MauEng::Camera::ToneMapper::ACESFilm:
 				camSettStr = "ACES Film";
 				break;
@@ -693,20 +693,20 @@ namespace MauGam
 
 		if (player->IsActionExecuted("LowerCustomExposure"))
 		{
-			float curr = GetCameraManager().GetActiveCamera().GetExposureOverride();
+			float curr = GetCameraManager().GetActiveCamera()->GetExposureOverride();
 			curr *= pow(2.0f, -1.0f / 3.0f); // LOWER exposure by 1/3 stop
 
-			GetCameraManager().GetActiveCamera().SetExposureOverride(curr);
+			GetCameraManager().GetActiveCamera()->SetExposureOverride(curr);
 
 			ME_LOG_INFO(MauCor::LogCategory::Game, "New exposure: {}", curr);
 		}
 
 		if (player->IsActionExecuted("HigherCustomExposure"))
 		{
-			float curr = GetCameraManager().GetActiveCamera().GetExposureOverride();
+			float curr = GetCameraManager().GetActiveCamera()->GetExposureOverride();
 			curr *= pow(2.0f, 1.0f / 3.0f); // INCREASE exposure by 1/3 stop
 
-			GetCameraManager().GetActiveCamera().SetExposureOverride(curr);
+			GetCameraManager().GetActiveCamera()->SetExposureOverride(curr);
 
 			ME_LOG_INFO(MauCor::LogCategory::Game, "New exposure: {}", curr);
 		}
@@ -722,8 +722,8 @@ namespace MauGam
 			auto const& x{ lJoy.first };
 			auto const& y{ lJoy.second };
 
-			m_CameraManager.GetActiveCamera().Translate({ 0.f, 0.f, -y * movementSpeed * TIME.ElapsedSec() * (isSprinting ? sprintModifier : 1) });
-			m_CameraManager.GetActiveCamera().Translate({ x * movementSpeed * TIME.ElapsedSec() * (isSprinting ? sprintModifier : 1), 0.f, 0.f });
+			m_CameraManager.GetActiveCamera()->Translate({ 0.f, 0.f, -y * movementSpeed * TIME.ElapsedSec() * (isSprinting ? sprintModifier : 1) });
+			m_CameraManager.GetActiveCamera()->Translate({ x * movementSpeed * TIME.ElapsedSec() * (isSprinting ? sprintModifier : 1), 0.f, 0.f });
 
 		}
 
