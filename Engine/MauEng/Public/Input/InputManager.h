@@ -22,13 +22,16 @@ namespace MauEng
 	class InputManager final : public MauCor::Singleton<InputManager>
 	{
 	public:
-		Player* CreatePlayer()
+		// Return nullptr if failed
+		Player* CreatePlayer() noexcept
 		{
 			return CreatePlayer<Player>();
 		}
+
+		// Return nullptr if failed (too many players created)
 		template<typename PlayerClass, typename... Args>
 		requires std::constructible_from<PlayerClass, uint32_t, Args...> && std::derived_from<PlayerClass, Player>
-		Player* CreatePlayer(Args&&... args)
+		Player* CreatePlayer(Args&&... args) noexcept
 		{
 			if (m_Players.size() <= 4)
 			{
@@ -38,8 +41,10 @@ namespace MauEng
 				return m_Players.emplace_back(std::make_unique<PlayerClass>(ID, std::forward<Args>(args)...)).get();
 			}
 
-			throw std::exception("could not create player");
+			ME_LOG_ERROR(MauCor::LogCategory::Engine, "Could not create player, too many players were already created (max 4)");
+			return nullptr;
 		}
+
 		[[nodiscard]] std::vector<Player const*> const GetPlayers() const noexcept;
 		[[nodiscard]] std::vector<Player*> GetPlayers() noexcept;
 		[[nodiscard]] Player* GetPlayer(uint32_t playerID = 0) const;
