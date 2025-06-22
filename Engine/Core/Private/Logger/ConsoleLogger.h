@@ -16,7 +16,7 @@ namespace MauCor
 		ConsoleLogger& operator=(ConsoleLogger const&) = delete;
 		ConsoleLogger& operator=(ConsoleLogger&&) = delete;
 	private:
-		virtual void LogInternal(LogPriority priority, std::string const& category, std::string const& message) override;
+		virtual void LogInternal(LogPriority priority, std::string_view const category, std::string_view const message) override;
 	};
 }
 

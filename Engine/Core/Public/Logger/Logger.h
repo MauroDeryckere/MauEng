@@ -39,7 +39,7 @@ namespace MauCor
 			LogInternalEnumBased(priority, category, fmt::format(fmtStr, std::forward<Args>(args)...));
 		}
 		template<typename... Args>
-		void Log(LogPriority priority, std::string const& category, fmt::format_string<Args...> fmtStr, Args... args)
+		void Log(LogPriority priority, std::string_view const category, fmt::format_string<Args...> fmtStr, Args... args)
 		{
 			if (priority < m_LogPriority)
 			{
@@ -56,7 +56,7 @@ namespace MauCor
 	protected:
 		Logger() = default;
 
-		virtual void LogInternal(LogPriority priority, std::string const& category, std::string const& message) = 0;
+		virtual void LogInternal(LogPriority priority, std::string_view category, std::string_view const message) = 0;
 		static constexpr char const* PriorityToString(LogPriority priority) noexcept
 		{
 			switch (priority)
