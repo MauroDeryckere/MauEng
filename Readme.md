@@ -1,6 +1,6 @@
 # 3D Game Engine Project
-[![Build Debug](https://github.com/Howest-DAE-GD/MauEng/actions/workflows/build-debug.yml/badge.svg)](https://github.com/Howest-DAE-GD/MauEng/actions/workflows/build-debug.yml)
-[![Build Release](https://github.com/Howest-DAE-GD/MauEng/actions/workflows/build-release.yml/badge.svg)](https://github.com/Howest-DAE-GD/MauEng/actions/workflows/build-release.yml)
+[![Build Debug](https://github.com/MauroDeryckere/MauEng/actions/workflows/build-debug.yml/badge.svg)](https://github.com/MauroDeryckere/MauEng/actions/workflows/build-debug.yml)
+[![Build Release](https://github.com/MauroDeryckere/MauEng/actions/workflows/build-release.yml/badge.svg)](https://github.com/MauroDeryckere/MauEng/actions/workflows/build-release.yml)
 
 ## Table of Contents
 - [3D Game Engine Project](#3d-game-engine-project)
