@@ -28,31 +28,9 @@ namespace MauCor
 		Logger& operator=(Logger&&) = delete;
 
 		template<typename... Args>
-		void Log(ELogPriority priority, ELogCategory category, fmt::format_string<Args...> fmtStr, Args... args)
-		{
-			if (priority < m_LogPriority)
-			{
-				return;
-			}
-
-			std::scoped_lock lock{ m_Mutex };
-			LogInternalEnumBased(priority, category, fmt::format(fmtStr, std::forward<Args>(args)...));
-		}
-		template<typename... Args>
-		void Log(ELogPriority priority, std::string_view const category, fmt::format_string<Args...> fmtStr, Args... args)
-		{
-			if (priority < m_LogPriority)
-			{
-				return;
-			}
-
-			std::scoped_lock lock{ m_Mutex };
-			LogInternal(priority, category, fmt::format(fmtStr, std::forward<Args>(args)...));
-		}
-		template<typename... Args>
 		void Log(ELogPriority priority, LogCategory const& category, fmt::format_string<Args...> fmtStr, Args... args)
 		{
-			if (priority < m_LogPriority)
+			if (priority < m_LogPriority or priority < category.GetPriority())
 			{
 				return;
 			}
@@ -65,6 +43,7 @@ namespace MauCor
 
 	protected:
 		Logger() = default;
+		friend class LogCategory;
 
 		virtual void LogInternal(ELogPriority priority, std::string_view category, std::string_view const message) = 0;
 		static constexpr char const* PriorityToString(ELogPriority priority) noexcept
@@ -97,19 +76,8 @@ namespace MauCor
 			}
 		}
 
-		static constexpr char const* CategoryToString(ELogCategory category) noexcept
-		{
-			switch (category)
-			{
-				case ELogCategory::Core: return "Core";
-				case ELogCategory::Engine: return "Engine";
-				case ELogCategory::Renderer: return "Renderer";
-				case ELogCategory::Game: return "Game";
-
-				default: return "Unknown";
-			}
-		}
 	private:
+
 		ELogPriority m_LogPriority{ LOG_STRIP_LEVEL };
 		mutable std::mutex m_Mutex{};
 
@@ -118,11 +86,6 @@ namespace MauCor
 		std::string Format(char const* fmt, Args&&... args)
 		{
 			return std::vformat(fmt, std::make_format_args(std::forward<Args>(args)...));
-		}
-
-		void LogInternalEnumBased(ELogPriority priority, ELogCategory category, std::string const& message)
-		{
-			LogInternal(priority, CategoryToString(category), message);
 		}
 	};
 }

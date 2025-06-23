@@ -328,7 +328,7 @@ namespace MauEng::ECS
 			if (IsOwned<ComponentType>())
 			{
 				// Could get the group and do the sort there automatically too
-				ME_LOG(MauCor::ELogPriority::Error, MauCor::ELogCategory::Engine, "Can not sort, trying to sort owned components (use group sort)");
+				ME_LOG(MauCor::ELogPriority::Error, LogEngine, "Can not sort, trying to sort owned components (use group sort)");
 				return;
 			}
 
@@ -349,7 +349,7 @@ namespace MauEng::ECS
 			if (IsOwned<ComponentType1, ComponentType2>())
 			{
 				// Could get the group and do the sort there automatically too
-				ME_LOG(MauCor::ELogPriority::Error, MauCor::ELogCategory::Engine, "Can not sort, trying to sort owned components (use group sort)");
+				ME_LOG(MauCor::ELogPriority::Error, LogEngine, "Can not sort, trying to sort owned components (use group sort)");
 				return;
 			}
 

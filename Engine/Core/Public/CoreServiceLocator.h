@@ -31,9 +31,9 @@ namespace MauCor
 #define LOGGER MauCor::CoreServiceLocator::GetLogger()
 	#define ME_LOG(priority, category, fmtStr, ...) \
 			do { \
-				if constexpr (priority >= LOG_STRIP_LEVEL) { \
+				if constexpr (priority >= LOG_STRIP_LEVEL || category.GetPriority() >= LOG_STRIP_LEVEL) { \
 					LOGGER.Log(priority, category, fmtStr, ##__VA_ARGS__); \
-				} \
+				}  \
 			} while (false)
 
 	#define ME_LOG_TRACE(category, fmtStr, ...) ME_LOG(MauCor::ELogPriority::Trace, category, fmtStr, __VA_ARGS__)

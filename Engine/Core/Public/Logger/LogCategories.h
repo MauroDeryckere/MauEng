@@ -13,32 +13,38 @@ namespace MauCor
 		Fatal
 	};
 
-	enum class ELogCategory : uint8_t
-	{
-		Core,
-		Engine,
-		Renderer,
-		Game
-	};
-
 	class LogCategory final
 	{
-		public:
-			explicit constexpr LogCategory(char const* name) noexcept 
-				: m_Name{ name }
-			{ }
-		constexpr char const* GetName() const noexcept { return m_Name; }
+	public:
+		explicit constexpr LogCategory(char const* name, MauCor::ELogPriority priority = MauCor::ELogPriority::Trace) noexcept
+			: m_Name{ name },
+			  m_Priority{ priority }
+		{ }
 
-		private:
-			char const* m_Name;
+		[[nodiscard]] constexpr char const* GetName() const noexcept { return m_Name; }
+		[[nodiscard]] constexpr MauCor::ELogPriority GetPriority() const noexcept { return m_Priority; }
+
+		void SetPriority(MauCor::ELogPriority priority) noexcept;
+
+	private:
+		char const* m_Name;
+		MauCor::ELogPriority m_Priority;
 	};
 }
 
-#define DEFINE_LOG_CATEGORY(CategoryName) \
-    MauCor::LogCategory CategoryName(#CategoryName);
+
+// should only be placed in one cpp file
+#define DEFINE_LOG_CATEGORY(CategoryName, ...) \
+    MauCor::LogCategory CategoryName{ #CategoryName, __VA_ARGS__ };
 
 #define DECLARE_LOG_CATEGORY_EXTERN(CategoryName) \
     extern MauCor::LogCategory CategoryName;
+
+
+DECLARE_LOG_CATEGORY_EXTERN(LogEngine);
+DECLARE_LOG_CATEGORY_EXTERN(LogRenderer);
+DECLARE_LOG_CATEGORY_EXTERN(LogCore);
+DECLARE_LOG_CATEGORY_EXTERN(LogGame);
 
 MauCor::ELogPriority constexpr Trace{ MauCor::ELogPriority::Trace };
 MauCor::ELogPriority constexpr Info{ MauCor::ELogPriority::Info };

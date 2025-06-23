@@ -33,7 +33,7 @@ namespace MauRen
 		}
 		else
 		{
-			ME_LOG_WARN(MauCor::ELogCategory::Renderer, "Debug renderer active points has surpassed the set limit, edit the config or try drawing less points! ");
+			ME_LOG_WARN(LogRenderer, "Debug renderer active points has surpassed the set limit, edit the config or try drawing less points! ");
 		}
 	}
 
@@ -245,13 +245,13 @@ namespace MauRen
 		ME_ASSERT(points.size() > 3, "Polygon must be contain more than 3 points");
 		if (points.size() <= 3)
 		{
-			ME_LOG_WARN(MauCor::ELogCategory::Renderer, "Polygon must be contain more than 3 points");
+			ME_LOG_WARN(LogRenderer, "Polygon must be contain more than 3 points");
 			return;
 		}
 
 		if (std::size(m_ActivePoints) + std::size(points) >= MAX_LINES)
 		{
-			ME_LOG_WARN(MauCor::ELogCategory::Renderer, "Debug renderer active points has surpassed the set limit, edit the config or try drawing less points! ");
+			ME_LOG_WARN(LogRenderer, "Debug renderer active points has surpassed the set limit, edit the config or try drawing less points! ");
 			return;
 		}
 
@@ -291,7 +291,7 @@ namespace MauRen
 	{
 		if (std::size(m_ActivePoints) + segments >= MAX_LINES)
 		{
-			ME_LOG_WARN(MauCor::ELogCategory::Renderer, "Debug renderer active points has surpassed the set limit, edit the config or try drawing less points! ");
+			ME_LOG_WARN(LogRenderer, "Debug renderer active points has surpassed the set limit, edit the config or try drawing less points! ");
 			return;
 		}
 
@@ -330,7 +330,7 @@ namespace MauRen
 	{
 		if (std::size(m_ActivePoints) + segments + 2 >= MAX_LINES)
 		{
-			ME_LOG_WARN(MauCor::ELogCategory::Renderer, "Debug renderer active points has surpassed the set limit, edit the config or try drawing less points! ");
+			ME_LOG_WARN(LogRenderer, "Debug renderer active points has surpassed the set limit, edit the config or try drawing less points! ");
 			return;
 		}
 
@@ -426,7 +426,7 @@ namespace MauRen
 
 		if (std::size(m_ActivePoints) + ((layers + 1) * (segments + 1)) >= MAX_LINES)
 		{
-			ME_LOG_WARN(MauCor::ELogCategory::Renderer, "Debug renderer active points has surpassed the set limit.");
+			ME_LOG_WARN(LogRenderer, "Debug renderer active points has surpassed the set limit.");
 			return;
 		}
 
@@ -488,7 +488,7 @@ namespace MauRen
 		ME_PROFILE_FUNCTION()
 			if (std::size(m_ActivePoints) + localPoints.size() >= MAX_LINES)
 			{
-				ME_LOG_WARN(MauCor::ELogCategory::Renderer, "Debug renderer active points has surpassed the set limit.");
+				ME_LOG_WARN(LogRenderer, "Debug renderer active points has surpassed the set limit.");
 				return;
 			}
 

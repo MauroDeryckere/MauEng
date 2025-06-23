@@ -12,14 +12,14 @@ namespace MauCor
 	{
 		if (isProfiling)
 		{
-			ME_LOG_INFO(MauCor::ELogCategory::Core, "Already profiling {}", fileName);
+			ME_LOG_INFO(LogCore, "Already profiling {}", fileName);
 		}
 		else
 		{
 			fileName = path;
 			fileName += std::to_string(numExecutedProfiles);
 
-			ME_LOG_INFO(MauCor::ELogCategory::Core, "Beginning profile session {}", fileName);
+			ME_LOG_INFO(LogCore, "Beginning profile session {}", fileName);
 			BeginSessionInternal(fileName);
 			isProfiling = true;
 		}
@@ -39,7 +39,7 @@ namespace MauCor
 
 			EndSession();
 
-			ME_LOG_INFO(MauCor::ELogCategory::Core, "Ending profile session {}", fileName);
+			ME_LOG_INFO(LogCore, "Ending profile session {}", fileName);
 		}
 	}
 
@@ -54,7 +54,7 @@ namespace MauCor
 		if (std::filesystem::exists(filepath))
 		{
 			std::filesystem::remove(filepath);
-			ME_LOG_WARN(ELogCategory::Core, "Existing file deleted: {}", filepath);
+			ME_LOG_WARN(LogCore, "Existing file deleted: {}", filepath);
 		}
 	}
 }

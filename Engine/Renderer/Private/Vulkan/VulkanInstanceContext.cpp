@@ -20,7 +20,7 @@ namespace MauRen
 		{
 			if (CheckValidationLayerSupport())
 			{
-				LOGGER.Log(MauCor::ELogPriority::Trace, MauCor::ELogCategory::Renderer, "All required validation layers are supported.");
+				LOGGER.Log(MauCor::ELogPriority::Trace, LogRenderer, "All required validation layers are supported.");
 			}
 			else
 			{
@@ -43,11 +43,11 @@ namespace MauRen
 
 		vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, availableExtensions.data());
 
-		LOGGER.Log(MauCor::ELogPriority::Trace, MauCor::ELogCategory::Renderer, "Available extensions: ");
+		LOGGER.Log(MauCor::ELogPriority::Trace, LogRenderer, "Available extensions: ");
 
 		for (const auto& [extensionName, specVersion] : availableExtensions)
 		{
-			LOGGER.Log(MauCor::ELogPriority::Trace, MauCor::ELogCategory::Renderer, "\tExtension: {}, versions: {} ", extensionName, specVersion);
+			LOGGER.Log(MauCor::ELogPriority::Trace, LogRenderer, "\tExtension: {}, versions: {} ", extensionName, specVersion);
 		}
 		// -------------------------------------
 
@@ -83,7 +83,7 @@ namespace MauRen
 			throw std::runtime_error("Not all required extensions are supported!");
 		}
 
-		LOGGER.Log(MauCor::ELogPriority::Trace, MauCor::ELogCategory::Renderer, "All required extensions are supported.");
+		LOGGER.Log(MauCor::ELogPriority::Trace, LogRenderer, "All required extensions are supported.");
 
 		if (vkCreateInstance(&createInfo, nullptr, &m_Instance) != VK_SUCCESS)
 		{
@@ -103,11 +103,11 @@ namespace MauRen
 			{
 				if (std::ranges::any_of(availableLayers, [&](const VkLayerProperties& props) { return layerName == props.layerName; }))
 				{
-					LOGGER.Log(MauCor::ELogPriority::Trace, MauCor::ELogCategory::Renderer, "Required validation layer \" {} \" is supported.", layerName);
+					LOGGER.Log(MauCor::ELogPriority::Trace, LogRenderer, "Required validation layer \" {} \" is supported.", layerName);
 					return true;
 				}
 
-				LOGGER.Log(MauCor::ELogPriority::Fatal, MauCor::ELogCategory::Renderer, "Required validation layer \" {} \" is NOT supported.", layerName);
+				LOGGER.Log(MauCor::ELogPriority::Fatal, LogRenderer, "Required validation layer \" {} \" is NOT supported.", layerName);
 				return false;
 			});
 	}
@@ -136,11 +136,11 @@ namespace MauRen
 			{
 				if (std::ranges::any_of(availableExtensions, [ext](const VkExtensionProperties& availableExt) { return ext == availableExt.extensionName; }))
 				{
-					LOGGER.Log(MauCor::ELogPriority::Trace, MauCor::ELogCategory::Renderer, "Required extension \" {} \" is supported.", ext);
+					LOGGER.Log(MauCor::ELogPriority::Trace, LogRenderer, "Required extension \" {} \" is supported.", ext);
 					return true;
 				}
 
-				LOGGER.Log(MauCor::ELogPriority::Fatal, MauCor::ELogCategory::Renderer, "Required extension \" {} \" is NOT supported.", ext);
+				LOGGER.Log(MauCor::ELogPriority::Fatal, LogRenderer, "Required extension \" {} \" is NOT supported.", ext);
 				return false;
 			});
 	}

@@ -107,7 +107,7 @@ namespace MauRen
 		std::vector<VkPhysicalDevice> devices(deviceCount);
 		vkEnumeratePhysicalDevices(m_InstanceContext->GetInstance(), &deviceCount, devices.data());
 
-		LOGGER.Log(MauCor::ELogPriority::Info, MauCor::ELogCategory::Renderer, "Selecting physical device.");
+		LOGGER.Log(MauCor::ELogPriority::Info, LogRenderer, "Selecting physical device.");
 
 		// Automatically select best option
 		uint32_t bestScore{ 0 };
@@ -135,7 +135,7 @@ namespace MauRen
 				}
 			}
 
-			LOGGER.Log(MauCor::ELogPriority::Info, MauCor::ELogCategory::Renderer, "Available Vulkan physical devices: \n {}", deviceList);
+			LOGGER.Log(MauCor::ELogPriority::Info, LogRenderer, "Available Vulkan physical devices: \n {}", deviceList);
 
 
 			if (m_PhysicalDevice == VK_NULL_HANDLE)
@@ -146,19 +146,19 @@ namespace MauRen
 			VkPhysicalDeviceProperties selectedProps;
 			vkGetPhysicalDeviceProperties(m_PhysicalDevice, &selectedProps);
 
-			LOGGER.Log(MauCor::ELogPriority::Info, MauCor::ELogCategory::Renderer, "Selected GPU: {}  (score: {} )" , selectedProps.deviceName, bestScore);
+			LOGGER.Log(MauCor::ELogPriority::Info, LogRenderer, "Selected GPU: {}  (score: {} )" , selectedProps.deviceName, bestScore);
 
 			uint32_t const maxDescUbos{ selectedProps.limits.maxDescriptorSetUniformBuffers };
-			LOGGER.Log(MauCor::ELogPriority::Info, MauCor::ELogCategory::Renderer, "Max per UBOS: {}", maxDescUbos);
+			LOGGER.Log(MauCor::ELogPriority::Info, LogRenderer, "Max per UBOS: {}", maxDescUbos);
 
 			// for bindless
 			uint32_t const maxSampledImages{ selectedProps.limits.maxPerStageDescriptorSampledImages };
 			const_cast<uint32_t&>(MAX_SAMPLED_IMAGES) = maxSampledImages;
-			LOGGER.Log(MauCor::ELogPriority::Info, MauCor::ELogCategory::Renderer, "Max per stage sampled images: {}", maxSampledImages);
+			LOGGER.Log(MauCor::ELogPriority::Info, LogRenderer, "Max per stage sampled images: {}", maxSampledImages);
 
 			uint32_t const maxDescriptorsPerStage{ selectedProps.limits.maxPerStageResources };
 			const_cast<uint32_t&>(MAX_DESCRIPTORS_STAGE) = maxDescriptorsPerStage;
-			LOGGER.Log(MauCor::ELogPriority::Info, MauCor::ELogCategory::Renderer, "Max per stage descriptors: {}", maxDescriptorsPerStage);
+			LOGGER.Log(MauCor::ELogPriority::Info, LogRenderer, "Max per stage descriptors: {}", maxDescriptorsPerStage);
 
 			uint32_t const maxDescriptorsPerSet{ selectedProps.limits.maxDescriptorSetSampledImages };
 			const_cast<uint32_t&>(MAX_DESCRIPTORS_SET) = maxDescriptorsPerSet;
@@ -186,7 +186,7 @@ namespace MauRen
 				}
 			}
 
-			LOGGER.Log(MauCor::ELogPriority::Info, MauCor::ELogCategory::Renderer, "Available Vulkan physical devices: \n {}", deviceList);
+			LOGGER.Log(MauCor::ELogPriority::Info, LogRenderer, "Available Vulkan physical devices: \n {}", deviceList);
 
 
 			if (selectableDevices.empty())
@@ -196,7 +196,7 @@ namespace MauRen
 
 			int selectedIndex = -1;
 
-			LOGGER.Log(MauCor::ELogPriority::Info, MauCor::ELogCategory::Renderer, "Enter the index of the GPU to use :");
+			LOGGER.Log(MauCor::ELogPriority::Info, LogRenderer, "Enter the index of the GPU to use :");
 			std::cin >> selectedIndex;
 
 			selectedIndex = std::clamp(selectedIndex, 0, static_cast<int>(selectableDevices.size()));
@@ -204,16 +204,16 @@ namespace MauRen
 			m_PhysicalDevice = selectableDevices[selectedIndex].first;
 			VkPhysicalDeviceProperties selectedProps;
 			vkGetPhysicalDeviceProperties(m_PhysicalDevice, &selectedProps);
-			LOGGER.Log(MauCor::ELogPriority::Info, MauCor::ELogCategory::Renderer, "Selected GPU: {}", selectedProps.deviceName);
+			LOGGER.Log(MauCor::ELogPriority::Info, LogRenderer, "Selected GPU: {}", selectedProps.deviceName);
 
 			// for bindless
 			uint32_t const maxSampledImages{ selectedProps.limits.maxPerStageDescriptorSampledImages };
 			const_cast<uint32_t&>(MAX_SAMPLED_IMAGES) = maxSampledImages;
-			LOGGER.Log(MauCor::ELogPriority::Info, MauCor::ELogCategory::Renderer, "Max per stage sampled images: {}", maxSampledImages);
+			LOGGER.Log(MauCor::ELogPriority::Info, LogRenderer, "Max per stage sampled images: {}", maxSampledImages);
 
 			uint32_t const maxDescriptorsPerStage{ selectedProps.limits.maxPerStageResources };
 			const_cast<uint32_t&>(MAX_DESCRIPTORS_STAGE) = maxDescriptorsPerStage;
-			LOGGER.Log(MauCor::ELogPriority::Info, MauCor::ELogCategory::Renderer, "Max per stage descriptors: {}", maxDescriptorsPerStage);
+			LOGGER.Log(MauCor::ELogPriority::Info, LogRenderer, "Max per stage descriptors: {}", maxDescriptorsPerStage);
 
 			uint32_t const maxDescriptorsPerSet{ selectedProps.limits.maxDescriptorSetSampledImages };
 			const_cast<uint32_t&>(MAX_DESCRIPTORS_SET) = maxDescriptorsPerSet;
@@ -309,14 +309,14 @@ namespace MauRen
 			// If the families are the same (unified), we can just use one queue for both
 			if (indices.IsGraphicsPresentUnified())
 			{
-				LOGGER.Log(MauCor::ELogPriority::Trace, MauCor::ELogCategory::Renderer, "Using unified graphics & present queue");
+				LOGGER.Log(MauCor::ELogPriority::Trace, LogRenderer, "Using unified graphics & present queue");
 				m_IsUsingUnifiedGraphicsPresentQueue = true;
 
 				vkGetDeviceQueue(m_LogicalDevice, indices.graphicsFamily.value(), 0, &m_UnifiedGraphicsPresentQueue);
 			}
 			else
 			{
-				LOGGER.Log(MauCor::ELogPriority::Trace, MauCor::ELogCategory::Renderer, "Using separate graphics & present queue");
+				LOGGER.Log(MauCor::ELogPriority::Trace, LogRenderer, "Using separate graphics & present queue");
 				m_IsUsingUnifiedGraphicsPresentQueue = false;
 
 				vkGetDeviceQueue(m_LogicalDevice, indices.graphicsFamily.value(), 0, &m_GraphicsQueue);
@@ -325,7 +325,7 @@ namespace MauRen
 		}
 		else
 		{
-			LOGGER.Log(MauCor::ELogPriority::Trace, MauCor::ELogCategory::Renderer, "Using separate graphics & present queue");
+			LOGGER.Log(MauCor::ELogPriority::Trace, LogRenderer, "Using separate graphics & present queue");
 			m_IsUsingUnifiedGraphicsPresentQueue = false;
 
 			vkGetDeviceQueue(m_LogicalDevice, indices.graphicsFamily.value(), 0, &m_GraphicsQueue);
@@ -345,10 +345,10 @@ namespace MauRen
 			{
 				if (std::ranges::any_of(availableExtensions, [ext](const VkExtensionProperties& availableExt) { return ext == availableExt.extensionName; }))
 				{
-					LOGGER.Log(MauCor::ELogPriority::Trace, MauCor::ELogCategory::Renderer, "Required extension \" {} \" is supported", ext);
+					LOGGER.Log(MauCor::ELogPriority::Trace, LogRenderer, "Required extension \" {} \" is supported", ext);
 					return true;
 				}
-				LOGGER.Log(MauCor::ELogPriority::Fatal, MauCor::ELogCategory::Renderer, "Required extension \" {} \" is NOT supported", ext);
+				LOGGER.Log(MauCor::ELogPriority::Fatal, LogRenderer, "Required extension \" {} \" is NOT supported", ext);
 				return false;
 			});
 	}
