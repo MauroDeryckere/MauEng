@@ -18,7 +18,7 @@ namespace MauCor
 		}
 	}
 
-	void FileLogger::LogInternal(LogPriority priority, std::string_view const category, std::string_view const message)
+	void FileLogger::LogInternal(ELogPriority priority, std::string_view const category, std::string_view const message)
 	{
 		if (m_LogFile.is_open())
 		{

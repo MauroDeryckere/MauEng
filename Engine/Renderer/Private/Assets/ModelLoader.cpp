@@ -37,7 +37,7 @@ namespace MauRen
 
 		if (!scene || !scene->HasMeshes()) 
 		{
-			ME_LOG_ERROR(MauCor::LogCategory::Renderer, "Error loading model! {}", importer.GetErrorString());
+			ME_LOG_ERROR(LogRenderer, "Error loading model! {}", importer.GetErrorString());
 			return model;
 		}
 
@@ -110,7 +110,7 @@ namespace MauRen
 			}
 			else
 			{
-				ME_LOG_WARN(MauCor::LogCategory::Renderer, "Missing texcoords for vertex {}", j);
+				ME_LOG_WARN(LogRenderer, "Missing texcoords for vertex {}", j);
 			}
 
 			Vertex vert{
@@ -144,7 +144,7 @@ namespace MauRen
 		if (AI_SUCCESS != result)
 		{
 			matStr = path + std::to_string(mesh->mMaterialIndex);
-			ME_LOG_WARN(MauCor::LogCategory::Renderer, "Setting material name manually for: {}", matStr);
+			ME_LOG_WARN(LogRenderer, "Setting material name manually for: {}", matStr);
 		}
 
 		auto& matManager{ VulkanMaterialManager::GetInstance() };

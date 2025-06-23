@@ -29,7 +29,7 @@ namespace MauEng
 		if constexpr (ENABLE_FILE_LOGGING)
 		{
 			MauCor::CoreServiceLocator::RegisterLogger(MauCor::CreateFileLogger("Log.txt"));
-			MauCor::CoreServiceLocator::GetLogger().SetPriorityLevel(MauCor::LogPriority::Warn);
+			MauCor::CoreServiceLocator::GetLogger().SetPriorityLevel(MauCor::ELogPriority::Warn);
 		}
 		else
 		{
@@ -116,7 +116,7 @@ namespace MauEng
 			{
 				if (IsMinimised)
 				{
-					LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Engine, "Window is minimized");
+					LOGGER.Log(MauCor::ELogPriority::Info, LogEngine, "Window is minimized");
 
 					elapsedTime = 0.f;
 					frameCount = 0;
@@ -129,7 +129,7 @@ namespace MauEng
 				if (elapsedTime >= 1.0f)
 				{
 					float const fps{ static_cast<float>(frameCount) / elapsedTime };
-					LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Engine, "FPS: {}", fps);
+					LOGGER.Log(MauCor::ELogPriority::Info, LogEngine, "FPS: {}", fps);
 					elapsedTime -= 1.0f;
 					frameCount = 0;
 				}

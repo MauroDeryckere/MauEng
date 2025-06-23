@@ -49,19 +49,19 @@ namespace MauRen
 
 		if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
 		{
-			LOGGER.Log(MauCor::LogPriority::Error, MauCor::LogCategory::Renderer, "{}", pCallbackData->pMessage);
+			LOGGER.Log(MauCor::ELogPriority::Error, LogRenderer, "{}", pCallbackData->pMessage);
 		}
 		else if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
 		{
-			LOGGER.Log(MauCor::LogPriority::Warn, MauCor::LogCategory::Renderer, "{}", pCallbackData->pMessage);
+			LOGGER.Log(MauCor::ELogPriority::Warn, LogRenderer, "{}", pCallbackData->pMessage);
 		}
 		else if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT)
 		{
-			LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Renderer,"{}", pCallbackData->pMessage);
+			LOGGER.Log(MauCor::ELogPriority::Info, LogRenderer,"{}", pCallbackData->pMessage);
 		}
 		else if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT)
 		{
-			LOGGER.Log(MauCor::LogPriority::Trace, MauCor::LogCategory::Renderer,"{}", pCallbackData->pMessage);
+			LOGGER.Log(MauCor::ELogPriority::Trace, LogRenderer,"{}", pCallbackData->pMessage);
 		}
 		return VK_FALSE;
 	}

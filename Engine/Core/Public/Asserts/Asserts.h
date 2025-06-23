@@ -9,9 +9,9 @@
 
 namespace MauCor
 {
-	void InternalAssert(LogCategory category, char const* expression, char const* file, int line, char const* message = nullptr) noexcept;
-	void InternalCheck(LogCategory category, char const* expression, char const* file, int line, char const* message = nullptr) noexcept;
-	void InternalVerify(LogCategory category, char const* expression, char const* file, int line, char const* message = nullptr) noexcept;
+	void InternalAssert(LogCategory const& category, char const* expression, char const* file, int line, char const* message = nullptr) noexcept;
+	void InternalCheck(LogCategory const& category, char const* expression, char const* file, int line, char const* message = nullptr) noexcept;
+	void InternalVerify(LogCategory const& category, char const* expression, char const* file, int line, char const* message = nullptr) noexcept;
 
 #pragma region Macros
 #pragma region MacrosInternal
@@ -62,9 +62,9 @@ namespace MauCor
 		    } while (0)
 
 #pragma endregion
-	#define ME_ASSERT(expr, ...) ME_ASSERT_INTERNAL(MauCor::LogCategory::Game, expr, __VA_ARGS__)
-	#define ME_CHECK(expr, ...) ME_CHECK_INTERNAL(MauCor::LogCategory::Game, expr, __VA_ARGS__)
-	#define ME_VERIFY(expr, ...) ME_VERIFY_INTERNAL(MauCor::LogCategory::Game, expr, __VA_ARGS__)
+	#define ME_ASSERT(expr, ...) ME_ASSERT_INTERNAL(LogGame, expr, __VA_ARGS__)
+	#define ME_CHECK(expr, ...) ME_CHECK_INTERNAL(LogGame, expr, __VA_ARGS__)
+	#define ME_VERIFY(expr, ...) ME_VERIFY_INTERNAL(LogGame, expr, __VA_ARGS__)
 #pragma endregion
 }
 

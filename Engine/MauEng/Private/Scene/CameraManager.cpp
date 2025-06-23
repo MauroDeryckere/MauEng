@@ -20,7 +20,7 @@ namespace MauEng
 			m_ActiveCamera = cameraID;
 			return true;
 		}
-		ME_LOG_WARN(MauCor::LogCategory::Engine, "Trying to set camera active but cameraID does not exist: {} ", cameraID);
+		ME_LOG_WARN(LogEngine, "Trying to set camera active but cameraID does not exist: {} ", cameraID);
 		return false;
 	}
 
@@ -29,7 +29,7 @@ namespace MauEng
 		auto const it{ m_Cameras.find(cameraID) };
 		if (it == m_Cameras.end())
 		{
-			ME_LOG_WARN(MauCor::LogCategory::Engine, "Trying to remove a camera but cameraID does not exist: {}", cameraID);
+			ME_LOG_WARN(LogEngine, "Trying to remove a camera but cameraID does not exist: {}", cameraID);
 			return false;
 		}
 
@@ -37,15 +37,15 @@ namespace MauEng
 
 		if (m_ActiveCamera == cameraID)
 		{
-			ME_LOG_WARN(MauCor::LogCategory::Engine, "Removed camera was the active camera, trying to set a new active camera; {}", cameraID);
+			ME_LOG_WARN(LogEngine, "Removed camera was the active camera, trying to set a new active camera; {}", cameraID);
 			if (!m_Cameras.empty())
 			{
-				ME_LOG_WARN(MauCor::LogCategory::Engine, "Setting active camera to first available camera: {}", m_Cameras.begin()->first);
+				ME_LOG_WARN(LogEngine, "Setting active camera to first available camera: {}", m_Cameras.begin()->first);
 				m_ActiveCamera = m_Cameras.begin()->first;
 				return true;
 			}
 
-			ME_LOG_ERROR(MauCor::LogCategory::Engine, "Can not set an active camera, all cameras were removed");
+			ME_LOG_ERROR(LogEngine, "Can not set an active camera, all cameras were removed");
 			m_ActiveCamera = 0;
 			return false;
 		}
@@ -68,7 +68,7 @@ namespace MauEng
 		auto const it{ m_Cameras.find(cameraID) };
 		if (it == std::end(m_Cameras))
 		{
-			ME_LOG_WARN(MauCor::LogCategory::Engine, "Trying to get a camera for a given ID but the camera doesn't exist: {}", cameraID);
+			ME_LOG_WARN(LogEngine, "Trying to get a camera for a given ID but the camera doesn't exist: {}", cameraID);
 			return nullptr;
 		}
 
@@ -80,7 +80,7 @@ namespace MauEng
 		auto const it{ m_Cameras.find(cameraID) };
 		if (it == std::end(m_Cameras))
 		{
-			ME_LOG_WARN(MauCor::LogCategory::Engine, "Trying to get a camera for a given ID but the camera doesn't exist: {}", cameraID);
+			ME_LOG_WARN(LogEngine, "Trying to get a camera for a given ID but the camera doesn't exist: {}", cameraID);
 			return nullptr;
 		}
 

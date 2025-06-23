@@ -28,79 +28,57 @@ namespace MauCor
 		Logger& operator=(Logger&&) = delete;
 
 		template<typename... Args>
-		void Log(LogPriority priority, LogCategory category, fmt::format_string<Args...> fmtStr, Args... args)
+		void Log(ELogPriority priority, LogCategory const& category, fmt::format_string<Args...> fmtStr, Args... args)
 		{
-			if (priority < m_LogPriority)
+			if (priority < m_LogPriority or priority < category.GetPriority())
 			{
 				return;
 			}
 
 			std::scoped_lock lock{ m_Mutex };
-			LogInternalEnumBased(priority, category, fmt::format(fmtStr, std::forward<Args>(args)...));
-		}
-		template<typename... Args>
-		void Log(LogPriority priority, std::string_view const category, fmt::format_string<Args...> fmtStr, Args... args)
-		{
-			if (priority < m_LogPriority)
-			{
-				return;
-			}
-
-			std::scoped_lock lock{ m_Mutex };
-			LogInternal(priority, category, fmt::format(fmtStr, std::forward<Args>(args)...));
+			LogInternal(priority, category.GetName(), fmt::format(fmtStr, std::forward<Args>(args)...));
 		}
 
-
-		void SetPriorityLevel(LogPriority priority) noexcept;
+		void SetPriorityLevel(ELogPriority priority) noexcept;
 
 	protected:
 		Logger() = default;
+		friend class LogCategory;
 
-		virtual void LogInternal(LogPriority priority, std::string_view category, std::string_view const message) = 0;
-		static constexpr char const* PriorityToString(LogPriority priority) noexcept
+		virtual void LogInternal(ELogPriority priority, std::string_view category, std::string_view const message) = 0;
+		static constexpr char const* PriorityToString(ELogPriority priority) noexcept
 		{
 			switch (priority)
 			{
-				case LogPriority::Trace: return "Trace";
-				case LogPriority::Info: return "Info";
-				case LogPriority::Debug: return "Debug";
-				case LogPriority::Warn: return "Warn";
-				case LogPriority::Error: return "Error";
-				case LogPriority::Fatal: return "Fatal";
+				case ELogPriority::Trace: return "Trace";
+				case ELogPriority::Info: return "Info";
+				case ELogPriority::Debug: return "Debug";
+				case ELogPriority::Warn: return "Warn";
+				case ELogPriority::Error: return "Error";
+				case ELogPriority::Fatal: return "Fatal";
 
 				default: return "Unknown";
 			}
 		}
 
-		static constexpr char const* PriorityToColour(LogPriority priority) noexcept
+		static constexpr char const* PriorityToColour(ELogPriority priority) noexcept
 		{
 			switch (priority)
 			{
-			case LogPriority::Trace: return MauEng::LOG_COLOR_TRACE;
-			case LogPriority::Info: return MauEng::LOG_COLOR_INFO;
-			case LogPriority::Debug: return MauEng::LOG_COLOR_DEBUG;
-			case LogPriority::Warn: return MauEng::LOG_COLOR_WARNING;
-			case LogPriority::Error: return MauEng::LOG_COLOR_ERROR;
-			case LogPriority::Fatal: return MauEng::LOG_COLOR_FATAL;
+			case ELogPriority::Trace: return MauEng::LOG_COLOR_TRACE;
+			case ELogPriority::Info: return MauEng::LOG_COLOR_INFO;
+			case ELogPriority::Debug: return MauEng::LOG_COLOR_DEBUG;
+			case ELogPriority::Warn: return MauEng::LOG_COLOR_WARNING;
+			case ELogPriority::Error: return MauEng::LOG_COLOR_ERROR;
+			case ELogPriority::Fatal: return MauEng::LOG_COLOR_FATAL;
 
 			default: return MauEng::LOG_COLOR_RESET;
 			}
 		}
 
-		static constexpr char const* CategoryToString(LogCategory category) noexcept
-		{
-			switch (category)
-			{
-				case LogCategory::Core: return "Core";
-				case LogCategory::Engine: return "Engine";
-				case LogCategory::Renderer: return "Renderer";
-				case LogCategory::Game: return "Game";
-
-				default: return "Unknown";
-			}
-		}
 	private:
-		LogPriority m_LogPriority{ LOG_STRIP_LEVEL };
+
+		ELogPriority m_LogPriority{ LOG_STRIP_LEVEL };
 		mutable std::mutex m_Mutex{};
 
 		// The std way of doing the logging, we're using fmt now but keeping this fnction in case we want to go back
@@ -108,11 +86,6 @@ namespace MauCor
 		std::string Format(char const* fmt, Args&&... args)
 		{
 			return std::vformat(fmt, std::make_format_args(std::forward<Args>(args)...));
-		}
-
-		void LogInternalEnumBased(LogPriority priority, LogCategory category, std::string const& message)
-		{
-			LogInternal(priority, CategoryToString(category), message);
 		}
 	};
 }

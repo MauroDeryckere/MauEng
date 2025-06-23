@@ -17,6 +17,8 @@
 #include "Events/Delegate.h"
 #include "Events/InputEvent.h"
 
+#include "Logger/LogCategories.h"
+
 namespace MauEng
 {
 	class InputManager final : public MauCor::Singleton<InputManager>
@@ -41,7 +43,7 @@ namespace MauEng
 				return m_Players.emplace_back(std::make_unique<PlayerClass>(ID, std::forward<Args>(args)...)).get();
 			}
 
-			ME_LOG_ERROR(MauCor::LogCategory::Engine, "Could not create player, too many players were already created (max 4)");
+			ME_LOG_ERROR(LogEngine, "Could not create player, too many players were already created (max 4)");
 			return nullptr;
 		}
 

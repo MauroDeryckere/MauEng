@@ -32,16 +32,18 @@ namespace MauCor
 	#define ME_LOG(priority, category, fmtStr, ...) \
 			do { \
 				if constexpr (priority >= LOG_STRIP_LEVEL) { \
-					LOGGER.Log(priority, category, fmtStr, ##__VA_ARGS__); \
-				} \
+					if (category.GetPriority() >= LOG_STRIP_LEVEL) { \
+						LOGGER.Log(priority, category, fmtStr, ##__VA_ARGS__); \
+					} \
+				}  \
 			} while (false)
 
-	#define ME_LOG_TRACE(category, fmtStr, ...) ME_LOG(MauCor::LogPriority::Trace, category, fmtStr, __VA_ARGS__)
-	#define ME_LOG_INFO(category, fmtStr, ...) ME_LOG(MauCor::LogPriority::Info, category, fmtStr, __VA_ARGS__)
-	#define ME_LOG_DEBUG(category, fmtStr, ...) ME_LOG(MauCor::LogPriority::Debug, category, fmtStr, __VA_ARGS__)
-	#define ME_LOG_WARN(category, fmtStr, ...) ME_LOG(MauCor::LogPriority::Warn, category, fmtStr, __VA_ARGS__)
-	#define ME_LOG_ERROR(category, fmtStr, ...) ME_LOG(MauCor::LogPriority::Error, category, fmtStr, __VA_ARGS__)
-	#define ME_LOG_FATAL(category, fmtStr, ...) ME_LOG(MauCor::LogPriority::Fatal, category, fmtStr, __VA_ARGS__)
+	#define ME_LOG_TRACE(category, fmtStr, ...) ME_LOG(MauCor::ELogPriority::Trace, category, fmtStr, __VA_ARGS__)
+	#define ME_LOG_INFO(category, fmtStr, ...) ME_LOG(MauCor::ELogPriority::Info, category, fmtStr, __VA_ARGS__)
+	#define ME_LOG_DEBUG(category, fmtStr, ...) ME_LOG(MauCor::ELogPriority::Debug, category, fmtStr, __VA_ARGS__)
+	#define ME_LOG_WARN(category, fmtStr, ...) ME_LOG(MauCor::ELogPriority::Warn, category, fmtStr, __VA_ARGS__)
+	#define ME_LOG_ERROR(category, fmtStr, ...) ME_LOG(MauCor::ELogPriority::Error, category, fmtStr, __VA_ARGS__)
+	#define ME_LOG_FATAL(category, fmtStr, ...) ME_LOG(MauCor::ELogPriority::Fatal, category, fmtStr, __VA_ARGS__)
 
 #define PROFILER MauCor::CoreServiceLocator::GetProfiler()
 	#define CONCAT(x, y) x ## y

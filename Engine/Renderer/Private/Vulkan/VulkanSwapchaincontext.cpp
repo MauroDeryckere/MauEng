@@ -185,7 +185,7 @@ namespace MauRen
 			m_SwapChainImages[i].height = m_SwapChainExtent.height;
 		}
 
-		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Renderer, "Swapchain: {} images, Format: {}, Extent: {} x {} y, Present Mode: {}", imageCount, static_cast<int>(surfaceFormat.format), extent.width, extent.height, static_cast<int>(presentMode));
+		LOGGER.Log(MauCor::ELogPriority::Info, LogRenderer, "Swapchain: {} images, Format: {}, Extent: {} x {} y, Present Mode: {}", imageCount, static_cast<int>(surfaceFormat.format), extent.width, extent.height, static_cast<int>(presentMode));
 	}
 
 	void VulkanSwapchainContext::CreateImageViews()

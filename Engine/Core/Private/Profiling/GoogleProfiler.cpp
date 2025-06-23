@@ -19,7 +19,7 @@ namespace MauCor
 
 		if (!m_OutputStream.is_open())
 		{
-			ME_LOG_ERROR(LogCategory::Core, "Failed to open the file: {}", fileName);
+			ME_LOG_ERROR(LogCore, "Failed to open the file: {}", fileName);
 			return;
 		}
 
@@ -65,7 +65,7 @@ namespace MauCor
 
 	void GoogleProfiler::WriteProfile(std::string const& name)
 	{
-		ME_LOG_ERROR(LogCategory::Core, "Incorrect profiler function for google profiler used.");
+		ME_LOG_ERROR(LogCore, "Incorrect profiler function for google profiler used.");
 		ME_CORE_CHECK(false);
 	}
 
