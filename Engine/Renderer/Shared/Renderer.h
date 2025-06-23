@@ -1,8 +1,6 @@
 #ifndef MAUREN_RENDERER_H
 #define MAUREN_RENDERER_H
 
-#include "MeshInstance.h"
-
 namespace MauEng
 {
 	class Camera;
