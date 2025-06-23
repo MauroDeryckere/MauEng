@@ -19,7 +19,7 @@ namespace MauCor
 	protected:
 
 	private:
-		virtual void LogInternal(LogPriority priority, std::string_view const category, std::string_view const message) override {}
+		virtual void LogInternal(ELogPriority priority, std::string_view const category, std::string_view const message) override {}
 	};
 }
 

@@ -25,7 +25,7 @@ namespace MauCor
 
 		const uint32_t MAX_FILE_SIZE_BEFORE_ROTATE{ 5'000 };
 
-		void LogInternal(LogPriority priority, std::string_view const category, std::string_view const message) override;
+		void LogInternal(ELogPriority priority, std::string_view const category, std::string_view const message) override;
 
 		void OpenLogFile();
 		void RotateFile();

@@ -41,7 +41,7 @@ namespace MauEng
 				return m_Players.emplace_back(std::make_unique<PlayerClass>(ID, std::forward<Args>(args)...)).get();
 			}
 
-			ME_LOG_ERROR(MauCor::LogCategory::Engine, "Could not create player, too many players were already created (max 4)");
+			ME_LOG_ERROR(MauCor::ELogCategory::Engine, "Could not create player, too many players were already created (max 4)");
 			return nullptr;
 		}
 

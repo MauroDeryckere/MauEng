@@ -66,7 +66,7 @@ namespace MauEng
 
 //#define DIST_BUILD
 
-#define LOG_STRIP_LEVEL MauCor::LogPriority::Trace
+#define LOG_STRIP_LEVEL MauCor::ELogPriority::Trace
 
 #ifdef DIST_BUILD
 	#undef LOG_STRIP_LEVEL

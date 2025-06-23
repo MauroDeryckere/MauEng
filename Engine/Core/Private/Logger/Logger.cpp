@@ -4,7 +4,7 @@
 
 namespace MauCor
 {
-	void Logger::SetPriorityLevel(LogPriority priority) noexcept
+	void Logger::SetPriorityLevel(ELogPriority priority) noexcept
 	{
 		m_LogPriority = priority;
 	}

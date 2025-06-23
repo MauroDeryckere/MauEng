@@ -66,7 +66,7 @@ namespace MauEng
 						ME_ENGINE_ASSERT(result);
 
 						ME_LOG_INFO(
-							MauCor::LogCategory::Engine,
+							MauCor::ELogCategory::Engine,
 							"Connected controller at input system init: {} player ID: {}",
 							SDL_GetGamepadName(gamepad),
 							m_Gamepads.back().playerID
@@ -342,7 +342,7 @@ namespace MauEng
 			if (p.markedForRemove)
 			{
 				ME_LOG_INFO(
-					MauCor::LogCategory::Engine,
+					MauCor::ELogCategory::Engine,
 					"Disconnected controller: {} player ID: {}",
 					SDL_GetGamepadName(p.gamepad),
 					m_Gamepads[i].playerID
@@ -462,7 +462,7 @@ namespace MauEng
 							ME_ENGINE_ASSERT(result);
 
 							ME_LOG_INFO(
-								MauCor::LogCategory::Engine,
+								MauCor::ELogCategory::Engine,
 								"Connected controller: {} player ID: {}",
 								SDL_GetGamepadName(gamepad),
 								m_Gamepads.back().playerID
@@ -622,7 +622,7 @@ namespace MauEng
 			}
 		}
 
-		ME_LOG_ERROR(MauCor::LogCategory::Engine, "Trying to get a player for playerID {}, but player does not exist (nullptr return)", playerID);
+		ME_LOG_ERROR(MauCor::ELogCategory::Engine, "Trying to get a player for playerID {}, but player does not exist (nullptr return)", playerID);
 		return nullptr;
 	}
 
@@ -634,7 +634,7 @@ namespace MauEng
 			return true;
 		}
 
-		ME_LOG_ERROR(MauCor::LogCategory::Engine, "Trying to destroy player for playerID {} but player does not exist", playerID);
+		ME_LOG_ERROR(MauCor::ELogCategory::Engine, "Trying to destroy player for playerID {} but player does not exist", playerID);
 		return false;
 	}
 
@@ -659,7 +659,7 @@ namespace MauEng
 		auto const it{ m_KeyboardContexts.find(mappingContext) };
 		if (it == end(m_KeyboardContexts))
 		{
-			ME_LOG_WARN(MauCor::LogCategory::Engine, "Creating new mapping context in SetKeyboardMappingContext; {} was not created yet", mappingContext);
+			ME_LOG_WARN(MauCor::ELogCategory::Engine, "Creating new mapping context in SetKeyboardMappingContext; {} was not created yet", mappingContext);
 			auto insertedIt{ m_KeyboardContexts.emplace(mappingContext, KeyboardMouseMappingContext{}) };
 			auto& context{ insertedIt.first->second };
 			context.mappedKeyboardActions.resize(static_cast<size_t>(KeyInfo::ActionType::COUNT));
@@ -674,7 +674,7 @@ namespace MauEng
 		auto const it{ m_GamepadContexts.find(mappingContext) };
 		if (it == end(m_GamepadContexts))
 		{
-			ME_LOG_WARN(MauCor::LogCategory::Engine, "Creating new mapping context in SetGamepadMappingContext; {} was not created yet", mappingContext);
+			ME_LOG_WARN(MauCor::ELogCategory::Engine, "Creating new mapping context in SetGamepadMappingContext; {} was not created yet", mappingContext);
 			auto insertedIt{ m_GamepadContexts.emplace(mappingContext, GamepadMappingContext{}) };
 			auto& context{ insertedIt.first->second };
 			context.mappedGamepadActions.resize(static_cast<size_t>(GamepadInfo::ActionType::COUNT));
@@ -700,7 +700,7 @@ namespace MauEng
 		auto it{ m_KeyboardContexts.find(mappingContext) };
 		if (it == end(m_KeyboardContexts))
 		{
-			ME_LOG_WARN(MauCor::LogCategory::Engine, "Creating new mapping context in BindAction; {} was not created yet", mappingContext);
+			ME_LOG_WARN(MauCor::ELogCategory::Engine, "Creating new mapping context in BindAction; {} was not created yet", mappingContext);
 			auto insertedIt{ m_KeyboardContexts.emplace(mappingContext, KeyboardMouseMappingContext{}) };
 			auto& context{ insertedIt.first->second };
 			context.mappedKeyboardActions.resize(static_cast<size_t>(KeyInfo::ActionType::COUNT));
@@ -719,7 +719,7 @@ namespace MauEng
 		auto it{ m_KeyboardContexts.find(mappingContext) };
 		if (it == end(m_KeyboardContexts))
 		{
-			ME_LOG_WARN(MauCor::LogCategory::Engine, "Creating new mapping context in BindAction; {} was not created yet", mappingContext);
+			ME_LOG_WARN(MauCor::ELogCategory::Engine, "Creating new mapping context in BindAction; {} was not created yet", mappingContext);
 			auto insertedIt{ m_KeyboardContexts.emplace(mappingContext, KeyboardMouseMappingContext{}) };
 			auto& context{ insertedIt.first->second };
 			context.mappedKeyboardActions.resize(static_cast<size_t>(KeyInfo::ActionType::COUNT));
@@ -752,7 +752,7 @@ namespace MauEng
 		auto it{ m_GamepadContexts.find(mappingContext) };
 		if (it == end(m_GamepadContexts))
 		{
-			ME_LOG_WARN(MauCor::LogCategory::Engine, "Creating new mapping context in BindAction; {} was not created yet", mappingContext);
+			ME_LOG_WARN(MauCor::ELogCategory::Engine, "Creating new mapping context in BindAction; {} was not created yet", mappingContext);
 			auto insertedIt{ m_GamepadContexts.emplace(mappingContext, GamepadMappingContext{}) };
 			auto& context{ insertedIt.first->second };
 			context.mappedGamepadActions.resize(static_cast<size_t>(GamepadInfo::ActionType::COUNT));
@@ -792,7 +792,7 @@ namespace MauEng
 		}
 		else
 		{
-			ME_LOG_WARN(MauCor::LogCategory::Engine, "Trying to unbind action for mapping context that doesn't exist for gamepad: {}", mappingContext);
+			ME_LOG_WARN(MauCor::ELogCategory::Engine, "Trying to unbind action for mapping context that doesn't exist for gamepad: {}", mappingContext);
 		}	
 	}
 
@@ -840,7 +840,7 @@ namespace MauEng
 		}
 		else
 		{
-			ME_LOG_WARN(MauCor::LogCategory::Engine, "Trying to unbind action for mapping context that doesnt exist (keyboard & mouse) {}", mappingContext);
+			ME_LOG_WARN(MauCor::ELogCategory::Engine, "Trying to unbind action for mapping context that doesnt exist (keyboard & mouse) {}", mappingContext);
 		}
 	}
 
@@ -855,7 +855,7 @@ namespace MauEng
 		auto const contextIt{ m_KeyboardContexts.find(mappingContext) };
 		if (contextIt == end(m_KeyboardContexts))
 		{
-			ME_LOG_WARN(MauCor::LogCategory::Engine, "Trying to unbind all actions (for a given keyinfo) for a mapping context that does not exist: {}", mappingContext);
+			ME_LOG_WARN(MauCor::ELogCategory::Engine, "Trying to unbind all actions (for a given keyinfo) for a mapping context that does not exist: {}", mappingContext);
 			return;
 		}
 		
@@ -885,7 +885,7 @@ namespace MauEng
 		auto const contextIt{ m_KeyboardContexts.find(mappingContext) };
 		if (contextIt == end(m_KeyboardContexts))
 		{
-			ME_LOG_WARN(MauCor::LogCategory::Engine, "Trying to unbind all actions (for a given mouseInfo) for a mapping context that does not exist: {}", mappingContext);
+			ME_LOG_WARN(MauCor::ELogCategory::Engine, "Trying to unbind all actions (for a given mouseInfo) for a mapping context that does not exist: {}", mappingContext);
 			return;
 		}
 	
@@ -915,7 +915,7 @@ namespace MauEng
 		auto const contextIt{ m_GamepadContexts.find(mappingContext) };
 		if (contextIt == end(m_GamepadContexts))
 		{
-			ME_LOG_WARN(MauCor::LogCategory::Engine, "Trying to unbind all actions (for a given gamepadinfo) for a mapping context that does not exist: {}", mappingContext);
+			ME_LOG_WARN(MauCor::ELogCategory::Engine, "Trying to unbind all actions (for a given gamepadinfo) for a mapping context that does not exist: {}", mappingContext);
 			return;
 		}
 		
@@ -1004,7 +1004,7 @@ namespace MauEng
 		}
 		else
 		{
-			ME_LOG_WARN(MauCor::LogCategory::Engine, "Trying to erase mapping context that does not exist: {}", mappingContext);
+			ME_LOG_WARN(MauCor::ELogCategory::Engine, "Trying to erase mapping context that does not exist: {}", mappingContext);
 			return;
 		}
 
@@ -1034,7 +1034,7 @@ namespace MauEng
 		}
 		else
 		{
-			ME_LOG_WARN(MauCor::LogCategory::Engine, "Trying to erase mapping context that does not exist: {}", mappingContext);
+			ME_LOG_WARN(MauCor::ELogCategory::Engine, "Trying to erase mapping context that does not exist: {}", mappingContext);
 			return;
 		}
 

@@ -5,11 +5,14 @@
 
 namespace MauGam
 {
+	DEFINE_LOG_CATEGORY(TestLogCategory)
+
 	DemoScene::DemoScene()
 	{
 		ME_PROFILE_FUNCTION()
 
 		ME_LOG(Debug, "A Custom Category Test", "TEST");
+		ME_LOG(Debug, TestLogCategory, "TEST");
 	}
 
 	void DemoScene::OnLoad()
@@ -457,7 +460,7 @@ namespace MauGam
 			view.Each([LIGHT_ADJUSTMENT](MauEng::CLight& light)
 				{
 					light.lumen_lux -= LIGHT_ADJUSTMENT;
-					ME_LOG_INFO(MauCor::LogCategory::Game, "Light intensity: {}", light.lumen_lux);
+					ME_LOG_INFO(MauCor::ELogCategory::Game, "Light intensity: {}", light.lumen_lux);
 				});
 		}
 
@@ -477,14 +480,14 @@ namespace MauGam
 
 					}
 					light.lumen_lux += LIGHT_ADJUSTMENT;
-					ME_LOG_INFO(MauCor::LogCategory::Game, "Light intensity ({}): {}", lightTypeStr, light.lumen_lux);
+					ME_LOG_INFO(MauCor::ELogCategory::Game, "Light intensity ({}): {}", lightTypeStr, light.lumen_lux);
 				});
 		}
 
 		if (player->IsActionExecuted("ToggleShadows"))
 		{
 			m_CastShadows = not m_CastShadows;
-			ME_LOG_INFO(MauCor::LogCategory::Game, "Shadows: {}", m_CastShadows);
+			ME_LOG_INFO(MauCor::ELogCategory::Game, "Shadows: {}", m_CastShadows);
 
 			auto view{ GetECSWorld().View<MauEng::CLight>() };
 			view.Each([this](MauEng::CLight& light)
@@ -512,7 +515,7 @@ namespace MauGam
 				lightMode = "Point And Directional";
 				break;
 			}
-			ME_LOG_INFO(MauCor::LogCategory::Game, "Light mode: {}", lightMode);
+			ME_LOG_INFO(MauCor::ELogCategory::Game, "Light mode: {}", lightMode);
 
 			auto view{ GetECSWorld().View<MauEng::CLight>() };
 			view.Each([this](MauEng::CLight& light)
@@ -555,13 +558,13 @@ namespace MauGam
 		if (player->IsActionExecuted("ToggleLightDebugRendering"))
 		{
 			m_DebugRenderLight = not m_DebugRenderLight;
-			ME_LOG_INFO(MauCor::LogCategory::Game, "Debug render light: {}", m_DebugRenderLight);
+			ME_LOG_INFO(MauCor::ELogCategory::Game, "Debug render light: {}", m_DebugRenderLight);
 		}
 
 		if (player->IsActionExecuted("ToggleRotation"))
 		{
 			m_Rotate = not m_Rotate;
-			ME_LOG_INFO(MauCor::LogCategory::Game, "Scene rotation: {}", m_Rotate);
+			ME_LOG_INFO(MauCor::ELogCategory::Game, "Scene rotation: {}", m_Rotate);
 		}
 
 		if (player->IsActionExecuted("ToggleDebugRenderMode"))
@@ -602,12 +605,12 @@ namespace MauGam
 				break;
 			}
 
-			ME_LOG_INFO(MauCor::LogCategory::Game, "Debug Render Mode: {}", debModeStr);
+			ME_LOG_INFO(MauCor::ELogCategory::Game, "Debug Render Mode: {}", debModeStr);
 		}
 
 		if (player->IsActionExecuted("RandomizeLightColours"))
 		{
-			ME_LOG_INFO(MauCor::LogCategory::Game, "Randomizing light colours");
+			ME_LOG_INFO(MauCor::ELogCategory::Game, "Randomizing light colours");
 
 			auto view{ GetECSWorld().View<MauEng::CLight>() };
 			view.Each([](MauEng::CLight& light)
@@ -631,7 +634,7 @@ namespace MauGam
 					std::uniform_real_distribution<float> dis(0, 1.f);
 
 					light.lightColour= { dis(gen), dis(gen), dis(gen) };
-					ME_LOG_INFO(MauCor::LogCategory::Game, "Light Colour ({}): [{:.2f}, {:.2f}, {:.2f}]", lightTypeStr, light.lightColour.x, light.lightColour.y, light.lightColour.z);
+					ME_LOG_INFO(MauCor::ELogCategory::Game, "Light Colour ({}): [{:.2f}, {:.2f}, {:.2f}]", lightTypeStr, light.lightColour.x, light.lightColour.y, light.lightColour.z);
 				}
 			);
 
@@ -665,7 +668,7 @@ namespace MauGam
 				break;
 			}
 
-			ME_LOG_INFO(MauCor::LogCategory::Game, "Cam Settings: {}", camSettStr);
+			ME_LOG_INFO(MauCor::ELogCategory::Game, "Cam Settings: {}", camSettStr);
 		}
 
 		if (player->IsActionExecuted("ToggleToneMap"))
@@ -690,7 +693,7 @@ namespace MauGam
 				break;
 			}
 
-			ME_LOG_INFO(MauCor::LogCategory::Game, "Cam Tone mapper: {}", camSettStr);
+			ME_LOG_INFO(MauCor::ELogCategory::Game, "Cam Tone mapper: {}", camSettStr);
 		}
 
 		if (player->IsActionExecuted("LowerCustomExposure"))
@@ -700,7 +703,7 @@ namespace MauGam
 
 			GetCameraManager().GetActiveCamera()->SetExposureOverride(curr);
 
-			ME_LOG_INFO(MauCor::LogCategory::Game, "New exposure: {}", curr);
+			ME_LOG_INFO(MauCor::ELogCategory::Game, "New exposure: {}", curr);
 		}
 
 		if (player->IsActionExecuted("HigherCustomExposure"))
@@ -710,7 +713,7 @@ namespace MauGam
 
 			GetCameraManager().GetActiveCamera()->SetExposureOverride(curr);
 
-			ME_LOG_INFO(MauCor::LogCategory::Game, "New exposure: {}", curr);
+			ME_LOG_INFO(MauCor::ELogCategory::Game, "New exposure: {}", curr);
 		}
 
 		if (player->IsActionExecuted("PrintInfo"))
@@ -731,12 +734,12 @@ namespace MauGam
 
 		if (player->IsActionExecuted("AxisReleasedTest"))
 		{
-			ME_LOG_DEBUG(MauCor::LogCategory::Game, "Left trigger axis released");
+			ME_LOG_DEBUG(MauCor::ELogCategory::Game, "Left trigger axis released");
 		}
 
 		if (player->IsActionExecuted("AxisStartHeldTest"))
 		{
-			ME_LOG_DEBUG(MauCor::LogCategory::Game, "Left trigger axis start hold");
+			ME_LOG_DEBUG(MauCor::ELogCategory::Game, "Left trigger axis start hold");
 		}
 	}
 
@@ -910,37 +913,37 @@ namespace MauGam
 
 	void DemoScene::OutputKeybinds()
 	{
-		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "Demo Scene Info");
-		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "Key binds: ");
-		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "SPACE: Print this screen");
+		LOGGER.Log(MauCor::ELogPriority::Info, MauCor::ELogCategory::Game, "Demo Scene Info");
+		LOGGER.Log(MauCor::ELogPriority::Info, MauCor::ELogCategory::Game, "Key binds: ");
+		LOGGER.Log(MauCor::ELogPriority::Info, MauCor::ELogCategory::Game, "SPACE: Print this screen");
 
-		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F1: Profile");
-		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F2: Toggle light debug rendering");
-		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F3: Toggle light mode - point light only; dir light only, both");
-		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F4: Toggle shadows");
-		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F5: Lower light intensity");
-		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F6: Higher light intensity");
-		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F7: Toggle scene rotation");
-		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F8: Toggle Debug render mode");
-		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F9: Randomize light colours");
-		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F10: Toggle Cam settings");
-		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "F11: Toggle Tone map\n");
+		LOGGER.Log(MauCor::ELogPriority::Info, MauCor::ELogCategory::Game, "F1: Profile");
+		LOGGER.Log(MauCor::ELogPriority::Info, MauCor::ELogCategory::Game, "F2: Toggle light debug rendering");
+		LOGGER.Log(MauCor::ELogPriority::Info, MauCor::ELogCategory::Game, "F3: Toggle light mode - point light only; dir light only, both");
+		LOGGER.Log(MauCor::ELogPriority::Info, MauCor::ELogCategory::Game, "F4: Toggle shadows");
+		LOGGER.Log(MauCor::ELogPriority::Info, MauCor::ELogCategory::Game, "F5: Lower light intensity");
+		LOGGER.Log(MauCor::ELogPriority::Info, MauCor::ELogCategory::Game, "F6: Higher light intensity");
+		LOGGER.Log(MauCor::ELogPriority::Info, MauCor::ELogCategory::Game, "F7: Toggle scene rotation");
+		LOGGER.Log(MauCor::ELogPriority::Info, MauCor::ELogCategory::Game, "F8: Toggle Debug render mode");
+		LOGGER.Log(MauCor::ELogPriority::Info, MauCor::ELogCategory::Game, "F9: Randomize light colours");
+		LOGGER.Log(MauCor::ELogPriority::Info, MauCor::ELogCategory::Game, "F10: Toggle Cam settings");
+		LOGGER.Log(MauCor::ELogPriority::Info, MauCor::ELogCategory::Game, "F11: Toggle Tone map\n");
 
-		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "E: Lower exposure (custom exposure mode)");
-		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "R: Higher exposure (custom exposure mode)\n");
+		LOGGER.Log(MauCor::ELogPriority::Info, MauCor::ELogCategory::Game, "E: Lower exposure (custom exposure mode)");
+		LOGGER.Log(MauCor::ELogPriority::Info, MauCor::ELogCategory::Game, "R: Higher exposure (custom exposure mode)\n");
 
-		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "WASD | ARROWS: Move Camera");
-		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "Mouse movement: Rotate Camera");
-		LOGGER.Log(MauCor::LogPriority::Info, MauCor::LogCategory::Game, "Left control: \"Sprint\"");
+		LOGGER.Log(MauCor::ELogPriority::Info, MauCor::ELogCategory::Game, "WASD | ARROWS: Move Camera");
+		LOGGER.Log(MauCor::ELogPriority::Info, MauCor::ELogCategory::Game, "Mouse movement: Rotate Camera");
+		LOGGER.Log(MauCor::ELogPriority::Info, MauCor::ELogCategory::Game, "Left control: \"Sprint\"");
 	}
 
 	void DemoScene::OnDelegate(TestEvent const& event)
 	{
-		ME_LOG_DEBUG(MauCor::LogCategory::Game, "Event test: {}", event.i);
+		ME_LOG_DEBUG(MauCor::ELogCategory::Game, "Event test: {}", event.i);
 	}
 
 	void DemoScene::OnDelegateConst(TestEvent const& event) const
 	{
-		ME_LOG_DEBUG(MauCor::LogCategory::Game, "Event test (const): {}", event.i);
+		ME_LOG_DEBUG(MauCor::ELogCategory::Game, "Event test (const): {}", event.i);
 	}
 }

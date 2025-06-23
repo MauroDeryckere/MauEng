@@ -5,6 +5,8 @@
 
 namespace MauGam
 {
+	DECLARE_LOG_CATEGORY_EXTERN(TestLogCategory)
+
 	struct TestEvent
 	{
 		int i = 10;

@@ -3,7 +3,7 @@
 
 namespace MauCor
 {
-	enum class LogPriority : uint8_t
+	enum class ELogPriority : uint8_t
 	{
 		Trace,
 		Info,
@@ -13,20 +13,38 @@ namespace MauCor
 		Fatal
 	};
 
-	enum class LogCategory : uint8_t
+	enum class ELogCategory : uint8_t
 	{
 		Core,
 		Engine,
 		Renderer,
 		Game
 	};
+
+	class LogCategory final
+	{
+		public:
+			explicit constexpr LogCategory(char const* name) noexcept 
+				: m_Name{ name }
+			{ }
+		constexpr char const* GetName() const noexcept { return m_Name; }
+
+		private:
+			char const* m_Name;
+	};
 }
 
-MauCor::LogPriority constexpr Trace{ MauCor::LogPriority::Trace };
-MauCor::LogPriority constexpr Info{ MauCor::LogPriority::Info };
-MauCor::LogPriority constexpr Debug{ MauCor::LogPriority::Debug };
-MauCor::LogPriority constexpr Warn{ MauCor::LogPriority::Warn };
-MauCor::LogPriority constexpr Error{ MauCor::LogPriority::Error };
-MauCor::LogPriority constexpr Fatal{ MauCor::LogPriority::Fatal };
+#define DEFINE_LOG_CATEGORY(CategoryName) \
+    MauCor::LogCategory CategoryName(#CategoryName);
+
+#define DECLARE_LOG_CATEGORY_EXTERN(CategoryName) \
+    extern MauCor::LogCategory CategoryName;
+
+MauCor::ELogPriority constexpr Trace{ MauCor::ELogPriority::Trace };
+MauCor::ELogPriority constexpr Info{ MauCor::ELogPriority::Info };
+MauCor::ELogPriority constexpr Debug{ MauCor::ELogPriority::Debug };
+MauCor::ELogPriority constexpr Warn{ MauCor::ELogPriority::Warn };
+MauCor::ELogPriority constexpr Error{ MauCor::ELogPriority::Error };
+MauCor::ELogPriority constexpr Fatal{ MauCor::ELogPriority::Fatal };
 
 #endif
