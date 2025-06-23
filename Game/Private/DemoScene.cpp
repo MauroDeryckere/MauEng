@@ -15,6 +15,9 @@ namespace MauGam
 		ME_LOG(Debug, TestLogCategory, "TEST");
 		ME_LOG(Debug, TestLogCategory2, "TEST CAT 02 - DEBUG");
 		ME_LOG(Warn, TestLogCategory2, "TEST CAT 02 - WARN");
+		TestLogCategory2.SetPriority(Debug);
+		ME_LOG(Debug, TestLogCategory2, "TEST CAT 02 - DEBUG");
+		ME_LOG(Warn, TestLogCategory2, "TEST CAT 02 - WARN");
 	}
 
 	void DemoScene::OnLoad()
