@@ -28,7 +28,7 @@
 ## Demo
 A small demo scene is included in the project, it showcases most of the features of the engine. The demo scene can be found in Game/DemoScene.h and .cpp<br>
 
-Demo Scene: 
+**Watch the Demo Video (click):** </br>  
 [![Watch the demo](https://img.youtube.com/vi/kbcXu0AuIoM/0.jpg)](https://www.youtube.com/watch?v=kbcXu0AuIoM)
 
 **Config**<br>
@@ -198,7 +198,7 @@ void GameScene::Tick()
 	DEBUG_RENDERER.DrawSphereComplex({20,20,20}, 20.f, { 1, 1, 1 }, 24, 10);
 }
 ```
-Debug rendering demo: 
+**Watch the Demo Video (click):** </br>  
 [![Watch the demo](https://img.youtube.com/vi/oeMaRM3xfdg/0.jpg)](https://www.youtube.com/watch?v=oeMaRM3xfdg)
 
 ## Features I want to add in the near future
