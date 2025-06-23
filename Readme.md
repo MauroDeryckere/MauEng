@@ -6,10 +6,14 @@
   - [Introduction](#introduction)
   - [Demo](#demo)
   - [Core](#core)
-	- [Logging](#logging)
+	- [Debugging - Logging](#debugging---logging)
 	- [Debugging - Asserts](#debugging---asserts)
+	- [Event System (delegates)](#event-system-(delegates))
+	- [UUID](#uuid)
 	- [Profiling](#profiling)
+	- [Libraries](#libraries)
   - [Engine](#engine)
+	- [Input System](#input-system)
 	- [Component System](#component-system)
 	- [Renderer](#renderer)
 	  - [Coordinate System](#coordinate-system)
@@ -22,15 +26,18 @@
 ## Introduction
 
 ## Demo
-Demo scene can be found in Game/DemoScene.h and .cpp<br>
-Change the EDemo m_Demo; in the header to a different enum value to view different scenes.
+A small demo scene is included in the project, it showcases most of the features of the engine. The demo scene can be found in Game/DemoScene.h and .cpp<br>
 
-Config<br>
+Demo Scene: 
+[![Watch the demo](https://img.youtube.com/vi/kbcXu0AuIoM/0.jpg)](https://www.youtube.com/watch?v=kbcXu0AuIoM)
+
+**Config**<br>
+Change the EDemo m_Demo; in the header to a different enum value to view different scenes.<br>
 Config.cmake: build settings<br>
 Renderer/Config/VulkanConfigs: buffer sizes, extensions <br>
 Core/Public/Config/EngineConfig.h: macros, general settings<br>
 
-Key binds<br>
+**Key binds**<br>
 SPACE output the keybinds<br>
 F1 Profile<br>
 F2 Toggle light debug render (display spheres for point light, arrow for dir light)<br>
@@ -53,7 +60,7 @@ Sprint control<br>
 <br>
 ## Core
 
-### Logging
+### Debugging -Logging
 The logger can log in the console and a file using different log priority levels and categories. Priority of logging can be adjusted to skip logging all levels below set level. Colors of the console logs are configurable.
 
 The file logging has a configurable file size, before it rotates to the next file. Currently it simply keeps a single backup. If a full backup is stored and the new rotation happens, the backup is overwritten with the new file. The file also contains the log level more clearly and is timestamped.
@@ -90,6 +97,12 @@ ME_CHECK(pRenderer, "Renderer must be valid");
 ME_VERIFY(CalculateAndValidatePath(), "Path must be valid");
 ```
 
+### Event System (delegates)
+
+### UUID
+Small custom UUID library that generates a unique identifier for each object. It is used to identify objects in the engine, such as entities, components, and resources.</br></br>
+[View UUID Library on GitHub](https://github.com/MauroDeryckere/UUID)
+
 ### Profiling
 The engine has 2 available profilers, a very barebones profiler that simply parses to a .json file and can be uploaded to chrome://tracing/. The other profiler is an integration of the Optick library and provides a lot more information if required.
 
@@ -115,8 +128,12 @@ void Render(){
 
 Profiling only happens when it is enabled in the Config.cmake file.
 
+### Libraries
+Core libraries used all over the engine, that the user may or may not also need access to: SDL, fmt, glm and Optick.
 
 ## Engine
+
+## Input System
 
 ## Component System
 The engine currently uses a wrapper around entts component system, it supports almost all functions entt offers.
@@ -148,12 +165,12 @@ As a test I loaded a mesh with 100 000 instances. The mesh is a simple gun and h
 - Bindless (indirect) Rendering<br>
 The renderer uses a global index and vertex buffer, draw commands are batched and issued using vkCmdDrawIndexedIndirect. Textures are in a descriptor array.
 
-- Deferred rendering
-
-- Dynamic rendering<br>
+- Deferred rendering<br>
 
 - Depth prepass<br>
 Reduce overdaw by doing a depth prepass.
+
+- Dynamic rendering<br>
 
 - Mesh & material support (loading a material from a file)<br>
 Assimp is integrated, and all formats supported by Assimp can be used to load meshes & materials. Meshes are split up in submeshes, these submeshes are then instanced.
@@ -181,9 +198,8 @@ void GameScene::Tick()
 	DEBUG_RENDERER.DrawSphereComplex({20,20,20}, 20.f, { 1, 1, 1 }, 24, 10);
 }
 ```
-
-Result of that last example is this: 
-![Screenshot](docs/SphereDebugDrawingExample.png)
+Debug rendering demo: 
+[![Watch the demo](https://img.youtube.com/vi/oeMaRM3xfdg/0.jpg)](https://www.youtube.com/watch?v=oeMaRM3xfdg)
 
 ## Features I want to add in the near future
 - Image based lighting (skybox)
