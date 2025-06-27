@@ -84,6 +84,9 @@ namespace MauGam
 
 		void OnDelegate(TestEvent const& event);
 		void OnDelegateConst(TestEvent const& event) const;
+
+		void OnTimerFires();
+		void OnTimerFiresConst() const;
 	};
 }
 

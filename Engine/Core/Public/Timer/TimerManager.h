@@ -2,6 +2,8 @@
 #define MAUCOR_TIMER_MANAGER_H
 
 #include "Events/ListenerHandlers.h"
+#include "../Shared/AssertsInternal.h"
+// Timers do require manual cleanup (RemoveTimer) when they are no longer needed, otherwise they will linger in memory and may cause invalid access errors.
 
 namespace MauEng
 {
@@ -61,15 +63,90 @@ namespace MauCor
 			return SetTimer(std::forward<Callable>(callable), duration, isLooping, owner);
 		}
 
-		//TODO member functions
-		//template<typename T>
-		//ListenerHandle const& SetTimer(T* obj, void (T::* memFn)(), float duration, bool isLooping = false, void* owner = nullptr) noexcept
-		//{
-		//	ListenerHandle handle{ ++m_NextTimerId, owner };
-		//	m_Timers.emplace_back(duration, duration, isLooping, false,
-		//		std::make_unique<MemberFunHandler<T, void>>(handle, obj, memFn));
-		//	return m_Timers.back().handler->GetHandle();
-		//}
+		template<typename T>
+		ListenerHandle const& SetTimer(void (T::* memFunc)(), T* instance, float duration, bool isLooping = false, void* owner = nullptr) noexcept
+		{
+			ME_CORE_ASSERT(duration >= 0.f);
+
+			m_Timers.emplace_back(duration, duration,
+				std::make_unique<MemberFunHandler<T, void>>(ListenerHandle{ m_NextTimerId, (owner ? owner : instance) }, instance, memFunc),
+				isLooping, false
+			);
+
+			++m_NextTimerId;
+			return m_Timers.back().handler->GetHandle();
+		}
+
+		template<typename T>
+		ListenerHandle const& SetTimer(ListenerHandle const& handle, void (T::* memFunc)(), T* instance, float duration, bool isLooping = false, void* owner = nullptr) noexcept
+		{
+			ME_CORE_ASSERT(duration >= 0.f);
+			auto const it{ m_TimerID_TimerVecIdx.find(handle.id) };
+
+			// Reset existing timer
+			if (it != m_TimerID_TimerVecIdx.end())
+			{
+				auto& timer{ m_Timers[it->second] };
+				if (duration == 0.f)
+				{
+					timer.remainingTime = timer.duration;
+					timer.isLooping = isLooping;
+				}
+				else
+				{
+					timer.remainingTime = duration;
+					timer.duration = duration;
+					timer.isLooping = isLooping;
+				}
+
+				timer.handler = std::make_unique<MemberFunHandler<T, void>>(handle, instance, memFunc);
+				return timer.handler->GetHandle();
+			}
+
+			return SetTimer(memFunc, instance, duration, isLooping, (owner ? owner : instance));
+		}
+
+		template<typename T>
+		ListenerHandle const& SetTimer(void (T::* memFunc)() const, T const* instance, float duration, bool isLooping = false, void* owner = nullptr) noexcept
+		{
+			ME_CORE_ASSERT(duration >= 0.f);
+
+			m_Timers.emplace_back(duration, duration,
+				std::make_unique<MemberFunHandlerConst<T, void>>(ListenerHandle{ m_NextTimerId, (owner ? owner : const_cast<void*>(static_cast<void const*>(instance))) }, instance, memFunc),
+				isLooping, false
+			);
+
+			++m_NextTimerId;
+			return m_Timers.back().handler->GetHandle();
+		}
+		template<typename T>
+		ListenerHandle const& SetTimer(ListenerHandle const& handle, void (T::* memFunc)() const, T const* instance, float duration, bool isLooping = false, void* owner = nullptr) noexcept
+		{
+			ME_CORE_ASSERT(duration >= 0.f);
+			auto const it{ m_TimerID_TimerVecIdx.find(handle.id) };
+
+			// Reset existing timer
+			if (it != m_TimerID_TimerVecIdx.end())
+			{
+				auto& timer{ m_Timers[it->second] };
+				if (duration == 0.f)
+				{
+					timer.remainingTime = timer.duration;
+					timer.isLooping = isLooping;
+				}
+				else
+				{
+					timer.remainingTime = duration;
+					timer.duration = duration;
+					timer.isLooping = isLooping;
+				}
+
+				timer.handler = std::make_unique<MemberFunHandlerConst<T, void>>(handle, instance, memFunc);
+				return timer.handler->GetHandle();
+			}
+
+			return SetTimer(memFunc, instance, duration, isLooping, (owner ? owner : const_cast<void*>(static_cast<void const*>(instance))));
+		}
 
 		void ResetTimer(ListenerHandle const& handle, float newDuration = 0.f, bool isLooping = false) noexcept
 		{
@@ -239,6 +316,9 @@ namespace MauCor
 
 		std::vector<Timer> m_Timers{};
 		std::unordered_map<uint32_t, uint32_t> m_TimerID_TimerVecIdx{};
+
+		//TODO
+		//std::vector<std::unique_ptr<IListenerHandler<>>> m_NextTickHandlers;
 
 		uint32_t m_NextTimerId{ 0 };
 	};

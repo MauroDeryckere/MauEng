@@ -74,7 +74,16 @@ namespace MauGam
 				m_TimerManager.SetTimer([]() { ME_LOG_DEBUG(TestTimers, "Timer 3 fired");  }, 1.f, false, this);
 			}
 
+			{
+				m_TimerManager.SetTimer([&]()
+				{
+					ME_LOG_DEBUG(TestTimers, "Setup member function timers");
+					m_TimerManager.SetTimer(&DemoScene::OnTimerFires, this, 5.f, true);
+					m_TimerManager.SetTimer(&DemoScene::OnTimerFiresConst, this, 5.f, true);
 
+					m_TimerManager.SetTimer([&]() { ME_LOG_DEBUG(TestTimers, "Clearing timers"); m_TimerManager.RemoveAllTimers(this); }, 11.f, false, this);
+				}, 5.f);
+			}
 		}
 #pragma endregion
 
@@ -1009,5 +1018,15 @@ namespace MauGam
 	void DemoScene::OnDelegateConst(TestEvent const& event) const
 	{
 		ME_LOG_DEBUG(LogGame, "Event test (const): {}", event.i);
+	}
+
+	void DemoScene::OnTimerFires()
+	{
+		ME_LOG_DEBUG(TestTimers, "On Timer fires member function executed");
+	}
+
+	void DemoScene::OnTimerFiresConst() const
+	{
+		ME_LOG_DEBUG(TestTimers, "On Timer fires const member function executed");
 	}
 }
