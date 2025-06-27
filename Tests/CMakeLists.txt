@@ -2,8 +2,7 @@
 add_executable(MauEngTests
     "${CMAKE_CURRENT_SOURCE_DIR}/src/TestMain.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/Transform/TestTransforms.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/Math/TestRotator.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/Timers/TestTimerManager.cpp")
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/Math/TestRotator.cpp")
 
 target_link_libraries(MauEngTests 
     PRIVATE
