@@ -84,6 +84,16 @@ namespace MauGam
 					m_TimerManager.SetTimer([&]() { ME_LOG_DEBUG(TestTimers, "Clearing timers"); m_TimerManager.RemoveAllTimers(this); }, 11.f, false, this);
 				}, 5.f);
 			}
+
+			{
+				// Next ticks
+				m_TimerManager.SetTimerForNextTick([&]()
+					{
+						ME_LOG_DEBUG(TestTimers, "Next tick timer fired");
+					});
+				m_TimerManager.SetTimerForNextTick(&DemoScene::OnTimerFires, this);
+				m_TimerManager.SetTimerForNextTick(&DemoScene::OnTimerFiresConst, this);
+			}
 		}
 #pragma endregion
 

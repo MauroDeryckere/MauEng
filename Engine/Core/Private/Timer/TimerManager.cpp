@@ -8,6 +8,15 @@ namespace MauCor
 	{
 		float const elapsed{ TIME.ElapsedSec() };
 
+		for (auto& h : m_NextTickHandlers)
+		{
+			if (h->IsValid())
+			{
+				h->Invoke();
+			}
+		}
+		m_NextTickHandlers.clear();
+
 		for (auto& timer : m_Timers)
 		{
 			if (timer.isPaused || timer.pendingRemove)

@@ -33,6 +33,11 @@ namespace MauCor
 			return m_Timers.back().handler->GetHandle();
 		}
 		template<typename Callable>
+		void SetTimerForNextTick(Callable&& callable) noexcept
+		{
+			m_NextTickHandlers.emplace_back(std::make_unique<CallableHandler<void>>(ListenerHandle{}, std::forward<Callable>(callable)));
+		}
+		template<typename Callable>
 		ListenerHandle const& SetTimer(ListenerHandle const& handle, Callable&& callable, float duration = 0.f, bool isLooping = false, void* owner = nullptr) noexcept
 		{
 			ME_CORE_ASSERT(duration >= 0.f);
@@ -76,7 +81,11 @@ namespace MauCor
 			++m_NextTimerId;
 			return m_Timers.back().handler->GetHandle();
 		}
-
+		template<typename T>
+		void SetTimerForNextTick(void (T::* memFunc)(), T* instance) noexcept
+		{
+			m_NextTickHandlers.emplace_back(std::make_unique<MemberFunHandler<T, void>>(ListenerHandle{}, instance, memFunc));
+		}
 		template<typename T>
 		ListenerHandle const& SetTimer(ListenerHandle const& handle, void (T::* memFunc)(), T* instance, float duration, bool isLooping = false, void* owner = nullptr) noexcept
 		{
@@ -118,6 +127,11 @@ namespace MauCor
 
 			++m_NextTimerId;
 			return m_Timers.back().handler->GetHandle();
+		}
+		template<typename T>
+		void SetTimerForNextTick(void (T::* memFunc)() const, T const* instance) noexcept
+		{
+			m_NextTickHandlers.emplace_back(std::make_unique<MemberFunHandlerConst<T, void>>(ListenerHandle{}, instance, memFunc));
 		}
 		template<typename T>
 		ListenerHandle const& SetTimer(ListenerHandle const& handle, void (T::* memFunc)() const, T const* instance, float duration, bool isLooping = false, void* owner = nullptr) noexcept
@@ -296,6 +310,7 @@ namespace MauCor
 		{
 			m_Timers.clear();
 			m_TimerID_TimerVecIdx.clear();
+			m_NextTickHandlers.clear();
 		}
 
 		TimerManager(TimerManager const&) = delete;
@@ -323,8 +338,7 @@ namespace MauCor
 		std::vector<Timer> m_Timers{};
 		std::unordered_map<uint32_t, uint32_t> m_TimerID_TimerVecIdx{};
 
-		//TODO
-		//std::vector<std::unique_ptr<IListenerHandler<>>> m_NextTickHandlers;
+		std::vector<std::unique_ptr<IListenerHandler<>>> m_NextTickHandlers;
 
 		uint32_t m_NextTimerId{ 0 };
 	};
