@@ -19,6 +19,8 @@ namespace MauCor
 		template<typename Callable>
 		ListenerHandle const& SetTimer(Callable&& callable, float duration, bool isLooping = false, void* owner = nullptr) noexcept
 		{
+			ME_CORE_ASSERT(duration >= 0.f);
+
 			m_Timers.emplace_back(duration, duration,
 								std::make_unique<CallableHandler<void>>(ListenerHandle{ m_NextTimerId, owner }, std::forward<Callable>(callable)),
 								isLooping, false
@@ -31,6 +33,8 @@ namespace MauCor
 		template<typename Callable>
 		ListenerHandle const& SetTimer(ListenerHandle const& handle, Callable&& callable, float duration = 0.f, bool isLooping = false, void* owner = nullptr) noexcept
 		{
+			ME_CORE_ASSERT(duration >= 0.f);
+
 			auto const it{ m_TimerID_TimerVecIdx.find(handle.id) };
 
 			// Reset existing timer
@@ -57,8 +61,20 @@ namespace MauCor
 			return SetTimer(std::forward<Callable>(callable), duration, isLooping, owner);
 		}
 
+		//TODO member functions
+		//template<typename T>
+		//ListenerHandle const& SetTimer(T* obj, void (T::* memFn)(), float duration, bool isLooping = false, void* owner = nullptr) noexcept
+		//{
+		//	ListenerHandle handle{ ++m_NextTimerId, owner };
+		//	m_Timers.emplace_back(duration, duration, isLooping, false,
+		//		std::make_unique<MemberFunHandler<T, void>>(handle, obj, memFn));
+		//	return m_Timers.back().handler->GetHandle();
+		//}
+
 		void ResetTimer(ListenerHandle const& handle, float newDuration = 0.f, bool isLooping = false) noexcept
 		{
+			ME_CORE_ASSERT(newDuration >= 0.f);
+
 			auto const it{ m_TimerID_TimerVecIdx.find(handle.id) };
 			if (it == end(m_TimerID_TimerVecIdx))
 			{
@@ -109,6 +125,45 @@ namespace MauCor
 			return m_Timers[it->second].remainingTime;
 		}
 
+		[[nodiscard]] bool IsTimerPaused(ListenerHandle const& handle) const noexcept
+		{
+			auto const it{ m_TimerID_TimerVecIdx.find(handle.id) };
+
+			if (it == end(m_TimerID_TimerVecIdx))
+			{
+				ME_LOG_WARN(LogCore, "Trying to check if timer is paused, but the timer does not exist");
+				return false;
+			}
+
+			return m_Timers[it->second].isPaused;
+		}
+
+		bool PauseTimer(ListenerHandle const& handle) noexcept
+		{
+			auto const it{ m_TimerID_TimerVecIdx.find(handle.id) };
+			if (it == end(m_TimerID_TimerVecIdx))
+			{
+				ME_LOG_WARN(LogCore, "Trying to pause timer, but the timer does not exist");
+				return false;
+			}
+
+			m_Timers[it->second].isPaused = true;
+			return true;
+		}
+
+		bool ResumeTimer(ListenerHandle const& handle) noexcept
+		{
+			auto const it{ m_TimerID_TimerVecIdx.find(handle.id) };
+			if (it == end(m_TimerID_TimerVecIdx))
+			{
+				ME_LOG_WARN(LogCore, "Trying to resume timer, but the timer does not exist");
+				return false;
+			}
+
+			m_Timers[it->second].isPaused = false;
+			return true;
+		}
+
 		bool RemoveTimer(ListenerHandle const& handle) noexcept
 		{
 			auto const it{ m_TimerID_TimerVecIdx.find(handle.id) };
@@ -122,8 +177,23 @@ namespace MauCor
 			return true;
 		}
 
+		void PauseAllTimers(void const* owner) noexcept
+		{
+			ME_CORE_ASSERT(owner);
+
+			for (auto& timer : m_Timers)
+			{
+				if (timer.handler->GetHandle().owner == owner)
+				{
+					timer.isPaused = true;
+				}
+			}
+		}
+
 		void RemoveAllTimers(void const* owner) noexcept
 		{
+			ME_CORE_ASSERT(owner);
+
 			for (auto& timer : m_Timers)
 			{
 				if (timer.handler->GetHandle().owner == owner)
@@ -133,15 +203,17 @@ namespace MauCor
 			}
 		}
 
-		//TODO member functions
-		//template<typename T>
-		//ListenerHandle const& SetTimer(T* obj, void (T::* memFn)(), float duration, bool isLooping = false, void* owner = nullptr) noexcept
-		//{
-		//	ListenerHandle handle{ ++m_NextTimerId, owner };
-		//	m_Timers.emplace_back(duration, duration, isLooping, false,
-		//		std::make_unique<MemberFunHandler<T, void>>(handle, obj, memFn));
-		//	return m_Timers.back().handler->GetHandle();
-		//}
+		[[nodiscard]] bool IsTimerExpired(ListenerHandle const& handle) const noexcept
+		{
+			auto const it{ m_TimerID_TimerVecIdx.find(handle.id) };
+			if (it == end(m_TimerID_TimerVecIdx))
+			{
+				ME_LOG_WARN(LogCore, "Trying to check if timer is expired, but the timer does not exist");
+				return false;
+			}
+			
+			return m_Timers[it->second].pendingRemove;
+		}
 
 		TimerManager(TimerManager const&) = delete;
 		TimerManager(TimerManager&&) = delete;
