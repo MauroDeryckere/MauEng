@@ -6,6 +6,8 @@ namespace MauEng
 {
 	void Scene::Tick()
 	{
+		m_TimerManager.Tick();
+
 		m_CameraManager.Tick();
 		for (auto& p : INPUT_MANAGER.GetPlayers())
 		{

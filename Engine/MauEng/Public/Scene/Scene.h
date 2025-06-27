@@ -11,6 +11,8 @@
 
 #include "Components/CTransform.h"
 
+#include "Timer/TimerManager.h"
+
 namespace MauEng
 {
 	// Base scene class to inherit from when creating a scene for the game
@@ -45,6 +47,9 @@ namespace MauEng
 		[[nodiscard]] CameraManager const& GetCameraManager() const noexcept { return m_CameraManager; }
 		[[nodiscard]] CameraManager& GetCameraManager() noexcept { return m_CameraManager; }
 
+		[[nodiscard]] MauCor::TimerManager const& GetTimerManager() const noexcept { return m_TimerManager; }
+		[[nodiscard]] MauCor::TimerManager& GetTimerManager() noexcept { return m_TimerManager; }
+
 		Scene(Scene const&) = delete;
 		Scene(Scene&&) = delete;
 		Scene& operator=(Scene const&) = delete;
@@ -52,6 +57,7 @@ namespace MauEng
 
 	protected:
 		CameraManager m_CameraManager{ };
+		MauCor::TimerManager m_TimerManager{};
 
 	private:
 		mutable ECS::ECSWorld m_ECSWorld{ };

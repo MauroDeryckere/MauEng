@@ -7,6 +7,7 @@ namespace MauGam
 {
 	DECLARE_LOG_CATEGORY_EXTERN(TestLogCategory)
 	DECLARE_LOG_CATEGORY_EXTERN(TestLogCategory2)
+	DECLARE_LOG_CATEGORY_EXTERN(TestTimers)
 
 	struct TestEvent
 	{

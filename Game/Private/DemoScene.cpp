@@ -7,11 +7,13 @@ namespace MauGam
 {
 	DEFINE_LOG_CATEGORY(TestLogCategory)
 	DEFINE_LOG_CATEGORY(TestLogCategory2, Warn)
+	DEFINE_LOG_CATEGORY(TestTimers)
 
 	DemoScene::DemoScene()
 	{
 		ME_PROFILE_FUNCTION()
 
+		// Testing the custom log categories
 		ME_LOG(Debug, TestLogCategory, "TEST");
 		ME_LOG(Debug, TestLogCategory2, "TEST CAT 02 - DEBUG");
 		ME_LOG(Warn, TestLogCategory2, "TEST CAT 02 - WARN");
@@ -28,47 +30,100 @@ namespace MauGam
 
 		using namespace MauEng;
 
-		auto const& handle{ m_DelegateTest += MauCor::Bind<TestEvent>
-		(
-			[this](TestEvent const& event) { OnDelegate(event); }
-		) };
+#pragma region TimerTest
+		{
+			{
+				// Set a one-shot timer (2 seconds)
+				auto const& handle2{ m_TimerManager.SetTimer([]()
+					{
+						ME_LOG_DEBUG(TestTimers, "Timer 2 fired (one-shot after 2s)");
+					}, 2.f) };
 
-		TestEvent event{};
+				// Set a looping timer (1 second)
+				auto const& handle1{ m_TimerManager.SetTimer([&]()
+					{
+						ME_LOG_DEBUG(TestTimers, "Timer 1 fired (looping every 1s)");
+						m_TimerManager.RemoveTimer(handle2);
+					}, 1.f, true) };
 
-		m_DelegateTest.Get()->Broadcast(event);
-		m_DelegateTest -= handle;
-		m_DelegateTest < event;
+				m_TimerManager.ResetTimer(handle1);
 
-		event.i = 20;
-		auto const& handle02{ m_DelegateTest += MauCor::Bind<TestEvent>([this](TestEvent const& event) { OnDelegate(event); }, this) };
-		m_DelegateTest.Broadcast(event);
-		m_DelegateTest.UnSubscribeImmediate(handle02.owner);
-		m_DelegateTest < event;
+				if (m_TimerManager.IsTimerActive(handle1))
+				{
+					ME_LOG_DEBUG(TestTimers, "Timer 1 is active");
+				}
+				else
+				{
+					ME_LOG_DEBUG(TestTimers, "Timer 1 is NOT active");
+				}
+				if (m_TimerManager.IsTimerActive(handle2))
+				{
+					ME_LOG_DEBUG(TestTimers, "Timer 2 is active");
+				}
+				else
+				{
+					ME_LOG_DEBUG(TestTimers, "Timer 2 is NOT active");
+				}
+			}
 
-		event.i = 30;
-		m_DelegateTest.Get()->Subscribe([this](TestEvent const& event) { OnDelegate(event); }, this);
-		m_DelegateTest.Broadcast(event);
-		m_DelegateTest /= this;
-		m_DelegateTest < event;
+			{
+				m_TimerManager.SetTimer([&]() { ME_LOG_DEBUG(TestTimers, "Timer 3 fired"); m_TimerManager.RemoveAllTimers(this); }, 0.5f, false, this);
+				m_TimerManager.SetTimer([]() { ME_LOG_DEBUG(TestTimers, "Timer 3 fired");  }, 1.f, false, this);
+				m_TimerManager.SetTimer([]() { ME_LOG_DEBUG(TestTimers, "Timer 3 fired");  }, 1.f, false, this);
+				m_TimerManager.SetTimer([]() { ME_LOG_DEBUG(TestTimers, "Timer 3 fired");  }, 1.f, false, this);
+				m_TimerManager.SetTimer([]() { ME_LOG_DEBUG(TestTimers, "Timer 3 fired");  }, 1.f, false, this);
+			}
 
-		event.i = 40;
-		m_DelegateTest += MauCor::Bind(&DemoScene::OnDelegate, this);
-		m_DelegateTest.Broadcast(event);
-		m_DelegateTest /= this;
-		m_DelegateTest.Broadcast(event);
 
-		event.i = 50;
-		m_DelegateTest += MauCor::Bind(&DemoScene::OnDelegateConst, this);
-		m_DelegateTest.Broadcast(event);
-		m_DelegateTest.UnSubscribeAllByOwnerImmediate(this);
-		m_DelegateTest.Broadcast(event);
+		}
+#pragma endregion
 
-		event.i = 60;
-		m_DelegateTest += MauCor::Bind(&DemoScene::OnDelegateConst, this);
-		m_DelegateTest << event;
+#pragma region EventTest
+		{
+			auto const& handle{ m_DelegateTest += MauCor::Bind<TestEvent>
+			(
+				[this](TestEvent const& event) { OnDelegate(event); }
+			) };
 
-		m_DelegateTest.Clear();
+			TestEvent event{};
 
+			m_DelegateTest.Get()->Broadcast(event);
+			m_DelegateTest -= handle;
+			m_DelegateTest < event;
+
+			event.i = 20;
+			auto const& handle02{ m_DelegateTest += MauCor::Bind<TestEvent>([this](TestEvent const& event) { OnDelegate(event); }, this) };
+			m_DelegateTest.Broadcast(event);
+			m_DelegateTest.UnSubscribeImmediate(handle02.owner);
+			m_DelegateTest < event;
+
+			event.i = 30;
+			m_DelegateTest.Get()->Subscribe([this](TestEvent const& event) { OnDelegate(event); }, this);
+			m_DelegateTest.Broadcast(event);
+			m_DelegateTest /= this;
+			m_DelegateTest < event;
+
+			event.i = 40;
+			m_DelegateTest += MauCor::Bind(&DemoScene::OnDelegate, this);
+			m_DelegateTest.Broadcast(event);
+			m_DelegateTest /= this;
+			m_DelegateTest.Broadcast(event);
+
+			event.i = 50;
+			m_DelegateTest += MauCor::Bind(&DemoScene::OnDelegateConst, this);
+			m_DelegateTest.Broadcast(event);
+			m_DelegateTest.UnSubscribeAllByOwnerImmediate(this);
+			m_DelegateTest.Broadcast(event);
+
+			event.i = 60;
+			m_DelegateTest += MauCor::Bind(&DemoScene::OnDelegateConst, this);
+			m_DelegateTest << event;
+
+			m_DelegateTest.Clear();
+		}
+#pragma endregion
+
+#pragma region MeshLightAndCamera
 		switch (m_Demo)
 		{
 		case EDemo::Sponza:
@@ -261,7 +316,11 @@ namespace MauGam
 			SetSceneAABBOverride({ -300, -300, -300 }, { 300, 300, 300 });
 		}
 		break;
+
+		default:
+			break;
 		}
+#pragma endregion
 
 		SetupInput();
 		OutputKeybinds();
