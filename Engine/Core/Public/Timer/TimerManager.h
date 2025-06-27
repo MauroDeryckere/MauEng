@@ -1,18 +1,15 @@
 #ifndef MAUCOR_TIMER_MANAGER_H
 #define MAUCOR_TIMER_MANAGER_H
 
-#include "Events/Delegate.h"
+#include "Events/ListenerHandlers.h"
 
 namespace MauCor
 {
-	
 	class TimerManager final
 	{
 	public:
 		TimerManager() = default;
 		~TimerManager() = default;
-
-		//Update
 
 		template<typename Callable>
 		ListenerHandle const& SetTimer(Callable&& callable, float duration, bool isLooping = false, void* owner = nullptr) noexcept
@@ -24,12 +21,21 @@ namespace MauCor
 		}
 		//TODO member functions
 
+
+
 		TimerManager(TimerManager const&) = delete;
 		TimerManager(TimerManager&&) = delete;
 		TimerManager& operator=(TimerManager const&) = delete;
 		TimerManager& operator=(TimerManager&&) = delete;
 
 	private:
+		friend class SceneManager;
+		void Tick(float elapsedSec) noexcept
+		{
+			
+		}
+
+
 		struct Timer final
 		{
 			float remainingTime;

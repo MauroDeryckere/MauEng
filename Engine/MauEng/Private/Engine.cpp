@@ -90,7 +90,7 @@ namespace MauEng
 		bool IsMinimised = false;
 
 		// Get all the systems we wish to use during the game loop
-		auto& time{ Time::GetInstance() };
+		auto& time{ TIME };
 		auto& sceneManager{ SceneManager::GetInstance() };
 		auto& inputManager{ InputManager::GetInstance() };
 		auto& eventManager{ MauCor::EventManager::GetInstance() };

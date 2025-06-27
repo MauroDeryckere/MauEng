@@ -19,7 +19,6 @@ namespace MauEng
 		[[nodiscard]] static MauRen::DebugRenderer& GetDebugRenderer() { return (*m_pDebugRenderer); }
 		static void RegisterDebugRenderer(std::unique_ptr<MauRen::DebugRenderer>&& pRenderer);
 
-		[[nodiscard]] static MauEng::Time& GetTime() { return MauEng::Time::GetInstance(); }
 		[[nodiscard]] static MauEng::SceneManager& GetSceneManager() { return MauEng::SceneManager::GetInstance(); }
 		[[nodiscard]] static MauEng::InputManager& GetInputManager() { return MauEng::InputManager::GetInstance(); }
 
@@ -31,7 +30,6 @@ namespace MauEng
 	// Macros
 	#define DEBUG_RENDERER MauEng::ServiceLocator::GetDebugRenderer()
 
-	#define TIME MauEng::ServiceLocator::GetTime()
 	#define SCENE_MANAGER MauEng::ServiceLocator::GetSceneManager()
 	#define INPUT_MANAGER MauEng::ServiceLocator::GetInputManager()
 
