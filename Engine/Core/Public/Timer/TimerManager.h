@@ -292,6 +292,12 @@ namespace MauCor
 			return m_Timers[it->second].pendingRemove;
 		}
 
+		void Clear() noexcept
+		{
+			m_Timers.clear();
+			m_TimerID_TimerVecIdx.clear();
+		}
+
 		TimerManager(TimerManager const&) = delete;
 		TimerManager(TimerManager&&) = delete;
 		TimerManager& operator=(TimerManager const&) = delete;
