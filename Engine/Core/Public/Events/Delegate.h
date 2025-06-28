@@ -13,8 +13,6 @@
 
 #include "ListenerHandlers.h"
 
-// TODO void specialization for no param delegates (fine for now, just use an empty struct)
-
 // TODO consider weak ptr for T* or an IsAlive call in member function handler
 // Because this could be an issue when it's an end of frame event, and the object has been destroyed when the event fires (object destroys should be delayed until after anyway though)
 // But if object that isn't managed by engine (?)
@@ -188,8 +186,8 @@ namespace MauCor
 
 		// Broadcast immediately (blocking broadcast)
 		template<typename E = EventType>
-		std::enable_if_t<!std::is_void_v<E>>
-		Broadcast(E const& event) const noexcept
+			requires (!std::is_void_v<E>)
+		void Broadcast(E const& event) const noexcept
 		{
 			for (auto&& l : m_Listeners)
 			{
@@ -201,8 +199,8 @@ namespace MauCor
 		}
 		// Broadcast immediately (blocking broadcast)
 		template<typename E = EventType>
-		std::enable_if_t<std::is_void_v<E>>
-		Broadcast() const noexcept
+			requires (std::is_void_v<E>)
+		void Broadcast() const noexcept
 		{
 			for (auto&& l : m_Listeners)
 			{
@@ -215,8 +213,8 @@ namespace MauCor
 
 		//Broadcast event for end of the frame (non blocking broadcast)
 		template<typename E = EventType>
-		std::enable_if_t<!std::is_void_v<E>>
-		QueueBroadcast(E const& event) const noexcept
+			requires (!std::is_void_v<E>)
+		void QueueBroadcast(E const& event) const noexcept
 		{
 			auto& e{ EventManager::GetInstance() };
 
@@ -225,8 +223,8 @@ namespace MauCor
 		}
 		//Broadcast event for end of the frame (non blocking broadcast)
 		template<typename E = EventType>
-		std::enable_if_t<std::is_void_v<E>>
-		QueueBroadcast() const noexcept
+			requires (std::is_void_v<E>)
+		void QueueBroadcast() const noexcept
 		{
 			auto& e{ EventManager::GetInstance() };
 
