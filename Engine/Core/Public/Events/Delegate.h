@@ -13,6 +13,8 @@
 
 #include "ListenerHandlers.h"
 
+// TODO void specialization for no param delegates (fine for now, just use an empty struct)
+
 // TODO consider weak ptr for T* or an IsAlive call in member function handler
 // Because this could be an issue when it's an end of frame event, and the object has been destroyed when the event fires (object destroys should be delayed until after anyway though)
 // But if object that isn't managed by engine (?)
