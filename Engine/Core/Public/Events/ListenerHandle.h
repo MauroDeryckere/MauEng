@@ -3,9 +3,11 @@
 
 namespace MauCor
 {
+	uint32_t constexpr INVALID_LISTENER_ID{ 0 };
+
 	struct ListenerHandle final
 	{
-		uint32_t id{ 0 };
+		uint32_t id{ INVALID_LISTENER_ID };
 		void* const owner{ nullptr };
 
 		bool constexpr operator==(ListenerHandle const& other) const noexcept
@@ -15,6 +17,11 @@ namespace MauCor
 		bool constexpr operator!=(ListenerHandle const& other) const noexcept
 		{
 			return !(*this == other);
+		}
+
+		explicit operator bool() const noexcept
+		{
+			return id != INVALID_LISTENER_ID;
 		}
 	};
 }

@@ -12,6 +12,37 @@ namespace MauEng
 
 namespace MauCor
 {
+	template<typename Callable>
+	struct TimerDataCallable
+	{
+		BindingCallable<Callable> binding;
+
+		float duration{ 0.f };
+		bool isLooping{ false };
+
+		ListenerHandle handle{};
+	};
+	template<typename T>
+	struct TimerDataMemFn
+	{
+		BindingMemFn<T> binding;
+
+		float duration{ 0.f };
+		bool isLooping{ false };
+
+		ListenerHandle handle{};
+	};
+	template<typename T>
+	struct TimerDataConstMemFn
+	{
+		BindingConstMemFn<T> binding;
+
+		float duration{ 0.f };
+		bool isLooping{ false };
+
+		ListenerHandle handle{};
+	};
+
 	class TimerManager final
 	{
 	public:
@@ -33,6 +64,16 @@ namespace MauCor
 			return m_Timers.back().handler->GetHandle();
 		}
 		template<typename Callable>
+		ListenerHandle const& SetTimer(TimerDataCallable<Callable> const& timerData) noexcept
+		{
+			if (timerData.handle)
+			{
+				return SetTimer(timerData.handle, std::move(timerData.binding.callable), timerData.duration, timerData.isLooping, timerData.binding.owner);
+			}
+			return SetTimer(std::move(timerData.binding.callable), timerData.duration, timerData.isLooping, timerData.binding.owner);
+		}
+
+		template<typename Callable>
 		void SetTimerForNextTick(Callable&& callable) noexcept
 		{
 			m_NextTickHandlers.emplace_back(std::make_unique<CallableHandler<void>>(ListenerHandle{}, std::forward<Callable>(callable)));
@@ -41,6 +82,7 @@ namespace MauCor
 		ListenerHandle const& SetTimer(ListenerHandle const& handle, Callable&& callable, float duration = 0.f, bool isLooping = false, void* owner = nullptr) noexcept
 		{
 			ME_CORE_ASSERT(duration >= 0.f);
+			ME_CORE_ASSERT(handle);
 
 			auto const it{ m_TimerID_TimerVecIdx.find(handle.id) };
 
@@ -82,6 +124,15 @@ namespace MauCor
 			return m_Timers.back().handler->GetHandle();
 		}
 		template<typename T>
+		ListenerHandle const& SetTimer(TimerDataMemFn<T> const& timerData) noexcept
+		{
+			if (timerData.handle)
+			{
+				return SetTimer(timerData.handle, timerData.binding.memFn, timerData.binding.instance, timerData.duration, timerData.isLooping, timerData.binding.owner);
+			}
+			return SetTimer(timerData.binding.memFn, timerData.binding.instance, timerData.duration, timerData.isLooping, timerData.binding.owner);
+		}
+		template<typename T>
 		void SetTimerForNextTick(void (T::* memFunc)(), T* instance) noexcept
 		{
 			m_NextTickHandlers.emplace_back(std::make_unique<MemberFunHandler<T, void>>(ListenerHandle{}, instance, memFunc));
@@ -90,6 +141,8 @@ namespace MauCor
 		ListenerHandle const& SetTimer(ListenerHandle const& handle, void (T::* memFunc)(), T* instance, float duration, bool isLooping = false, void* owner = nullptr) noexcept
 		{
 			ME_CORE_ASSERT(duration >= 0.f);
+			ME_CORE_ASSERT(handle);
+
 			auto const it{ m_TimerID_TimerVecIdx.find(handle.id) };
 
 			// Reset existing timer
@@ -129,6 +182,15 @@ namespace MauCor
 			return m_Timers.back().handler->GetHandle();
 		}
 		template<typename T>
+		ListenerHandle const& SetTimer(TimerDataConstMemFn<T> const& timerData) noexcept
+		{
+			if (timerData.handle)
+			{
+				return SetTimer(timerData.handle, timerData.binding.memFn, timerData.binding.instance, timerData.duration, timerData.isLooping, timerData.binding.owner);
+			}
+			return SetTimer(timerData.binding.memFn, timerData.binding.instance, timerData.duration, timerData.isLooping, timerData.binding.owner);
+		}
+		template<typename T>
 		void SetTimerForNextTick(void (T::* memFunc)() const, T const* instance) noexcept
 		{
 			m_NextTickHandlers.emplace_back(std::make_unique<MemberFunHandlerConst<T, void>>(ListenerHandle{}, instance, memFunc));
@@ -137,6 +199,8 @@ namespace MauCor
 		ListenerHandle const& SetTimer(ListenerHandle const& handle, void (T::* memFunc)() const, T const* instance, float duration, bool isLooping = false, void* owner = nullptr) noexcept
 		{
 			ME_CORE_ASSERT(duration >= 0.f);
+			ME_CORE_ASSERT(handle);
+
 			auto const it{ m_TimerID_TimerVecIdx.find(handle.id) };
 
 			// Reset existing timer
@@ -165,6 +229,7 @@ namespace MauCor
 		void ResetTimer(ListenerHandle const& handle, float newDuration = 0.f, bool isLooping = false) noexcept
 		{
 			ME_CORE_ASSERT(newDuration >= 0.f);
+			ME_CORE_ASSERT(handle);
 
 			auto const it{ m_TimerID_TimerVecIdx.find(handle.id) };
 			if (it == end(m_TimerID_TimerVecIdx))
@@ -189,6 +254,8 @@ namespace MauCor
 
 		[[nodiscard]] bool IsTimerActive(ListenerHandle const& handle) const noexcept
 		{
+			ME_CORE_ASSERT(handle);
+
 			auto const it{ m_TimerID_TimerVecIdx.find(handle.id) };
 			if (it == end(m_TimerID_TimerVecIdx))
 			{
@@ -201,11 +268,15 @@ namespace MauCor
 
 		[[nodiscard]] bool Exists(ListenerHandle const& handle) const noexcept
 		{
+			ME_CORE_ASSERT(handle);
+
 			return m_TimerID_TimerVecIdx.contains(handle.id);
 		}
 
 		[[nodiscard]] float GetRemainingTime(ListenerHandle const& handle) const noexcept
 		{
+			ME_CORE_ASSERT(handle);
+
 			auto const it{ m_TimerID_TimerVecIdx.find(handle.id) };
 			if (it == end(m_TimerID_TimerVecIdx))
 			{
@@ -218,6 +289,8 @@ namespace MauCor
 
 		[[nodiscard]] bool IsTimerPaused(ListenerHandle const& handle) const noexcept
 		{
+			ME_CORE_ASSERT(handle);
+
 			auto const it{ m_TimerID_TimerVecIdx.find(handle.id) };
 
 			if (it == end(m_TimerID_TimerVecIdx))
@@ -231,6 +304,8 @@ namespace MauCor
 
 		bool PauseTimer(ListenerHandle const& handle) noexcept
 		{
+			ME_CORE_ASSERT(handle);
+
 			auto const it{ m_TimerID_TimerVecIdx.find(handle.id) };
 			if (it == end(m_TimerID_TimerVecIdx))
 			{
@@ -244,6 +319,8 @@ namespace MauCor
 
 		bool ResumeTimer(ListenerHandle const& handle) noexcept
 		{
+			ME_CORE_ASSERT(handle);
+
 			auto const it{ m_TimerID_TimerVecIdx.find(handle.id) };
 			if (it == end(m_TimerID_TimerVecIdx))
 			{
@@ -257,6 +334,8 @@ namespace MauCor
 
 		bool RemoveTimer(ListenerHandle const& handle) noexcept
 		{
+			ME_CORE_ASSERT(handle);
+
 			auto const it{ m_TimerID_TimerVecIdx.find(handle.id) };
 			if (it == m_TimerID_TimerVecIdx.end())
 			{
@@ -319,6 +398,8 @@ namespace MauCor
 
 		[[nodiscard]] bool IsTimerExpired(ListenerHandle const& handle) const noexcept
 		{
+			ME_CORE_ASSERT(handle);
+
 			auto const it{ m_TimerID_TimerVecIdx.find(handle.id) };
 			if (it == end(m_TimerID_TimerVecIdx))
 			{
@@ -339,28 +420,36 @@ namespace MauCor
 #pragma region operators
 		TimerManager& operator-=(ListenerHandle const& handle) noexcept
 		{
+			ME_CORE_ASSERT(handle);
+
 			RemoveTimer(handle);
 			return *this;
 		}
 		TimerManager& operator-=(void const* owner) noexcept
 		{
+			ME_CORE_ASSERT(owner);
+
 			RemoveAllTimers(owner);
 			return *this;
 		}
 
 		TimerManager& operator%=(ListenerHandle const& handle) noexcept
 		{
+			ME_CORE_ASSERT(handle);
+
 			ResetTimer(handle);
 			return *this;
 		}
 		TimerManager& operator%=(void const* owner) noexcept
 		{
+			ME_CORE_ASSERT(owner);
+
 			ResetAllTimers(owner);
 			return *this;
 		}
 
 		template<typename Callable>
-		TimerManager& operator*=(BindingCallable<Callable> const& binding)
+		TimerManager& operator*=(BindingCallable<Callable> const& binding) noexcept
 		{
 			SetTimerForNextTick(std::move(binding.callable));
 			return *this;
@@ -376,6 +465,22 @@ namespace MauCor
 		{
 			SetTimerForNextTick(binding.memFn, binding.instance, binding.owner);
 			return *this;
+		}
+
+		template<typename Callable>
+		ListenerHandle const& operator+=(TimerDataCallable<Callable> const& timerData) noexcept
+		{
+			return SetTimer(timerData);
+		}
+		template<typename T>
+		ListenerHandle const& operator+=(TimerDataMemFn<T> const& timerData) noexcept
+		{
+			return SetTimer(timerData);
+		}
+		template<typename T>
+		ListenerHandle const& operator+=(TimerDataConstMemFn<T> const& timerData) noexcept
+		{
+			return SetTimer(timerData);
 		}
 #pragma endregion
 
@@ -404,9 +509,9 @@ namespace MauCor
 		std::vector<Timer> m_Timers{};
 		std::unordered_map<uint32_t, uint32_t> m_TimerID_TimerVecIdx{};
 
-		std::vector<std::unique_ptr<IListenerHandler<>>> m_NextTickHandlers;
+		std::vector<std::unique_ptr<IListenerHandler<>>> m_NextTickHandlers{};
 
-		uint32_t m_NextTimerId{ 0 };
+		uint32_t m_NextTimerId{ 1 };
 	};
 }
 #endif

@@ -246,7 +246,7 @@ namespace MauCor
 
 	private:
 		std::vector<std::unique_ptr<IListenerHandler<EventType>>> m_Listeners;
-		uint32_t m_NextListenerId{ 0 };
+		uint32_t m_NextListenerId{ 1 };
 
 		std::vector<void const*> m_OwnerUnSubs;
 		std::vector<ListenerHandle> m_HandleUnSubs;

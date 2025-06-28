@@ -34,10 +34,10 @@ namespace MauGam
 		{
 			{
 				// Set a one-shot timer (2 seconds)
-				auto const& handle2{ m_TimerManager.SetTimer([]()
+				auto const& handle2{ m_TimerManager += MauCor::TimerDataCallable{ MauCor::Bind([]()
 					{
 						ME_LOG_DEBUG(TestTimers, "Timer 2 fired (one-shot after 2s)");
-					}, 2.f) };
+					}), 2.f} };
 
 				// Set a looping timer (1 second)
 				auto const& handle1{ m_TimerManager.SetTimer([&]()

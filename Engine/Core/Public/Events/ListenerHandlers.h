@@ -209,12 +209,12 @@ namespace MauCor
 	};
 
 
-	template<typename T, typename EventType = void>
+	template<typename T, typename ParamType = void>
 	struct BindingConstMemFn final
 	{
-		using MemFnType = void (T::*)(EventType const&) const;
+		using MemFnType = void (T::*)(ParamType const&) const;
 
-		explicit BindingConstMemFn(void (T::* memFunc)(EventType const&) const, T const* instance, void* owner = nullptr) :
+		explicit BindingConstMemFn(void (T::* memFunc)(ParamType const&) const, T const* instance, void* owner = nullptr) :
 			instance{ instance }, memFn{ memFunc }, owner{ owner } { }
 
 		T const* instance;
@@ -234,12 +234,12 @@ namespace MauCor
 		MemFnType memFn;
 		void* owner;
 	};
-	template<typename T, typename EventType = void>
+	template<typename T, typename ParamType = void>
 	struct BindingMemFn final
 	{
-		using MemFnType = void (T::*)(EventType const&);
+		using MemFnType = void (T::*)(ParamType const&);
 
-		explicit BindingMemFn(void (T::* mem)(EventType const&), T* ins, void* own = nullptr) :
+		explicit BindingMemFn(void (T::* mem)(ParamType const&), T* ins, void* own = nullptr) :
 			instance{ ins }, memFn{ mem }, owner{ own } { }
 
 		T* instance;
