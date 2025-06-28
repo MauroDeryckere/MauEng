@@ -11,6 +11,7 @@
 	- [Debugging - Logging](#debugging---logging)
 	- [Debugging - Asserts](#debugging---asserts)
 	- [Event System (delegates)](#event-system-(delegates))
+	- [Timer Manager](#timer-manager)
 	- [UUID](#uuid)
 	- [Profiling](#profiling)
 	- [Libraries](#libraries)
@@ -61,6 +62,7 @@ arrows / WASD cam movement<br>
 Sprint control<br>
 <br>
 ## Core
+The core of the engine contains basic functionality that is used by the engine (and the game). It includes debugging tools, a timer manager, an event system, a UUID generator, and profiling tools.
 
 ### Debugging -Logging
 The logger can log in the console and a file using different log priority levels and categories. Priority of logging can be adjusted to skip logging all levels below set level. Colors of the console logs are configurable.
@@ -100,6 +102,10 @@ ME_VERIFY(CalculateAndValidatePath(), "Path must be valid");
 ```
 
 ### Event System (delegates)
+TODO 
+
+### Timer Manager
+TODO
 
 ### UUID
 Small custom UUID library that generates a unique identifier for each object. It is used to identify objects in the engine, such as entities, components, and resources.</br></br>
@@ -136,6 +142,7 @@ Core libraries used all over the engine, that the user may or may not also need 
 ## Engine
 
 ## Input System
+TODO
 
 ## Component System
 The engine currently uses a wrapper around entts component system, it supports almost all functions entt offers.
