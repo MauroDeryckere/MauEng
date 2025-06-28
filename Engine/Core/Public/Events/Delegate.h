@@ -11,9 +11,11 @@
 #include "DelegateDelayedUnSubscription.h"
 #include "../Shared/AssertsInternal.h"
 
-// TODO consider weak ptr for T* or an IsAlive call in memnber function handler
-// Because this could be an issue when its an end of frame event, and the object has been destroyed when the event fires (object destroys sgould be delayed until after anyway though)
-// But if object that isnt managed by engine (?)
+#include "ListenerHandlers.h"
+
+// TODO consider weak ptr for T* or an IsAlive call in member function handler
+// Because this could be an issue when it's an end of frame event, and the object has been destroyed when the event fires (object destroys should be delayed until after anyway though)
+// But if object that isn't managed by engine (?)
 
 // Delegate is in class A
 // class B is subscribed & is deleted
@@ -24,47 +26,53 @@
 
 namespace MauCor
 {
-	struct ListenerHandle final
-	{
-		uint32_t id{ 0 };
-		void* const owner{ nullptr };
-
-		bool constexpr operator==(ListenerHandle const& other) const noexcept
-		{
-			return id == other.id and owner == other.owner;
-		}
-		bool constexpr operator!=(ListenerHandle const& other) const noexcept
-		{
-			return !(*this == other);
-		}
-	};
-
-	template<typename EventType, typename Callable>
-	concept EventCallable = std::invocable<Callable, EventType const&>;
-
 	template<typename EventType>
 	class DelegateInternal final : public std::enable_shared_from_this<DelegateInternal<EventType>>
 	{
 	public:
-		template<typename Callable>
-		requires EventCallable<EventType, Callable>
+		template<typename Callable, typename E = EventType>
+			requires !std::is_void_v<E> && CallableWithParam<E, Callable>
 		ListenerHandle const& Subscribe(Callable&& callable, void* owner = nullptr)
 		{
-			m_Listeners.emplace_back(std::make_unique<CallableHandler>(ListenerHandle{ ++m_NextListenerId, owner }, std::forward<Callable>(callable)));
+			m_Listeners.emplace_back(std::make_unique<CallableHandler<EventType>>(ListenerHandle{ ++m_NextListenerId, owner }, std::forward<Callable>(callable)));
+			return m_Listeners.back()->GetHandle();
+		}
+		// For callables expecting no parameters (void)
+		template<typename Callable, typename E = EventType>
+			requires (std::is_void_v<E> && CallableNoParam<Callable>)
+		ListenerHandle const& Subscribe(Callable&& callable, void* owner = nullptr)
+		{
+			m_Listeners.emplace_back(std::make_unique<CallableHandler<EventType>>(ListenerHandle{ ++m_NextListenerId, owner }, std::forward<Callable>(callable)));
 			return m_Listeners.back()->GetHandle();
 		}
 
-		template<typename T>
-		ListenerHandle const& Subscribe(void (T::* memFunc)(EventType const&), T* instance, void* owner = nullptr)
+		template<typename T, typename E = EventType>
+			requires (!std::is_void_v<E>)
+		ListenerHandle const& Subscribe(void (T::* memFunc)(E const&), T* instance, void* owner = nullptr)
 		{
-			m_Listeners.emplace_back(std::make_unique<MemberFunHandler<T>>(ListenerHandle{ ++m_NextListenerId, owner ? owner : instance }, instance, memFunc));
+			m_Listeners.emplace_back(std::make_unique<MemberFunHandler<T, EventType>>(ListenerHandle{ ++m_NextListenerId, owner ? owner : instance }, instance, memFunc));
+			return m_Listeners.back()->GetHandle();
+		}
+		template<typename T, typename E = EventType>
+			requires (std::is_void_v<E>)
+		ListenerHandle const& Subscribe(void (T::* memFunc)(), T* instance, void* owner = nullptr)
+		{
+			m_Listeners.emplace_back(std::make_unique<MemberFunHandler<T, EventType>>(ListenerHandle{ ++m_NextListenerId, owner ? owner : instance }, instance, memFunc));
 			return m_Listeners.back()->GetHandle();
 		}
 
-		template<typename T>
-		ListenerHandle const& Subscribe(void (T::* memFunc)(EventType const&) const, T const* instance, void* owner = nullptr)
+		template<typename T, typename E = EventType>
+			requires (!std::is_void_v<E>)
+		ListenerHandle const& Subscribe(void (T::* memFunc)(E const&) const, T const* instance, void* owner = nullptr)
 		{
-			m_Listeners.emplace_back(std::make_unique<MemberFunHandlerConst<T>>(ListenerHandle{ ++m_NextListenerId, owner ? owner : const_cast<void*>(static_cast<void const*>(instance)) }, instance, memFunc));
+			m_Listeners.emplace_back(std::make_unique<MemberFunHandlerConst<T, EventType>>(ListenerHandle{ ++m_NextListenerId, owner ? owner : const_cast<void*>(static_cast<void const*>(instance)) }, instance, memFunc));
+			return m_Listeners.back()->GetHandle();
+		}
+		template<typename T, typename E = EventType>
+			requires (std::is_void_v<E>)
+		ListenerHandle const& Subscribe(void (T::* memFunc)() const, T const* instance, void* owner = nullptr)
+		{
+			m_Listeners.emplace_back(std::make_unique<MemberFunHandlerConst<T, EventType>>(ListenerHandle{ ++m_NextListenerId, owner ? owner : const_cast<void*>(static_cast<void const*>(instance)) }, instance, memFunc));
 			return m_Listeners.back()->GetHandle();
 		}
 
@@ -176,9 +184,10 @@ namespace MauCor
 				}) > 0;
 		}
 
-
 		// Broadcast immediately (blocking broadcast)
-		void Broadcast(EventType const& event) const noexcept
+		template<typename E = EventType>
+			requires (!std::is_void_v<E>)
+		void Broadcast(E const& event) const noexcept
 		{
 			for (auto&& l : m_Listeners)
 			{
@@ -188,14 +197,39 @@ namespace MauCor
 				}
 			}
 		}
+		// Broadcast immediately (blocking broadcast)
+		template<typename E = EventType>
+			requires (std::is_void_v<E>)
+		void Broadcast() const noexcept
+		{
+			for (auto&& l : m_Listeners)
+			{
+				if (l->IsValid())
+				{
+					l->Invoke();
+				}
+			}
+		}
 
 		//Broadcast event for end of the frame (non blocking broadcast)
-		void QueueBroadcast(EventType const& event) const noexcept
+		template<typename E = EventType>
+			requires (!std::is_void_v<E>)
+		void QueueBroadcast(E const& event) const noexcept
 		{
 			auto& e{ EventManager::GetInstance() };
 
 			auto self{ this->weak_from_this() };
 			e.Enqueue(std::make_unique<DeferredEvent>(self, event));
+		}
+		//Broadcast event for end of the frame (non blocking broadcast)
+		template<typename E = EventType>
+			requires (std::is_void_v<E>)
+		void QueueBroadcast() const noexcept
+		{
+			auto& e{ EventManager::GetInstance() };
+
+			auto self{ this->weak_from_this() };
+			e.Enqueue(std::make_unique<DeferredEvent>(self));
 		}
 
 		void Clear() noexcept
@@ -211,22 +245,42 @@ namespace MauCor
 		}
 
 	private:
+		std::vector<std::unique_ptr<IListenerHandler<EventType>>> m_Listeners;
+		uint32_t m_NextListenerId{ 1 };
+
+		std::vector<void const*> m_OwnerUnSubs;
+		std::vector<ListenerHandle> m_HandleUnSubs;
+
+		bool m_ShouldClear { false };
+
+#pragma region PrivateTemplatedClasses
 		class DeferredEvent final : public IDeferredEvent
 		{
 		public:
 			using DelegateType = const MauCor::DelegateInternal<EventType>;
 
-			DeferredEvent(std::weak_ptr<DelegateType> delegate, EventType const& event) :
-				IDeferredEvent{ },
-				m_pDelegate{ delegate },
-				m_Event{ event } { }
+			template<typename T = EventType, typename = std::enable_if_t<!std::is_void_v<T>>>
+			explicit DeferredEvent(std::weak_ptr<DelegateType> delegate, T const& event)
+				: m_pDelegate{ delegate }, m_Event{ event } { }
+
+			template<typename T = EventType, typename = std::enable_if_t<std::is_void_v<T>>, typename = void>
+			explicit DeferredEvent(std::weak_ptr<DelegateType> delegate)
+				: m_pDelegate{ delegate } { }
+
 			virtual ~DeferredEvent() override = default;
 
 			virtual void Dispatch() override
 			{
 				if (auto ptr{ m_pDelegate.lock() })
 				{
-					ptr->Broadcast(m_Event);
+					if constexpr (std::is_void_v<EventType>)
+					{
+						ptr->Broadcast();
+					}
+					else
+					{
+						ptr->Broadcast(m_Event);
+					}
 				}
 			}
 
@@ -237,7 +291,7 @@ namespace MauCor
 
 		private:
 			std::weak_ptr<DelegateType> m_pDelegate;
-			EventType m_Event;
+			std::conditional_t<std::is_void_v<EventType>, std::monostate, EventType> m_Event;
 		};
 
 		class DelegateDelayedUnSub final : public IDelegateDelayedUnSubscription
@@ -247,7 +301,8 @@ namespace MauCor
 
 			explicit DelegateDelayedUnSub(std::weak_ptr<DelegateType> delegate) :
 				IDelegateDelayedUnSubscription{ },
-				m_pDelegate{ delegate } {}
+				m_pDelegate{ delegate } {
+			}
 
 			virtual ~DelegateDelayedUnSub() override = default;
 
@@ -267,198 +322,62 @@ namespace MauCor
 		private:
 			std::weak_ptr<DelegateType> m_pDelegate;
 		};
-
-		class IListenerHandler
-		{
-		public:
-			explicit IListenerHandler(ListenerHandle const& handle) : m_ListenerHandle{ handle } { }
-			virtual ~IListenerHandler() = default;
-
-			virtual void Invoke(EventType const&) const noexcept = 0;
-			[[nodiscard]] virtual bool IsValid() const noexcept = 0;
-
-			[[nodiscard]] ListenerHandle const& GetHandle() const noexcept { return m_ListenerHandle; }
-
-			IListenerHandler(IListenerHandler const&) = delete;
-			IListenerHandler(IListenerHandler&&) = delete;
-			IListenerHandler& operator=(IListenerHandler const&) = delete;
-			IListenerHandler& operator=(IListenerHandler&&) = delete;
-		protected:
-			ListenerHandle m_ListenerHandle;
-		};
-
-		class CallableHandler final : public IListenerHandler
-		{
-		public:
-			template<typename Callable>
-			requires EventCallable<EventType, Callable>
-			explicit CallableHandler(ListenerHandle const& handle, Callable&& cb) :
-				IListenerHandler{ handle },
-				m_Callback{ std::forward<Callable>(cb) } { }
-
-			~CallableHandler() override = default;
-
-			virtual void Invoke(EventType const& e) const noexcept override { m_Callback(e); }
-			[[nodiscard]] virtual bool IsValid() const noexcept override { return true; }
-
-			CallableHandler(CallableHandler const&) = delete;
-			CallableHandler(CallableHandler&&) = delete;
-			CallableHandler& operator=(CallableHandler const&) = delete;
-			CallableHandler& operator=(CallableHandler&&) = delete;
-
-		private:
-			std::function<void(EventType const&)> m_Callback;
-		};
-
-		template<typename T>
-		class MemberFunHandler final : public IListenerHandler
-		{
-		public:
-			using MemFnType = void (T::*)(EventType const&);
-
-			explicit MemberFunHandler(ListenerHandle const& handle, T* obj, MemFnType fn) :
-				IListenerHandler{ handle },
-				m_pObject{ obj },
-				m_MemFn{ fn } { }
-
-			~MemberFunHandler() override = default;
-
-			virtual void Invoke(EventType const& e) const noexcept override { (m_pObject->*m_MemFn)(e); }
-			[[nodiscard]] virtual bool IsValid() const noexcept override { return m_pObject != nullptr; }
-
-			MemberFunHandler(MemberFunHandler const&) = delete;
-			MemberFunHandler(MemberFunHandler&&) = delete;
-			MemberFunHandler& operator=(MemberFunHandler const&) = delete;
-			MemberFunHandler& operator=(MemberFunHandler&&) = delete;
-
-		private:
-			T* m_pObject;
-			MemFnType m_MemFn;
-		};
-
-		template<typename T>
-		class MemberFunHandlerConst final : public IListenerHandler
-		{
-		public:
-			using MemFnType = void (T::*)(EventType const&) const;
-
-			MemberFunHandlerConst(ListenerHandle const& handle, T const* obj, MemFnType fn) :
-				IListenerHandler{ handle },
-				m_Object{ obj },
-				m_MemFn{ fn } { }
-
-			void Invoke(EventType const& e) const noexcept override
-			{
-				(m_Object->*m_MemFn)(e);
-			}
-
-			bool IsValid() const noexcept override { return m_Object != nullptr; }
-
-			MemberFunHandlerConst(MemberFunHandlerConst const&) = delete;
-			MemberFunHandlerConst(MemberFunHandlerConst&&) = delete;
-			MemberFunHandlerConst& operator=(MemberFunHandlerConst const&) = delete;
-			MemberFunHandlerConst& operator=(MemberFunHandlerConst&&) = delete;
-
-		private:
-			T const* m_Object;
-			MemFnType m_MemFn;
-		};
-
-		std::vector<std::unique_ptr<IListenerHandler>> m_Listeners;
-		uint32_t m_NextListenerId{ 0 };
-
-		std::vector<void const*> m_OwnerUnSubs;
-		std::vector<ListenerHandle> m_HandleUnSubs;
-
-		bool m_ShouldClear { false };
+#pragma endregion
 	};
 
-	template<typename EventType>
+	template<typename EventType = void>
 	class Delegate final
 	{
 	public:
-		template<typename T>
-		struct DelegateBindingConstMemFn final
-		{
-			using MemFnType = void (T::*)(EventType const&) const;
-
-			DelegateBindingConstMemFn(void (T::* memFunc)(EventType const&) const, T const* instance, void* owner = nullptr) :
-				m_Instance{ instance }, m_MemFn{ memFunc }, m_Owner{ owner } {}
-
-			T const* m_Instance;
-			MemFnType m_MemFn;
-			void* m_Owner;
-		};
-
-		template<typename T>
-		struct DelegateBindingMemFn final
-		{
-			using MemFnType = void (T::*)(EventType const&);
-
-			DelegateBindingMemFn(void (T::* memFunc)(EventType const&), T* instance, void* owner = nullptr) :
-				m_Instance{ instance }, m_MemFn{ memFunc }, m_Owner{ owner } {
-			}
-
-			T* m_Instance;
-			MemFnType m_MemFn;
-			void* m_Owner;
-		};
-
-		template<typename Callable>
-		struct DelegateBindingCallable final
-		{
-			DelegateBindingCallable(Callable&& callable, void* owner = nullptr) :
-				m_Callable{ std::move(callable) }, m_Owner{ owner } { }
-
-			Callable m_Callable;
-			void* m_Owner;
-			
-		};
-
-
 		Delegate() : m_pDelegate{ std::make_shared<DelegateInternal<EventType>>() } { }
 		~Delegate() = default;
 
 		[[nodiscard]] DelegateInternal<EventType>* Get() const noexcept { return m_pDelegate.get(); }
 
-		// Subsrcibes
+		// Subscribes
 		//Subscribe using const member function
 		template<typename T>
-		ListenerHandle const& Subscribe(DelegateBindingConstMemFn<T> const& binding) noexcept
+		ListenerHandle const& Subscribe(BindingConstMemFn<T, EventType> const& binding) noexcept
 		{
-			return Get()->Subscribe(binding.m_MemFn, binding.m_Instance, binding.m_Owner);
+			return Get()->Subscribe(binding.memFn, binding.instance, binding.owner);
 		}
 		template<typename T>
-		ListenerHandle const& Subscribe(DelegateBindingMemFn<T> const& binding) noexcept
+		ListenerHandle const& Subscribe(BindingMemFn<T, EventType> const& binding) noexcept
 		{
-			return Get()->Subscribe(binding.m_MemFn, binding.m_Instance, binding.m_Owner);
+			return Get()->Subscribe(binding.memFn, binding.instance, binding.owner);
 		}
 		template<typename Callable>
-		requires EventCallable<EventType, Callable>
-		ListenerHandle const& Subscribe(DelegateBindingCallable<Callable> const& binding) noexcept
+			requires CallableWithParam<EventType, Callable>
+		ListenerHandle const& Subscribe(BindingCallable<Callable> const& binding) noexcept
 		{
-			return Get()->Subscribe(std::move(binding.m_Callable), binding.m_Owner);
+			return Get()->Subscribe(std::move(binding.callable), binding.owner);
 		}
 
 		template<typename T>
-		ListenerHandle const& operator+=(DelegateBindingConstMemFn<T> const& binding) noexcept
+		ListenerHandle const& operator+=(BindingConstMemFn<T, EventType> const& binding) noexcept
 		{
-			return Get()->Subscribe(binding.m_MemFn, binding.m_Instance, binding.m_Owner);
+			return Get()->Subscribe(binding.memFn, binding.instance, binding.owner);
 		}
 		//Subscribe using member function
 		template<typename T>
-		ListenerHandle const& operator+=(DelegateBindingMemFn<T> const& binding) noexcept
+		ListenerHandle const& operator+=(BindingMemFn<T, EventType> const& binding) noexcept
 		{
-			return Get()->Subscribe(binding.m_MemFn, binding.m_Instance, binding.m_Owner);
+			return Get()->Subscribe(binding.memFn, binding.instance, binding.owner);
 		}
 		//Subscribe using callable 
 		template<typename Callable>
-		requires EventCallable<EventType, Callable>
-		ListenerHandle const& operator+=(DelegateBindingCallable<Callable> const& binding) noexcept
+			requires (!std::is_void_v<EventType>&& CallableWithParam<EventType, Callable>)
+		ListenerHandle const& operator+=(BindingCallable<Callable> const& binding) noexcept
 		{
-			return Get()->Subscribe(std::move(binding.m_Callable), binding.m_Owner);
+			return Get()->Subscribe(std::move(binding.callable), binding.owner);
 		}
-
+		//Subscribe using callable 
+		template<typename Callable>
+			requires (std::is_void_v<EventType>&& CallableNoParam<Callable>)
+		ListenerHandle const& operator+=(BindingCallable<Callable> const& binding) noexcept
+		{
+			return Get()->Subscribe(std::move(binding.callable), binding.owner);
+		}
 
 		// UnSubs (delayed)
 		bool UnSubscribe(void const* owner) noexcept
@@ -516,25 +435,48 @@ namespace MauCor
 			return Get()->UnSubscribeImmediate(handle);
 		}
 
-
 		// Broadcasts immediately
-		void Broadcast(EventType const& event) const noexcept
+		template<typename E = EventType>
+			requires (!std::is_void_v<E>)
+		void Broadcast(E const& event) const noexcept
 		{
 			Get()->Broadcast(event);
 		}
+		// Broadcasts immediately
+		template<typename E = EventType>
+			requires (std::is_void_v<E>)
+		void Broadcast() const noexcept
+		{
+			Get()->Broadcast();
+		}
+
 		// Queue broadcast for end of frame
-		void QueueBroadcast(EventType const& event) const noexcept
+		template<typename E = EventType>
+			requires (!std::is_void_v<E>)
+		void QueueBroadcast(E const& event) const noexcept
 		{
 			Get()->QueueBroadcast(event);
 		}
+		// Queue broadcast for end of frame
+		template<typename E = EventType>
+			requires (std::is_void_v<E>)
+		void QueueBroadcast() const noexcept
+		{
+			Get()->QueueBroadcast();
+		}
 
 		// Broadcasts immediately
-		void operator<(EventType const& event) noexcept
+		template<typename E = EventType>
+		std::enable_if_t<!std::is_void_v<E>>
+		operator<(E const& event) noexcept
 		{
 			Broadcast(event);
 		}
-		// queue Broadcast
-		void operator<<(EventType const& event) noexcept
+
+		// Broadcasts immediately
+		template<typename E = EventType>
+		std::enable_if_t<!std::is_void_v<E>>
+		operator<<(E const& event) noexcept
 		{
 			QueueBroadcast(event);
 		}
@@ -551,24 +493,6 @@ namespace MauCor
 	private:
 		std::shared_ptr<DelegateInternal<EventType>> m_pDelegate;
 	};
-
-	template<typename T, typename EventType>
-	auto Bind(void (T::* memFn)(EventType const&) const, T const* instance, void* owner = nullptr)
-	{
-		return typename Delegate<EventType>::template DelegateBindingConstMemFn<T>(memFn, instance, owner);
-	}
-	template<typename T, typename EventType>
-	auto Bind(void (T::* memFn)(EventType const&), T* instance, void* owner = nullptr)
-	{
-		return typename Delegate<EventType>::template DelegateBindingMemFn<T>(memFn, instance, owner);
-	}
-
-	template<typename EventType, typename Callable>
-	requires EventCallable<EventType, Callable>
-	auto Bind(Callable&& callable, void* owner = nullptr)
-	{
-		return typename Delegate<EventType>::template DelegateBindingCallable<Callable>(std::move(callable), owner);
-	}
 }
 
 #endif

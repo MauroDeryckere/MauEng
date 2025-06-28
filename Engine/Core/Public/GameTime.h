@@ -7,6 +7,11 @@
 
 namespace MauEng
 {
+	class Engine;
+}
+
+namespace MauCor
+{
 	class Time final : public MauCor::Singleton<Time>
 	{
 	public:
@@ -26,7 +31,7 @@ namespace MauEng
 		virtual ~Time() override = default;
 
 		// Allow engine to call update functions, but users can not
-		friend class Engine;
+		friend class MauEng::Engine;
 
 		std::chrono::steady_clock::time_point m_LastTime{ std::chrono::high_resolution_clock::now() };
 

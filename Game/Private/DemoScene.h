@@ -7,6 +7,7 @@ namespace MauGam
 {
 	DECLARE_LOG_CATEGORY_EXTERN(TestLogCategory)
 	DECLARE_LOG_CATEGORY_EXTERN(TestLogCategory2)
+	DECLARE_LOG_CATEGORY_EXTERN(TestTimers)
 
 	struct TestEvent
 	{
@@ -23,6 +24,7 @@ namespace MauGam
 		virtual void OnRender() const override;
 	private:
 		MauCor::Delegate<TestEvent> m_DelegateTest{};
+		MauCor::Delegate<> m_DelegateVoidTest{};
 
 		enum class EDemo : uint8_t
 		{
@@ -82,7 +84,12 @@ namespace MauGam
 		void OutputKeybinds();
 
 		void OnDelegate(TestEvent const& event);
+		void OnDelegateVoid();
 		void OnDelegateConst(TestEvent const& event) const;
+		void OnDelegateConstVoid() const;
+
+		void OnTimerFires();
+		void OnTimerFiresConst() const;
 	};
 }
 

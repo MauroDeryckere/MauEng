@@ -4,6 +4,7 @@
 #include <memory>
 
 #include "Logger/Logger.h"
+#include "GameTime.h"
 #include "Profiling/Profiler.h"
 #include "Profiling/InstrumentorTimer.h"
 
@@ -22,10 +23,15 @@ namespace MauCor
 		[[nodiscard]] static Profiler& GetProfiler() { return (*m_pProfiler); }
 		static void RegisterProfiler(std::unique_ptr<Profiler>&& pProfiler);
 
+
+		[[nodiscard]] static MauCor::Time& GetTime() { return MauCor::Time::GetInstance(); }
+
 	private:
 		static std::unique_ptr<Logger> m_pLogger;
 		static std::unique_ptr<Profiler> m_pProfiler;
 	};
+
+#define TIME MauCor::CoreServiceLocator::GetTime()
 
 #pragma region EasyAccessHelpers
 #define LOGGER MauCor::CoreServiceLocator::GetLogger()
