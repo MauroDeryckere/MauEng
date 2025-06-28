@@ -402,24 +402,6 @@ namespace MauCor
 	private:
 		std::shared_ptr<DelegateInternal<EventType>> m_pDelegate;
 	};
-
-	template<typename T, typename EventType>
-	auto Bind(void (T::* memFn)(EventType const&) const, T const* instance, void* owner = nullptr)
-	{
-		return BindingConstMemFn<T, EventType>(memFn, instance, owner);
-	}
-	template<typename T, typename EventType>
-	auto Bind(void (T::* memFn)(EventType const&), T* instance, void* owner = nullptr)
-	{
-		return BindingMemFn<T, EventType>(memFn, instance, owner);
-	}
-
-	template<typename EventType, typename Callable>
-		requires CallableWithParam<EventType, Callable>
-	auto Bind(Callable&& callable, void* owner = nullptr)
-	{
-		return BindingCallable<Callable>(std::move(callable), owner);
-	}
 }
 
 #endif

@@ -206,7 +206,7 @@ namespace MauCor
 	};
 
 
-	template<typename T, typename EventType>
+	template<typename T, typename EventType = void>
 	struct BindingConstMemFn final
 	{
 		using MemFnType = void (T::*)(EventType const&) const;
@@ -218,7 +218,20 @@ namespace MauCor
 		MemFnType memFn;
 		void* owner;
 	};
-	template<typename T, typename EventType>
+	template<typename T>
+	struct BindingConstMemFn<T, void> final
+	{
+		using MemFnType = void (T::*)() const;
+
+		explicit BindingConstMemFn(MemFnType mem, T* ins, void* own = nullptr)
+			: instance{ ins }, memFn{ mem }, owner{ own } {
+		}
+
+		T* instance;
+		MemFnType memFn;
+		void* owner;
+	};
+	template<typename T, typename EventType = void>
 	struct BindingMemFn final
 	{
 		using MemFnType = void (T::*)(EventType const&);
@@ -230,6 +243,19 @@ namespace MauCor
 		MemFnType memFn;
 		void* owner;
 	};
+	template<typename T>
+	struct BindingMemFn<T, void> final
+	{
+		using MemFnType = void (T::*)();
+
+		explicit BindingMemFn(MemFnType mem, T* ins, void* own = nullptr)
+			: instance{ ins }, memFn{ mem }, owner{ own } { }
+
+		T* instance;
+		MemFnType memFn;
+		void* owner;
+	};
+
 	template<typename Callable>
 	struct BindingCallable final
 	{
@@ -239,6 +265,24 @@ namespace MauCor
 		Callable callable;
 		void* owner;
 	};
+
+	template<typename T, typename EventType>
+	auto Bind(void (T::* memFn)(EventType const&) const, T const* instance, void* owner = nullptr)
+	{
+		return BindingConstMemFn<T, EventType>(memFn, instance, owner);
+	}
+	template<typename T, typename EventType>
+	auto Bind(void (T::* memFn)(EventType const&), T* instance, void* owner = nullptr)
+	{
+		return BindingMemFn<T, EventType>(memFn, instance, owner);
+	}
+
+	template<typename EventType, typename Callable>
+		requires CallableWithParam<EventType, Callable>
+	auto Bind(Callable&& callable, void* owner = nullptr)
+	{
+		return BindingCallable<Callable>(std::move(callable), owner);
+	}
 }
 
 #endif
