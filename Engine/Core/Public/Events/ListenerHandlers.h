@@ -297,7 +297,7 @@ namespace MauCor
 		return BindingMemFn<T, void>(memFn, instance, owner);
 	}
 
-	template<typename ParamType, typename Callable>
+	template<typename ParamType = void, typename Callable>
 		requires (std::is_void_v<ParamType> && CallableNoParam<Callable>)
 	auto Bind(Callable&& callable, void* owner = nullptr)
 	{

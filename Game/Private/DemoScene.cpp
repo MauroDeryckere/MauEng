@@ -46,7 +46,7 @@ namespace MauGam
 						m_TimerManager.RemoveTimer(handle2);
 					}, 1.f, true) };
 
-				m_TimerManager.ResetTimer(handle1);
+				m_TimerManager %= (handle1);
 
 				if (m_TimerManager.IsTimerActive(handle1))
 				{
@@ -87,7 +87,7 @@ namespace MauGam
 
 			{
 				// Next ticks
-				m_TimerManager.SetTimerForNextTick([&]()
+				m_TimerManager *= MauCor::Bind([&]()
 					{
 						ME_LOG_DEBUG(TestTimers, "Next tick timer fired");
 					});

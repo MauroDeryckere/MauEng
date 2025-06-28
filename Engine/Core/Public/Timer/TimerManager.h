@@ -294,6 +294,29 @@ namespace MauCor
 			}
 		}
 
+		void ResetAllTimers(void const* owner, float newDuration = 0.f, bool isLooping = false) noexcept
+		{
+			ME_CORE_ASSERT(owner);
+
+			for (auto& timer : m_Timers)
+			{
+				if (timer.handler->GetHandle().owner == owner)
+				{
+					if (newDuration == 0.f)
+					{
+						timer.remainingTime = timer.duration;
+						timer.isLooping = isLooping;
+					}
+					else
+					{
+						timer.remainingTime = newDuration;
+						timer.duration = newDuration;
+						timer.isLooping = isLooping;
+					}
+				}
+			}
+		}
+
 		[[nodiscard]] bool IsTimerExpired(ListenerHandle const& handle) const noexcept
 		{
 			auto const it{ m_TimerID_TimerVecIdx.find(handle.id) };
@@ -314,10 +337,46 @@ namespace MauCor
 		}
 
 #pragma region operators
-		// TODO
-		// += for set timer
-		// -= for remove timer
-		// %= for reset timer
+		TimerManager& operator-=(ListenerHandle const& handle) noexcept
+		{
+			RemoveTimer(handle);
+			return *this;
+		}
+		TimerManager& operator-=(void const* owner) noexcept
+		{
+			RemoveAllTimers(owner);
+			return *this;
+		}
+
+		TimerManager& operator%=(ListenerHandle const& handle) noexcept
+		{
+			ResetTimer(handle);
+			return *this;
+		}
+		TimerManager& operator%=(void const* owner) noexcept
+		{
+			ResetAllTimers(owner);
+			return *this;
+		}
+
+		template<typename Callable>
+		TimerManager& operator*=(BindingCallable<Callable> const& binding)
+		{
+			SetTimerForNextTick(std::move(binding.callable));
+			return *this;
+		}
+		template<typename T>
+		TimerManager& operator*=(BindingConstMemFn<T> const& binding) noexcept
+		{
+			SetTimerForNextTick(binding.memFn, binding.instance, binding.owner);
+			return *this;
+		}
+		template<typename T>
+		TimerManager& operator*=(BindingMemFn<T> const& binding) noexcept
+		{
+			SetTimerForNextTick(binding.memFn, binding.instance, binding.owner);
+			return *this;
+		}
 #pragma endregion
 
 		TimerManager(TimerManager const&) = delete;
