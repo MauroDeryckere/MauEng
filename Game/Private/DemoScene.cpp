@@ -98,6 +98,7 @@ namespace MauGam
 #pragma endregion
 
 #pragma region EventTest
+		// eventtype
 		{
 			auto const& handle{ m_DelegateTest += MauCor::Bind<TestEvent>
 			(
@@ -139,6 +140,34 @@ namespace MauGam
 			m_DelegateTest << event;
 
 			m_DelegateTest.Clear();
+		}
+		// void
+		{
+			auto const& handle{ m_DelegateVoidTest += MauCor::Bind<void>
+			(
+				[this]() { OnDelegateVoid(); }
+			) };
+			m_DelegateVoidTest.Get()->Broadcast();
+			m_DelegateVoidTest /= handle;
+			m_DelegateVoidTest.Broadcast();
+
+			m_DelegateVoidTest.Get()->Subscribe([this]() { OnDelegateVoid(); }, this);
+			m_DelegateVoidTest.Broadcast();
+			m_DelegateVoidTest /= this;
+			m_DelegateVoidTest.Broadcast();
+
+			m_DelegateVoidTest.Get()->Subscribe(&DemoScene::OnDelegateVoid, this);
+			m_DelegateVoidTest.Get()->Subscribe(&DemoScene::OnDelegateConstVoid, this);
+
+			auto bind = MauCor::Bind(&DemoScene::OnDelegateVoid, this);
+
+			m_DelegateVoidTest += bind;
+			m_DelegateVoidTest += MauCor::Bind(&DemoScene::OnDelegateConstVoid, this);
+
+			m_DelegateVoidTest.Broadcast();
+			m_DelegateVoidTest /= this;
+			m_DelegateVoidTest.Broadcast();
+			m_DelegateVoidTest.Clear();
 		}
 #pragma endregion
 
@@ -335,9 +364,10 @@ namespace MauGam
 			SetSceneAABBOverride({ -300, -300, -300 }, { 300, 300, 300 });
 		}
 		break;
-
-		default:
-			break;
+	case EDemo::COUNT:
+		break;
+	default:
+		break;
 		}
 #pragma endregion
 
@@ -1025,9 +1055,19 @@ namespace MauGam
 		ME_LOG_DEBUG(LogGame, "Event test: {}", event.i);
 	}
 
+	void DemoScene::OnDelegateVoid()
+	{
+		ME_LOG_DEBUG(LogGame, "Event test (void)");
+	}
+
 	void DemoScene::OnDelegateConst(TestEvent const& event) const
 	{
 		ME_LOG_DEBUG(LogGame, "Event test (const): {}", event.i);
+	}
+
+	void DemoScene::OnDelegateConstVoid() const
+	{
+		ME_LOG_DEBUG(LogGame, "Event test (const) (void)");
 	}
 
 	void DemoScene::OnTimerFires()

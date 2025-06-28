@@ -32,23 +32,47 @@ namespace MauCor
 	class DelegateInternal final : public std::enable_shared_from_this<DelegateInternal<EventType>>
 	{
 	public:
-		template<typename Callable>
-			requires CallableWithParam<EventType, Callable>
+		template<typename Callable, typename E = EventType>
+			requires !std::is_void_v<E> && CallableWithParam<E, Callable>
+		ListenerHandle const& Subscribe(Callable&& callable, void* owner = nullptr)
+		{
+			m_Listeners.emplace_back(std::make_unique<CallableHandler<EventType>>(ListenerHandle{ ++m_NextListenerId, owner }, std::forward<Callable>(callable)));
+			return m_Listeners.back()->GetHandle();
+		}
+		// For callables expecting no parameters (void)
+		template<typename Callable, typename E = EventType>
+			requires (std::is_void_v<E> && CallableNoParam<Callable>)
 		ListenerHandle const& Subscribe(Callable&& callable, void* owner = nullptr)
 		{
 			m_Listeners.emplace_back(std::make_unique<CallableHandler<EventType>>(ListenerHandle{ ++m_NextListenerId, owner }, std::forward<Callable>(callable)));
 			return m_Listeners.back()->GetHandle();
 		}
 
-		template<typename T>
-		ListenerHandle const& Subscribe(void (T::* memFunc)(EventType const&), T* instance, void* owner = nullptr)
+		template<typename T, typename E = EventType>
+			requires (!std::is_void_v<E>)
+		ListenerHandle const& Subscribe(void (T::* memFunc)(E const&), T* instance, void* owner = nullptr)
+		{
+			m_Listeners.emplace_back(std::make_unique<MemberFunHandler<T, EventType>>(ListenerHandle{ ++m_NextListenerId, owner ? owner : instance }, instance, memFunc));
+			return m_Listeners.back()->GetHandle();
+		}
+		template<typename T, typename E = EventType>
+			requires (std::is_void_v<E>)
+		ListenerHandle const& Subscribe(void (T::* memFunc)(), T* instance, void* owner = nullptr)
 		{
 			m_Listeners.emplace_back(std::make_unique<MemberFunHandler<T, EventType>>(ListenerHandle{ ++m_NextListenerId, owner ? owner : instance }, instance, memFunc));
 			return m_Listeners.back()->GetHandle();
 		}
 
-		template<typename T>
-		ListenerHandle const& Subscribe(void (T::* memFunc)(EventType const&) const, T const* instance, void* owner = nullptr)
+		template<typename T, typename E = EventType>
+			requires (!std::is_void_v<E>)
+		ListenerHandle const& Subscribe(void (T::* memFunc)(E const&) const, T const* instance, void* owner = nullptr)
+		{
+			m_Listeners.emplace_back(std::make_unique<MemberFunHandlerConst<T, EventType>>(ListenerHandle{ ++m_NextListenerId, owner ? owner : const_cast<void*>(static_cast<void const*>(instance)) }, instance, memFunc));
+			return m_Listeners.back()->GetHandle();
+		}
+		template<typename T, typename E = EventType>
+			requires (std::is_void_v<E>)
+		ListenerHandle const& Subscribe(void (T::* memFunc)() const, T const* instance, void* owner = nullptr)
 		{
 			m_Listeners.emplace_back(std::make_unique<MemberFunHandlerConst<T, EventType>>(ListenerHandle{ ++m_NextListenerId, owner ? owner : const_cast<void*>(static_cast<void const*>(instance)) }, instance, memFunc));
 			return m_Listeners.back()->GetHandle();
@@ -162,9 +186,10 @@ namespace MauCor
 				}) > 0;
 		}
 
-
 		// Broadcast immediately (blocking broadcast)
-		void Broadcast(EventType const& event) const noexcept
+		template<typename E = EventType>
+		std::enable_if_t<!std::is_void_v<E>>
+		Broadcast(E const& event) const noexcept
 		{
 			for (auto&& l : m_Listeners)
 			{
@@ -174,14 +199,39 @@ namespace MauCor
 				}
 			}
 		}
+		// Broadcast immediately (blocking broadcast)
+		template<typename E = EventType>
+		std::enable_if_t<std::is_void_v<E>>
+		Broadcast() const noexcept
+		{
+			for (auto&& l : m_Listeners)
+			{
+				if (l->IsValid())
+				{
+					l->Invoke();
+				}
+			}
+		}
 
 		//Broadcast event for end of the frame (non blocking broadcast)
-		void QueueBroadcast(EventType const& event) const noexcept
+		template<typename E = EventType>
+		std::enable_if_t<!std::is_void_v<E>>
+		QueueBroadcast(E const& event) const noexcept
 		{
 			auto& e{ EventManager::GetInstance() };
 
 			auto self{ this->weak_from_this() };
 			e.Enqueue(std::make_unique<DeferredEvent>(self, event));
+		}
+		//Broadcast event for end of the frame (non blocking broadcast)
+		template<typename E = EventType>
+		std::enable_if_t<std::is_void_v<E>>
+		QueueBroadcast() const noexcept
+		{
+			auto& e{ EventManager::GetInstance() };
+
+			auto self{ this->weak_from_this() };
+			e.Enqueue(std::make_unique<DeferredEvent>(self));
 		}
 
 		void Clear() noexcept
@@ -211,18 +261,28 @@ namespace MauCor
 		public:
 			using DelegateType = const MauCor::DelegateInternal<EventType>;
 
-			DeferredEvent(std::weak_ptr<DelegateType> delegate, EventType const& event) :
-				IDeferredEvent{ },
-				m_pDelegate{ delegate },
-				m_Event{ event } {
-			}
+			template<typename T = EventType, typename = std::enable_if_t<!std::is_void_v<T>>>
+			explicit DeferredEvent(std::weak_ptr<DelegateType> delegate, T const& event)
+				: m_pDelegate{ delegate }, m_Event{ event } { }
+
+			template<typename T = EventType, typename = std::enable_if_t<std::is_void_v<T>>, typename = void>
+			explicit DeferredEvent(std::weak_ptr<DelegateType> delegate)
+				: m_pDelegate{ delegate } { }
+
 			virtual ~DeferredEvent() override = default;
 
 			virtual void Dispatch() override
 			{
 				if (auto ptr{ m_pDelegate.lock() })
 				{
-					ptr->Broadcast(m_Event);
+					if constexpr (std::is_void_v<EventType>)
+					{
+						ptr->Broadcast();
+					}
+					else
+					{
+						ptr->Broadcast(m_Event);
+					}
 				}
 			}
 
@@ -233,7 +293,7 @@ namespace MauCor
 
 		private:
 			std::weak_ptr<DelegateType> m_pDelegate;
-			EventType m_Event;
+			std::conditional_t<std::is_void_v<EventType>, std::monostate, EventType> m_Event;
 		};
 
 		class DelegateDelayedUnSub final : public IDelegateDelayedUnSubscription
@@ -267,7 +327,7 @@ namespace MauCor
 #pragma endregion
 	};
 
-	template<typename EventType>
+	template<typename EventType = void>
 	class Delegate final
 	{
 	public:
@@ -308,7 +368,14 @@ namespace MauCor
 		}
 		//Subscribe using callable 
 		template<typename Callable>
-			requires CallableWithParam<EventType, Callable>
+			requires (!std::is_void_v<EventType>&& CallableWithParam<EventType, Callable>)
+		ListenerHandle const& operator+=(BindingCallable<Callable> const& binding) noexcept
+		{
+			return Get()->Subscribe(std::move(binding.callable), binding.owner);
+		}
+		//Subscribe using callable 
+		template<typename Callable>
+			requires (std::is_void_v<EventType>&& CallableNoParam<Callable>)
 		ListenerHandle const& operator+=(BindingCallable<Callable> const& binding) noexcept
 		{
 			return Get()->Subscribe(std::move(binding.callable), binding.owner);
@@ -371,23 +438,47 @@ namespace MauCor
 		}
 
 		// Broadcasts immediately
-		void Broadcast(EventType const& event) const noexcept
+		template<typename E = EventType>
+			requires (!std::is_void_v<E>)
+		void Broadcast(E const& event) const noexcept
 		{
 			Get()->Broadcast(event);
 		}
+		// Broadcasts immediately
+		template<typename E = EventType>
+			requires (std::is_void_v<E>)
+		void Broadcast() const noexcept
+		{
+			Get()->Broadcast();
+		}
+
 		// Queue broadcast for end of frame
-		void QueueBroadcast(EventType const& event) const noexcept
+		template<typename E = EventType>
+			requires (!std::is_void_v<E>)
+		void QueueBroadcast(E const& event) const noexcept
 		{
 			Get()->QueueBroadcast(event);
 		}
+		// Queue broadcast for end of frame
+		template<typename E = EventType>
+			requires (std::is_void_v<E>)
+		void QueueBroadcast() const noexcept
+		{
+			Get()->QueueBroadcast();
+		}
 
 		// Broadcasts immediately
-		void operator<(EventType const& event) noexcept
+		template<typename E = EventType>
+		std::enable_if_t<!std::is_void_v<E>>
+		operator<(E const& event) noexcept
 		{
 			Broadcast(event);
 		}
-		// queue Broadcast
-		void operator<<(EventType const& event) noexcept
+
+		// Broadcasts immediately
+		template<typename E = EventType>
+		std::enable_if_t<!std::is_void_v<E>>
+		operator<<(E const& event) noexcept
 		{
 			QueueBroadcast(event);
 		}

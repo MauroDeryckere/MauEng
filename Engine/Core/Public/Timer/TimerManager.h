@@ -313,6 +313,13 @@ namespace MauCor
 			m_NextTickHandlers.clear();
 		}
 
+#pragma region operators
+		// TODO
+		// += for set timer
+		// -= for remove timer
+		// %= for reset timer
+#pragma endregion
+
 		TimerManager(TimerManager const&) = delete;
 		TimerManager(TimerManager&&) = delete;
 		TimerManager& operator=(TimerManager const&) = delete;

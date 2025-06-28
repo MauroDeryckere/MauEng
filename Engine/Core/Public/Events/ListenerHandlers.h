@@ -8,6 +8,9 @@ namespace MauCor
 	template<typename ParamType, typename Callable>
 	concept CallableWithParam = std::invocable<Callable, ParamType const&>;
 
+	template<typename Callable>
+	concept CallableNoParam = std::invocable<Callable>;
+
 	template<typename ParamType = void>
 	class IListenerHandler
 	{
@@ -223,11 +226,11 @@ namespace MauCor
 	{
 		using MemFnType = void (T::*)() const;
 
-		explicit BindingConstMemFn(MemFnType mem, T* ins, void* own = nullptr)
+		explicit BindingConstMemFn(MemFnType mem, T const* ins, void* own = nullptr)
 			: instance{ ins }, memFn{ mem }, owner{ own } {
 		}
 
-		T* instance;
+		T const* instance;
 		MemFnType memFn;
 		void* owner;
 	};
@@ -266,19 +269,43 @@ namespace MauCor
 		void* owner;
 	};
 
-	template<typename T, typename EventType>
-	auto Bind(void (T::* memFn)(EventType const&) const, T const* instance, void* owner = nullptr)
+	// Const member function with ParamType
+	template<typename T, typename ParamType>
+	auto Bind(void (T::* memFn)(ParamType const&) const, T const* instance, void* owner = nullptr)
 	{
-		return BindingConstMemFn<T, EventType>(memFn, instance, owner);
-	}
-	template<typename T, typename EventType>
-	auto Bind(void (T::* memFn)(EventType const&), T* instance, void* owner = nullptr)
-	{
-		return BindingMemFn<T, EventType>(memFn, instance, owner);
+		return BindingConstMemFn<T, ParamType>(memFn, instance, owner);
 	}
 
-	template<typename EventType, typename Callable>
-		requires CallableWithParam<EventType, Callable>
+	// Const member function with no param (ParamType = void)
+	template<typename T>
+	auto Bind(void (T::* memFn)() const, T const* instance, void* owner = nullptr)
+	{
+		return BindingConstMemFn<T, void>(memFn, instance, owner);
+	}
+
+	// Non-const member function with ParamType
+	template<typename T, typename ParamType>
+	auto Bind(void (T::* memFn)(ParamType const&), T* instance, void* owner = nullptr)
+	{
+		return BindingMemFn<T, ParamType>(memFn, instance, owner);
+	}
+
+	// Non-const member function with no param (ParamType = void)
+	template<typename T>
+	auto Bind(void (T::* memFn)(), T* instance, void* owner = nullptr)
+	{
+		return BindingMemFn<T, void>(memFn, instance, owner);
+	}
+
+	template<typename ParamType, typename Callable>
+		requires (std::is_void_v<ParamType> && CallableNoParam<Callable>)
+	auto Bind(Callable&& callable, void* owner = nullptr)
+	{
+		static_assert(std::is_void_v<ParamType>);
+		return BindingCallable<Callable>(std::move(callable), owner);
+	}
+	template<typename ParamType, typename Callable>
+		requires (!std::is_void_v<ParamType> && CallableWithParam<ParamType, Callable>)
 	auto Bind(Callable&& callable, void* owner = nullptr)
 	{
 		return BindingCallable<Callable>(std::move(callable), owner);
