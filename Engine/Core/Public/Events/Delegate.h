@@ -269,41 +269,6 @@ namespace MauCor
 	class Delegate final
 	{
 	public:
-		template<typename T>
-		struct DelegateBindingConstMemFn final
-		{
-			using MemFnType = void (T::*)(EventType const&) const;
-
-			explicit DelegateBindingConstMemFn(void (T::* memFunc)(EventType const&) const, T const* instance, void* owner = nullptr) :
-				instance{ instance }, memFn{ memFunc }, owner{ owner } { }
-
-			T const* instance;
-			MemFnType memFn;
-			void* owner;
-		};
-		template<typename T>
-		struct DelegateBindingMemFn final
-		{
-			using MemFnType = void (T::*)(EventType const&);
-
-			explicit DelegateBindingMemFn(void (T::* mem)(EventType const&), T* ins, void* own = nullptr) :
-				instance{ ins }, memFn{ mem }, owner{ own } { }
-
-			T* instance;
-			MemFnType memFn;
-			void* owner;
-		};
-		template<typename Callable>
-		struct DelegateBindingCallable final
-		{
-			explicit DelegateBindingCallable(Callable&& call, void* own = nullptr) :
-				callable{ std::move(call) }, owner{ own } { }
-
-			Callable callable;
-			void* owner;
-		};
-
-
 		Delegate() : m_pDelegate{ std::make_shared<DelegateInternal<EventType>>() } { }
 		~Delegate() = default;
 
@@ -312,41 +277,40 @@ namespace MauCor
 		// Subscribes
 		//Subscribe using const member function
 		template<typename T>
-		ListenerHandle const& Subscribe(DelegateBindingConstMemFn<T> const& binding) noexcept
+		ListenerHandle const& Subscribe(BindingConstMemFn<T, EventType> const& binding) noexcept
 		{
 			return Get()->Subscribe(binding.memFn, binding.instance, binding.owner);
 		}
 		template<typename T>
-		ListenerHandle const& Subscribe(DelegateBindingMemFn<T> const& binding) noexcept
+		ListenerHandle const& Subscribe(BindingMemFn<T, EventType> const& binding) noexcept
 		{
 			return Get()->Subscribe(binding.memFn, binding.instance, binding.owner);
 		}
 		template<typename Callable>
 			requires CallableWithParam<EventType, Callable>
-		ListenerHandle const& Subscribe(DelegateBindingCallable<Callable> const& binding) noexcept
+		ListenerHandle const& Subscribe(BindingCallable<Callable> const& binding) noexcept
 		{
 			return Get()->Subscribe(std::move(binding.callable), binding.owner);
 		}
 
 		template<typename T>
-		ListenerHandle const& operator+=(DelegateBindingConstMemFn<T> const& binding) noexcept
+		ListenerHandle const& operator+=(BindingConstMemFn<T, EventType> const& binding) noexcept
 		{
 			return Get()->Subscribe(binding.memFn, binding.instance, binding.owner);
 		}
 		//Subscribe using member function
 		template<typename T>
-		ListenerHandle const& operator+=(DelegateBindingMemFn<T> const& binding) noexcept
+		ListenerHandle const& operator+=(BindingMemFn<T, EventType> const& binding) noexcept
 		{
 			return Get()->Subscribe(binding.memFn, binding.instance, binding.owner);
 		}
 		//Subscribe using callable 
 		template<typename Callable>
 			requires CallableWithParam<EventType, Callable>
-		ListenerHandle const& operator+=(DelegateBindingCallable<Callable> const& binding) noexcept
+		ListenerHandle const& operator+=(BindingCallable<Callable> const& binding) noexcept
 		{
 			return Get()->Subscribe(std::move(binding.callable), binding.owner);
 		}
-
 
 		// UnSubs (delayed)
 		bool UnSubscribe(void const* owner) noexcept
@@ -404,7 +368,6 @@ namespace MauCor
 			return Get()->UnSubscribeImmediate(handle);
 		}
 
-
 		// Broadcasts immediately
 		void Broadcast(EventType const& event) const noexcept
 		{
@@ -443,19 +406,19 @@ namespace MauCor
 	template<typename T, typename EventType>
 	auto Bind(void (T::* memFn)(EventType const&) const, T const* instance, void* owner = nullptr)
 	{
-		return typename Delegate<EventType>::template DelegateBindingConstMemFn<T>(memFn, instance, owner);
+		return BindingConstMemFn<T, EventType>(memFn, instance, owner);
 	}
 	template<typename T, typename EventType>
 	auto Bind(void (T::* memFn)(EventType const&), T* instance, void* owner = nullptr)
 	{
-		return typename Delegate<EventType>::template DelegateBindingMemFn<T>(memFn, instance, owner);
+		return BindingMemFn<T, EventType>(memFn, instance, owner);
 	}
 
 	template<typename EventType, typename Callable>
 		requires CallableWithParam<EventType, Callable>
 	auto Bind(Callable&& callable, void* owner = nullptr)
 	{
-		return typename Delegate<EventType>::template DelegateBindingCallable<Callable>(std::move(callable), owner);
+		return BindingCallable<Callable>(std::move(callable), owner);
 	}
 }
 
