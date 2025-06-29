@@ -18,6 +18,8 @@ file(GLOB_RECURSE ENGINE_PUBLIC_HEADERS
     "${ENGINE_PUBLIC_DIR}/*.h"
 )
 
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/Libs)
+
 # Create the Engine target (as a library)
 add_library(Engine STATIC
     ${ENGINE_PRIVATE_SOURCES}
@@ -39,6 +41,7 @@ target_link_libraries(Engine
     PUBLIC
         MauEngCore
         Renderer
+        MauENG_ImGUI
     PRIVATE
 )
 
