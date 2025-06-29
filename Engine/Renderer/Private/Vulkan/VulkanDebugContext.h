@@ -15,6 +15,9 @@ namespace MauRen
 		void Initialize(VulkanInstanceContext* pVulkanInstanceContext);
 		void Destroy();
 
+		// ImGUI check result 
+		static void CheckVkResult(VkResult err);
+
 		VulkanDebugContext(VulkanDebugContext const&) = delete;
 		VulkanDebugContext(VulkanDebugContext&&) = delete;
 		VulkanDebugContext& operator=(VulkanDebugContext const&) = delete;

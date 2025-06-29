@@ -21,9 +21,14 @@ namespace MauRen
 		virtual ~NullRenderer() override = default;
 
 		virtual void Init() override {}
+		virtual void InitImGUI() override {}
+
 		virtual void Destroy() override {}
 
+		virtual void BeginImGUIFrame() override {}
 		virtual void Render(MauEng::Camera const*) override {}
+		virtual void EndImGUIFrame() override {}
+
 		virtual void ResizeWindow() override {}
 
 		virtual void QueueDraw(glm::mat4 const&, MauEng::CStaticMesh const&) override {}

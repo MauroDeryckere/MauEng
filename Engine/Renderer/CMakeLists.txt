@@ -47,6 +47,9 @@ target_include_directories(stb INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/Libs/stb)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/Libs/vma)
 
 target_link_libraries(Renderer
+    PUBLIC
+        MauENG_ImGUI
+        MauENG_ImGUI_Backends
     PRIVATE
         stb
         assimp

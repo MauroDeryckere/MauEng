@@ -41,6 +41,7 @@ namespace MauRen
 
 		[[nodiscard]] VkQueue GetGraphicsQueue() const noexcept { return m_IsUsingUnifiedGraphicsPresentQueue ? m_UnifiedGraphicsPresentQueue : m_GraphicsQueue; }
 		[[nodiscard]] VkQueue GetPresentQueue() const noexcept { return m_IsUsingUnifiedGraphicsPresentQueue ? m_UnifiedGraphicsPresentQueue : m_PresentQueue; }
+		[[nodiscard]] QueueFamilyIndices GetQueueFamilyIndices() const noexcept { return m_FamilyIndices; }
 
 		[[nodiscard]] VkSampleCountFlagBits GetSampleCount() const noexcept { return m_MsaaSamples; }
 
@@ -72,6 +73,8 @@ namespace MauRen
 		uint32_t const MAX_SAMPLED_IMAGES{ 0 };
 		uint32_t const MAX_DESCRIPTORS_SET{ 0 };
 		uint32_t const MAX_DESCRIPTORS_STAGE{ 0 };
+
+		QueueFamilyIndices m_FamilyIndices;
 
 		void SelectPhysicalDevice();
 		void CreateLogicalDevice();

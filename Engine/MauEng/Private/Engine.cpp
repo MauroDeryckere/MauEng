@@ -21,8 +21,9 @@
 
 #include "Input/KeyInfo.h"
 
-#include "imgui.h"
 #include "backends/imgui_impl_sdl3.h"
+#include "imgui.h"
+#include "backends/imgui_impl_vulkan.h"
 
 namespace MauEng
 {
@@ -48,7 +49,7 @@ namespace MauEng
 		InternalServiceLocator::RegisterRenderer(MauRen::CreateVulkanRenderer(m_Window->window, DEBUG_RENDERER));
 		InternalServiceLocator::GetRenderer().Init();
 
-		m_Window->Initialize();
+		m_Window->InitWindowEvent_PostRendererInit();
 		SDL_GL_SetSwapInterval(0);
 
 #pragma region INIT_IMGUI
@@ -59,8 +60,9 @@ namespace MauEng
 		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+		io.DisplaySize = ImVec2{ static_cast<float>(m_Window->width), static_cast<float>(m_Window->height) };
 
-		ImGui_ImplSDL3_InitForVulkan(m_Window->window);
+		InternalServiceLocator::GetRenderer().InitImGUI();
 #pragma endregion
 
 		// Also initializes input manager
@@ -80,6 +82,9 @@ namespace MauEng
 
 		// Cleanup all core dependences & singletons
 		InternalServiceLocator::GetRenderer().Destroy();
+
+		ImGui_ImplSDL3_Shutdown();
+		ImGui::DestroyContext();
 
 		m_Window->Destroy();
 	}
@@ -150,7 +155,7 @@ namespace MauEng
 				}
 			}
 
-			doContinue = inputManager.ProcessInput();
+			doContinue = inputManager.ProcessInput(m_Window->window);
 			eventManager.ProcessEvents();
 
 			while (time.IsLag())
@@ -166,6 +171,39 @@ namespace MauEng
 			if (not IsMinimised)
 			{
 				sceneManager.Tick();
+
+				RENDERER.BeginImGUIFrame();
+
+				// Create main dockspace window
+				ImGuiWindowFlags windowFlags{ ImGuiWindowFlags_NoDocking };
+				windowFlags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
+				windowFlags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
+				windowFlags |= ImGuiWindowFlags_NoBackground;
+
+				ImGuiViewport* viewport{ ImGui::GetMainViewport() };
+				ImGui::SetNextWindowPos(viewport->WorkPos);
+				ImGui::SetNextWindowSize(viewport->WorkSize);
+				ImGui::SetNextWindowViewport(viewport->ID);
+
+				ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+				ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+
+				ImGui::Begin("DockSpaceBackground", nullptr, windowFlags);
+				ImGui::PopStyleVar(2);
+
+				// Use flags to prevent window splitting in center
+				ImGuiID const dockspaceID{ ImGui::GetID("MyDockSpace") };
+				ImGui::DockSpace(dockspaceID, ImVec2{ 0.0f, 0.0f }, ImGuiDockNodeFlags_PassthruCentralNode);
+
+				ImGui::End();
+
+				// Temp test
+				ImGui::Begin("Debug Info");
+				ImGui::Text("Frame time: %.3f ms", 10.f);
+				ImGui::End();
+
+				RENDERER.EndImGUIFrame();
+
 				sceneManager.Render({m_Window->width, m_Window->height});
 			}
 

@@ -12,6 +12,10 @@
 
 #include "VulkanMemoryAllocator.h"
 
+#include "imgui.h"
+#include "backends/imgui_impl_sdl3.h"
+#include "backends/imgui_impl_vulkan.h"
+
 namespace MauRen
 {
 	VulkanRenderer::VulkanRenderer(SDL_Window* pWindow, DebugRenderer& debugRenderer) :
@@ -110,8 +114,6 @@ namespace MauRen
 			
 		}
 
-
-
 		m_QuadVertexBuffer = { sizeof(m_QuadVertices[0]) * std::size(m_QuadVertices),
 			VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
 			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, 1.f
@@ -138,12 +140,54 @@ namespace MauRen
 		stagingBuffer.Destroy();
 	}
 
+	void VulkanRenderer::InitImGUI()
+	{
+		ImGui_ImplSDL3_InitForVulkan(m_pWindow);
+
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+
+		ImGui_ImplVulkan_InitInfo initInfo{};
+		initInfo.Instance = m_InstanceContext.GetInstance();
+		initInfo.PhysicalDevice = deviceContext->GetPhysicalDevice();
+		initInfo.Device = deviceContext->GetLogicalDevice();
+		initInfo.QueueFamily = deviceContext->GetQueueFamilyIndices().graphicsFamily.value();
+		initInfo.Queue = deviceContext->GetGraphicsQueue();
+		initInfo.PipelineCache = VK_NULL_HANDLE;
+		initInfo.DescriptorPool = m_DescriptorContext.GetImGUIPool();
+		initInfo.Allocator = nullptr;
+		initInfo.MinImageCount = MAX_FRAMES_IN_FLIGHT;
+		initInfo.ImageCount = MAX_FRAMES_IN_FLIGHT;
+		initInfo.CheckVkResultFn = VulkanDebugContext::CheckVkResult;
+		initInfo.ApiVersion = VULKAN_API_VERSION;
+		initInfo.UseDynamicRendering = true;
+
+		VkFormat const colorFormat{ m_SwapChainContext.GetImageFormat() };
+
+		VkPipelineRenderingCreateInfoKHR pipelineRenderingCreateInfo{};
+		pipelineRenderingCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR;
+		pipelineRenderingCreateInfo.colorAttachmentCount = 1;
+		pipelineRenderingCreateInfo.pColorAttachmentFormats = &colorFormat;
+		pipelineRenderingCreateInfo.depthAttachmentFormat = VK_FORMAT_UNDEFINED;
+		pipelineRenderingCreateInfo.stencilAttachmentFormat = VK_FORMAT_UNDEFINED;
+
+		initInfo.PipelineRenderingCreateInfo = pipelineRenderingCreateInfo;
+
+		if (not ImGui_ImplVulkan_Init(&initInfo))
+		{
+			throw std::runtime_error("Failed to init ImGui_ImplVulkan_Init");
+		}
+	}
+
 	void VulkanRenderer::Destroy()
 	{
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 
 		// Wait for GPU to finish everything
 		vkDeviceWaitIdle(deviceContext->GetLogicalDevice());
+
+#pragma region ImGuiDestroy
+		ImGui_ImplVulkan_Shutdown();
+#pragma endregion
 
 		for (size_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; ++i)
 		{
@@ -192,8 +236,22 @@ namespace MauRen
 		m_InstanceContext.Destroy();
 	}
 
+	void VulkanRenderer::BeginImGUIFrame()
+	{
+		ImGui_ImplSDL3_NewFrame();
+		ImGui_ImplVulkan_NewFrame();
+
+		ImGuiIO& io{ ImGui::GetIO() };
+		int fbWidth, fbHeight;
+		SDL_GetWindowSize(m_pWindow, & fbWidth, & fbHeight);
+		io.DisplaySize = ImVec2{ static_cast<float>(fbWidth), static_cast<float>(fbHeight) };
+
+		ImGui::NewFrame();
+	}
+
 	void VulkanRenderer::Render(MauEng::Camera const* cam)
 	{
+
 		DrawFrame(cam);
 
 		if (m_DebugRenderer)
@@ -201,6 +259,11 @@ namespace MauRen
 			m_DebugRenderer->m_ActivePoints.clear();
 			m_DebugRenderer->m_IndexBuffer.clear();
 		}
+	}
+
+	void VulkanRenderer::EndImGUIFrame()
+	{
+
 	}
 
 	void VulkanRenderer::ResizeWindow()
@@ -622,6 +685,41 @@ namespace MauRen
 			vkCmdEndRendering(commandBuffer);
 		}
 #pragma endregion
+#pragma region ImGUI_PASS
+		{
+			ME_PROFILE_SCOPE("ImGUI Pass")
+			auto& swapColor{ m_SwapChainContext.GetSwapchainImages()[imageIndex] };
+
+			if (swapColor.layout != VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
+			{
+				swapColor.TransitionImageLayout(commandBuffer,
+					VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+					VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
+					VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT);
+			}
+
+			VkRenderingAttachmentInfo colorAttachment{};
+			colorAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+			colorAttachment.imageView = swapColor.imageViews[0];
+			colorAttachment.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+			colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+			colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+
+			VkRenderingInfo renderInfo{};
+			renderInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
+			renderInfo.renderArea = VkRect2D{ {0, 0}, m_SwapChainContext.GetExtent() };
+			renderInfo.layerCount = 1;
+			renderInfo.colorAttachmentCount = 1;
+			renderInfo.pColorAttachments = &colorAttachment;
+			renderInfo.pDepthAttachment = nullptr;
+			renderInfo.pStencilAttachment = nullptr;
+
+			vkCmdBeginRendering(commandBuffer, &renderInfo);
+				ImGui::Render();
+				ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer);
+			vkCmdEndRendering(commandBuffer);
+		}
+#pragma endregion
 #pragma region POST_DRAW
 		{
 			ME_PROFILE_SCOPE("Post draw")
@@ -638,6 +736,12 @@ namespace MauRen
 			if (VK_SUCCESS != vkEndCommandBuffer(commandBuffer))
 			{
 				throw std::runtime_error("Failed to record command buffer!");
+			}
+
+			if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+			{
+				ImGui::UpdatePlatformWindows();
+				ImGui::RenderPlatformWindowsDefault();
 			}
 		}
 #pragma endregion
@@ -847,7 +951,8 @@ namespace MauRen
 		}
 
 		m_FramebufferResized = false;
-
+		//ImGui_ImplVulkan_InvalidateDeviceObjects();
+		//ImGui_ImplVulkan_
 		m_SwapChainContext.ReCreate(m_pWindow, &m_GraphicsPipelineContext, &m_SurfaceContext, m_CommandPoolManager, m_DescriptorContext);
 
 		return true;

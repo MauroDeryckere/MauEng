@@ -22,6 +22,7 @@ namespace MauRen
 		[[nodiscard]] VkDescriptorSetLayout GetDescriptorSetLayout() const noexcept { return m_DescriptorSetLayout; }
 		[[nodiscard]] std::vector<VkDescriptorSet> const& GetDescriptorSets() const noexcept { return m_DescriptorSets; }
 		[[nodiscard]] VkDescriptorPool GetDescriptorPool() const noexcept { return m_DescriptorPool; }
+		[[nodiscard]] VkDescriptorPool GetImGUIPool() const noexcept { return m_ImGUIPool; }
 
 		void BindTexture(uint32_t destLocation, VkImageView imageView, VkImageLayout imageLayout);
 		void BindMaterialBuffer(VkDescriptorBufferInfo bufferInfo, uint32_t frame);
@@ -48,6 +49,8 @@ namespace MauRen
 	private:
 		VkDescriptorSetLayout m_DescriptorSetLayout{ VK_NULL_HANDLE };
 		VkDescriptorPool m_DescriptorPool{ VK_NULL_HANDLE };
+
+		VkDescriptorPool m_ImGUIPool{ VK_NULL_HANDLE };
 
 		// !
 		// common practice to rank from "least updated" descriptor set(index 0) to "most frequent updated"
