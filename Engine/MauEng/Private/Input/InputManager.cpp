@@ -380,13 +380,20 @@ namespace MauEng
 		}
 
 		SDL_Event event;
+		bool mouseCaptured{ false };
+		bool keyboardCaptured{ false };
+
 		while (SDL_PollEvent(&event))
 		{
-			ImGui_ImplSDL3_ProcessEvent(&event);
-			ImGuiIO const& io{ ImGui::GetIO() };
-			bool const mouseCaptured{ io.WantCaptureMouse };
-			bool const keyboardCaptured{ io.WantCaptureKeyboard };
-			
+			if constexpr (USE_IMGUI)
+			{
+				ImGui_ImplSDL3_ProcessEvent(&event);
+				ImGuiIO const& io{ ImGui::GetIO() };
+
+				mouseCaptured = io.WantCaptureMouse;
+				keyboardCaptured = io.WantCaptureKeyboard;
+			}
+
 			// Quit event -> return false so the gameloop can stop
 			if ((event.type == SDL_EVENT_QUIT || event.type == SDL_EVENT_WINDOW_CLOSE_REQUESTED) && event.window.windowID == SDL_GetWindowID(window))
 			{
@@ -578,12 +585,19 @@ namespace MauEng
 			}
 		}
 
-		ImGuiIO const& io{ ImGui::GetIO() };
-		if (!io.WantCaptureMouse)
+		if constexpr(USE_IMGUI)
+		{
+			ImGuiIO const& io{ ImGui::GetIO() };
+
+			mouseCaptured = io.WantCaptureMouse;
+			keyboardCaptured = io.WantCaptureKeyboard;
+		}
+
+		if (!mouseCaptured)
 		{
 			HandleMouseHeldAndMovement(keyboardContexts);
 		}
-		if (!io.WantCaptureKeyboard)
+		if (!keyboardCaptured)
 		{
 			HandleKeyboardHeld(keyboardContexts);
 		}

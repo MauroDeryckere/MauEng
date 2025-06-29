@@ -21,17 +21,12 @@
 
 #include "Input/KeyInfo.h"
 
-
-
-#include "imgui.h"
-
-#include "ImGUI/ImGUILayer.h"
+#include "GUI/ImGUILayer.h"
 
 namespace MauEng
 {
 	Engine::Engine():
-		m_Window{ std::make_unique<SDLWindow>() },
-		m_ImGuiLayer{ std::make_unique<ImGUILayer>() }
+		m_Window{ std::make_unique<SDLWindow>() }
 	{
 		// Initialize all core dependences & singletons
 		if constexpr (ENABLE_FILE_LOGGING)
@@ -55,7 +50,11 @@ namespace MauEng
 		m_Window->InitWindowEvent_PostRendererInit();
 		SDL_GL_SetSwapInterval(0);
 
-		m_ImGuiLayer->Init(m_Window.get());
+		if constexpr (USE_IMGUI)
+		{
+			InternalServiceLocator::RegisterGUILayer(std::move(std::make_unique<ImGUILayer>()));
+			InternalServiceLocator::GetGUILayer().Init(m_Window.get());
+		}
 
 		// Also initializes input manager
 		auto& inputManager{ InputManager::GetInstance() };
@@ -72,7 +71,7 @@ namespace MauEng
 		auto& inputManager{ InputManager::GetInstance() };
 		inputManager.Destroy();
 
-		m_ImGuiLayer->Destroy();
+		InternalServiceLocator::GetGUILayer().Destroy();
 
 		// Cleanup all core dependences & singletons
 		InternalServiceLocator::GetRenderer().Destroy();
@@ -163,12 +162,12 @@ namespace MauEng
 			{
 				sceneManager.Tick();
 
-				m_ImGuiLayer->BeginFrame();
-
+			#pragma region IMGUI
+				InternalServiceLocator::GetGUILayer().BeginFrame();
 				ME_ENGINE_ASSERT(sceneManager.GetActiveScene()->GetCameraManager().GetActiveCamera());
-				m_ImGuiLayer->Render(sceneManager.GetActiveScene()->GetCameraManager().GetActiveCamera());
-
-				m_ImGuiLayer->EndFrame();
+				InternalServiceLocator::GetGUILayer().Render(sceneManager.GetActiveScene()->GetCameraManager().GetActiveCamera());
+				InternalServiceLocator::GetGUILayer().EndFrame();
+			#pragma endregion
 
 				sceneManager.Render({m_Window->width, m_Window->height});
 			}

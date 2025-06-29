@@ -26,7 +26,6 @@ namespace MauEng
 
 	private:
 		std::unique_ptr<SDLWindow> m_Window;
-		std::unique_ptr<class ImGUILayer> m_ImGuiLayer;
 		void GameLoop() noexcept;
 	};
 }

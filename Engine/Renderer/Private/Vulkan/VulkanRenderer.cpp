@@ -360,8 +360,6 @@ namespace MauRen
 			throw std::runtime_error("Failed to begin recording command buffer!");
 		}
 
-		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
-
 		auto& depth{ m_SwapChainContext.GetDepthImage(m_CurrentFrame) };
 		auto& colour{ m_SwapChainContext.GetColorImage(m_CurrentFrame) };
 		auto& gBufferColor{ m_SwapChainContext.GetGBuffer(m_CurrentFrame).color };
@@ -692,6 +690,7 @@ namespace MauRen
 		}
 #pragma endregion
 #pragma region ImGUI_PASS
+		if constexpr (USE_IMGUI)
 		{
 			ME_PROFILE_SCOPE("ImGUI Pass")
 			auto& swapColor{ m_SwapChainContext.GetSwapchainImages()[imageIndex] };
@@ -744,10 +743,14 @@ namespace MauRen
 				throw std::runtime_error("Failed to record command buffer!");
 			}
 
-			if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+			// TODO maybe move to ImGUI layer 
+			if constexpr (USE_IMGUI)
 			{
-				ImGui::UpdatePlatformWindows();
-				ImGui::RenderPlatformWindowsDefault();
+				if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+				{
+					ImGui::UpdatePlatformWindows();
+					ImGui::RenderPlatformWindowsDefault();
+				}
 			}
 		}
 #pragma endregion
