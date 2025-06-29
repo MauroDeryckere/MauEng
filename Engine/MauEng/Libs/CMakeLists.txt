@@ -11,18 +11,19 @@ add_library(MauENG_ImGUI STATIC
     ImGUI/imgui_demo.cpp
 )
 
-target_include_directories(MauENG_ImGUI PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/ImGUI")
+target_include_directories(MauENG_ImGUI PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/ImGUI/")
 
 # ImGui Backend (SDL2 + Vulkan)
 
 add_library(MauENG_ImGUI_Backends STATIC
    "${CMAKE_CURRENT_SOURCE_DIR}/ImGUI/backends/imgui_impl_vulkan.cpp"
-   "${CMAKE_CURRENT_SOURCE_DIR}/ImGUI/backends/imgui_impl_sdl2.cpp"
+   "${CMAKE_CURRENT_SOURCE_DIR}/ImGUI/backends/imgui_impl_sdl3.cpp"
 )
 
 target_include_directories(MauENG_ImGUI_Backends PUBLIC
-     "${CMAKE_CURRENT_SOURCE_DIR}/ImGUI/imgui"
-     "${CMAKE_CURRENT_SOURCE_DIR}/ImGUI/backends"
+     "${CMAKE_CURRENT_SOURCE_DIR}/ImGUI"
+     "${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Libs/SDL/include"
+     "$ENV{VULKAN_SDK}/Include"
 )
 
 target_link_libraries(MauENG_ImGUI_Backends PUBLIC MauENG_ImGUI)

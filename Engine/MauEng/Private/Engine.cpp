@@ -20,6 +20,10 @@
 #include "Logger/logger.h"
 
 #include "Input/KeyInfo.h"
+
+#include "imgui.h"
+#include "backends/imgui_impl_sdl3.h"
+
 namespace MauEng
 {
 	Engine::Engine():
@@ -45,8 +49,19 @@ namespace MauEng
 		InternalServiceLocator::GetRenderer().Init();
 
 		m_Window->Initialize();
-
 		SDL_GL_SetSwapInterval(0);
+
+#pragma region INIT_IMGUI
+		IMGUI_CHECKVERSION();
+		ImGui::CreateContext();
+
+		ImGuiIO& io{ ImGui::GetIO() };
+		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+
+		ImGui_ImplSDL3_InitForVulkan(m_Window->window);
+#pragma endregion
 
 		// Also initializes input manager
 		auto& inputManager{ InputManager::GetInstance() };
@@ -69,7 +84,7 @@ namespace MauEng
 		m_Window->Destroy();
 	}
 
-	void Engine::Run(std::function<void()> const& load)
+	void Engine::Run(std::function<void()> const& load) noexcept
 	{
 		ME_PROFILE_BEGIN_SESSION("Startup", "Profiling/Startup/Startup")
 		// First load everything the user wants us to load using their "load function"
@@ -79,7 +94,7 @@ namespace MauEng
 		GameLoop();
 	}
 
-	void Engine::GameLoop()
+	void Engine::GameLoop() noexcept
 	{
 		using namespace MauRen;
 

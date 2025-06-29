@@ -42,6 +42,7 @@ target_link_libraries(Engine
         MauEngCore
         Renderer
         MauENG_ImGUI
+        MauENG_ImGUI_Backends
     PRIVATE
 )
 
