@@ -41,25 +41,25 @@ Renderer/Config/VulkanConfigs: buffer sizes, extensions <br>
 Core/Public/Config/EngineConfig.h: macros, general settings<br>
 
 **Key binds**<br>
-SPACE output the keybinds<br>
-F1 Profile<br>
-F2 Toggle light debug render (display spheres for point light, arrow for dir light)<br>
-F3 toggle light mode - point light only, dir light only, both<br>
-F4 toggle shadows<br>
-F5 lower light intensity <br>
-F6 up light intensity<br>
-F7 Toggle rotation<br>
-F8 Toggle Debug render mode<br>
-F9 Randomize light color<br>
-F10 Toggle cam settings<br>
-F11 Toggle tone mapper<br>
+SPACE: Output the keybinds<br>
+F1: Profile<br>
+F2: Toggle light debug render (display spheres for point light, arrow for dir light)<br>
+F3: Toggle light mode - point light only, dir light only, both<br>
+F4: Toggle shadows<br>
+F5: Lower light intensity <br>
+F6: Up light intensity<br>
+F7: Toggle rotation<br>
+F8: Toggle Debug render mode<br>
+F9: Randomize light color<br>
+F10: Toggle cam settings<br>
+F11: Toggle tone mapper<br>
 <br>
-E Lower custom exposure (used in custom exposure mode)<br>
-R Higher custom exposure (used in custom exposure mode)<br>
+E: Lower custom exposure (used in custom exposure mode)<br>
+R: Higher custom exposure (used in custom exposure mode)<br>
 <br>
-Mouse movement, rotate cam<br>
-arrows / WASD cam movement<br>
-Sprint control<br>
+Mouse movement + Left Mouse Button Held: Cam rotation<br>
+Arrows/WASD: Cam movement<br>
+Control: Sprint <br>
 <br>
 ## Core
 The core of the engine contains basic functionality that is used by the engine (and the game). It includes debugging tools, a timer manager, an event system, a UUID generator, and profiling tools.
