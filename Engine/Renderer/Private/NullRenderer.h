@@ -24,6 +24,7 @@ namespace MauRen
 		virtual void InitImGUI() override {}
 
 		virtual void Destroy() override {}
+		virtual void DestroyImGUI() override {}
 
 		virtual void BeginImGUIFrame() override {}
 		virtual void Render(MauEng::Camera const*) override {}

@@ -21,14 +21,17 @@
 
 #include "Input/KeyInfo.h"
 
-#include "backends/imgui_impl_sdl3.h"
+
+
 #include "imgui.h"
-#include "backends/imgui_impl_vulkan.h"
+
+#include "ImGUI/ImGUILayer.h"
 
 namespace MauEng
 {
 	Engine::Engine():
-		m_Window{ std::make_unique<SDLWindow>() }
+		m_Window{ std::make_unique<SDLWindow>() },
+		m_ImGuiLayer{ std::make_unique<ImGUILayer>() }
 	{
 		// Initialize all core dependences & singletons
 		if constexpr (ENABLE_FILE_LOGGING)
@@ -52,18 +55,7 @@ namespace MauEng
 		m_Window->InitWindowEvent_PostRendererInit();
 		SDL_GL_SetSwapInterval(0);
 
-#pragma region INIT_IMGUI
-		IMGUI_CHECKVERSION();
-		ImGui::CreateContext();
-
-		ImGuiIO& io{ ImGui::GetIO() };
-		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
-		io.DisplaySize = ImVec2{ static_cast<float>(m_Window->width), static_cast<float>(m_Window->height) };
-
-		InternalServiceLocator::GetRenderer().InitImGUI();
-#pragma endregion
+		m_ImGuiLayer->Init(m_Window.get());
 
 		// Also initializes input manager
 		auto& inputManager{ InputManager::GetInstance() };
@@ -80,11 +72,10 @@ namespace MauEng
 		auto& inputManager{ InputManager::GetInstance() };
 		inputManager.Destroy();
 
+		m_ImGuiLayer->Destroy();
+
 		// Cleanup all core dependences & singletons
 		InternalServiceLocator::GetRenderer().Destroy();
-
-		ImGui_ImplSDL3_Shutdown();
-		ImGui::DestroyContext();
 
 		m_Window->Destroy();
 	}
@@ -172,37 +163,12 @@ namespace MauEng
 			{
 				sceneManager.Tick();
 
-				RENDERER.BeginImGUIFrame();
+				m_ImGuiLayer->BeginFrame();
 
-				// Create main dockspace window
-				ImGuiWindowFlags windowFlags{ ImGuiWindowFlags_NoDocking };
-				windowFlags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
-				windowFlags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
-				windowFlags |= ImGuiWindowFlags_NoBackground;
+				ME_ENGINE_ASSERT(sceneManager.GetActiveScene()->GetCameraManager().GetActiveCamera());
+				m_ImGuiLayer->Render(sceneManager.GetActiveScene()->GetCameraManager().GetActiveCamera());
 
-				ImGuiViewport* viewport{ ImGui::GetMainViewport() };
-				ImGui::SetNextWindowPos(viewport->WorkPos);
-				ImGui::SetNextWindowSize(viewport->WorkSize);
-				ImGui::SetNextWindowViewport(viewport->ID);
-
-				ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
-				ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
-
-				ImGui::Begin("DockSpaceBackground", nullptr, windowFlags);
-				ImGui::PopStyleVar(2);
-
-				// Use flags to prevent window splitting in center
-				ImGuiID const dockspaceID{ ImGui::GetID("MyDockSpace") };
-				ImGui::DockSpace(dockspaceID, ImVec2{ 0.0f, 0.0f }, ImGuiDockNodeFlags_PassthruCentralNode);
-
-				ImGui::End();
-
-				// Temp test
-				ImGui::Begin("Debug Info");
-				ImGui::Text("Frame time: %.3f ms", 10.f);
-				ImGui::End();
-
-				RENDERER.EndImGUIFrame();
+				m_ImGuiLayer->EndFrame();
 
 				sceneManager.Render({m_Window->width, m_Window->height});
 			}

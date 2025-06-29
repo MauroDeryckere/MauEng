@@ -185,10 +185,6 @@ namespace MauRen
 		// Wait for GPU to finish everything
 		vkDeviceWaitIdle(deviceContext->GetLogicalDevice());
 
-#pragma region ImGuiDestroy
-		ImGui_ImplVulkan_Shutdown();
-#pragma endregion
-
 		for (size_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; ++i)
 		{
 			vkDestroySemaphore(deviceContext->GetLogicalDevice(), m_ImageAvailableSemaphores[i], nullptr);
@@ -234,6 +230,16 @@ namespace MauRen
 		m_DebugContext.Destroy();
 		m_SurfaceContext.Destroy();
 		m_InstanceContext.Destroy();
+	}
+
+	void VulkanRenderer::DestroyImGUI()
+	{
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+
+		// Wait for GPU to finish everything
+		vkDeviceWaitIdle(deviceContext->GetLogicalDevice());
+
+		ImGui_ImplVulkan_Shutdown();
 	}
 
 	void VulkanRenderer::BeginImGUIFrame()
