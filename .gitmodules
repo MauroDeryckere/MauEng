@@ -28,3 +28,7 @@
 [submodule "Engine/Core/Libs/UUID"]
 	path = Engine/Core/Libs/UUID
 	url = https://github.com/MauroDeryckere/UUID
+[submodule "Engine/MauEng/Libs/ImGUI"]
+	path = Engine/MauEng/Libs/ImGUI
+	url = https://github.com/ocornut/imgui.git
+	branch = docking

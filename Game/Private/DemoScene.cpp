@@ -515,6 +515,7 @@ namespace MauGam
 		input.BindAction("Sprint", MauEng::KeyInfo{ SDLK_LCTRL, MauEng::KeyInfo::ActionType::Held });
 
 		input.BindAction("Rotate", MauEng::MouseInfo{ {}, MauEng::MouseInfo::ActionType::Moved });
+		input.BindAction("LeftMBHeld", MauEng::MouseInfo{ {SDL_BUTTON_LEFT}, MauEng::MouseInfo::ActionType::Held });
 
 		//Unbind tests
 		//input.UnBindAction("PrintInfo");
@@ -557,7 +558,7 @@ namespace MauGam
 		}
 
 		float constexpr mouseRotSpeed{ 60 };
-		if (player->IsActionExecuted("Rotate"))
+		if (player->IsActionExecuted("Rotate") and player->IsActionExecuted("LeftMBHeld"))
 		{
 			auto const mouseMovement{ player->GetDeltaMouseMovement() };
 			float const rot{ mouseRotSpeed * TIME.ElapsedSec() };

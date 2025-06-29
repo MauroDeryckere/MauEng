@@ -15,6 +15,14 @@ namespace MauRen
 		DestroyDebugUtilsMessengerEXT(m_pVulkanInstanceContext->GetInstance(), m_DebugMessenger, nullptr);
 	}
 
+	void VulkanDebugContext::CheckVkResult(VkResult err)
+	{
+		if (err != VK_SUCCESS)
+		{
+			LOGGER.Log(MauCor::ELogPriority::Error, LogRenderer, "ImGui Vulkan error: VkResult = {}", static_cast<int>(err));
+		}
+	}
+
 	void VulkanDebugContext::PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo)
 	{
 		// "I've specified all types except for VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT here to receive notifications about possible problems while leaving out verbose general debug info."

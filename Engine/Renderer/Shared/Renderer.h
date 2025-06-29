@@ -22,9 +22,12 @@ namespace MauRen
 		virtual ~Renderer() = default;
 
 		virtual void Init() = 0;
+		virtual void InitImGUI() = 0;
 		virtual void Destroy() = 0;
 
+		virtual void BeginImGUIFrame() = 0;
 		virtual void Render(MauEng::Camera const* cam) = 0;
+		virtual void EndImGUIFrame() = 0;
 
 		virtual void ResizeWindow() = 0;
 		virtual void QueueDraw(glm::mat4 const& transformMat, MauEng::CStaticMesh const& mesh) = 0;

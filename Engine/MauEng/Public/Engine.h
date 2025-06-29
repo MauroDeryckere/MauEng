@@ -17,7 +17,7 @@ namespace MauEng
 		explicit Engine();
 		~Engine();
 
-		void Run(std::function<void()> const& load);
+		void Run(std::function<void()> const& load) noexcept;
 
 		Engine(Engine const&) = delete;
 		Engine(Engine&&) = delete;
@@ -27,7 +27,7 @@ namespace MauEng
 	private:
 		std::unique_ptr<SDLWindow> m_Window;
 
-		void GameLoop();
+		void GameLoop() noexcept;
 	};
 }
 

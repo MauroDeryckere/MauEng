@@ -45,9 +45,13 @@ namespace MauRen
 		virtual ~VulkanRenderer() override = default;
 
 		virtual void Init() override;
+		virtual void InitImGUI() override;
 		virtual void Destroy() override;
 
+		virtual void BeginImGUIFrame() override;
 		virtual void Render(MauEng::Camera const* cam) override;
+		virtual void EndImGUIFrame() override;
+
 		virtual void ResizeWindow() override;
 
 		virtual uint32_t CreateLight() override;

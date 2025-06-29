@@ -126,7 +126,7 @@ namespace MauEng
 		// make sure user cant call destroy or process input
 		friend class Engine;
 		// Internal function to process all input, returns if the application should close based on the processed input
-		[[nodiscard]] bool ProcessInput() noexcept;
+		[[nodiscard]] bool ProcessInput(SDL_Window* window) noexcept;
 		void Destroy();
 
 		// All executed actions this frame

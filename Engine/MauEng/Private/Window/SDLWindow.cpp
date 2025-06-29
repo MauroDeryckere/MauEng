@@ -23,7 +23,7 @@ namespace MauEng
 		{
 			throw std::runtime_error("Failed to create SDL window: " + std::string(SDL_GetError()));
 		}
-		SDL_SetWindowRelativeMouseMode(window, true);
+		//SDL_SetWindowRelativeMouseMode(window, true);
 	}
 
 	SDLWindow::~SDLWindow()
@@ -31,7 +31,7 @@ namespace MauEng
 		Destroy();
 	}
 
-	void SDLWindow::Initialize()
+	void SDLWindow::InitWindowEvent_PostRendererInit()
 	{
 		SDL_SetEventFilter(HandleWindowEvent, this);
 	}

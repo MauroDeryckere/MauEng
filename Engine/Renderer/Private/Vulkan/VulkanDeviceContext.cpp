@@ -222,13 +222,13 @@ namespace MauRen
 
 	void VulkanDeviceContext::CreateLogicalDevice()
 	{
-		QueueFamilyIndices const indices{ FindQueueFamilies(m_PhysicalDevice) };
-		assert(indices.IsComplete());
+		m_FamilyIndices = FindQueueFamilies(m_PhysicalDevice);
+		assert(m_FamilyIndices.IsComplete());
 
 		std::set<uint32_t> uniqueQueueFamilies;
 
-		uniqueQueueFamilies.insert(indices.graphicsFamily.value());
-		uniqueQueueFamilies.insert(indices.presentFamily.value());
+		uniqueQueueFamilies.insert(m_FamilyIndices.graphicsFamily.value());
+		uniqueQueueFamilies.insert(m_FamilyIndices.presentFamily.value());
 
 		float constexpr queuePriority{ 1.0f };
 
@@ -307,20 +307,20 @@ namespace MauRen
 		if constexpr (not FORCE_SEPARATE_GRAPHICS_PRESENT_QUEUES)
 		{
 			// If the families are the same (unified), we can just use one queue for both
-			if (indices.IsGraphicsPresentUnified())
+			if (m_FamilyIndices.IsGraphicsPresentUnified())
 			{
 				LOGGER.Log(MauCor::ELogPriority::Trace, LogRenderer, "Using unified graphics & present queue");
 				m_IsUsingUnifiedGraphicsPresentQueue = true;
 
-				vkGetDeviceQueue(m_LogicalDevice, indices.graphicsFamily.value(), 0, &m_UnifiedGraphicsPresentQueue);
+				vkGetDeviceQueue(m_LogicalDevice, m_FamilyIndices.graphicsFamily.value(), 0, &m_UnifiedGraphicsPresentQueue);
 			}
 			else
 			{
 				LOGGER.Log(MauCor::ELogPriority::Trace, LogRenderer, "Using separate graphics & present queue");
 				m_IsUsingUnifiedGraphicsPresentQueue = false;
 
-				vkGetDeviceQueue(m_LogicalDevice, indices.graphicsFamily.value(), 0, &m_GraphicsQueue);
-				vkGetDeviceQueue(m_LogicalDevice, indices.presentFamily.value(), 0, &m_PresentQueue);
+				vkGetDeviceQueue(m_LogicalDevice, m_FamilyIndices.graphicsFamily.value(), 0, &m_GraphicsQueue);
+				vkGetDeviceQueue(m_LogicalDevice, m_FamilyIndices.presentFamily.value(), 0, &m_PresentQueue);
 			}
 		}
 		else
@@ -328,8 +328,8 @@ namespace MauRen
 			LOGGER.Log(MauCor::ELogPriority::Trace, LogRenderer, "Using separate graphics & present queue");
 			m_IsUsingUnifiedGraphicsPresentQueue = false;
 
-			vkGetDeviceQueue(m_LogicalDevice, indices.graphicsFamily.value(), 0, &m_GraphicsQueue);
-			vkGetDeviceQueue(m_LogicalDevice, indices.presentFamily.value(), 0, &m_PresentQueue);
+			vkGetDeviceQueue(m_LogicalDevice, m_FamilyIndices.graphicsFamily.value(), 0, &m_GraphicsQueue);
+			vkGetDeviceQueue(m_LogicalDevice, m_FamilyIndices.presentFamily.value(), 0, &m_PresentQueue);
 		}
 	}
 

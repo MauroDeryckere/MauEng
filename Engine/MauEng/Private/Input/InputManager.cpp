@@ -3,6 +3,8 @@
 
 #include <SDL3/SDL.h>
 
+#include "backends/imgui_impl_sdl3.h"
+
 namespace MauEng
 {
 	InputManager::InputManager()
@@ -30,7 +32,6 @@ namespace MauEng
 			{
 				a = "DEFAULT";
 			}
-
 		}
 
 		if constexpr (SKIP_CONTROLLER_INPUT_PLAYER_ID_0)
@@ -363,7 +364,7 @@ namespace MauEng
 		}
 	}
 
-	bool InputManager::ProcessInput() noexcept
+	bool InputManager::ProcessInput(SDL_Window* window) noexcept
 	{
 		ME_PROFILE_FUNCTION()
 
@@ -381,51 +382,62 @@ namespace MauEng
 		SDL_Event event;
 		while (SDL_PollEvent(&event))
 		{
+			ImGui_ImplSDL3_ProcessEvent(&event);
+			ImGuiIO const& io{ ImGui::GetIO() };
+			bool const mouseCaptured{ io.WantCaptureMouse };
+			bool const keyboardCaptured{ io.WantCaptureKeyboard };
+			
 			// Quit event -> return false so the gameloop can stop
-			if (event.type == SDL_EVENT_QUIT || event.type == SDL_EVENT_WINDOW_CLOSE_REQUESTED)
+			if ((event.type == SDL_EVENT_QUIT || event.type == SDL_EVENT_WINDOW_CLOSE_REQUESTED) && event.window.windowID == SDL_GetWindowID(window))
 			{
 				return false;
 			}
 
 			// Mouse
-			HandleMouseAction(event, SDL_EVENT_MOUSE_BUTTON_DOWN, MouseInfo::ActionType::Down, keyboardContexts);
-			HandleMouseAction(event, SDL_EVENT_MOUSE_BUTTON_UP, MouseInfo::ActionType::Up, keyboardContexts);
-			HandleMouseAction(event, SDL_EVENT_MOUSE_WHEEL, MouseInfo::ActionType::Scrolled, keyboardContexts);
-			HandleMouseAction(event, SDL_EVENT_MOUSE_MOTION, MouseInfo::ActionType::Moved, keyboardContexts);
-			HandleMouseAction(event, SDL_EVENT_WINDOW_MOUSE_ENTER, MouseInfo::ActionType::EnteredWindow, keyboardContexts);
-			HandleMouseAction(event, SDL_EVENT_WINDOW_MOUSE_LEAVE, MouseInfo::ActionType::LeftWindow, keyboardContexts);
+			if (not mouseCaptured)
+			{
+				HandleMouseAction(event, SDL_EVENT_MOUSE_BUTTON_DOWN, MouseInfo::ActionType::Down, keyboardContexts);
+				HandleMouseAction(event, SDL_EVENT_MOUSE_BUTTON_UP, MouseInfo::ActionType::Up, keyboardContexts);
+				HandleMouseAction(event, SDL_EVENT_MOUSE_WHEEL, MouseInfo::ActionType::Scrolled, keyboardContexts);
+				HandleMouseAction(event, SDL_EVENT_MOUSE_MOTION, MouseInfo::ActionType::Moved, keyboardContexts);
+				HandleMouseAction(event, SDL_EVENT_WINDOW_MOUSE_ENTER, MouseInfo::ActionType::EnteredWindow, keyboardContexts);
+				HandleMouseAction(event, SDL_EVENT_WINDOW_MOUSE_LEAVE, MouseInfo::ActionType::LeftWindow, keyboardContexts);
+			}
 
 			// Keyboard
 			//Down this frame
-			if (event.type == SDL_EVENT_KEY_DOWN && !event.key.repeat)
+			if (not keyboardCaptured)
 			{
-				for (uint32_t i{ 0 }; i < m_ActiveKeyboardMouseContexts.size(); ++i)
+				if (event.type == SDL_EVENT_KEY_DOWN && !event.key.repeat)
 				{
-					auto const& actions{ keyboardContexts[i]->second.mappedKeyboardActions[static_cast<size_t>(KeyInfo::ActionType::Down)]};
-					auto const it{ actions.find(static_cast<uint32_t>(event.key.key)) };
-					if (it != end(actions))
+					for (uint32_t i{ 0 }; i < m_ActiveKeyboardMouseContexts.size(); ++i)
 					{
-						for (auto const& action : it->second)
+						auto const& actions{ keyboardContexts[i]->second.mappedKeyboardActions[static_cast<size_t>(KeyInfo::ActionType::Down)] };
+						auto const it{ actions.find(static_cast<uint32_t>(event.key.key)) };
+						if (it != end(actions))
 						{
-							m_InputDelegateImmediate < InputEvent{ i, action };
-							m_InputDelegateDelayed[i] << InputEvent{ i, action };
+							for (auto const& action : it->second)
+							{
+								m_InputDelegateImmediate < InputEvent{ i, action };
+								m_InputDelegateDelayed[i] << InputEvent{ i, action };
+							}
 						}
 					}
 				}
-			}
-			//Up this frame
-			else if (event.type == SDL_EVENT_KEY_UP)
-			{
-				for (uint32_t i{ 0 }; i < m_ActiveKeyboardMouseContexts.size(); ++i)
+				//Up this frame
+				else if (event.type == SDL_EVENT_KEY_UP)
 				{
-					auto const& actions{ keyboardContexts[i]->second.mappedKeyboardActions[static_cast<size_t>(KeyInfo::ActionType::Up)] };
-					auto it{ actions.find(static_cast<uint32_t>(event.key.key)) };
-					if (it != end(actions))
+					for (uint32_t i{ 0 }; i < m_ActiveKeyboardMouseContexts.size(); ++i)
 					{
-						for (auto const& action : it->second)
+						auto const& actions{ keyboardContexts[i]->second.mappedKeyboardActions[static_cast<size_t>(KeyInfo::ActionType::Up)] };
+						auto it{ actions.find(static_cast<uint32_t>(event.key.key)) };
+						if (it != end(actions))
 						{
-							m_InputDelegateImmediate < InputEvent{ i, action };
-							m_InputDelegateDelayed[i] << InputEvent{ i, action };
+							for (auto const& action : it->second)
+							{
+								m_InputDelegateImmediate < InputEvent{ i, action };
+								m_InputDelegateDelayed[i] << InputEvent{ i, action };
+							}
 						}
 					}
 				}
@@ -566,8 +578,15 @@ namespace MauEng
 			}
 		}
 
-		HandleMouseHeldAndMovement(keyboardContexts);
-		HandleKeyboardHeld(keyboardContexts);
+		ImGuiIO const& io{ ImGui::GetIO() };
+		if (!io.WantCaptureMouse)
+		{
+			HandleMouseHeldAndMovement(keyboardContexts);
+		}
+		if (!io.WantCaptureKeyboard)
+		{
+			HandleKeyboardHeld(keyboardContexts);
+		}
 		HandleGamepadHeld(gamepadContexts);
 		HandleGamepadAxisState(gamepadContexts);
 
