@@ -31,3 +31,4 @@
 [submodule "Engine/MauEng/Libs/ImGUI"]
 	path = Engine/MauEng/Libs/ImGUI
 	url = https://github.com/ocornut/imgui.git
+	branch = docking
