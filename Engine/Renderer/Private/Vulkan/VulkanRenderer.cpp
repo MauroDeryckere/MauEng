@@ -947,7 +947,7 @@ namespace MauRen
 			SDL_Event event;
 			while (SDL_PollEvent(&event))
 			{
-				if (SDL_EVENT_QUIT == event.type || SDL_EVENT_WINDOW_CLOSE_REQUESTED == event.type)
+				if ((SDL_EVENT_QUIT == event.type || SDL_EVENT_WINDOW_CLOSE_REQUESTED == event.type) and event.window.windowID == SDL_GetWindowID(m_pWindow))
 				{
 					return false;
 				}
@@ -960,8 +960,7 @@ namespace MauRen
 		}
 
 		m_FramebufferResized = false;
-		//ImGui_ImplVulkan_InvalidateDeviceObjects();
-		//ImGui_ImplVulkan_
+
 		m_SwapChainContext.ReCreate(m_pWindow, &m_GraphicsPipelineContext, &m_SurfaceContext, m_CommandPoolManager, m_DescriptorContext);
 
 		return true;

@@ -49,9 +49,9 @@ namespace MauEng
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
 
 		ImGui::Begin("DockSpaceBackground", nullptr, windowFlags);
+
 		ImGui::PopStyleVar(2);
 
-		// Use flags to prevent window splitting in center
 		ImGuiID const dockspaceID{ ImGui::GetID("MyDockSpace") };
 		ImGui::DockSpace(dockspaceID, ImVec2{ 0.0f, 0.0f }, ImGuiDockNodeFlags_PassthruCentralNode);
 
@@ -64,6 +64,9 @@ namespace MauEng
 		ImGui::Begin("Debug Info");
 		ImGui::Text("Frame time: %.3f ms", 10.f);
 		ImGui::End();
+
+		//TODO
+		//ImGui::GetForegroundDrawList(ImGui::GetMainViewport())->AddText(ImVec2(100, 100), IM_COL32(255, 255, 255, 255), "Debug Info TEST YIPPEEEE");
 	}
 
 	void ImGUILayer::EndFrame()

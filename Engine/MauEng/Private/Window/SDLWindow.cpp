@@ -1,5 +1,6 @@
 #include "SDLWindow.h"
 
+#include "imgui.h"
 #include "InternalServiceLocator.h"
 #include "ServiceLocator.h"
 
@@ -57,12 +58,15 @@ namespace MauEng
 
 			SDLWindow* winClassPtr{ static_cast<SDLWindow*>(userdata) };
 
-			winClassPtr->width = static_cast<uint16_t>(event->window.data1);
-			winClassPtr->height = static_cast<uint16_t>(event->window.data2);
+			if (event->window.windowID == SDL_GetWindowID(winClassPtr->window))
+			{
+				winClassPtr->width = static_cast<uint16_t>(event->window.data1);
+				winClassPtr->height = static_cast<uint16_t>(event->window.data2);
 
-			InternalServiceLocator::GetRenderer().ResizeWindow();
+				InternalServiceLocator::GetRenderer().ResizeWindow();
 
-			SCENE_MANAGER.UpdateCamerasAspectRatio(static_cast<float>(winClassPtr->width) / static_cast<float>(winClassPtr->height));
+				SCENE_MANAGER.UpdateCamerasAspectRatio(static_cast<float>(winClassPtr->width) / static_cast<float>(winClassPtr->height));
+			}
 		}
 
 		return true;
