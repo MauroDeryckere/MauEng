@@ -80,7 +80,7 @@ namespace MauEng
 				ImFont* defaultFont{ ImGui::GetFont() };
 
 				auto v{ scene->GetECSWorld().View<CDebugText, CTransform>() };
-				v.Each([drawList, pos, &viewProj, pWindow, defaultFont, &cameraPos = camera->GetPosition()](CDebugText const& d, CTransform const& t)
+				v.Each([drawList, &pos, &viewProj, pWindow, defaultFont, &cameraPos = camera->GetPosition()](CDebugText const& d, CTransform const& t)
 					{
 						auto const res{ Camera::IsInFrustum(t.translation, viewProj, pWindow->width, pWindow->height) };
 						if (res.first)
