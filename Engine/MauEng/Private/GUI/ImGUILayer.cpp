@@ -82,17 +82,8 @@ namespace MauEng
 				auto v{ scene->GetECSWorld().View<CDebugText, CTransform>() };
 				v.Each([drawList, pos, &viewProj, pWindow, defaultFont, &cameraPos = camera->GetPosition()](CDebugText const& d, CTransform const& t)
 					{
-						glm::vec4 clipSpacePos{ viewProj * glm::vec4{ t.translation, 1.0f } };
-
-						if (clipSpacePos.w != 0.0f)
-						{
-							clipSpacePos /= clipSpacePos.w;
-						}
-
-						float const x{ (clipSpacePos.x * 0.5f + 0.5f) * pWindow->width };
-						float const y{ (clipSpacePos.y * 0.5f + 0.5f) * pWindow->height };
-
-						if (clipSpacePos.z > 0.0f && clipSpacePos.z < 1.0f)
+						auto const res{ Camera::IsInFrustum(t.translation, viewProj, pWindow->width, pWindow->height) };
+						if (res.first)
 						{
 							float const distance{ glm::distance(cameraPos, t.translation) };
 							float const fontSize{ d.scaleWithDistance ? glm::clamp(d.baseFontSize / distance, d.minFontSize, d.maxFontSize)
@@ -116,7 +107,7 @@ namespace MauEng
 								case VerticalAlignment::Bottom: offsetY = -textSize.y; break;
 							}
 
-							drawList->AddText(defaultFont, fontSize,ImVec2{ pos.x + x + offsetX, pos.y + y + offsetY }, IM_COL32(d.colour.r * 255.f, d.colour.g * 255.f, d.colour.b * 255.f, d.colour.a * 255.f), d.text.c_str());
+							drawList->AddText(defaultFont, fontSize,ImVec2{ pos.x + res.second.x + offsetX, pos.y + res.second.y + offsetY }, IM_COL32(d.colour.r * 255.f, d.colour.g * 255.f, d.colour.b * 255.f, d.colour.a * 255.f), d.text.c_str());
 						}
 					});
 			}

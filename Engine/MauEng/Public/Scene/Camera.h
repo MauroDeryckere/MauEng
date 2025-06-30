@@ -63,6 +63,11 @@ namespace MauEng
 		void SetCamSettingsSunny16() noexcept;
 		void SetCamSettingsIndoor() noexcept;
 
+		// Returns true if the position is in the frustum, and returns the screen position if it is
+		[[nodiscard]] static std::pair<bool, glm::vec2> IsInFrustum(glm::vec3 const& pos, glm::mat4 const& viewProj, uint32_t windowWidth, uint32_t windowHeight) noexcept;
+		// Returns true if the position is in the frustum, and returns the screen position if it is
+		[[nodiscard]] std::pair<bool, glm::vec2> IsInFrustum(glm::vec3 const& pos, uint32_t windowWidth, uint32_t windowHeight) noexcept;
+
 		Camera(Camera const&) = default;
 		Camera(Camera&&) = default;
 		Camera& operator=(Camera const&) = default;

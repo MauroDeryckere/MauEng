@@ -153,4 +153,31 @@ namespace MauEng
 
 		m_EnableExposure = true;
 	}
+
+	std::pair<bool, glm::vec2> Camera::IsInFrustum(glm::vec3 const& pos, glm::mat4 const& viewProj,
+		uint32_t windowWidth, uint32_t windowHeight) noexcept
+	{
+		glm::vec4 clipSpacePos{ viewProj * glm::vec4{ pos, 1.0f } };
+
+		if (clipSpacePos.w != 0.0f)
+		{
+			clipSpacePos /= clipSpacePos.w;
+		}
+
+		float const x{ (clipSpacePos.x * 0.5f + 0.5f) * windowWidth };
+		float const y{ (clipSpacePos.y * 0.5f + 0.5f) * windowHeight };
+
+		if (clipSpacePos.z > 0.0f && clipSpacePos.z < 1.0f)
+		{
+			return { true, glm::vec2{ x, y } };
+		}
+
+		return { false, glm::vec2{ x, y } };
+	}
+
+	std::pair<bool, glm::vec2> Camera::IsInFrustum(glm::vec3 const& pos, uint32_t windowWidth,
+		uint32_t windowHeight) noexcept
+	{
+		return IsInFrustum(pos, m_ViewMatrix * m_ProjectionMatrix, windowWidth, windowHeight);
+	}
 }
