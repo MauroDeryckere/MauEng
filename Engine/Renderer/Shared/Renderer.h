@@ -24,6 +24,7 @@ namespace MauRen
 		virtual void Init() = 0;
 		virtual void InitImGUI() = 0;
 		virtual void Destroy() = 0;
+		virtual void DestroyImGUI() = 0;
 
 		virtual void BeginImGUIFrame() = 0;
 		virtual void Render(MauEng::Camera const* cam) = 0;

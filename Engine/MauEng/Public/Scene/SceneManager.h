@@ -19,6 +19,8 @@ namespace MauEng
 		void Render(glm::vec2 const& screenSize) const;
 		void Tick();
 
+		[[nodiscard]] Scene* GetActiveScene() const noexcept { return m_Scene.get(); }
+
 		void UpdateCamerasAspectRatio(float aspectRatio) noexcept;
 
 		SceneManager(SceneManager const&) = delete;

@@ -19,7 +19,6 @@ namespace MauEng
 	{
 		ME_PROFILE_FUNCTION()
 		{
-			//GetECSWorld(). ;
 			{
 				auto const view = GetECSWorld().View<CTransform>();
 				ME_PROFILE_SCOPE("UPDATE MATRICES")
@@ -55,11 +54,11 @@ namespace MauEng
 		RENDERER.SetSceneAABBOverride(min, max);
 	}
 
-	Entity Scene::CreateEntity()
+	Entity Scene::CreateEntity(glm::vec3 const& pos)
 	{
 		Entity ent{ m_ECSWorld.CreateEntity() };
 
-		ent.AddComponent<CTransform>();
+		ent.AddComponent<CTransform>(pos);
 
 		return ent;
 	}

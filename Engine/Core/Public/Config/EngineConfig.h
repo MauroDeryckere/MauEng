@@ -78,6 +78,7 @@ namespace MauEng
 	#endif
 #endif
 
+#define USE_IMGUI 1
 
 	bool constexpr LIMIT_FPS{ true };
 	inline bool LOG_FPS{ true };

@@ -185,10 +185,6 @@ namespace MauRen
 		// Wait for GPU to finish everything
 		vkDeviceWaitIdle(deviceContext->GetLogicalDevice());
 
-#pragma region ImGuiDestroy
-		ImGui_ImplVulkan_Shutdown();
-#pragma endregion
-
 		for (size_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; ++i)
 		{
 			vkDestroySemaphore(deviceContext->GetLogicalDevice(), m_ImageAvailableSemaphores[i], nullptr);
@@ -234,6 +230,16 @@ namespace MauRen
 		m_DebugContext.Destroy();
 		m_SurfaceContext.Destroy();
 		m_InstanceContext.Destroy();
+	}
+
+	void VulkanRenderer::DestroyImGUI()
+	{
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+
+		// Wait for GPU to finish everything
+		vkDeviceWaitIdle(deviceContext->GetLogicalDevice());
+
+		ImGui_ImplVulkan_Shutdown();
 	}
 
 	void VulkanRenderer::BeginImGUIFrame()
@@ -353,8 +359,6 @@ namespace MauRen
 		{
 			throw std::runtime_error("Failed to begin recording command buffer!");
 		}
-
-		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 
 		auto& depth{ m_SwapChainContext.GetDepthImage(m_CurrentFrame) };
 		auto& colour{ m_SwapChainContext.GetColorImage(m_CurrentFrame) };
@@ -686,6 +690,7 @@ namespace MauRen
 		}
 #pragma endregion
 #pragma region ImGUI_PASS
+		if constexpr (USE_IMGUI)
 		{
 			ME_PROFILE_SCOPE("ImGUI Pass")
 			auto& swapColor{ m_SwapChainContext.GetSwapchainImages()[imageIndex] };
@@ -738,10 +743,14 @@ namespace MauRen
 				throw std::runtime_error("Failed to record command buffer!");
 			}
 
-			if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+			// TODO maybe move to ImGUI layer 
+			if constexpr (USE_IMGUI)
 			{
-				ImGui::UpdatePlatformWindows();
-				ImGui::RenderPlatformWindowsDefault();
+				if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+				{
+					ImGui::UpdatePlatformWindows();
+					ImGui::RenderPlatformWindowsDefault();
+				}
 			}
 		}
 #pragma endregion
@@ -938,7 +947,7 @@ namespace MauRen
 			SDL_Event event;
 			while (SDL_PollEvent(&event))
 			{
-				if (SDL_EVENT_QUIT == event.type || SDL_EVENT_WINDOW_CLOSE_REQUESTED == event.type)
+				if ((SDL_EVENT_QUIT == event.type || SDL_EVENT_WINDOW_CLOSE_REQUESTED == event.type) and event.window.windowID == SDL_GetWindowID(m_pWindow))
 				{
 					return false;
 				}
@@ -951,8 +960,7 @@ namespace MauRen
 		}
 
 		m_FramebufferResized = false;
-		//ImGui_ImplVulkan_InvalidateDeviceObjects();
-		//ImGui_ImplVulkan_
+
 		m_SwapChainContext.ReCreate(m_pWindow, &m_GraphicsPipelineContext, &m_SurfaceContext, m_CommandPoolManager, m_DescriptorContext);
 
 		return true;

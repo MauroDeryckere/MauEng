@@ -37,7 +37,7 @@ namespace MauEng
 		void SetSceneAABBOverride(glm::vec3 const& min, glm::vec3 const& max);
 
 #pragma region ECS
-		[[nodiscard]] Entity CreateEntity();
+		[[nodiscard]] Entity CreateEntity(glm::vec3 const& pos = {});
 		void DestroyEntity(Entity entity);
 
 		[[nodiscard]] ECS::ECSWorld& GetECSWorld() noexcept { return m_ECSWorld; }
