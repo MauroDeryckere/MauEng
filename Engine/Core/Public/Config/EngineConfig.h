@@ -21,12 +21,20 @@ namespace MauEng
 
 	bool constexpr SKIP_CONTROLLER_INPUT_PLAYER_ID_0{ false };
 
+#define DISTRIBUTION_BUILD 0
+
 #define ENABLE_FILE_LOGGING 0
 #define ENABLE_DEBUG_RENDERING 0
 #define ENABLE_ASSERTS 0
+#define USE_IMGUI 0
 
 #define ENABLE_PROFILER 0
 #define	USE_OPTICK_LIBRARY 0
+
+#ifdef MAUENG_DISTRUBUTION
+	#undef DISTRIBUTION_BUILD
+	#define DISTRIBUTION_BUILD 1
+#endif
 
 #ifdef MAUENG_LOG_TO_FILE
 	#undef ENABLE_FILE_LOGGING
@@ -41,6 +49,11 @@ namespace MauEng
 #ifdef MAUENG_ENABLE_ASSERTS
 	#undef ENABLE_ASSERTS
 	#define ENABLE_ASSERTS 1
+#endif
+
+#ifdef MAUENG_USE_IMGUI
+	#undef USE_IMGUI
+	#define USE_IMGUI 1
 #endif
 
 #ifdef MAUENG_ENABLE_PROFILER
@@ -62,13 +75,14 @@ namespace MauEng
 	#else
 		#define USE_OPTICK 0
 	#endif
-#endif
 
-//#define DIST_BUILD
+#else
+	uint32_t constexpr NUM_FRAMES_TO_PROFILE{ 0 };
+#endif
 
 #define LOG_STRIP_LEVEL MauCor::ELogPriority::Trace
 
-#ifdef DIST_BUILD
+#if DISTRIBUTION_BUILD
 	#undef LOG_STRIP_LEVEL
 	#define LOG_STRIP_LEVEL MauCor::ELogPriority::Error
 #else
@@ -77,8 +91,6 @@ namespace MauEng
 		#define LOG_STRIP_LEVEL MauCor::ELogPriority::Warn
 	#endif
 #endif
-
-#define USE_IMGUI 1
 
 	bool constexpr LIMIT_FPS{ true };
 	inline bool LOG_FPS{ true };

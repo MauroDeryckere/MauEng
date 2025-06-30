@@ -12,6 +12,30 @@ project ("MauEng")
 # Set the name of the executable
 set(EXECUTABLE_NAME "MauEng")
 add_executable(${EXECUTABLE_NAME})
+
+if(WIN32)
+    if(!MAUENG_LOG_TO_FILE)
+        set_target_properties(${EXECUTABLE_NAME} PROPERTIES
+            WIN32_EXECUTABLE FALSE
+        )
+    endif()
+    if(MAUENG_USE_IMGUI)
+        set_target_properties(${EXECUTABLE_NAME} PROPERTIES
+            WIN32_EXECUTABLE TRUE
+        )
+    endif()
+    if(MAUENG_LOG_TO_FILE)
+        set_target_properties(${EXECUTABLE_NAME} PROPERTIES
+            WIN32_EXECUTABLE TRUE
+        )
+    endif()
+    if(MAUENG_DISTRIBUTION)
+        set_target_properties(${EXECUTABLE_NAME} PROPERTIES
+            WIN32_EXECUTABLE TRUE
+        )
+    endif()
+endif()
+
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${EXECUTABLE_NAME})
 set_target_properties(${EXECUTABLE_NAME} PROPERTIES
     VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}"

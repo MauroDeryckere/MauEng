@@ -22,6 +22,7 @@
 #include "Input/KeyInfo.h"
 
 #include "GUI/ImGUILayer.h"
+#include "Logging/ImGUILogger.h"
 
 namespace MauEng
 {
@@ -32,7 +33,6 @@ namespace MauEng
 		if constexpr (ENABLE_FILE_LOGGING)
 		{
 			MauCor::CoreServiceLocator::RegisterLogger(MauCor::CreateFileLogger("Log.txt"));
-			MauCor::CoreServiceLocator::GetLogger().SetPriorityLevel(MauCor::ELogPriority::Warn);
 		}
 		else
 		{
@@ -54,6 +54,8 @@ namespace MauEng
 		{
 			InternalServiceLocator::RegisterGUILayer(std::move(std::make_unique<ImGUILayer>()));
 			InternalServiceLocator::GetGUILayer().Init(m_Window.get());
+
+			MauCor::CoreServiceLocator::RegisterLogger(std::move(std::make_unique<MauEng::ImGUILogger>()));
 		}
 
 		// Also initializes input manager
