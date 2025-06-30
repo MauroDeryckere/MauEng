@@ -6,6 +6,9 @@
 
 #include "backends/imgui_impl_sdl3.h"
 #include "backends/imgui_impl_vulkan.h"
+
+#include "Components/CDebugText.h"
+
 namespace MauEng
 {
 	void ImGUILayer::Init(SDLWindow* pWindow)
@@ -33,14 +36,23 @@ namespace MauEng
 	void ImGUILayer::BeginFrame()
 	{
 		RENDERER.BeginImGUIFrame();
+	}
 
-		// Create main dockspace window
-		ImGuiWindowFlags windowFlags{ ImGuiWindowFlags_NoDocking };
-		windowFlags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
-		windowFlags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
-		windowFlags |= ImGuiWindowFlags_NoBackground;
+	void ImGUILayer::Render(class Scene* scene, SDLWindow* pWindow)
+	{
+		ImGuiWindowFlags constexpr flags
+		{
+			ImGuiWindowFlags_NoTitleBar |
+			ImGuiWindowFlags_NoResize |
+			ImGuiWindowFlags_NoMove |
+			ImGuiWindowFlags_NoScrollbar |
+			ImGuiWindowFlags_NoSavedSettings |
+			ImGuiWindowFlags_NoBackground |
+			ImGuiWindowFlags_NoFocusOnAppearing |
+			ImGuiWindowFlags_NoBringToFrontOnFocus
+		};
 
-		ImGuiViewport* viewport{ ImGui::GetMainViewport() };
+		ImGuiViewport const* viewport{ ImGui::GetMainViewport() };
 		ImGui::SetNextWindowPos(viewport->WorkPos);
 		ImGui::SetNextWindowSize(viewport->WorkSize);
 		ImGui::SetNextWindowViewport(viewport->ID);
@@ -48,25 +60,73 @@ namespace MauEng
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
 
-		ImGui::Begin("DockSpaceBackground", nullptr, windowFlags);
+		ImGui::Begin("DockSpaceBackground", nullptr, flags);
+			ImGui::PopStyleVar(2);
 
-		ImGui::PopStyleVar(2);
+			ImGuiID const dockSpaceID{ ImGui::GetID("MyDockSpace") };
+			ImGui::DockSpace(dockSpaceID, ImVec2{ 0.0f, 0.0f }, ImGuiDockNodeFlags_PassthruCentralNode);
 
-		ImGuiID const dockspaceID{ ImGui::GetID("MyDockSpace") };
-		ImGui::DockSpace(dockspaceID, ImVec2{ 0.0f, 0.0f }, ImGuiDockNodeFlags_PassthruCentralNode);
+			{
+				// Draw debug text
+				ImDrawList* drawList{ ImGui::GetWindowDrawList() };
+				ImVec2 const pos{ viewport->Pos };
+
+				auto const* camera{ scene->GetCameraManager().GetActiveCamera() };
+
+				glm::mat4 const view{ camera->GetViewMatrix() };
+				glm::mat4 const proj{ camera->GetProjectionMatrix() };
+				
+				glm::mat4 const viewProj{ proj * view };
+				ImFont* defaultFont{ ImGui::GetFont() };
+
+				auto v{ scene->GetECSWorld().View<CDebugText, CTransform>() };
+				v.Each([drawList, pos, &viewProj, pWindow, defaultFont, &cameraPos = camera->GetPosition()](CDebugText const& d, CTransform const& t)
+					{
+						glm::vec4 clipSpacePos{ viewProj * glm::vec4{ t.translation, 1.0f } };
+
+						if (clipSpacePos.w != 0.0f)
+						{
+							clipSpacePos /= clipSpacePos.w;
+						}
+
+						float const x{ (clipSpacePos.x * 0.5f + 0.5f) * pWindow->width };
+						float const y{ (clipSpacePos.y * 0.5f + 0.5f) * pWindow->height };
+
+						if (clipSpacePos.z > 0.0f && clipSpacePos.z < 1.0f)
+						{
+							float const distance{ glm::distance(cameraPos, t.translation) };
+							float const fontSize{ d.scaleWithDistance ? glm::clamp(d.baseFontSize / distance, d.minFontSize, d.maxFontSize)
+																	  : d.baseFontSize };
+
+							ImVec2 const textSize{ defaultFont->CalcTextSizeA(fontSize, FLT_MAX, 0.0f, d.text.c_str()) };
+
+							float offsetX{ 0.f };
+							float offsetY{ 0.f};
+							switch (d.hAlign)
+							{
+								case HorizontalAlignment::Left: offsetX = 0.f; break;
+								case HorizontalAlignment::Center: offsetX = -textSize.x / 2.f; break;
+								case HorizontalAlignment::Right: offsetX = -textSize.x; break;
+							}
+
+							switch (d.vAlign)
+							{
+								case VerticalAlignment::Top: offsetY = 0.f; break;
+								case VerticalAlignment::Middle: offsetY = -textSize.y / 2.f; break;
+								case VerticalAlignment::Bottom: offsetY = -textSize.y; break;
+							}
+
+							drawList->AddText(defaultFont, fontSize,ImVec2{ pos.x + x + offsetX, pos.y + y + offsetY }, IM_COL32(d.colour.r * 255.f, d.colour.g * 255.f, d.colour.b * 255.f, d.colour.a * 255.f), d.text.c_str());
+						}
+					});
+			}
 
 		ImGui::End();
-	}
 
-	void ImGUILayer::Render(MauEng::Camera const* cam)
-	{
 		// Temp test
 		ImGui::Begin("Debug Info");
-		ImGui::Text("Frame time: %.3f ms", 10.f);
+			ImGui::Text("Frame time: %.3f ms", 10.f);
 		ImGui::End();
-
-		//TODO
-		//ImGui::GetForegroundDrawList(ImGui::GetMainViewport())->AddText(ImVec2(100, 100), IM_COL32(255, 255, 255, 255), "Debug Info TEST YIPPEEEE");
 	}
 
 	void ImGUILayer::EndFrame()

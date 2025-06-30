@@ -164,8 +164,7 @@ namespace MauEng
 
 			#pragma region IMGUI
 				InternalServiceLocator::GetGUILayer().BeginFrame();
-				ME_ENGINE_ASSERT(sceneManager.GetActiveScene()->GetCameraManager().GetActiveCamera());
-				InternalServiceLocator::GetGUILayer().Render(sceneManager.GetActiveScene()->GetCameraManager().GetActiveCamera());
+				InternalServiceLocator::GetGUILayer().Render(sceneManager.GetActiveScene(), m_Window.get());
 				InternalServiceLocator::GetGUILayer().EndFrame();
 			#pragma endregion
 

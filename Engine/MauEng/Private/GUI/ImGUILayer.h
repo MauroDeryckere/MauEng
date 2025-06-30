@@ -15,7 +15,7 @@ namespace MauEng
 
 		void BeginFrame() override;
 
-		void Render(class Camera const* cam) override;
+		void Render(class Scene* scene, SDLWindow* pWindow) override;
 
 		void EndFrame() override;
 	private:

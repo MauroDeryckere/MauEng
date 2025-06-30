@@ -12,7 +12,7 @@ namespace MauEng
 		virtual void Init(class SDLWindow* pWindow) = 0;
 		virtual void Destroy() = 0;
 		virtual void BeginFrame() = 0;
-		virtual void Render(class Camera const* cam) = 0;
+		virtual void Render(class Scene* scene, class SDLWindow* pWindow) = 0;
 		virtual void EndFrame() = 0;
 
 		GUILayer(GUILayer const&) = delete;

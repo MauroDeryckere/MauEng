@@ -3,6 +3,8 @@
 #include <random>
 #include "CustomPlayerClass.h"
 
+#include "Components/CDebugText.h"
+
 namespace MauGam
 {
 	DEFINE_LOG_CATEGORY(TestLogCategory)
@@ -193,14 +195,15 @@ namespace MauGam
 			}
 
 
-
 			{
-				Entity enttDirLight{ CreateEntity() };
+				Entity enttDirLight{ CreateEntity({ -1, -.5, -1 }) };
 				auto& cLight{ enttDirLight.AddComponent<CLight>() };
 				cLight.lumen_lux = 100;
 				cLight.direction_position = { -1, -.5, -1 };
 				cLight.castShadows = false;
 				cLight.lightColour = { 1, 0.956, 0.84 };
+
+				enttDirLight.AddComponent<CDebugText>(std::to_string(cLight.lumen_lux));
 			}
 
 			//{
@@ -272,30 +275,36 @@ namespace MauGam
 			}
 
 			{
-				Entity enttDirLight{ CreateEntity() };
+				Entity enttDirLight{ CreateEntity({0, 100.f, 0 }) };
 				auto& cLight{ enttDirLight.AddComponent<CLight>() };
 				cLight.lumen_lux = 100;
 				cLight.direction_position = { 0, -1, 0 };
 				cLight.castShadows = false;
 				cLight.lightColour = { 1, 1, 1 };
+
+				enttDirLight.AddComponent<CDebugText>(std::to_string(cLight.lumen_lux));
 			}
 
 			{
-				Entity enttPLight{ CreateEntity() };
+				Entity enttPLight{ CreateEntity({ 50.f, 50, -20 }) };
 				auto& cLight{ enttPLight.AddComponent<CLight>() };
 				cLight.type = ELightType::POINT;
 				cLight.lumen_lux = 1'000'000.f;
 				cLight.direction_position = { 50.f, 50, -20 };
 				cLight.lightColour = { 1, 0, 0 };
+
+				enttPLight.AddComponent<CDebugText>(std::to_string(cLight.lumen_lux));
 			}
 
 			{
-				Entity enttPLight{ CreateEntity() };
+				Entity enttPLight{ CreateEntity({ -50.f, 50, -20 }) };
 				auto& cLight{ enttPLight.AddComponent<CLight>() };
 				cLight.type = ELightType::POINT;
 				cLight.lumen_lux = 1'000'000.f;
 				cLight.direction_position = { -50.f, 50, -20 };
 				cLight.lightColour = { 0, 0, 1 };
+
+				enttPLight.AddComponent<CDebugText>(std::to_string(cLight.lumen_lux));
 			}
 			SetSceneAABBOverride({ -100, -100, -100 }, { 100, 100, 100 });
 		}
@@ -424,14 +433,14 @@ namespace MauGam
 
 		if (m_DebugRenderLight)
 		{
-			auto view{ GetECSWorld().View<MauEng::CLight>() };
-			view.Each([](MauEng::CLight const& l)
+			auto view{ GetECSWorld().View<MauEng::CTransform, MauEng::CLight>() };
+			view.Each([](MauEng::CTransform const& t, MauEng::CLight const& l)
 				{
 					switch (l.type)
 					{
 					case MauEng::ELightType::DIRECTIONAL:
 					{
-						glm::vec3 constexpr start{ 0, 100, 0 };
+						glm::vec3 const start{ t.translation };
 						glm::vec3 const dir{ glm::normalize(l.direction_position) };
 						float const length{ std::clamp(l.lumen_lux / 10000.f, 5.f, 40.f) };
 						glm::vec3 const end{ start + dir * length };

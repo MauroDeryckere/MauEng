@@ -15,7 +15,7 @@ namespace MauEng
 		virtual void Destroy() override {}
 
 		virtual void BeginFrame() override {}
-		virtual void Render(class Camera const*) override {}
+		virtual void Render(class Scene*, class SDLWindow*) override {}
 		virtual void EndFrame() override {}
 
 		NullGUILayer(NullGUILayer const&) = delete;
