@@ -22,7 +22,7 @@ namespace MauEng
 		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 		io.DisplaySize = ImVec2{ static_cast<float>(pWindow->width), static_cast<float>(pWindow->height) };
-
+		io.IniFilename = "Resources/ImGUI/layout.ini";
 		InternalServiceLocator::GetRenderer().InitImGUI();
 	}
 
