@@ -19,6 +19,8 @@ namespace MauEng
 
 		void EndFrame() override;
 	private:
+		static void RenderDebugText(class Scene* scene, SDLWindow* pWindow);
+		static void RenderConsoleOutput();
 	};
 }
 

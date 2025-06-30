@@ -12,6 +12,16 @@ void InitDemoScene();
 #include "SDL3/SDL_main.h"
 int main(int, char* [])
 {
+	#ifdef _WIN32
+		if constexpr (USE_IMGUI)
+		{
+			HWND hWnd{ GetConsoleWindow() };
+			if (hWnd != nullptr) {
+				ShowWindow(hWnd, SW_HIDE);
+			}
+		}
+	#endif
+
 	using namespace MauEng;
 	Engine engine{};
 

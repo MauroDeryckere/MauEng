@@ -45,7 +45,7 @@ namespace MauCor
 		Logger() = default;
 		friend class LogCategory;
 
-		virtual void LogInternal(ELogPriority priority, std::string_view category, std::string_view const message) = 0;
+		virtual void LogInternal(ELogPriority priority, std::string_view const category, std::string_view const message) = 0;
 		static constexpr char const* PriorityToString(ELogPriority priority) noexcept
 		{
 			switch (priority)

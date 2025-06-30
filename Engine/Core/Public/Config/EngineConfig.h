@@ -24,6 +24,7 @@ namespace MauEng
 #define ENABLE_FILE_LOGGING 0
 #define ENABLE_DEBUG_RENDERING 0
 #define ENABLE_ASSERTS 0
+#define USE_IMGUI 0
 
 #define ENABLE_PROFILER 0
 #define	USE_OPTICK_LIBRARY 0
@@ -41,6 +42,11 @@ namespace MauEng
 #ifdef MAUENG_ENABLE_ASSERTS
 	#undef ENABLE_ASSERTS
 	#define ENABLE_ASSERTS 1
+#endif
+
+#ifdef MAUENG_USE_IMGUI
+	#undef USE_IMGUI
+	#define USE_IMGUI 1
 #endif
 
 #ifdef MAUENG_ENABLE_PROFILER
@@ -77,8 +83,6 @@ namespace MauEng
 		#define LOG_STRIP_LEVEL MauCor::ELogPriority::Warn
 	#endif
 #endif
-
-#define USE_IMGUI 1
 
 	bool constexpr LIMIT_FPS{ true };
 	inline bool LOG_FPS{ true };
