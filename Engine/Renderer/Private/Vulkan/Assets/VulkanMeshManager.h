@@ -4,7 +4,7 @@
 #include "MeshInstance.h"
 #include "RendererPCH.h"
 #include "../VulkanBuffer.h"
-#include "Assets//BindlessData.h"
+#include "BindlessData.h"
 
 namespace MauRen
 {
@@ -16,6 +16,7 @@ namespace MauRen
 	public:
 		bool Initialize(VulkanCommandPoolManager const * CmdPoolManager);
 		bool Destroy();
+		[[nodiscard]] std::pair<std::unordered_map<std::string, LoadedMeshes_PathInfo> const&, std::vector<MeshData>const&> GetLoadedMeshesPathMap() const noexcept { return { m_LoadedMeshes_Path, m_MeshData }; }
 
 		[[nodiscard]] uint32_t LoadMesh(char const* path, VulkanCommandPoolManager& cmdPoolManager, VulkanDescriptorContext& descriptorContext) noexcept;
 
@@ -90,7 +91,8 @@ namespace MauRen
 		// maps mesh ID -> index into m_MeshData
 		std::unordered_map<uint32_t, uint32_t> m_LoadedMeshes;
 		// map model/mesh path into m_MeshData
-		std::unordered_map<char const*, uint32_t> m_LoadedMeshes_Path;
+
+		std::unordered_map<std::string, LoadedMeshes_PathInfo> m_LoadedMeshes_Path;
 
 		uint32_t m_CurrentVertexOffset{ 0 }; // current vertex offset in the "global" vertex buffer
 		uint32_t m_CurrentIndexOffset{ 0 }; // current index offset in the "global" index buffer

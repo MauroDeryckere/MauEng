@@ -1,5 +1,6 @@
 #include "ImGUILayer.h"
 
+#include "BindlessData.h"
 #include "Window/SDLWindow.h"
 
 #include "InternalServiceLocator.h"
@@ -71,11 +72,7 @@ namespace MauEng
 
 		ImGui::End();
 
-		// Temp test
-		ImGui::Begin("Debug Info");
-			ImGui::Text("Frame time: %.3f ms", 10.f);
-		ImGui::End();
-
+		RenderRendererInfo();
 		RenderConsoleOutput();
 	}
 
@@ -182,5 +179,48 @@ namespace MauEng
 		{
 			ME_ASSERT(false);
 		}
+	}
+
+	void ImGUILayer::RenderRendererInfo()
+	{
+		auto const& info{ RENDERER.GetRendererMeshInfo() };
+
+		ImGui::Begin("Renderer Mesh Info");
+			if (ImGui::BeginTable("MeshTable", 1, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg))
+			{
+				ImGui::TableSetupColumn("Meshes");
+				ImGui::TableHeadersRow();
+
+				for (auto const& mesh : info.first)
+				{
+					ImGui::TableNextRow();
+					ImGui::TableSetColumnIndex(0);
+
+					if (ImGui::TreeNode(mesh.first.c_str()))
+					{
+						ImGui::Indent();
+
+						// Display mesh details as plain text or another table
+						auto const loadedID{ mesh.second.loadedMeshesID };
+
+						if (loadedID == UINT32_MAX)
+						{
+							ImGui::TextColored(ImVec4(1, 0, 0, 1), "Invalid Mesh ID");
+						}
+						else
+						{
+							ImGui::Text("Mesh ID: %zu", info.second[loadedID].meshID);
+							ImGui::Text("Use Count: %zu", mesh.second.useCount);
+							ImGui::Text("Sub Mesh Count: %zu", info.second[loadedID].subMeshCount);
+						}
+
+						ImGui::Unindent();
+						ImGui::TreePop();
+					}
+				}
+
+				ImGui::EndTable();
+			}
+		ImGui::End();
 	}
 }

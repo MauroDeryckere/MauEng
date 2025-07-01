@@ -307,6 +307,12 @@ namespace MauRen
 		return VulkanMeshManager::GetInstance().LoadMesh(path, m_CommandPoolManager, m_DescriptorContext);
 	}
 
+	std::pair<std::unordered_map<std::string, struct LoadedMeshes_PathInfo> const&, std::vector<struct MeshData> const&>
+	VulkanRenderer::GetRendererMeshInfo()
+	{
+		return VulkanMeshManager::GetInstance().GetLoadedMeshesPathMap();
+	}
+
 	void VulkanRenderer::CreateUniformBuffers()
 	{
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };

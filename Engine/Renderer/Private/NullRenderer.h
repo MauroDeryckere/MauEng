@@ -2,7 +2,7 @@
 #define MAUREN_NULLRENDERER
 
 #include "RendererIdentifiers.h"
-
+#include "BindlessData.h"
 namespace MauEng
 {
 	struct CStaticMesh;
@@ -39,6 +39,12 @@ namespace MauRen
 		virtual void PreLightQueue(glm::mat4 const&) override {}
 		virtual uint32_t CreateLight() override { return INVALID_LIGHT_ID; }
 		virtual void QueueLight(MauEng::CLight const&) override {}
+
+		virtual [[nodiscard]] std::pair<std::unordered_map<std::string, LoadedMeshes_PathInfo> const&, std::vector<struct MeshData>const&> GetRendererMeshInfo() override
+		{
+			static auto temp{ std::pair<std::unordered_map<std::string, LoadedMeshes_PathInfo>, std::vector<struct MeshData>>{} };
+			return temp;
+		}
 
 		NullRenderer(NullRenderer const&) = delete;
 		NullRenderer(NullRenderer&&) = delete;

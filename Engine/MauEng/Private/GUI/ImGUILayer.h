@@ -21,6 +21,7 @@ namespace MauEng
 	private:
 		static void RenderDebugText(class Scene* scene, SDLWindow* pWindow);
 		static void RenderConsoleOutput();
+		static void RenderRendererInfo();
 	};
 }
 

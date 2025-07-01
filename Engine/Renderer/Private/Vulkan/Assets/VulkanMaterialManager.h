@@ -5,7 +5,7 @@
 #include "../VulkanBuffer.h"
 #include "VulkanTextureManager.h"
 
-#include "Assets/BindlessData.h"
+#include "BindlessData.h"
 
 namespace MauRen
 {

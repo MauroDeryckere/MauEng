@@ -59,13 +59,23 @@ namespace MauRen
 	{
 		ME_PROFILE_FUNCTION()
 
-		if (auto it{ m_LoadedMeshes_Path.find(path) }; it != m_LoadedMeshes_Path.end())
+		std::string cleanPath{ path };
+		std::string const prefix{ "Resources/Models/" };
+		if (cleanPath.compare(0, prefix.size(), prefix) == 0)
 		{
-			const auto& data{ m_MeshData[it->second] };
-			return data.meshID;
+			cleanPath.erase(0, prefix.size());
 		}
 
-		LoadedModel const loadedModel{ ModelLoader::LoadModel({ path }, cmdPoolManager, descriptorContext) };
+		if (auto it{ m_LoadedMeshes_Path.find(cleanPath) }; it != m_LoadedMeshes_Path.end())
+		{
+			if (it->second.loadedMeshesID != INVALID_MESH_ID)
+			{
+				it->second.useCount++;
+				return m_MeshData[it->second.loadedMeshesID].meshID;
+			}
+		}
+
+		LoadedModel const loadedModel{ ModelLoader::LoadModel(path, cmdPoolManager, descriptorContext) };
 		ME_RENDERER_ASSERT(m_CurrentVertexOffset + loadedModel.vertices.size() <= MAX_VERTICES);
 		ME_RENDERER_ASSERT(m_CurrentIndexOffset + loadedModel.indices.size() <= MAX_INDICES);
 
@@ -104,7 +114,7 @@ namespace MauRen
 		m_CurrentIndexOffset += static_cast<uint32_t>(loadedModel.indices.size());
 
 		m_LoadedMeshes[m_NextID] = static_cast<uint32_t>(m_MeshData.size());
-		m_LoadedMeshes_Path[path] = static_cast<uint32_t>(m_MeshData.size());
+		m_LoadedMeshes_Path[cleanPath] = { static_cast<uint32_t>(m_MeshData.size()), 1 };
 
 		m_MeshData.emplace_back(std::move(meshData));
 

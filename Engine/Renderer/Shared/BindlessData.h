@@ -27,6 +27,13 @@ FirstInstance + instance Count -> InstanceData [gl_InstanceID]
 
 namespace MauRen
 {
+    struct LoadedMeshes_PathInfo
+    {
+        uint32_t loadedMeshesID{ INVALID_MESH_ID };
+        uint32_t useCount{ 0 };
+    };
+
+
     // (GPU-side resource - CPU copy)
 	// Per instance data
 	// Maps to all used data from buffers
