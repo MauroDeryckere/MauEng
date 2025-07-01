@@ -792,8 +792,10 @@ namespace MauRen
 		UpdateUniformBuffer(m_CurrentFrame, cam->GetViewMatrix(), cam->GetProjectionMatrix());
 		UpdateCamSettings(cam, m_CurrentFrame);
 		UpdateDebugVertexBuffer();
-		VulkanMeshManager::GetInstance().PreDraw(1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame], m_CurrentFrame);
-		VulkanLightManager::GetInstance().PreDraw(1, &m_DescriptorContext.GetDescriptorSets()[m_CurrentFrame], m_CurrentFrame);
+		VulkanMeshManager::GetInstance().PreDraw(m_DescriptorContext, m_CurrentFrame);
+		VulkanLightManager::GetInstance().PreDraw(m_DescriptorContext, m_CurrentFrame);
+
+		m_DescriptorContext.ProcessDescriptorUpdateQueue(m_CurrentFrame);
 	}
 
 	void VulkanRenderer::DrawFrame(MauEng::Camera const* cam)

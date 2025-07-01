@@ -2,7 +2,6 @@
 
 namespace MauRen
 {
-	// ! THIS IS NOT SAFE TO CALL DURING A FRAME, HAS TO BE HANDLED IF WE WANT THAT
 	void VulkanDescriptorContext::BindTexture(uint32_t destLocation, VkImageView imageView, VkImageLayout imageLayout)
 	{
 		VkDescriptorImageInfo imageInfo{};
@@ -10,66 +9,46 @@ namespace MauRen
 		imageInfo.imageView = imageView;
 		imageInfo.sampler = VK_NULL_HANDLE;
 
-		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
-
 		for (size_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; ++i)
 		{
-			VkWriteDescriptorSet descriptorWrite{};
-			descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-			descriptorWrite.dstSet = m_DescriptorSets[i];
-			descriptorWrite.dstBinding = TEXTURE_BINDING_SLOT;
-			descriptorWrite.dstArrayElement = destLocation;
-
-			ME_ASSERT(destLocation < MAX_TEXTURES);
-
-			descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
-			descriptorWrite.descriptorCount = 1;
-
-			descriptorWrite.pImageInfo = &imageInfo;
-
-			vkUpdateDescriptorSets(deviceContext->GetLogicalDevice(), 1, &descriptorWrite, 0, nullptr);
+			m_DescriptorSetUpdates[i].emplace_back(
+				DescriptorSetUpdate::CreateImageUpdate(
+					m_DescriptorSets[i], 
+					TEXTURE_BINDING_SLOT, 
+					destLocation, 
+					VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 
+					{ imageInfo }
+				)
+			);
 		}
 	}
 
-	// ! THIS IS NOT SAFE TO CALL DURING A FRAME, HAS TO BE HANDLED IF WE WANT THAT
 	void VulkanDescriptorContext::BindMaterialBuffer(VkDescriptorBufferInfo bufferInfo, uint32_t frame)
 	{
-		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
-
-		// Update descriptor set
-		VkWriteDescriptorSet descriptorWrite{};
-		descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-		descriptorWrite.dstSet = m_DescriptorSets[frame];
-
-		descriptorWrite.dstBinding = MATERIAL_DATA_BINDING_SLOT;
-		descriptorWrite.dstArrayElement = 0;
-		descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-		descriptorWrite.descriptorCount = 1;
-		descriptorWrite.pBufferInfo = &bufferInfo;
-
-		vkUpdateDescriptorSets(deviceContext->GetLogicalDevice(), 1, &descriptorWrite, 0, nullptr);
+		m_DescriptorSetUpdates[frame].emplace_back(
+			DescriptorSetUpdate::CreateBufferUpdate(
+				m_DescriptorSets[frame],
+				MATERIAL_DATA_BINDING_SLOT,
+				0,
+				VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+				{ bufferInfo }
+			)
+		);
 	}
 
-	// ! THIS IS NOT SAFE TO CALL DURING A FRAME, HAS TO BE HANDLED IF WE WANT THAT
 	void VulkanDescriptorContext::BindLightBuffer(VkDescriptorBufferInfo bufferInfo, uint32_t frame)
 	{
-		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
-
-		// Update descriptor set
-		VkWriteDescriptorSet descriptorWrite{};
-		descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-		descriptorWrite.dstSet = m_DescriptorSets[frame];
-
-		descriptorWrite.dstBinding = LIGHT_BUFFER_SLOT;
-		descriptorWrite.dstArrayElement = 0;
-		descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-		descriptorWrite.descriptorCount = 1;
-		descriptorWrite.pBufferInfo = &bufferInfo;
-
-		vkUpdateDescriptorSets(deviceContext->GetLogicalDevice(), 1, &descriptorWrite, 0, nullptr);
+		m_DescriptorSetUpdates[frame].emplace_back(
+			DescriptorSetUpdate::CreateBufferUpdate(
+				m_DescriptorSets[frame],
+				LIGHT_BUFFER_SLOT,
+				0,
+				VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+				{ bufferInfo }
+			)
+		);
 	}
 
-	// ! THIS IS NOT SAFE TO CALL DURING A FRAME, HAS TO BE HANDLED IF WE WANT THAT
 	void VulkanDescriptorContext::BindShadowMap(uint32_t destLocation, VkImageView imageView, VkImageLayout imageLayout)
 	{
 		VkDescriptorImageInfo imageInfo{};
@@ -77,47 +56,52 @@ namespace MauRen
 		imageInfo.imageView = imageView;
 		imageInfo.sampler = VK_NULL_HANDLE;
 
-		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+		ME_ASSERT(destLocation < MAX_SHADOW_MAPS);
 
 		for (size_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; ++i)
 		{
-			VkWriteDescriptorSet descriptorWrite{};
-			descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-			descriptorWrite.dstSet = m_DescriptorSets[i];
-			descriptorWrite.dstBinding = SHADOW_MAPS_SLOT;
-			descriptorWrite.dstArrayElement = destLocation;
-
-			ME_ASSERT(destLocation < MAX_SHADOW_MAPS);
-
-			descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
-			descriptorWrite.descriptorCount = 1;
-
-			descriptorWrite.pImageInfo = &imageInfo;
-
-			vkUpdateDescriptorSets(deviceContext->GetLogicalDevice(), 1, &descriptorWrite, 0, nullptr);
+			m_DescriptorSetUpdates[i].emplace_back(
+				DescriptorSetUpdate::CreateImageUpdate(
+					m_DescriptorSets[i],
+					SHADOW_MAPS_SLOT,
+					destLocation,
+					VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+					{ imageInfo }
+				)
+			);
 		}
 	}
 
 	void VulkanDescriptorContext::BindShadowMapSampler(VkSampler sampler)
 	{
-		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
-
 		VkDescriptorImageInfo imageInfo{};
 		imageInfo.sampler = sampler;
 
 		for (size_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; ++i)
 		{
-			VkWriteDescriptorSet samplerWrite{};
-			samplerWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-			samplerWrite.dstSet = m_DescriptorSets[i];
-			samplerWrite.dstBinding = SHADOW_MAP_SAMPLER;
-			samplerWrite.dstArrayElement = 0;
-			samplerWrite.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
-			samplerWrite.descriptorCount = 1;
-			samplerWrite.pImageInfo = &imageInfo;
-
-			vkUpdateDescriptorSets(deviceContext->GetLogicalDevice(), 1, &samplerWrite, 0, nullptr);
+			m_DescriptorSetUpdates[i].emplace_back(
+				DescriptorSetUpdate::CreateImageUpdate(
+					m_DescriptorSets[i],
+					SHADOW_MAP_SAMPLER,
+					0,
+					VK_DESCRIPTOR_TYPE_SAMPLER,
+					{ imageInfo }
+				)
+			);
 		}
+	}
+
+	void VulkanDescriptorContext::BindMeshInstanceDataBuffer(VkDescriptorBufferInfo bufferInfo, uint32_t frame)
+	{
+		m_DescriptorSetUpdates[frame].emplace_back(
+			DescriptorSetUpdate::CreateBufferUpdate(
+				m_DescriptorSets[frame],
+				MESH_INSTANCE_DATA_BINDING_SLOT,
+				0,
+				VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+				{ bufferInfo }
+			)
+		);
 	}
 
 	void VulkanDescriptorContext::CreateDescriptorSetLayout()
@@ -501,5 +485,42 @@ namespace MauRen
 
 		VulkanUtils::SafeDestroy(deviceContext->GetLogicalDevice(), m_DescriptorPool, nullptr);
 		VulkanUtils::SafeDestroy(deviceContext->GetLogicalDevice(), m_DescriptorSetLayout, nullptr);
+	}
+
+	void VulkanDescriptorContext::ProcessDescriptorUpdateQueue(uint32_t frame) noexcept
+	{
+		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
+
+		auto& updates{ m_DescriptorSetUpdates[frame] };
+
+		for (auto const& update : updates)
+		{
+			VkWriteDescriptorSet write{};
+			write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+			write.dstSet = update.targetSet;
+			write.dstBinding = update.dstBinding;
+			write.dstArrayElement = update.dstArrayElement;
+			write.descriptorType = update.descriptorType;
+
+			switch (update.type)
+			{
+			case DescriptorSetUpdate::EType::Buffer:
+				write.pBufferInfo = std::get<std::vector<VkDescriptorBufferInfo>>(update.descriptorData).data();
+				write.descriptorCount = static_cast<uint32_t>(std::size(std::get<std::vector<VkDescriptorBufferInfo>>(update.descriptorData)));
+				break;
+			case DescriptorSetUpdate::EType::Image:
+				write.pImageInfo = std::get<std::vector<VkDescriptorImageInfo>>(update.descriptorData).data();
+				write.descriptorCount = static_cast<uint32_t>(std::size(std::get<std::vector<VkDescriptorImageInfo>>(update.descriptorData)));
+				break;
+			case DescriptorSetUpdate::EType::TexelBuffer:
+				write.pTexelBufferView = std::get<std::vector<VkBufferView>>(update.descriptorData).data();
+				write.descriptorCount = static_cast<uint32_t>(std::size(std::get<std::vector<VkBufferView>>(update.descriptorData)));
+				break;
+			}
+
+			vkUpdateDescriptorSets(deviceContext->GetLogicalDevice(), 1, &write, 0, nullptr);
+		}
+
+		updates.clear();
 	}
 }

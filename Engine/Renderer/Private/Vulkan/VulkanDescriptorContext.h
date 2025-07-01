@@ -1,6 +1,8 @@
 #ifndef MAUREN_VULKANDESCRIPTORCONTEXT_H
 #define MAUREN_VULKANDESCRIPTORCONTEXT_H
 
+#include <variant>
+
 #include "RendererPCH.h"
 #include "VulkanBuffer.h"
 
@@ -10,6 +12,9 @@ namespace MauRen
 {
 	// Currently only supports one layout, more layouts is more optimal;
 	// but to get everything working now I put everything is the single layout
+
+	//TODO descriptor update queue
+
 	class VulkanDescriptorContext final
 	{
 	public:
@@ -18,6 +23,8 @@ namespace MauRen
 
 		void Initialize() {}
 		void Destroy();
+
+		void ProcessDescriptorUpdateQueue(uint32_t frame) noexcept;
 
 		[[nodiscard]] VkDescriptorSetLayout GetDescriptorSetLayout() const noexcept { return m_DescriptorSetLayout; }
 		[[nodiscard]] std::vector<VkDescriptorSet> const& GetDescriptorSets() const noexcept { return m_DescriptorSets; }
@@ -31,6 +38,8 @@ namespace MauRen
 		void BindShadowMap(uint32_t destLocation, VkImageView imageView, VkImageLayout imageLayout);
 
 		void BindShadowMapSampler(VkSampler sampler);
+
+		void BindMeshInstanceDataBuffer(VkDescriptorBufferInfo bufferInfo, uint32_t frame);
 
 		void CreateDescriptorSetLayout();
 		void CreateDescriptorPool();
@@ -62,6 +71,7 @@ namespace MauRen
 		uint32_t const TEXTURE_BINDING_SLOT{ 2 };
 		uint32_t const MATERIAL_DATA_BINDING_SLOT{ 3 };
 
+		// currently unused!; may use in future
 		uint32_t const MESH_DATA_BINDING_SLOT{ 4 };
 		uint32_t const MESH_INSTANCE_DATA_BINDING_SLOT{ 5 };
 
@@ -77,6 +87,89 @@ namespace MauRen
 		uint32_t const SHADOW_MAP_SAMPLER{ 13 };
 
 		uint32_t const CAM_SETTINGS_SLOT{ 14 };
+
+		struct DescriptorSetUpdate final
+		{
+			enum class EType : uint8_t
+			{
+				Buffer,
+				Image,
+				TexelBuffer
+			};
+
+			// Depending on the type, one of these will be used
+			std::variant<
+				std::vector<VkDescriptorBufferInfo>,
+				std::vector<VkDescriptorImageInfo>,
+				std::vector<VkBufferView>
+			>descriptorData;
+			
+			VkDescriptorSet targetSet;
+
+
+			uint32_t dstBinding;
+			uint32_t dstArrayElement;
+			VkDescriptorType descriptorType;
+
+			EType type;
+
+			// Factory methods to create DescriptorSetUpdate easily
+			[[nodiscard]] static DescriptorSetUpdate CreateBufferUpdate(
+				VkDescriptorSet target,
+				uint32_t binding,
+				uint32_t arrayElement,
+				VkDescriptorType descriptorType,
+				std::vector<VkDescriptorBufferInfo>&& bufferInfos)
+			{
+				return DescriptorSetUpdate
+				{
+					.descriptorData =std::move(bufferInfos),
+					.targetSet = target,
+					.dstBinding = binding,
+					.dstArrayElement = arrayElement,
+					.descriptorType = descriptorType,
+					.type = EType::Buffer
+				};
+			}
+
+			[[nodiscard]] static DescriptorSetUpdate CreateImageUpdate(
+				VkDescriptorSet target,
+				uint32_t binding,
+				uint32_t arrayElement,
+				VkDescriptorType descriptorType,
+				std::vector<VkDescriptorImageInfo>&& imageInfos)
+			{
+				return DescriptorSetUpdate
+				{
+					.descriptorData = std::move(imageInfos),
+					.targetSet = target,
+					.dstBinding = binding,
+					.dstArrayElement = arrayElement,
+					.descriptorType = descriptorType,
+					.type = EType::Image
+				};
+			}
+
+			[[nodiscard]] static DescriptorSetUpdate CreateTexelBufferUpdate(
+				VkDescriptorSet target,
+				uint32_t binding,
+				uint32_t arrayElement,
+				VkDescriptorType descriptorType,
+				std::vector<VkBufferView>&& texelBuffers)
+			{
+				return DescriptorSetUpdate
+				{
+					.descriptorData =std::move(texelBuffers),
+					.targetSet = target,
+					.dstBinding = binding,
+					.dstArrayElement = arrayElement,
+					.descriptorType = descriptorType,
+					.type = EType::TexelBuffer
+				};
+			}
+		};
+
+		std::array<std::vector<DescriptorSetUpdate>, MAX_FRAMES_IN_FLIGHT> m_DescriptorSetUpdates{};
 	};
 }
 

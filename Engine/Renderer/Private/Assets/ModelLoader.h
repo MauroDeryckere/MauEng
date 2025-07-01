@@ -24,7 +24,7 @@ namespace MauRen
 		ModelLoader(ModelLoader&&) = delete;
 		ModelLoader& operator=(ModelLoader const&) = delete;
 		ModelLoader& operator=(ModelLoader const&&) = delete;
-		/*
+		/**
 		 * load assimp by file
 		 * -> this files contains one big static mesh
 		 * -> split up in submeshes 

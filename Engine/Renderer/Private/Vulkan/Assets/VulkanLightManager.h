@@ -32,7 +32,7 @@ namespace MauRen
 
 		void SetSceneAABBOverride(glm::vec3 const& min, glm::vec3 const& max);
 		void PreQueue(glm::mat4 const& viewProj);
-		void PreDraw(uint32_t setCount, VkDescriptorSet const* pDescriptorSets, uint32_t frame);
+		void PreDraw(VulkanDescriptorContext& descriptorContext, uint32_t frame);
 		void QueueLight(VulkanCommandPoolManager& cmdPoolManager, VulkanDescriptorContext& descriptorContext, MauEng::CLight const& light);
 		void PostDraw();
 

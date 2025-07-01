@@ -50,7 +50,7 @@ namespace MauRen
 			}
 		}
 
-		void PreDraw(uint32_t setCount, VkDescriptorSet const* pDescriptorSets, uint32_t frame);
+		void PreDraw(VulkanDescriptorContext& descriptorContext, uint32_t frame);
 		void Draw(VkCommandBuffer commandBuffer, VkPipelineLayout layout, uint32_t setCount, VkDescriptorSet const* pDescriptorSets, uint32_t frame);
 		void PostDraw(VkCommandBuffer commandBuffer, VkPipelineLayout layout, uint32_t setCount, VkDescriptorSet const* pDescriptorSets, uint32_t frame);
 

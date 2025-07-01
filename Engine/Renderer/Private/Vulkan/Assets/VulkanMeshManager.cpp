@@ -6,6 +6,7 @@
 #include "VulkanMaterialManager.h"
 
 #include "Assets/ModelLoader.h"
+#include "Vulkan/VulkanDescriptorContext.h"
 #include "Vulkan/VulkanMemoryAllocator.h"
 
 namespace MauRen
@@ -124,8 +125,9 @@ namespace MauRen
 		throw std::runtime_error("Mesh not found! ");
 	}
 
-	void VulkanMeshManager::PreDraw(uint32_t setCount, VkDescriptorSet const* pDescriptorSets, uint32_t frame)
+	void VulkanMeshManager::PreDraw(VulkanDescriptorContext& descriptorContext, uint32_t frame)
 	{
+		//TODO only does this when contents change
 		{
 			ME_PROFILE_SCOPE("Mesh instance data update - buffer")
 
@@ -138,28 +140,16 @@ namespace MauRen
 			memcpy(m_DrawCommandBuffers[frame].mapped, m_DrawCommands.data(), m_DrawCommands.size() * sizeof(DrawCommand));
 		}
 
+		//TODO only does this when contents change
 		{
 			if (not m_MeshInstanceData.empty())
 			{
-
-				ME_PROFILE_SCOPE("Mesh instance data update - descriptor sets")
-
-				auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 				VkDescriptorBufferInfo bufferInfo = {};
 				bufferInfo.buffer = m_MeshInstanceDataBuffers[frame].buffer.buffer;
 				bufferInfo.offset = 0;
 				bufferInfo.range = m_MeshInstanceData.size() * sizeof(MeshInstanceData);
 
-				VkWriteDescriptorSet descriptorWrite = {};
-				descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-				descriptorWrite.dstSet = *pDescriptorSets;
-				descriptorWrite.dstBinding = 5; // Binding index -TODO use a get Binding on the context
-				descriptorWrite.dstArrayElement = 0; // Array element offset (if applicable)
-				descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-				descriptorWrite.descriptorCount = 1;
-				descriptorWrite.pBufferInfo = &bufferInfo;
-
-				vkUpdateDescriptorSets(deviceContext->GetLogicalDevice(), 1, &descriptorWrite, 0, nullptr);
+				descriptorContext.BindMeshInstanceDataBuffer(bufferInfo, frame);
 			}
 		}
 	}
@@ -216,8 +206,6 @@ namespace MauRen
 
 	void VulkanMeshManager::InitializeDrawCommandBuffers() noexcept
 	{
-		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
-
 		VkDeviceSize constexpr BUFFER_SIZE{ sizeof(DrawCommand) * MAX_DRAW_COMMANDS };
 
 		for (size_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; ++i)
@@ -235,8 +223,6 @@ namespace MauRen
 
 	void VulkanMeshManager::CreateVertexAndIndexBuffers() noexcept
 	{
-		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
-
 		{
 			VkDeviceSize constexpr BUFFER_SIZE{ sizeof(Vertex) * MAX_VERTICES };
 

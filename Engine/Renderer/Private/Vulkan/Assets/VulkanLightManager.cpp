@@ -162,35 +162,27 @@ namespace MauRen
 		}
 	}
 
-	void VulkanLightManager::PreDraw(uint32_t setCount, VkDescriptorSet const* pDescriptorSets, uint32_t frame)
+	void VulkanLightManager::PreDraw(VulkanDescriptorContext& descriptorContext, uint32_t frame)
 	{
+		//TODO only do this when the contents change
 		{
 			ME_PROFILE_SCOPE("Light data update - buffer")
 			memcpy(m_LightBuffers[frame].mapped, m_Lights.data(), m_Lights.size() * sizeof(Light));
 		}
 
+		//TODO only do this when the contents change
 		{
 			ME_PROFILE_SCOPE("Light instance data update - descriptor sets")
 
 			// Will likely never be empty but if it is, skip to prevent errors
 			if (not m_Lights.empty())
 			{
-				auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
-				VkDescriptorBufferInfo bufferInfo = {};
+				VkDescriptorBufferInfo bufferInfo{};
 				bufferInfo.buffer = m_LightBuffers[frame].buffer.buffer;
 				bufferInfo.offset = 0;
 				bufferInfo.range = m_Lights.size() * sizeof(Light);
 
-				VkWriteDescriptorSet descriptorWrite = {};
-				descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-				descriptorWrite.dstSet = *pDescriptorSets;
-				descriptorWrite.dstBinding = 12; // Binding index -TODO use a get Binding on the context
-				descriptorWrite.dstArrayElement = 0; // Array element offset (if applicable)
-				descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-				descriptorWrite.descriptorCount = 1;
-				descriptorWrite.pBufferInfo = &bufferInfo;
-
-				vkUpdateDescriptorSets(deviceContext->GetLogicalDevice(), 1, &descriptorWrite, 0, nullptr);
+				descriptorContext.BindLightBuffer(bufferInfo, frame);
 			}
 		}
 	}
