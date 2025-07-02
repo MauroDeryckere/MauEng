@@ -262,6 +262,42 @@ namespace MauEng
 
 				ImGui::EndTable();
 			}
+
+			if (ImGui::BeginTable("TextureTable", 1, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg))
+			{
+				auto const& info{ RENDERER.GetTextureMap() };
+
+				ImGui::TableSetupColumn("Textures");
+				ImGui::TableHeadersRow();
+
+				for (auto const& mat : info)
+				{
+					ImGui::TableNextRow();
+					ImGui::TableSetColumnIndex(0);
+
+					if (ImGui::TreeNode(mat.first.c_str()))
+					{
+						ImGui::Indent();
+
+						// Display mesh details as plain text or another table
+						auto const loadedID{ mat.second.textureID };
+						if (loadedID == UINT32_MAX)
+						{
+							ImGui::TextColored(ImVec4(1, 0, 0, 1), "Invalid Texture ID");
+						}
+						else
+						{
+							ImGui::Text("Texture ID: %zu", mat.second.textureID);
+							ImGui::Text("Use Count: %zu", mat.second.useCount);
+						}
+
+						ImGui::Unindent();
+						ImGui::TreePop();
+					}
+				}
+
+				ImGui::EndTable();
+			}
 		ImGui::End();
 	}
 }

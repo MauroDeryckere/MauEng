@@ -49,7 +49,7 @@ namespace MauRen
 			return INVALID_TEXTURE_ID;
 		}
 
-		return it->second;
+		return it->second.textureID;
 	}
 
 	uint32_t VulkanTextureManager::LoadOrGetTexture(VulkanCommandPoolManager& cmdPoolManager, VulkanDescriptorContext& descriptorContext, std::string const& textureName, bool isNorm) noexcept
@@ -60,18 +60,25 @@ namespace MauRen
 		{
 			return INVALID_TEXTURE_ID;
 		}
+		std::string cleanPath{ textureName };
+		std::string const prefix{ "Resources/Models/" };
+		if (cleanPath.starts_with(prefix))
+		{
+			cleanPath.erase(0, prefix.size());
+		}
 
-		auto const it{ m_TextureIDMap.find(textureName) };
+		auto const it{ m_TextureIDMap.find(cleanPath) };
 		if (it != end(m_TextureIDMap))
 		{
-			return it->second;
+			it->second.useCount++;
+			return it->second.textureID;
 		}
 
 		VulkanImage textureImage{ CreateTextureImage(cmdPoolManager, textureName, isNorm)};
 		descriptorContext.BindTexture(m_Textures.size(), textureImage.imageViews[0], VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 		m_Textures.emplace_back(std::move(textureImage));
-		m_TextureIDMap[textureName] = m_Textures.size() - 1;
+		m_TextureIDMap[cleanPath] = { static_cast<uint32_t>(m_Textures.size() - 1), 1 };
 
 		return m_Textures.size() - 1;
 	}
@@ -84,18 +91,25 @@ namespace MauRen
 		{
 			return INVALID_TEXTURE_ID;
 		}
+		std::string cleanPath{ textureName };
+		std::string const prefix{ "Resources/Models/" };
+		if (cleanPath.starts_with(prefix))
+		{
+			cleanPath.erase(0, prefix.size());
+		}
 
-		auto const it = m_TextureIDMap.find(textureName);
+		auto const it = m_TextureIDMap.find(cleanPath);
 		if (it != m_TextureIDMap.end())
 		{
-			return it->second;
+			it->second.useCount++;
+			return it->second.textureID;
 		}
 
 		VulkanImage textureImage{ CreateTextureImage(cmdPoolManager, embTex, isNorm) };
 		descriptorContext.BindTexture(m_Textures.size(), textureImage.imageViews[0], VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 		m_Textures.emplace_back(std::move(textureImage));
-		m_TextureIDMap[textureName] = m_Textures.size() - 1;
+		m_TextureIDMap[cleanPath] = { static_cast<uint32_t>(m_Textures.size() - 1), 1 };
 
 		return m_Textures.size() - 1;
 	}
@@ -144,41 +158,41 @@ namespace MauRen
 		descriptorContext.BindTexture(static_cast<uint32_t>(std::size(m_Textures)), defaultWhiteTexture.imageViews[0], VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 		m_Textures.emplace_back(std::move(defaultWhiteTexture));
-		m_TextureIDMap["__DefaultWhite"] = static_cast<uint32_t>(std::size(m_Textures) - 1);
+		m_TextureIDMap["__DefaultWhite"] = { static_cast<uint32_t>(std::size(m_Textures) - 1) , 0};
 
 		// 1
 		auto defaultGrayTexture{ Create1x1Texture(cmdPoolManager, glm::vec4(.5f), false) };
 		descriptorContext.BindTexture(static_cast<uint32_t>(std::size(m_Textures)), defaultGrayTexture.imageViews[0], VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 		m_Textures.emplace_back(std::move(defaultGrayTexture));
-		m_TextureIDMap["__DefaultGray"] = static_cast<uint32_t>(std::size(m_Textures) - 1);
+		m_TextureIDMap["__DefaultGray"] = { static_cast<uint32_t>(std::size(m_Textures) - 1) , 0 };
 		
 		// 2
 		auto defaultNormalTexture{ Create1x1Texture(cmdPoolManager, glm::vec4(0.5f, 0.5f, 1.0f, 1.0f), false) };
 		descriptorContext.BindTexture(static_cast<uint32_t>(std::size(m_Textures)), defaultNormalTexture.imageViews[0], VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 		m_Textures.emplace_back(std::move(defaultNormalTexture));
-		m_TextureIDMap["__DefaultNormal"] = static_cast<uint32_t>(std::size(m_Textures) - 1);
+		m_TextureIDMap["__DefaultNormal"] = { static_cast<uint32_t>(std::size(m_Textures) - 1) , 0 };
 
 		// 3
 		auto defaultBlackTexture{ Create1x1Texture(cmdPoolManager, glm::vec4(0.0f), false) };
 		descriptorContext.BindTexture(static_cast<uint32_t>(std::size(m_Textures)), defaultBlackTexture.imageViews[0], VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 		m_Textures.emplace_back(std::move(defaultBlackTexture));
-		m_TextureIDMap["__DefaultBlack"] = static_cast<uint32_t>(std::size(m_Textures) - 1);
+		m_TextureIDMap["__DefaultBlack"] = { static_cast<uint32_t>(std::size(m_Textures) - 1) , 0 };
 
 		// 4
 		auto defaultMetalnessTexture{ Create1x1Texture(cmdPoolManager, glm::vec4(1.0f, 1.0f, 0.f, 1.0f), false) };
 		descriptorContext.BindTexture(static_cast<uint32_t>(std::size(m_Textures)), defaultMetalnessTexture.imageViews[0], VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 		m_Textures.emplace_back(std::move(defaultMetalnessTexture));
-		m_TextureIDMap["__DefaultMetalness"] = static_cast<uint32_t>(std::size(m_Textures) - 1);
+		m_TextureIDMap["__DefaultMetalness"] = { static_cast<uint32_t>(std::size(m_Textures) - 1) , 0 };
 
 		// 5
 		auto invalidTexture{ Create1x1Texture(cmdPoolManager, glm::vec4(1.0f, 0.0f, 1.0f, 1.0f), false) };
 		descriptorContext.BindTexture(static_cast<uint32_t>(std::size(m_Textures)), invalidTexture.imageViews[0], VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 		m_Textures.emplace_back(std::move(invalidTexture));
-		m_TextureIDMap["__DefaultInvalid"] = static_cast<uint32_t>(std::size(m_Textures) - 1);
+		m_TextureIDMap["__DefaultInvalid"] = { static_cast<uint32_t>(std::size(m_Textures) - 1) , 0 };
 
 	}
 
@@ -188,7 +202,6 @@ namespace MauRen
 
 		ME_ASSERT(std::filesystem::exists(path));
 
-		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 		Image const img{ path };
 
 		VkDeviceSize const imageSize{ static_cast<uint32_t>(img.width * img.height * 4) };

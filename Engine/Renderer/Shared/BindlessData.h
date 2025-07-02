@@ -37,6 +37,11 @@ namespace MauRen
         uint32_t materialID{ INVALID_MATERIAL_ID };
         uint32_t useCount{ 0 };
     };
+    struct LoadedTextureInfo
+    {
+        uint32_t textureID{ INVALID_TEXTURE_ID };
+        uint32_t useCount{ 0 };
+	};
 
     // (GPU-side resource - CPU copy)
 	// Per instance data

@@ -315,6 +315,11 @@ namespace MauRen
 		};
 	}
 
+	std::unordered_map<std::string, struct LoadedTextureInfo> const& VulkanRenderer::GetTextureMap() const noexcept
+	{
+		return VulkanMaterialManager::GetInstance().GetTextureManager()->GetTextureMap();
+	}
+
 	std::pair<std::unordered_map<std::string, struct LoadedMeshes_PathInfo> const&, std::vector<struct MeshData> const&>
 	VulkanRenderer::GetRendererMeshInfo()
 	{

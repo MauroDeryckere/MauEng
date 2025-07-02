@@ -55,6 +55,13 @@ namespace MauRen
 			return info;
 		}
 
+		virtual [[nodiscard]] std::unordered_map<std::string, struct LoadedTextureInfo> const& GetTextureMap() const noexcept override
+		{
+			static auto temp{ std::unordered_map<std::string, LoadedTextureInfo>{}};
+
+			return temp;
+		}
+
 
 		NullRenderer(NullRenderer const&) = delete;
 		NullRenderer(NullRenderer&&) = delete;

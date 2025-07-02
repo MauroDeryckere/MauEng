@@ -3,6 +3,7 @@
 
 #include <unordered_map>
 
+#include "BindlessData.h"
 #include "VulkanImage.h"
 #include "Assets/Material.h"
 
@@ -27,6 +28,8 @@ namespace MauRen
 
 		[[nodiscard]] VkSampler GetTextureSampler() const noexcept { return m_TextureSampler; }
 
+		[[nodiscard]] std::unordered_map<std::string, LoadedTextureInfo>const& GetTextureMap() const noexcept { return m_TextureIDMap; }
+
 		VulkanTextureManager(VulkanTextureManager const&) = delete;
 		VulkanTextureManager(VulkanTextureManager&&) = delete;
 		VulkanTextureManager& operator=(VulkanTextureManager const&) = delete;
@@ -34,7 +37,7 @@ namespace MauRen
 	private:
 		// Texture name, ID
 		// ID maps directly to the ID in the vulkan buffer & should be reflected in the material
-		std::unordered_map<std::string, uint32_t> m_TextureIDMap;
+		std::unordered_map<std::string, LoadedTextureInfo> m_TextureIDMap;
 
 		// Vector of all the texture images - this is a 1:1 with the buffer on the GPU
 		std::vector<VulkanImage> m_Textures;

@@ -65,7 +65,7 @@ namespace MauRen
 
 		virtual [[nodiscard]] std::pair<std::unordered_map<std::string, struct LoadedMeshes_PathInfo> const&, std::vector<struct MeshData>const&> GetRendererMeshInfo() override;
 		virtual [[nodiscard]] MaterialRendererInfo GetMaterialRendererInfo() const noexcept override;
-		
+		virtual [[nodiscard]] std::unordered_map<std::string, struct LoadedTextureInfo> const& GetTextureMap() const noexcept override;
 		VulkanRenderer(VulkanRenderer const&) = delete;
 		VulkanRenderer(VulkanRenderer&&) = delete;
 		VulkanRenderer& operator=(VulkanRenderer const&) = delete;
