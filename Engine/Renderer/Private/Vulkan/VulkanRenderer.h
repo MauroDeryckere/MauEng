@@ -130,8 +130,8 @@ namespace MauRen
 
 		std::vector<VulkanMappedBuffer> m_CamSettingsMappedUniformBuffers{};
 
-		VulkanMappedBuffer m_DebugVertexBuffer{};
-		VulkanMappedBuffer m_DebugIndexBuffer{};
+		std::vector<VulkanMappedBuffer> m_DebugVertexBuffer{};
+		std::vector<VulkanMappedBuffer> m_DebugIndexBuffer{};
 
 		std::array<VkClearValue, 2> static constexpr CLEAR_VALUES
 		{
@@ -163,8 +163,8 @@ namespace MauRen
 
 		void DrawFrame(MauEng::Camera const* cam);
 		void RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex, glm::mat4 const& viewProj);
-		void UpdateUniformBuffer(uint32_t currentImage, glm::mat4 const& view, glm::mat4 const& proj);
-		void UpdateCamSettings(MauEng::Camera const* cam, uint32_t currentImage);
+		void UpdateUniformBuffer(glm::mat4 const& view, glm::mat4 const& proj);
+		void UpdateCamSettings(MauEng::Camera const* cam);
 
 		// Recreate the swapchain on e.g a window resize
 		bool RecreateSwapchain();
