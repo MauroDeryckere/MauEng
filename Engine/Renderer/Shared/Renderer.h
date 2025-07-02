@@ -40,6 +40,7 @@ namespace MauRen
 		virtual void QueueLight(MauEng::CLight const& light) = 0;
 
 		virtual [[nodiscard]] std::pair<std::unordered_map<std::string, struct LoadedMeshes_PathInfo> const&, std::vector<struct MeshData>const&> GetRendererMeshInfo() = 0;
+		virtual [[nodiscard]] struct MaterialRendererInfo GetMaterialRendererInfo() const noexcept = 0;
 
 		Renderer(Renderer const&) = delete;
 		Renderer(Renderer&&) = delete;

@@ -90,9 +90,11 @@ namespace MauRen
 
 		// maps mesh ID -> index into m_MeshData
 		std::unordered_map<uint32_t, uint32_t> m_LoadedMeshes;
-		// map model/mesh path into m_MeshData
 
+		// map model/mesh path into m_MeshData
 		std::unordered_map<std::string, LoadedMeshes_PathInfo> m_LoadedMeshes_Path;
+
+		std::unordered_map<uint32_t, std::string> m_MeshID_path;
 
 		uint32_t m_CurrentVertexOffset{ 0 }; // current vertex offset in the "global" vertex buffer
 		uint32_t m_CurrentIndexOffset{ 0 }; // current index offset in the "global" index buffer

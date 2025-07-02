@@ -48,22 +48,7 @@ namespace MauRen
 			return { false, INVALID_MATERIAL_ID };
 		}
 
-		return { true, it->second };
-	}
-
-	bool VulkanMaterialManager::Exists(uint32_t ID) const noexcept
-	{
-		if (ID == INVALID_MATERIAL_ID)
-		{
-			return false;
-		}
-
-		if (ID < m_Materials.size())
-		{
-			return true;
-		}
-
-		return false;
+		return { true, it->second.materialID };
 	}
 
 	uint32_t VulkanMaterialManager::LoadOrGetMaterial(VulkanCommandPoolManager& cmdPoolManager, VulkanDescriptorContext& descriptorContext, Material const& material)
@@ -80,7 +65,8 @@ namespace MauRen
 		auto const it{ m_MaterialIDMap.find(material.name) };
 		if (it != end(m_MaterialIDMap))
 		{
-			return it->second;
+			m_MaterialIDMap[material.name].useCount++;
+			return it->second.materialID;
 		}
 
 		MaterialData vkMat{};
@@ -112,7 +98,11 @@ namespace MauRen
 			vkMat.metallicTextureID = m_TextureManager->LoadOrGetTexture(cmdPoolManager, descriptorContext, material.metalnessRoughnessTexture, true);
 		}
 
+		vkMat.materialID = m_NextMaterialID;
+
 		m_Materials.emplace_back(vkMat);
+		m_MaterialIDMap[material.name] = { static_cast<uint32_t>(m_Materials.size() - 1), 1};
+		m_NextMaterialID++;
 
 		// Upload the material id if new
 		{
@@ -129,18 +119,12 @@ namespace MauRen
 				bufferInfo.buffer = m_MaterialDataBuffers[i].buffer.buffer;
 				bufferInfo.range = sizeof(MaterialData) * MAX_MATERIALS;
 
-				//TODO simply do this once per frame, if buffer has changed
 				descriptorContext.BindMaterialBuffer(bufferInfo, i);
 			}
 		}
 
 		//firstRun = true;
 		return static_cast<uint32_t>(m_Materials.size() - 1);
-	}
-
-	MaterialData const& VulkanMaterialManager::GetMaterial(uint32_t ID) const noexcept
-	{
-		return m_Materials[ID];
 	}
 
 	void VulkanMaterialManager::InitMaterialBuffers()
@@ -168,6 +152,6 @@ namespace MauRen
 		Material const defaultMat{};
 		auto const id{ LoadOrGetMaterial(cmdPoolManager, descContext, defaultMat) };
 
-		ME_ASSERT(id == INVALID_MATERIAL_ID);
+		ME_ASSERT(id == DEFAULT_MATERIAL_ID);
 	}
 }

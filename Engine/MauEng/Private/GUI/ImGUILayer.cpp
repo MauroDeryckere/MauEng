@@ -183,11 +183,13 @@ namespace MauEng
 
 	void ImGUILayer::RenderRendererInfo()
 	{
-		auto const& info{ RENDERER.GetRendererMeshInfo() };
 
-		ImGui::Begin("Renderer Mesh Info");
+		ImGui::Begin("Renderer Info");
+
 			if (ImGui::BeginTable("MeshTable", 1, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg))
 			{
+				auto const& info{ RENDERER.GetRendererMeshInfo() };
+
 				ImGui::TableSetupColumn("Meshes");
 				ImGui::TableHeadersRow();
 
@@ -212,6 +214,45 @@ namespace MauEng
 							ImGui::Text("Mesh ID: %zu", info.second[loadedID].meshID);
 							ImGui::Text("Use Count: %zu", mesh.second.useCount);
 							ImGui::Text("Sub Mesh Count: %zu", info.second[loadedID].subMeshCount);
+						}
+
+						ImGui::Unindent();
+						ImGui::TreePop();
+					}
+				}
+
+				ImGui::EndTable();
+			}
+
+			if (ImGui::BeginTable("MaterialTable", 1, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg))
+			{
+				auto const& info{ RENDERER.GetMaterialRendererInfo() };
+
+				ImGui::TableSetupColumn("Materials");
+				ImGui::TableHeadersRow();
+
+				for (auto const& mat : info.name_ID)
+				{
+					ImGui::TableNextRow();
+					ImGui::TableSetColumnIndex(0);
+
+					if (ImGui::TreeNode(mat.first.c_str()))
+					{
+						ImGui::Indent();
+
+						// Display mesh details as plain text or another table
+						auto const loadedID{ mat.second.materialID };
+						if (loadedID == UINT32_MAX)
+						{
+							ImGui::TextColored(ImVec4(1, 0, 0, 1), "Invalid Material ID");
+						}
+						else
+						{
+							ImGui::Text("Mat ID: %zu", info.matData[loadedID].materialID);
+							ImGui::Text("Use Count: %zu", mat.second.useCount);
+							ImGui::Text("Albedo texture ID: %zu", info.matData[loadedID].albedoTextureID);
+							ImGui::Text("Normal texture ID: %zu", info.matData[loadedID].normalTextureID);
+							ImGui::Text("Metalness texture ID: %zu", info.matData[loadedID].metallicTextureID);
 						}
 
 						ImGui::Unindent();

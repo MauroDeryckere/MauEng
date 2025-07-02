@@ -14,8 +14,8 @@ namespace MauRen
 	uint32_t constexpr INVALID_TEXTURE_ID{ 5 };
 
 
-	uint32_t constexpr INVALID_MATERIAL_ID{ 0 };
-
+	uint32_t constexpr DEFAULT_MATERIAL_ID{ 0 };
+	uint32_t constexpr INVALID_MATERIAL_ID{ UINT32_MAX };
 	uint32_t constexpr INVALID_DRAW_COMMAND{ UINT32_MAX };
 
 	uint32_t constexpr INVALID_SHADOW_MAP_ID{ 0 };

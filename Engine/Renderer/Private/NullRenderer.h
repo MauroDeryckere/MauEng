@@ -46,6 +46,16 @@ namespace MauRen
 			return temp;
 		}
 
+		virtual [[nodiscard]] struct MaterialRendererInfo GetMaterialRendererInfo() const noexcept override
+		{
+			static auto temp01{ std::unordered_map<std::string, LoadedMaterialInfo>{} };
+			static auto temp02{ std::vector<MaterialData>{} };
+
+			MaterialRendererInfo info{ temp01, temp02 };
+			return info;
+		}
+
+
 		NullRenderer(NullRenderer const&) = delete;
 		NullRenderer(NullRenderer&&) = delete;
 		NullRenderer& operator=(NullRenderer const&) = delete;

@@ -307,6 +307,14 @@ namespace MauRen
 		return VulkanMeshManager::GetInstance().LoadMesh(path, m_CommandPoolManager, m_DescriptorContext);
 	}
 
+	MaterialRendererInfo VulkanRenderer::GetMaterialRendererInfo() const noexcept
+	{
+		return {
+				VulkanMaterialManager::GetInstance().GetMaterialIDMap(),
+				VulkanMaterialManager::GetInstance().GetMaterialData()
+		};
+	}
+
 	std::pair<std::unordered_map<std::string, struct LoadedMeshes_PathInfo> const&, std::vector<struct MeshData> const&>
 	VulkanRenderer::GetRendererMeshInfo()
 	{

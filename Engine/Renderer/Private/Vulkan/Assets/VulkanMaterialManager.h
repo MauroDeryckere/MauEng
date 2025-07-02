@@ -22,15 +22,15 @@ namespace MauRen
 
 		// Returns if it exists, and ID if it does
 		[[nodiscard]] std::pair<bool, uint32_t> GetMaterial(std::string const& materialName) const noexcept;
-		[[nodiscard]] bool Exists(uint32_t ID) const noexcept;
 
 		[[nodiscard]] uint32_t LoadOrGetMaterial(VulkanCommandPoolManager& cmdPoolManager, VulkanDescriptorContext& descriptorContext, Material const& material);
-
-		[[nodiscard]] MaterialData const& GetMaterial(uint32_t ID) const noexcept;
 
 		[[nodiscard]] VkSampler GetTextureSampler() const noexcept { return m_TextureManager->GetTextureSampler(); }
 		[[nodiscard]] VulkanTextureManager* GetTextureManager() const noexcept { return m_TextureManager.get(); }
 		[[nodiscard]] std::vector<MaterialData> const& GetMaterials() const noexcept { return m_Materials; }
+
+		[[nodiscard]] std::unordered_map<std::string, LoadedMaterialInfo> const& GetMaterialIDMap() const noexcept { return m_MaterialIDMap; }
+		[[nodiscard]] std::vector<MaterialData> const& GetMaterialData() const noexcept { return m_Materials; }
 
 		VulkanMaterialManager(VulkanMaterialManager const&) = delete;
 		VulkanMaterialManager(VulkanMaterialManager&&) = delete;
@@ -41,15 +41,17 @@ namespace MauRen
 		friend class MauCor::Singleton<VulkanMaterialManager>;
 		VulkanMaterialManager() = default;
 		virtual ~VulkanMaterialManager() override = default;
-
+		
 		std::unique_ptr<VulkanTextureManager> m_TextureManager;
 
 		// Material name, ID in MaterialData[ ]
-		std::unordered_map<std::string, uint32_t> m_MaterialIDMap;
+		std::unordered_map<std::string, LoadedMaterialInfo> m_MaterialIDMap;
 
 		// All loaded materials - 1:1 copy of GPU buffer
 		std::vector<MaterialData> m_Materials;
 		std::vector<VulkanMappedBuffer> m_MaterialDataBuffers;
+
+		uint32_t m_NextMaterialID{ 0 };
 
 		void InitMaterialBuffers();
 

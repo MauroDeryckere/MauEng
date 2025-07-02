@@ -151,7 +151,7 @@ namespace MauRen
 		descriptorContext.BindTexture(static_cast<uint32_t>(std::size(m_Textures)), defaultGrayTexture.imageViews[0], VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 		m_Textures.emplace_back(std::move(defaultGrayTexture));
 		m_TextureIDMap["__DefaultGray"] = static_cast<uint32_t>(std::size(m_Textures) - 1);
-
+		
 		// 2
 		auto defaultNormalTexture{ Create1x1Texture(cmdPoolManager, glm::vec4(0.5f, 0.5f, 1.0f, 1.0f), false) };
 		descriptorContext.BindTexture(static_cast<uint32_t>(std::size(m_Textures)), defaultNormalTexture.imageViews[0], VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);

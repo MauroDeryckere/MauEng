@@ -61,7 +61,7 @@ namespace MauRen
 
 		std::string cleanPath{ path };
 		std::string const prefix{ "Resources/Models/" };
-		if (cleanPath.compare(0, prefix.size(), prefix) == 0)
+		if (cleanPath.starts_with(prefix))
 		{
 			cleanPath.erase(0, prefix.size());
 		}
@@ -115,6 +115,7 @@ namespace MauRen
 
 		m_LoadedMeshes[m_NextID] = static_cast<uint32_t>(m_MeshData.size());
 		m_LoadedMeshes_Path[cleanPath] = { static_cast<uint32_t>(m_MeshData.size()), 1 };
+		m_MeshID_path[m_NextID] = cleanPath;
 
 		m_MeshData.emplace_back(std::move(meshData));
 
