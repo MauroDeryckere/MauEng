@@ -40,6 +40,30 @@ namespace MauRen
 		m_TextureManager = nullptr;
 	}
 
+	void VulkanMaterialManager::PreDraw(uint32_t currentFrame, VulkanDescriptorContext& descriptorContext)
+	{
+		if (m_DirtyMaterialIndices[currentFrame].empty())
+		{
+			return;
+		}
+
+		VkDeviceSize constexpr MAT_SIZE{ sizeof(MaterialData) };
+		uint8_t* basePtr{ static_cast<uint8_t*>(m_MaterialDataBuffers[currentFrame].mapped) };
+
+		for (uint32_t const index : m_DirtyMaterialIndices[currentFrame])
+		{
+			std::memcpy(basePtr + index * MAT_SIZE, &m_Materials[index], MAT_SIZE);
+		}
+
+		VkDescriptorBufferInfo bufferInfo{};
+		bufferInfo.buffer = m_MaterialDataBuffers[currentFrame].buffer.buffer;
+		bufferInfo.range = sizeof(MaterialData) * m_Materials.size();
+
+		descriptorContext.BindMaterialBuffer(bufferInfo, currentFrame);
+
+		m_DirtyMaterialIndices[currentFrame].clear();
+	}
+
 	std::pair<bool, uint32_t> VulkanMaterialManager::GetMaterial(std::string const& materialName) const noexcept
 	{
 		auto const it{ m_MaterialIDMap.find(materialName) };
@@ -54,13 +78,6 @@ namespace MauRen
 	uint32_t VulkanMaterialManager::LoadOrGetMaterial(VulkanCommandPoolManager& cmdPoolManager, VulkanDescriptorContext& descriptorContext, Material const& material)
 	{
 		ME_PROFILE_FUNCTION()
-
-		// Test code to assign default mat
-		//static bool firstRun{ false };
-		//if (firstRun)
-		//{
-		//	return INVALID_MATERIAL_ID;
-		//}
 
 		auto const it{ m_MaterialIDMap.find(material.name) };
 		if (it != end(m_MaterialIDMap))
@@ -105,25 +122,11 @@ namespace MauRen
 		m_NextMaterialID++;
 
 		// Upload the material id if new
+		for (auto& s : m_DirtyMaterialIndices)
 		{
-			VkDeviceSize constexpr MAT_SIZE{ sizeof(MaterialData) };
-
-			for (uint32_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; ++i)
-			{
-				// Write to CPU-visible buffer
-				uint8_t* basePtr{ static_cast<uint8_t*>(m_MaterialDataBuffers[i].mapped) };
-				std::memcpy(basePtr + (m_Materials.size() - 1) * MAT_SIZE, &vkMat, MAT_SIZE);
-
-				// Describe buffer for descriptor
-				VkDescriptorBufferInfo bufferInfo{};
-				bufferInfo.buffer = m_MaterialDataBuffers[i].buffer.buffer;
-				bufferInfo.range = sizeof(MaterialData) * MAX_MATERIALS;
-
-				descriptorContext.BindMaterialBuffer(bufferInfo, i);
-			}
+			s.emplace(m_Materials.size() - 1);
 		}
 
-		//firstRun = true;
 		return static_cast<uint32_t>(m_Materials.size() - 1);
 	}
 

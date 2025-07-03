@@ -34,10 +34,16 @@ namespace MauRen
 
 	bool VulkanMeshManager::Destroy()
 	{
-		m_VertexBuffer.UnMap();
-		m_VertexBuffer.buffer.Destroy();
-		m_IndexBuffer.UnMap();
-		m_IndexBuffer.buffer.Destroy();
+		for (auto & b : m_VertexBuffer)
+		{
+			b.UnMap();
+			b.buffer.Destroy();
+		}
+		for (auto& b : m_IndexBuffer)
+		{
+			b.UnMap();
+			b.buffer.Destroy();
+		}
 
 		for (auto& d : m_DrawCommandBuffers)
 		{
@@ -95,15 +101,17 @@ namespace MauRen
 		}
 
 		// may want to store a copy of the buffers on the CPU  side to support compacting and be more "optimal" as its less copies.
+		for (size_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; ++i)
 		{
-			uint8_t* basePtr{ static_cast<uint8_t*>(m_VertexBuffer.mapped) };
+			uint8_t* basePtr{ static_cast<uint8_t*>(m_VertexBuffer[i].mapped)};
 
 			std::memcpy(basePtr + m_CurrentVertexOffset * sizeof(Vertex), 
 						loadedModel.vertices.data(), 
 						loadedModel.vertices.size() * sizeof(Vertex));
 		}
+		for (size_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; ++i)
 		{
-			uint8_t* basePtr{ static_cast<uint8_t*>(m_IndexBuffer.mapped) };
+			uint8_t* basePtr{ static_cast<uint8_t*>(m_IndexBuffer[i].mapped) };
 
 			std::memcpy(basePtr + m_CurrentIndexOffset * sizeof(uint32_t), 
 						loadedModel.indices.data(), 
@@ -170,10 +178,10 @@ namespace MauRen
 		ME_PROFILE_FUNCTION()
 
 		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, setCount, pDescriptorSets, 0, nullptr);
-		vkCmdBindIndexBuffer(commandBuffer, m_IndexBuffer.buffer.buffer, 0, VK_INDEX_TYPE_UINT32);
+		vkCmdBindIndexBuffer(commandBuffer, m_IndexBuffer[frame].buffer.buffer, 0, VK_INDEX_TYPE_UINT32);
 
 		VkDeviceSize offset{ 0 };
-		vkCmdBindVertexBuffers(commandBuffer, 0, 1, &m_VertexBuffer.buffer.buffer, &offset);
+		vkCmdBindVertexBuffers(commandBuffer, 0, 1, &m_VertexBuffer[frame].buffer.buffer, &offset);
 		vkCmdDrawIndexedIndirect(
 			commandBuffer,
 			m_DrawCommandBuffers[frame].buffer.buffer,               // Indirect buffer that holds the draw command(s)
@@ -234,30 +242,32 @@ namespace MauRen
 
 	void VulkanMeshManager::CreateVertexAndIndexBuffers() noexcept
 	{
+		for (size_t i { 0 }; i < MAX_FRAMES_IN_FLIGHT; ++i)
 		{
 			VkDeviceSize constexpr BUFFER_SIZE{ sizeof(Vertex) * MAX_VERTICES };
 
-			m_VertexBuffer = (VulkanMappedBuffer{
+			m_VertexBuffer.emplace_back(VulkanMappedBuffer{
 												VulkanBuffer{BUFFER_SIZE,
 																	VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
 																	VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT },
 												nullptr });
 
 			// Persistent mapping
-			vmaMapMemory(VulkanMemoryAllocator::GetInstance().GetAllocator(), m_VertexBuffer.buffer.alloc, &m_VertexBuffer.mapped);
+			vmaMapMemory(VulkanMemoryAllocator::GetInstance().GetAllocator(), m_VertexBuffer.back().buffer.alloc, &m_VertexBuffer.back().mapped);
 		}
 
+		for (size_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; ++i)
 		{
 			VkDeviceSize constexpr BUFFER_SIZE{ sizeof(uint32_t) * MAX_INDICES };
 
-			m_IndexBuffer = (VulkanMappedBuffer{
+			m_IndexBuffer.emplace_back(VulkanMappedBuffer{
 												VulkanBuffer{BUFFER_SIZE,
 																	VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
 																	VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT },
 												nullptr });
 
 			// Persistent mapping
-			vmaMapMemory(VulkanMemoryAllocator::GetInstance().GetAllocator(), m_IndexBuffer.buffer.alloc, &m_IndexBuffer.mapped);
+			vmaMapMemory(VulkanMemoryAllocator::GetInstance().GetAllocator(), m_IndexBuffer.back().buffer.alloc, &m_IndexBuffer.back().mapped);
 		}
 	}
 }

@@ -80,9 +80,9 @@ namespace MauRen
 		std::vector<VulkanMappedBuffer> m_DrawCommandBuffers;
 
 		// All vertices in one big buffer
-		VulkanMappedBuffer m_VertexBuffer;
+		std::vector<VulkanMappedBuffer> m_VertexBuffer;
 		// All indices in one big buffer
-		VulkanMappedBuffer m_IndexBuffer;
+		std::vector<VulkanMappedBuffer> m_IndexBuffer;
 
 		// Maps SubMeshID -> index into m_DrawCommands
 		// DrawCommands[SubMeshID] == uint max -> no batch yet; else it's the idx into the vec

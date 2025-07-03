@@ -265,7 +265,6 @@ namespace MauRen
 
 	void VulkanRenderer::Render(MauEng::Camera const* cam)
 	{
-
 		DrawFrame(cam);
 
 		if (m_DebugRenderer)
@@ -807,7 +806,7 @@ namespace MauRen
 		}
 	}
 
-	void VulkanRenderer::PreDraw(MauEng::Camera const* cam, uint32_t image)
+	void VulkanRenderer::PreDraw(MauEng::Camera const* cam)
 	{
 		ME_PROFILE_FUNCTION()
 
@@ -816,6 +815,9 @@ namespace MauRen
 		UpdateUniformBuffer(cam->GetViewMatrix(), cam->GetProjectionMatrix());
 		UpdateCamSettings(cam);
 		UpdateDebugVertexBuffer();
+
+		VulkanMaterialManager::GetInstance().PreDraw(m_CurrentFrame, m_DescriptorContext);
+
 		VulkanMeshManager::GetInstance().PreDraw(m_DescriptorContext, m_CurrentFrame);
 		VulkanLightManager::GetInstance().PreDraw(m_DescriptorContext, m_CurrentFrame);
 
@@ -857,7 +859,7 @@ namespace MauRen
 			vkResetFences(deviceContext->GetLogicalDevice(), 1, &m_InFlightFences[m_CurrentFrame]);
 		}
 
-		PreDraw(cam, imageIndex);
+		PreDraw(cam);
 
 		{
 			ME_PROFILE_SCOPE("Reset command buffer")

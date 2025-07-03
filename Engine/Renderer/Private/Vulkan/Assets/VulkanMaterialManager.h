@@ -1,6 +1,8 @@
 #ifndef MAUREN_VULKANMATERIALMANAGER_H
 #define MAUREN_VULKANMATERIALMANAGER_H
 
+#include <unordered_set>
+
 #include "RendererPCH.h"
 #include "../VulkanBuffer.h"
 #include "VulkanTextureManager.h"
@@ -19,6 +21,8 @@ namespace MauRen
 		void Initialize();
 		void InitializeTextureManager(VulkanCommandPoolManager& cmdPoolManager, VulkanDescriptorContext& descContext);
 		void Destroy();
+
+		void PreDraw(uint32_t currentFrame, VulkanDescriptorContext& descriptorContext);
 
 		// Returns if it exists, and ID if it does
 		[[nodiscard]] std::pair<bool, uint32_t> GetMaterial(std::string const& materialName) const noexcept;
@@ -56,6 +60,8 @@ namespace MauRen
 		void InitMaterialBuffers();
 
 		void CreateDefaultMaterial(VulkanCommandPoolManager& cmdPoolManager, VulkanDescriptorContext& descContext);
+
+		std::array<std::unordered_set<uint32_t>, MAX_FRAMES_IN_FLIGHT> m_DirtyMaterialIndices;
 	};
 }
 
