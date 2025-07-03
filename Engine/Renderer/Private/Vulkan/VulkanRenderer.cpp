@@ -306,6 +306,11 @@ namespace MauRen
 		VulkanMeshManager::GetInstance().QueueDraw(transformMat, mesh.meshID);
 	}
 
+	void VulkanRenderer::UnloadMesh(uint32_t meshID)
+	{
+		VulkanMeshManager::GetInstance().UnloadMesh(meshID);
+	}
+
 	uint32_t VulkanRenderer::LoadOrGetMeshID(char const* path)
 	{
 		return VulkanMeshManager::GetInstance().LoadMesh(path, m_CommandPoolManager, m_DescriptorContext);

@@ -27,6 +27,7 @@ namespace MauRen
 		// Returns if it exists, and ID if it does
 		[[nodiscard]] std::pair<bool, uint32_t> GetMaterial(std::string const& materialName) const noexcept;
 
+		void UnloadMaterial(uint32_t materialID) noexcept;
 		[[nodiscard]] uint32_t LoadOrGetMaterial(VulkanCommandPoolManager& cmdPoolManager, VulkanDescriptorContext& descriptorContext, Material const& material);
 
 		[[nodiscard]] VkSampler GetTextureSampler() const noexcept { return m_TextureManager->GetTextureSampler(); }

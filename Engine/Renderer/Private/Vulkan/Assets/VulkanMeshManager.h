@@ -18,6 +18,7 @@ namespace MauRen
 		bool Destroy();
 		[[nodiscard]] std::pair<std::unordered_map<std::string, LoadedMeshes_PathInfo> const&, std::vector<MeshData>const&> GetLoadedMeshesPathMap() const noexcept { return { m_LoadedMeshes_Path, m_MeshData }; }
 
+		void UnloadMesh(uint32_t meshID) noexcept;
 		[[nodiscard]] uint32_t LoadMesh(char const* path, VulkanCommandPoolManager& cmdPoolManager, VulkanDescriptorContext& descriptorContext) noexcept;
 		[[nodiscard]] MeshData const& GetMeshData(uint32_t meshID) const;
 

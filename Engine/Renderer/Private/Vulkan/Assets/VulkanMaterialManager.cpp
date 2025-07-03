@@ -42,6 +42,8 @@ namespace MauRen
 
 	void VulkanMaterialManager::PreDraw(uint32_t currentFrame, VulkanDescriptorContext& descriptorContext)
 	{
+		m_TextureManager->PreDraw(currentFrame);
+
 		if (m_DirtyMaterialIndices[currentFrame].empty())
 		{
 			return;
@@ -73,6 +75,16 @@ namespace MauRen
 		}
 
 		return { true, it->second.materialID };
+	}
+
+	void VulkanMaterialManager::UnloadMaterial(uint32_t materialID) noexcept
+	{
+		ME_PROFILE_FUNCTION()
+
+		//TODO
+		//m_TextureManager->UnloadTexture();
+		//m_TextureManager->UnloadTexture();
+		//m_TextureManager->UnloadTexture();
 	}
 
 	uint32_t VulkanMaterialManager::LoadOrGetMaterial(VulkanCommandPoolManager& cmdPoolManager, VulkanDescriptorContext& descriptorContext, Material const& material)

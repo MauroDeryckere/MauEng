@@ -60,6 +60,14 @@ namespace MauRen
 		return true;
 	}
 
+	void VulkanMeshManager::UnloadMesh(uint32_t meshID) noexcept
+	{
+		ME_PROFILE_FUNCTION()
+
+			//TODO
+		//VulkanMaterialManager::GetInstance().UnloadMaterial();
+	}
+
 	uint32_t VulkanMeshManager::LoadMesh(char const* path, VulkanCommandPoolManager& cmdPoolManager, VulkanDescriptorContext& descriptorContext) noexcept
 	{
 		ME_PROFILE_FUNCTION()

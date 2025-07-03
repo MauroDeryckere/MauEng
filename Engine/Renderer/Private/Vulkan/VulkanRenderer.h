@@ -61,6 +61,7 @@ namespace MauRen
 		virtual void PreLightQueue(glm::mat4 const& viewProj) override;
 		virtual void QueueLight(MauEng::CLight const& light) override;
 		virtual void QueueDraw(glm::mat4 const& transformMat, MauEng::CStaticMesh const& mesh) override;
+		virtual void UnloadMesh(uint32_t meshID) override;
 		virtual [[nodiscard]] uint32_t LoadOrGetMeshID(char const* path) override;
 
 		virtual [[nodiscard]] std::pair<std::unordered_map<std::string, struct LoadedMeshes_PathInfo> const&, std::vector<struct MeshData>const&> GetRendererMeshInfo() override;

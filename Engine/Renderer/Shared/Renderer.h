@@ -32,6 +32,7 @@ namespace MauRen
 
 		virtual void ResizeWindow() = 0;
 		virtual void QueueDraw(glm::mat4 const& transformMat, MauEng::CStaticMesh const& mesh) = 0;
+		virtual void UnloadMesh(uint32_t meshID) = 0;
 		virtual [[nodiscard]] uint32_t LoadOrGetMeshID(char const* path) = 0;
 
 		virtual void SetSceneAABBOverride(glm::vec3 const& min, glm::vec3 const& max) = 0;
