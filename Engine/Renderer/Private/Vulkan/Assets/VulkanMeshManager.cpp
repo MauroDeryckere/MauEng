@@ -60,7 +60,6 @@ namespace MauRen
 		return true;
 	}
 
-	//NOT THREAD SAFE CURRENTLY, but okay to call at start program
 	uint32_t VulkanMeshManager::LoadMesh(char const* path, VulkanCommandPoolManager& cmdPoolManager, VulkanDescriptorContext& descriptorContext) noexcept
 	{
 		ME_PROFILE_FUNCTION()
@@ -144,33 +143,37 @@ namespace MauRen
 
 	void VulkanMeshManager::PreDraw(VulkanDescriptorContext& descriptorContext, uint32_t frame)
 	{
-		// Update the vertex & index buffer
-		for (auto& upload : m_PendingUploads[frame])
 		{
-			auto& data{ m_CPUModelData.at(upload.meshID) };
-			{
-				uint8_t* basePtr{ static_cast<uint8_t*>(m_VertexBuffer[frame].mapped)};
+			ME_PROFILE_SCOPE("Mesh GPU uploads")
 
-				std::memcpy(basePtr + data.vertexOffset * sizeof(Vertex),
+				// Update the vertex & index buffer
+				for (auto& upload : m_PendingUploads[frame])
+				{
+					auto& data{ m_CPUModelData.at(upload.meshID) };
+					{
+						uint8_t* basePtr{ static_cast<uint8_t*>(m_VertexBuffer[frame].mapped) };
+
+						std::memcpy(basePtr + data.vertexOffset * sizeof(Vertex),
 							data.vertices.data(),
 							data.vertices.size() * sizeof(Vertex));
-			}
-			{
-				uint8_t* basePtr{ static_cast<uint8_t*>(m_IndexBuffer[frame].mapped) };
+					}
+					{
+						uint8_t* basePtr{ static_cast<uint8_t*>(m_IndexBuffer[frame].mapped) };
 
-				std::memcpy(basePtr + data.indexOffset * sizeof(uint32_t),
-							data.indices.data(), 
+						std::memcpy(basePtr + data.indexOffset * sizeof(uint32_t),
+							data.indices.data(),
 							data.indices.size() * sizeof(uint32_t));
-			}
+					}
 
-			data.uses--;
+					data.uses--;
 
-			if (data.uses == 0)
-			{
-				m_CPUModelData.erase(upload.meshID);
-			}
+					if (data.uses == 0)
+					{
+						m_CPUModelData.erase(upload.meshID);
+					}
+				}
+			m_PendingUploads[frame].clear();
 		}
-		m_PendingUploads[frame].clear();
 
 		//TODO only does this when contents change
 		{
