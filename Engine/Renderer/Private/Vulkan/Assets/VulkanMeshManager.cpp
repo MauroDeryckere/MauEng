@@ -100,22 +100,20 @@ namespace MauRen
 			m_SubMeshes.emplace_back(entry);
 		}
 
-		// may want to store a copy of the buffers on the CPU  side to support compacting and be more "optimal" as its less copies.
-		for (size_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; ++i)
+		m_CPUModelData[m_NextID] =
 		{
-			uint8_t* basePtr{ static_cast<uint8_t*>(m_VertexBuffer[i].mapped)};
+			.vertices = loadedModel.vertices,
+			.indices = loadedModel.indices,
 
-			std::memcpy(basePtr + m_CurrentVertexOffset * sizeof(Vertex), 
-						loadedModel.vertices.data(), 
-						loadedModel.vertices.size() * sizeof(Vertex));
-		}
-		for (size_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; ++i)
+			.vertexOffset = m_CurrentVertexOffset,
+			.indexOffset = m_CurrentIndexOffset,
+
+			.uses = 3
+		};
+
+		for (auto& pu : m_PendingUploads)
 		{
-			uint8_t* basePtr{ static_cast<uint8_t*>(m_IndexBuffer[i].mapped) };
-
-			std::memcpy(basePtr + m_CurrentIndexOffset * sizeof(uint32_t), 
-						loadedModel.indices.data(), 
-						loadedModel.indices.size() * sizeof(uint32_t));
+			pu.emplace_back(m_NextID);
 		}
 
 		m_CurrentVertexOffset += static_cast<uint32_t>(loadedModel.vertices.size());
@@ -146,6 +144,34 @@ namespace MauRen
 
 	void VulkanMeshManager::PreDraw(VulkanDescriptorContext& descriptorContext, uint32_t frame)
 	{
+		// Update the vertex & index buffer
+		for (auto& upload : m_PendingUploads[frame])
+		{
+			auto& data{ m_CPUModelData.at(upload.meshID) };
+			{
+				uint8_t* basePtr{ static_cast<uint8_t*>(m_VertexBuffer[frame].mapped)};
+
+				std::memcpy(basePtr + data.vertexOffset * sizeof(Vertex),
+							data.vertices.data(),
+							data.vertices.size() * sizeof(Vertex));
+			}
+			{
+				uint8_t* basePtr{ static_cast<uint8_t*>(m_IndexBuffer[frame].mapped) };
+
+				std::memcpy(basePtr + data.indexOffset * sizeof(uint32_t),
+							data.indices.data(), 
+							data.indices.size() * sizeof(uint32_t));
+			}
+
+			data.uses--;
+
+			if (data.uses == 0)
+			{
+				m_CPUModelData.erase(upload.meshID);
+			}
+		}
+		m_PendingUploads[frame].clear();
+
 		//TODO only does this when contents change
 		{
 			ME_PROFILE_SCOPE("Mesh instance data update - buffer")

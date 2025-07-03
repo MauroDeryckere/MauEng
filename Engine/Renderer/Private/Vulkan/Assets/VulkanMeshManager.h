@@ -100,6 +100,25 @@ namespace MauRen
 		uint32_t m_CurrentIndexOffset{ 0 }; // current index offset in the "global" index buffer
 		uint32_t m_NextID{ 0 }; // next available mesh ID
 
+		struct PendingMeshUpload final
+		{
+			uint32_t meshID;
+		};
+
+		struct CPUModelDataCache final
+		{
+			std::vector<Vertex> vertices;
+			std::vector<uint32_t> indices;
+
+			uint32_t vertexOffset;
+			uint32_t indexOffset;
+
+			uint32_t uses;
+		};
+		std::unordered_map<uint32_t, CPUModelDataCache> m_CPUModelData;
+
+		std::vector<PendingMeshUpload> m_PendingUploads[MAX_FRAMES_IN_FLIGHT];
+
 		void InitializeMeshInstanceDataBuffers() noexcept;
 		void InitializeDrawCommandBuffers() noexcept;
 

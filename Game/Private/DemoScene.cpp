@@ -390,6 +390,20 @@ namespace MauGam
 
 		Scene::Tick();
 
+		// runtime model load test
+		using namespace MauEng;
+		static bool didOnce = false;
+		if (not didOnce)
+		{
+			Entity entFish{ CreateEntity() };
+			auto& transform{ entFish.GetComponent<CTransform>() };
+			transform.Scale({ 100, 100, 100 });
+			transform.Translate({ -50, 0, -50 });
+			entFish.AddComponent<CStaticMesh>("Resources/Models/BarramundiFish/glTF/BarramundiFish.gltf");
+		}
+		didOnce = true;
+
+
 		HandleInput();
 
 		bool const shouldSceneRotate{	m_Demo == EDemo::Chess or
