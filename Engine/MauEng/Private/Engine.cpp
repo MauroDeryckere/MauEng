@@ -70,6 +70,8 @@ namespace MauEng
 
 	Engine::~Engine()
 	{
+		SCENE_MANAGER.Destroy();
+
 		auto& inputManager{ InputManager::GetInstance() };
 		inputManager.Destroy();
 

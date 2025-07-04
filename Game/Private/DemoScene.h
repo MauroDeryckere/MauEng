@@ -77,6 +77,8 @@ namespace MauGam
 		};
 		ECamSettings m_CamSettings{ ECamSettings::SUNNY16 };
 
+		std::vector<MauEng::Entity> m_Fishes;
+
 		void SetupInput();
 		void HandleInput();
 		void RenderDebugDemo() const;

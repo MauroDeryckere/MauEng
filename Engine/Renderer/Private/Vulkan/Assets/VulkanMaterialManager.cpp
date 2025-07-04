@@ -114,6 +114,9 @@ namespace MauRen
 			{
 				s.emplace(materialID);
 			}
+
+			m_MaterialID_PathMap.erase(it);
+			m_MaterialIDMap.erase(mapIt);
 		}
 	}
 

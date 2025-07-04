@@ -4,6 +4,14 @@
 
 namespace MauEng
 {
+	Scene::Scene()
+	{
+		m_ECSWorld.RegisterPreRemoveCallback<CStaticMesh>([](CStaticMesh const& mesh)
+			{
+				RENDERER.UnloadMesh(mesh.meshID);
+			});
+	}
+
 	void Scene::Tick()
 	{
 		m_TimerManager.Tick();
@@ -28,8 +36,8 @@ namespace MauEng
 			}
 			{
 				ME_PROFILE_SCOPE("QUEUE DRAWS")
-				auto group{ GetECSWorld().Group<CStaticMesh, CTransform>() };
-				group.Each([](CStaticMesh const& m, CTransform const& t)
+				auto view{ GetECSWorld().View<CStaticMesh, CTransform>() };
+				view.Each([](CStaticMesh const& m, CTransform const& t)
 							{
 								RENDERER.QueueDraw(t.mat, m);
 							});
@@ -56,7 +64,7 @@ namespace MauEng
 
 	Entity Scene::CreateEntity(glm::vec3 const& pos)
 	{
-		Entity ent{ m_ECSWorld.CreateEntity() };
+		Entity ent{ &m_ECSWorld, m_ECSWorld.CreateEntity() };
 
 		ent.AddComponent<CTransform>(pos);
 

@@ -164,6 +164,7 @@ namespace MauRen
 				.indexCount = indexCount,
 				.firstIndex = indexOffset,
 				.vertexOffset = static_cast<int32_t>(vertexOffset),
+				.vertexCount = static_cast<uint32_t>(mesh->mNumVertices),
 				.materialID = matID
 			});
 	}

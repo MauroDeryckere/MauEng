@@ -1,8 +1,7 @@
 #include "Entity.h"
 
-#include "ECSWorld.h"
 #include "Asserts/Asserts.h"
-
+#include "Components/CStaticMesh.h"
 namespace MauEng
 {
 	Entity::Entity(ECS::ECSWorld* pWorld, ECS::EntityID id) :
@@ -12,6 +11,11 @@ namespace MauEng
 
 	void Entity::Destroy() noexcept
 	{
-		m_pECSWorld->DestroyEntity(*this);
+		if (m_pECSWorld->HasComponent<CStaticMesh>(m_ID))
+		{
+			m_pECSWorld->RemoveComponent<CStaticMesh>(m_ID);
+		}
+
+		m_pECSWorld->DestroyEntity(m_ID);
 	}
 }

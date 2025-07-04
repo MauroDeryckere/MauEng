@@ -8,4 +8,6 @@ namespace MauEng
 	{
 		meshID = RENDERER.LoadOrGetMeshID(path);
 	}
+
+	CStaticMesh::~CStaticMesh(){ }
 }

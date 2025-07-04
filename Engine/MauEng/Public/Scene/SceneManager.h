@@ -15,6 +15,8 @@ namespace MauEng
 	public:
 		void LoadScene(std::unique_ptr<Scene> pScene);
 
+		void Destroy();
+
 		void FixedUpdate();
 		void Render(glm::vec2 const& screenSize) const;
 		void Tick();

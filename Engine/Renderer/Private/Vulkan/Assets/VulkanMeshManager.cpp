@@ -64,8 +64,59 @@ namespace MauRen
 	{
 		ME_PROFILE_FUNCTION()
 
-			//TODO
-		//VulkanMaterialManager::GetInstance().UnloadMaterial();
+		auto const meshIt{ m_LoadedMeshes.find(meshID) };
+		if (meshIt == m_LoadedMeshes.end())
+		{
+			ME_LOG_ERROR(LogRenderer, "Tried to unload non-existent mesh ID: {}", meshID);
+			return;
+		}
+
+		uint32_t const internalIndex{ meshIt->second };
+		std::string const path{ m_MeshID_path[meshID] };
+
+		auto pathIt = m_LoadedMeshes_Path.find(path);
+		ME_RENDERER_ASSERT(pathIt != m_LoadedMeshes_Path.end());
+
+		pathIt->second.useCount--;
+
+		// Still in use
+		if (pathIt->second.useCount > 0)
+		{
+			return;
+		}
+
+		// Clear CPU-side model data if it somehow persisted
+		m_CPUModelData.erase(meshID);
+
+		MeshData& meshData{ m_MeshData[internalIndex] };
+		// Clean up submeshes
+		for (uint32_t i{ 0 }; i < meshData.subMeshCount; ++i)
+		{
+			VulkanMaterialManager::GetInstance().UnloadMaterial(m_SubMeshes[meshData.firstSubMesh + i].materialID);
+
+			m_FreeIndices.emplace_back(m_SubMeshes[meshData.firstSubMesh + i].firstIndex, m_SubMeshes[meshData.firstSubMesh + i].indexCount);
+			m_FreeVertices.emplace_back(m_SubMeshes[meshData.firstSubMesh + i].vertexOffset, m_SubMeshes[meshData.firstSubMesh + i].vertexCount);
+
+			m_SubMeshes[meshData.firstSubMesh + i] = {}; // Zeroing out
+		}
+		FreeRange::MergeFreeRanges(m_FreeIndices);
+		FreeRange::MergeFreeRanges(m_FreeVertices);
+		
+		m_MeshData[internalIndex] = {};
+
+		m_LoadedMeshes.erase(meshIt);
+		m_LoadedMeshes_Path.erase(pathIt);
+		m_MeshID_path.erase(meshID);
+
+		for (auto& frameUploads : m_PendingUploads)
+		{
+			frameUploads.erase(
+				std::ranges::remove_if(frameUploads,
+				                       [meshID](PendingMeshUpload const& pu) { return pu.meshID == meshID; }).begin(),
+				frameUploads.end());
+		}
+
+		ME_LOG_INFO(LogRenderer, "Unloaded mesh ID: {} ({})", meshID, path);
 	}
 
 	uint32_t VulkanMeshManager::LoadMesh(char const* path, VulkanCommandPoolManager& cmdPoolManager, VulkanDescriptorContext& descriptorContext) noexcept

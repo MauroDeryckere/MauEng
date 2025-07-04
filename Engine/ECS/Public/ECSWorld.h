@@ -13,11 +13,6 @@
 #include "View.h"
 #include "Group.h"
 
-namespace MauEng
-{
-	class Entity;
-}
-
 namespace MauEng::ECS
 {
 	class ECSWorld final
@@ -45,15 +40,11 @@ namespace MauEng::ECS
 
 #pragma region Entities
 		// Create an entity and add it to the ECS
-		[[nodiscard]] Entity CreateEntity() & noexcept;
+		[[nodiscard]] EntityID CreateEntity() & noexcept;
 
-		// Destroy an Entity & remove it from the ECS
-		void DestroyEntity(Entity entity) & noexcept;
 		// Destroy an Entity & remove it from the ECS
 		void DestroyEntity(EntityID id) & noexcept;
 
-		// Checks if the entity is valid
-		[[nodiscard]] bool IsValid(Entity entity) const& noexcept;
 		// Checks if the entity is valid
 		[[nodiscard]] bool IsValid(EntityID id) const& noexcept;
 
@@ -143,6 +134,17 @@ namespace MauEng::ECS
 #pragma endregion
 
 #pragma region Components
+		template<typename ComponentType, typename Func>
+		void ConnectOnDestroy(Func&& callback)
+		{
+			m_pImpl->ConnectOnDestroy<ComponentType>(std::forward<Func>(callback));
+		}
+		template<typename ComponentType>
+		void RegisterPreRemoveCallback(std::function<void(ComponentType const&)>&& callback)
+		{
+			m_pImpl->RegisterPreRemoveCallback<ComponentType>(std::move(callback));
+		}
+
 		template<typename ComponentType>
 		[[nodiscard]] std::size_t ComponentCount() const& noexcept
 		{

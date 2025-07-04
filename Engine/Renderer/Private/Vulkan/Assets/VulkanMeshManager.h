@@ -119,6 +119,52 @@ namespace MauRen
 
 		std::vector<PendingMeshUpload> m_PendingUploads[MAX_FRAMES_IN_FLIGHT];
 
+		struct FreeRange
+		{
+			uint32_t offset;
+			uint32_t size;
+
+			uint32_t End() const { return offset + size; }
+
+			bool operator<(FreeRange const& other) const
+			{
+				return offset < other.offset;
+			}
+
+			static void MergeFreeRanges(std::vector<FreeRange>& ranges)
+			{
+				if (ranges.empty())
+					return;
+
+				std::sort(ranges.begin(), ranges.end());
+
+				std::vector<FreeRange> merged;
+				merged.reserve(ranges.size());
+				merged.push_back(ranges[0]);
+
+				for (size_t i{ 1 }; i < ranges.size(); ++i)
+				{
+					FreeRange& last{ merged.back() };
+					FreeRange const& current{ ranges[i] };
+
+					if (last.End() >= current.offset)
+					{
+						ME_RENDERER_ASSERT(last.End() == current.offset, "Overlapping free ranges detected!");
+						last.size = std::max(last.End(), current.End()) - last.offset;
+					}
+					else
+					{
+						merged.push_back(current);
+					}
+				}
+
+				ranges = std::move(merged);
+			}
+		};
+
+		std::vector<FreeRange> m_FreeIndices{};
+		std::vector<FreeRange> m_FreeVertices{};
+
 		void InitializeMeshInstanceDataBuffers() noexcept;
 		void InitializeDrawCommandBuffers() noexcept;
 
