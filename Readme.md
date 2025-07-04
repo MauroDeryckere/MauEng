@@ -214,7 +214,6 @@ void GameScene::Tick()
 - Image based lighting (skybox)
 - Auto exposure
 - GPU frustrum culling
-- Deleting / hiding meshes
 - Optimized scene AABB calculation for shadow maps
 - Soft shadows
 - ImGUI integration
