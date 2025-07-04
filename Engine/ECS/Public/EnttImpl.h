@@ -2,16 +2,41 @@
 #define MAUENG_ENTTIMPL_H
 
 //TODO fix include
+#include <typeindex>
+
 #include "../../ECS/Libs/Entt/single_include/entt/entt.hpp"
 #include "EntityID.h"
 
 namespace MauEng::ECS
 {
+	template<typename ComponentType>
+	using PreRemoveCallbackType = std::function<void(ComponentType const&)>;
+
 	struct ECSImpl final
 	{
 		entt::registry registry{};
 
+		std::unordered_map<std::type_index, std::function<void(entt::registry&, entt::entity)>> m_PreRemoveCallbacks;
+
+
 #pragma region Registry
+		template<typename ComponentType, typename Func>
+		void ConnectOnDestroy(Func&& callback)
+		{
+			registry.on_destroy<ComponentType>().connect(std::forward<Func>(callback));
+		}
+
+		template<typename ComponentType>
+		void RegisterPreRemoveCallback(std::function<void(ComponentType const&)> callback)
+		{
+			m_PreRemoveCallbacks[typeid(ComponentType)] =
+				[callback = std::move(callback)](entt::registry& reg, entt::entity ent)
+				{
+					if (auto comp = reg.try_get<ComponentType>(ent))
+						callback(*comp);
+				};
+		}
+
 		template<typename... ComponentTypes>
 		void Compact() noexcept
 		{
@@ -116,6 +141,14 @@ namespace MauEng::ECS
 		template <typename... ComponentTypes>
 		[[nodiscard]] bool RemoveComponent(EntityID id) noexcept
 		{
+			((
+				[&] {
+					auto it = m_PreRemoveCallbacks.find(typeid(ComponentTypes));
+					if (it != m_PreRemoveCallbacks.end())
+						it->second(registry, static_cast<entt::entity>(id));
+				}()
+					), ...);
+
 			return registry.remove<ComponentTypes...>(static_cast<entt::entity>(id)) == sizeof...(ComponentTypes);
 		}
 		template <typename... ComponentTypes, typename Iterator>

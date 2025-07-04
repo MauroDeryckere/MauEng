@@ -13,6 +13,15 @@ namespace MauEng
 		m_Scene->OnLoad();
 	}
 
+	void SceneManager::Destroy()
+	{
+		if (m_Scene)
+		{
+			m_Scene->OnUnload();
+		}
+		m_Scene = nullptr;
+	}
+
 	void SceneManager::FixedUpdate()
 	{
 		ME_PROFILE_FUNCTION()
@@ -45,6 +54,9 @@ namespace MauEng
 
 	SceneManager::~SceneManager()
 	{
-		m_Scene->OnUnload();
+		if (m_Scene)
+		{
+			m_Scene->OnUnload();
+		}
 	}
 }

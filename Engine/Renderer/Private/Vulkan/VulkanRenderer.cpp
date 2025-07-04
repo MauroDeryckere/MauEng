@@ -86,32 +86,34 @@ namespace MauRen
 
 		if (m_DebugRenderer)
 		{
+			for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
 			{
-				size_t constexpr bufferSize = sizeof(DebugVertex) * 100;
+				{
+					size_t constexpr bufferSize = sizeof(DebugVertex) * 100;
 
-				m_DebugVertexBuffer = (VulkanMappedBuffer{
-													VulkanBuffer{bufferSize,
-																		VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-																		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT },
-													nullptr });
+					m_DebugVertexBuffer.emplace_back(VulkanMappedBuffer{
+														VulkanBuffer{bufferSize,
+																			VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+																			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT },
+														nullptr });
 
-				// Persistent mapping
-				vmaMapMemory(VulkanMemoryAllocator::GetInstance().GetAllocator(), m_DebugVertexBuffer.buffer.alloc, &m_DebugVertexBuffer.mapped);
+					// Persistent mapping
+					vmaMapMemory(VulkanMemoryAllocator::GetInstance().GetAllocator(), m_DebugVertexBuffer.back().buffer.alloc, &m_DebugVertexBuffer.back().mapped);
+				}
+
+				{
+					size_t constexpr bufferSize = sizeof(uint32_t) * 100;
+
+					m_DebugIndexBuffer.emplace_back(VulkanMappedBuffer{
+														VulkanBuffer{bufferSize,
+																			VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+																			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT },
+														nullptr });
+
+					// Persistent mapping
+					vmaMapMemory(VulkanMemoryAllocator::GetInstance().GetAllocator(), m_DebugIndexBuffer.back().buffer.alloc, &m_DebugIndexBuffer.back().mapped);
+				}
 			}
-
-			{
-				size_t constexpr bufferSize = sizeof(uint32_t) * 100;
-
-				m_DebugIndexBuffer = (VulkanMappedBuffer{
-													VulkanBuffer{bufferSize,
-																		VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-																		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT },
-													nullptr });
-
-				// Persistent mapping
-				vmaMapMemory(VulkanMemoryAllocator::GetInstance().GetAllocator(), m_DebugIndexBuffer.buffer.alloc, &m_DebugIndexBuffer.mapped);
-			}
-			
 		}
 
 		m_QuadVertexBuffer = { sizeof(m_QuadVertices[0]) * std::size(m_QuadVertices),
@@ -198,10 +200,16 @@ namespace MauRen
 
 		if (m_DebugRenderer)
 		{
-			m_DebugVertexBuffer.UnMap();
-			m_DebugVertexBuffer.buffer.Destroy();
-			m_DebugIndexBuffer.UnMap();
-			m_DebugIndexBuffer.buffer.Destroy();
+			for (auto& b : m_DebugVertexBuffer)
+			{
+				b.UnMap();
+				b.buffer.Destroy();
+			}
+			for (auto& b : m_DebugIndexBuffer)
+			{
+				b.UnMap();
+				b.buffer.Destroy();
+			}
 		}
 
 		m_QuadVertexBuffer.Destroy();
@@ -257,7 +265,6 @@ namespace MauRen
 
 	void VulkanRenderer::Render(MauEng::Camera const* cam)
 	{
-
 		DrawFrame(cam);
 
 		if (m_DebugRenderer)
@@ -267,10 +274,7 @@ namespace MauRen
 		}
 	}
 
-	void VulkanRenderer::EndImGUIFrame()
-	{
-
-	}
+	void VulkanRenderer::EndImGUIFrame(){ }
 
 	void VulkanRenderer::ResizeWindow()
 	{
@@ -302,9 +306,33 @@ namespace MauRen
 		VulkanMeshManager::GetInstance().QueueDraw(transformMat, mesh.meshID);
 	}
 
+	void VulkanRenderer::UnloadMesh(uint32_t meshID)
+	{
+		VulkanMeshManager::GetInstance().UnloadMesh(meshID);
+	}
+
 	uint32_t VulkanRenderer::LoadOrGetMeshID(char const* path)
 	{
 		return VulkanMeshManager::GetInstance().LoadMesh(path, m_CommandPoolManager, m_DescriptorContext);
+	}
+
+	MaterialRendererInfo VulkanRenderer::GetMaterialRendererInfo() const noexcept
+	{
+		return {
+				VulkanMaterialManager::GetInstance().GetMaterialIDMap(),
+				VulkanMaterialManager::GetInstance().GetMaterialData()
+		};
+	}
+
+	std::unordered_map<std::string, struct LoadedTextureInfo> const& VulkanRenderer::GetTextureMap() const noexcept
+	{
+		return VulkanMaterialManager::GetInstance().GetTextureManager()->GetTextureMap();
+	}
+
+	std::pair<std::unordered_map<std::string, struct LoadedMeshes_PathInfo> const&, std::vector<struct MeshData> const&>
+	VulkanRenderer::GetRendererMeshInfo()
+	{
+		return VulkanMeshManager::GetInstance().GetLoadedMeshesPathMap();
 	}
 
 	void VulkanRenderer::CreateUniformBuffers()
@@ -783,15 +811,18 @@ namespace MauRen
 		}
 	}
 
-	void VulkanRenderer::PreDraw(MauEng::Camera const* cam, uint32_t image)
+	void VulkanRenderer::PreDraw(MauEng::Camera const* cam)
 	{
 		ME_PROFILE_FUNCTION()
 
 		auto const deviceContext{ VulkanDeviceContextManager::GetInstance().GetDeviceContext() };
 
-		UpdateUniformBuffer(m_CurrentFrame, cam->GetViewMatrix(), cam->GetProjectionMatrix());
-		UpdateCamSettings(cam, m_CurrentFrame);
+		UpdateUniformBuffer(cam->GetViewMatrix(), cam->GetProjectionMatrix());
+		UpdateCamSettings(cam);
 		UpdateDebugVertexBuffer();
+
+		VulkanMaterialManager::GetInstance().PreDraw(m_CurrentFrame, m_DescriptorContext);
+
 		VulkanMeshManager::GetInstance().PreDraw(m_DescriptorContext, m_CurrentFrame);
 		VulkanLightManager::GetInstance().PreDraw(m_DescriptorContext, m_CurrentFrame);
 
@@ -833,7 +864,7 @@ namespace MauRen
 			vkResetFences(deviceContext->GetLogicalDevice(), 1, &m_InFlightFences[m_CurrentFrame]);
 		}
 
-		PreDraw(cam, imageIndex);
+		PreDraw(cam);
 
 		{
 			ME_PROFILE_SCOPE("Reset command buffer")
@@ -898,7 +929,7 @@ namespace MauRen
 		m_CurrentFrame = (m_CurrentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 	}
 
-	void VulkanRenderer::UpdateUniformBuffer(uint32_t currentImage, glm::mat4 const& view, glm::mat4 const& proj)
+	void VulkanRenderer::UpdateUniformBuffer(glm::mat4 const& view, glm::mat4 const& proj)
 	{
 		ME_PROFILE_FUNCTION()
 
@@ -912,10 +943,10 @@ namespace MauRen
 			.numLights = VulkanLightManager::GetInstance().GetNumLights()
 		};
 
-		memcpy(m_MappedUniformBuffers[currentImage].mapped, &ubo, sizeof(ubo));
+		memcpy(m_MappedUniformBuffers[m_CurrentFrame].mapped, &ubo, sizeof(ubo));
 	}
 
-	void VulkanRenderer::UpdateCamSettings(MauEng::Camera const* cam, uint32_t currentImage)
+	void VulkanRenderer::UpdateCamSettings(MauEng::Camera const* cam)
 	{
 		ME_PROFILE_FUNCTION()
 
@@ -931,7 +962,7 @@ namespace MauRen
 			.enableExposure = static_cast<uint32_t>(cam->IsExposureEnabled())
 		};
 
-		memcpy(m_CamSettingsMappedUniformBuffers[currentImage].mapped, &ubo, sizeof(ubo));
+		memcpy(m_CamSettingsMappedUniformBuffers[m_CurrentFrame].mapped, &ubo, sizeof(ubo));
 	}
 
 	bool VulkanRenderer::RecreateSwapchain()
@@ -985,32 +1016,32 @@ namespace MauRen
 		size_t const vertexCount{ m_DebugRenderer->m_ActivePoints.size() };
 		size_t const indexCount{ m_DebugRenderer->m_IndexBuffer.size() };
 
-		if (sizeof(DebugVertex) * vertexCount >= m_DebugVertexBuffer.buffer.size)
+		if (sizeof(DebugVertex) * vertexCount >= m_DebugVertexBuffer[m_CurrentFrame].buffer.size)
 		{
-			m_DebugVertexBuffer.UnMap();
-			m_DebugVertexBuffer.buffer.Resize(sizeof(DebugVertex) * vertexCount * 2, m_DebugVertexBuffer.buffer._usage, m_DebugVertexBuffer.buffer._properties, m_DebugVertexBuffer.buffer.memPriority);
+			m_DebugVertexBuffer[m_CurrentFrame].UnMap();
+			m_DebugVertexBuffer[m_CurrentFrame].buffer.Resize(sizeof(DebugVertex) * vertexCount * 2, m_DebugVertexBuffer[m_CurrentFrame].buffer._usage, m_DebugVertexBuffer[m_CurrentFrame].buffer._properties, m_DebugVertexBuffer[m_CurrentFrame].buffer.memPriority);
 			
-			vmaMapMemory(VulkanMemoryAllocator::GetInstance().GetAllocator(), m_DebugVertexBuffer.buffer.alloc, &m_DebugVertexBuffer.mapped);
+			vmaMapMemory(VulkanMemoryAllocator::GetInstance().GetAllocator(), m_DebugVertexBuffer[m_CurrentFrame].buffer.alloc, &m_DebugVertexBuffer[m_CurrentFrame].mapped);
 		}
-		if (sizeof(uint32_t) * indexCount >= m_DebugIndexBuffer.buffer.size)
+		if (sizeof(uint32_t) * indexCount >= m_DebugIndexBuffer[m_CurrentFrame].buffer.size)
 		{
-			m_DebugIndexBuffer.UnMap();
-			m_DebugIndexBuffer.buffer.Resize(sizeof(uint32_t) * indexCount * 2, m_DebugIndexBuffer.buffer._usage, m_DebugIndexBuffer.buffer._properties, m_DebugIndexBuffer.buffer.memPriority);
+			m_DebugIndexBuffer[m_CurrentFrame].UnMap();
+			m_DebugIndexBuffer[m_CurrentFrame].buffer.Resize(sizeof(uint32_t) * indexCount * 2, m_DebugIndexBuffer[m_CurrentFrame].buffer._usage, m_DebugIndexBuffer[m_CurrentFrame].buffer._properties, m_DebugIndexBuffer[m_CurrentFrame].buffer.memPriority);
 
-			vmaMapMemory(VulkanMemoryAllocator::GetInstance().GetAllocator(), m_DebugIndexBuffer.buffer.alloc, &m_DebugIndexBuffer.mapped);
+			vmaMapMemory(VulkanMemoryAllocator::GetInstance().GetAllocator(), m_DebugIndexBuffer[m_CurrentFrame].buffer.alloc, &m_DebugIndexBuffer[m_CurrentFrame].mapped);
 		}
 
 		{
 			ME_PROFILE_SCOPE("debug vert buffer copy")
 
 			size_t const bufferSize{ sizeof(DebugVertex) * vertexCount };
-			memcpy(m_DebugVertexBuffer.mapped, m_DebugRenderer->m_ActivePoints.data(), bufferSize);
+			memcpy(m_DebugVertexBuffer[m_CurrentFrame].mapped, m_DebugRenderer->m_ActivePoints.data(), bufferSize);
 		}
 
 		{
 			ME_PROFILE_SCOPE("debug index buffer copy")
 			size_t const bufferSize{ sizeof(uint32_t) * indexCount };
-			memcpy(m_DebugIndexBuffer.mapped, m_DebugRenderer->m_IndexBuffer.data(), bufferSize);
+			memcpy(m_DebugIndexBuffer[m_CurrentFrame].mapped, m_DebugRenderer->m_IndexBuffer.data(), bufferSize);
 		}
 	}
 
@@ -1033,8 +1064,8 @@ namespace MauRen
 		}
 
 		VkDeviceSize constexpr offset{ 0 };
-		vkCmdBindVertexBuffers(commandBuffer, 0, 1, &m_DebugVertexBuffer.buffer.buffer, &offset);
-		vkCmdBindIndexBuffer(commandBuffer, m_DebugIndexBuffer.buffer.buffer, offset, VK_INDEX_TYPE_UINT32);
+		vkCmdBindVertexBuffers(commandBuffer, 0, 1, &m_DebugVertexBuffer[m_CurrentFrame].buffer.buffer, &offset);
+		vkCmdBindIndexBuffer(commandBuffer, m_DebugIndexBuffer[m_CurrentFrame].buffer.buffer, offset, VK_INDEX_TYPE_UINT32);
 		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(m_DebugRenderer->m_IndexBuffer.size()), 1, 0, 0, 0);
 	}
 }

@@ -61,8 +61,12 @@ namespace MauRen
 		virtual void PreLightQueue(glm::mat4 const& viewProj) override;
 		virtual void QueueLight(MauEng::CLight const& light) override;
 		virtual void QueueDraw(glm::mat4 const& transformMat, MauEng::CStaticMesh const& mesh) override;
+		virtual void UnloadMesh(uint32_t meshID) override;
 		virtual [[nodiscard]] uint32_t LoadOrGetMeshID(char const* path) override;
 
+		virtual [[nodiscard]] std::pair<std::unordered_map<std::string, struct LoadedMeshes_PathInfo> const&, std::vector<struct MeshData>const&> GetRendererMeshInfo() override;
+		virtual [[nodiscard]] MaterialRendererInfo GetMaterialRendererInfo() const noexcept override;
+		virtual [[nodiscard]] std::unordered_map<std::string, struct LoadedTextureInfo> const& GetTextureMap() const noexcept override;
 		VulkanRenderer(VulkanRenderer const&) = delete;
 		VulkanRenderer(VulkanRenderer&&) = delete;
 		VulkanRenderer& operator=(VulkanRenderer const&) = delete;
@@ -127,8 +131,8 @@ namespace MauRen
 
 		std::vector<VulkanMappedBuffer> m_CamSettingsMappedUniformBuffers{};
 
-		VulkanMappedBuffer m_DebugVertexBuffer{};
-		VulkanMappedBuffer m_DebugIndexBuffer{};
+		std::vector<VulkanMappedBuffer> m_DebugVertexBuffer{};
+		std::vector<VulkanMappedBuffer> m_DebugIndexBuffer{};
 
 		std::array<VkClearValue, 2> static constexpr CLEAR_VALUES
 		{
@@ -156,12 +160,12 @@ namespace MauRen
 		void CreateSyncObjects();
 
 		// Before command buffer recording, update descriptor set, ...
-		void PreDraw(MauEng::Camera const* cam, uint32_t image);
+		void PreDraw(MauEng::Camera const* cam);
 
 		void DrawFrame(MauEng::Camera const* cam);
 		void RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex, glm::mat4 const& viewProj);
-		void UpdateUniformBuffer(uint32_t currentImage, glm::mat4 const& view, glm::mat4 const& proj);
-		void UpdateCamSettings(MauEng::Camera const* cam, uint32_t currentImage);
+		void UpdateUniformBuffer(glm::mat4 const& view, glm::mat4 const& proj);
+		void UpdateCamSettings(MauEng::Camera const* cam);
 
 		// Recreate the swapchain on e.g a window resize
 		bool RecreateSwapchain();

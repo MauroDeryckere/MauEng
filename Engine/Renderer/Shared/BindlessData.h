@@ -27,6 +27,22 @@ FirstInstance + instance Count -> InstanceData [gl_InstanceID]
 
 namespace MauRen
 {
+    struct LoadedMeshes_PathInfo
+    {
+        uint32_t loadedMeshesID{ INVALID_MESH_ID };
+        uint32_t useCount{ 0 };
+    };
+    struct LoadedMaterialInfo
+    {
+        uint32_t materialID{ INVALID_MATERIAL_ID };
+        uint32_t useCount{ 0 };
+    };
+    struct LoadedTextureInfo
+    {
+        uint32_t textureID{ INVALID_TEXTURE_ID };
+        uint32_t useCount{ 0 };
+	};
+
     // (GPU-side resource - CPU copy)
 	// Per instance data
 	// Maps to all used data from buffers
@@ -57,6 +73,7 @@ namespace MauRen
         uint32_t indexCount;
         uint32_t firstIndex;
         int32_t  vertexOffset;
+        uint32_t  vertexCount;
 
 		uint32_t materialID;   // Material for this submesh
     };
@@ -69,6 +86,9 @@ namespace MauRen
         uint32_t albedoTextureID{ INVALID_DIFFUSE_TEXTURE_ID };
         uint32_t normalTextureID{ INVALID_NORMAL_TEXTURE_ID };
         uint32_t metallicTextureID{ INVALID_METALNESS_TEXTURE_ID };
+
+        uint32_t materialID{ INVALID_MATERIAL_ID };
+
         //...
 
        // uint32_t flags; // Flags for deletion or active status (0 = active, 1 = marked for deletion)
@@ -83,6 +103,13 @@ namespace MauRen
         int32_t  vertexOffset{ 0 };      // Offset to add to the vertex indices
         uint32_t firstInstance{ 0 };     // Starting instance index
     };
+
+    struct MaterialRendererInfo
+    {
+        std::unordered_map<std::string, LoadedMaterialInfo> const& name_ID;
+        std::vector<MaterialData> const& matData;
+    };
+
 }
 
 #endif

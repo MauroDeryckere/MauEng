@@ -1,8 +1,8 @@
 #ifndef MAUENG_ENTITY_H
 #define MAUENG_ENTITY_H
 
-#include "ECSWorld.h"
-#include "EntityID.h"
+#include "../../ECS/public/ECSWorld.h"
+#include "../../ECS/public/EntityID.h"
 
 namespace MauEng
 {

@@ -34,10 +34,16 @@ namespace MauRen
 
 	bool VulkanMeshManager::Destroy()
 	{
-		m_VertexBuffer.UnMap();
-		m_VertexBuffer.buffer.Destroy();
-		m_IndexBuffer.UnMap();
-		m_IndexBuffer.buffer.Destroy();
+		for (auto & b : m_VertexBuffer)
+		{
+			b.UnMap();
+			b.buffer.Destroy();
+		}
+		for (auto& b : m_IndexBuffer)
+		{
+			b.UnMap();
+			b.buffer.Destroy();
+		}
 
 		for (auto& d : m_DrawCommandBuffers)
 		{
@@ -54,20 +60,113 @@ namespace MauRen
 		return true;
 	}
 
-	//NOT THREAD SAFE CURRENTLY, but okay to call at start program
+	void VulkanMeshManager::UnloadMesh(uint32_t meshID) noexcept
+	{
+		ME_PROFILE_FUNCTION()
+
+		auto const meshIt{ m_LoadedMeshes.find(meshID) };
+		if (meshIt == m_LoadedMeshes.end())
+		{
+			ME_LOG_ERROR(LogRenderer, "Tried to unload non-existent mesh ID: {}", meshID);
+			return;
+		}
+
+		uint32_t const internalIndex{ meshIt->second };
+		std::string const path{ m_MeshID_path[meshID] };
+
+		auto pathIt = m_LoadedMeshes_Path.find(path);
+		ME_RENDERER_ASSERT(pathIt != m_LoadedMeshes_Path.end());
+
+		pathIt->second.useCount--;
+
+		// Still in use
+		if (pathIt->second.useCount > 0)
+		{
+			return;
+		}
+
+		// Clear CPU-side model data if it somehow persisted
+		m_CPUModelData.erase(meshID);
+
+		MeshData& meshData{ m_MeshData[internalIndex] };
+		// Clean up submeshes
+		for (uint32_t i{ 0 }; i < meshData.subMeshCount; ++i)
+		{
+			VulkanMaterialManager::GetInstance().UnloadMaterial(m_SubMeshes[meshData.firstSubMesh + i].materialID);
+
+			m_FreeIndices.emplace_back(m_SubMeshes[meshData.firstSubMesh + i].firstIndex, m_SubMeshes[meshData.firstSubMesh + i].indexCount);
+			m_FreeVertices.emplace_back(m_SubMeshes[meshData.firstSubMesh + i].vertexOffset, m_SubMeshes[meshData.firstSubMesh + i].vertexCount);
+
+			m_SubMeshes[meshData.firstSubMesh + i] = {}; // Zeroing out
+		}
+		FreeRange::MergeFreeRanges(m_FreeIndices);
+		FreeRange::MergeFreeRanges(m_FreeVertices);
+		
+		m_MeshData[internalIndex] = {};
+
+		m_LoadedMeshes.erase(meshIt);
+		m_LoadedMeshes_Path.erase(pathIt);
+		m_MeshID_path.erase(meshID);
+
+		for (auto& frameUploads : m_PendingUploads)
+		{
+			frameUploads.erase(
+				std::ranges::remove_if(frameUploads,
+				                       [meshID](PendingMeshUpload const& pu) { return pu.meshID == meshID; }).begin(),
+				frameUploads.end());
+		}
+
+		ME_LOG_INFO(LogRenderer, "Unloaded mesh ID: {} ({})", meshID, path);
+	}
+
 	uint32_t VulkanMeshManager::LoadMesh(char const* path, VulkanCommandPoolManager& cmdPoolManager, VulkanDescriptorContext& descriptorContext) noexcept
 	{
 		ME_PROFILE_FUNCTION()
 
-		if (auto it{ m_LoadedMeshes_Path.find(path) }; it != m_LoadedMeshes_Path.end())
+		std::string cleanPath{ path };
+		std::string const prefix{ "Resources/Models/" };
+		if (cleanPath.starts_with(prefix))
 		{
-			const auto& data{ m_MeshData[it->second] };
-			return data.meshID;
+			cleanPath.erase(0, prefix.size());
 		}
 
-		LoadedModel const loadedModel{ ModelLoader::LoadModel({ path }, cmdPoolManager, descriptorContext) };
-		ME_RENDERER_ASSERT(m_CurrentVertexOffset + loadedModel.vertices.size() <= MAX_VERTICES);
-		ME_RENDERER_ASSERT(m_CurrentIndexOffset + loadedModel.indices.size() <= MAX_INDICES);
+		if (auto it{ m_LoadedMeshes_Path.find(cleanPath) }; it != m_LoadedMeshes_Path.end())
+		{
+			if (it->second.loadedMeshesID != INVALID_MESH_ID)
+			{
+				it->second.useCount++;
+				return m_MeshData[it->second.loadedMeshesID].meshID;
+			}
+		}
+
+		LoadedModel const loadedModel{ ModelLoader::LoadModel(path, cmdPoolManager, descriptorContext) };
+		//ME_RENDERER_ASSERT(m_CurrentVertexOffset + loadedModel.vertices.size() <= MAX_VERTICES);
+		//ME_RENDERER_ASSERT(m_CurrentIndexOffset + loadedModel.indices.size() <= MAX_INDICES);
+
+		uint32_t const vertexCount{ static_cast<uint32_t>(loadedModel.vertices.size()) };
+		uint32_t const indexCount{ static_cast<uint32_t>(loadedModel.indices.size()) };
+
+		auto [usedVertexRange, vertexOffset] { FreeRange::TryUseFreeRange(m_FreeVertices, vertexCount) };
+		auto [usedIndexRange, indexOffset] { FreeRange::TryUseFreeRange(m_FreeIndices, indexCount) };
+
+		if (!usedVertexRange)
+		{
+			vertexOffset = m_CurrentVertexOffset;
+			m_CurrentVertexOffset += vertexCount;
+		}
+		else
+		{
+			ME_LOG_INFO(LogRenderer, "Reusing free range in vertex buffer for mesh: {}", path);
+		}
+		if (!usedIndexRange)
+		{
+			indexOffset = m_CurrentIndexOffset;
+			m_CurrentIndexOffset += indexCount;
+		}
+		else
+		{
+			ME_LOG_INFO(LogRenderer, "Reusing free range in index buffer for mesh: {}", path);
+		}
 
 		MeshData meshData;
 		meshData.meshID = m_NextID;
@@ -78,33 +177,34 @@ namespace MauRen
 		for (auto& sub : loadedModel.subMeshes)
 		{
 			SubMeshData entry{ sub };
-			entry.vertexOffset += m_CurrentVertexOffset;
-			entry.firstIndex += m_CurrentIndexOffset;
+			entry.vertexOffset += vertexOffset;
+			entry.firstIndex += indexOffset;
 
 			m_SubMeshes.emplace_back(entry);
 		}
 
-		// may want to store a copy of the buffers on the CPU  side to support compacting and be more "optimal" as its less copies.
+		m_CPUModelData[m_NextID] =
 		{
-			uint8_t* basePtr{ static_cast<uint8_t*>(m_VertexBuffer.mapped) };
+			.vertices = loadedModel.vertices,
+			.indices = loadedModel.indices,
 
-			std::memcpy(basePtr + m_CurrentVertexOffset * sizeof(Vertex), 
-						loadedModel.vertices.data(), 
-						loadedModel.vertices.size() * sizeof(Vertex));
-		}
+			.vertexOffset = vertexOffset,
+			.indexOffset = indexOffset,
+
+			.uses = 3
+		};
+
+		for (auto& pu : m_PendingUploads)
 		{
-			uint8_t* basePtr{ static_cast<uint8_t*>(m_IndexBuffer.mapped) };
-
-			std::memcpy(basePtr + m_CurrentIndexOffset * sizeof(uint32_t), 
-						loadedModel.indices.data(), 
-						loadedModel.indices.size() * sizeof(uint32_t));
+			pu.emplace_back(m_NextID);
 		}
 
 		m_CurrentVertexOffset += static_cast<uint32_t>(loadedModel.vertices.size());
 		m_CurrentIndexOffset += static_cast<uint32_t>(loadedModel.indices.size());
 
 		m_LoadedMeshes[m_NextID] = static_cast<uint32_t>(m_MeshData.size());
-		m_LoadedMeshes_Path[path] = static_cast<uint32_t>(m_MeshData.size());
+		m_LoadedMeshes_Path[cleanPath] = { static_cast<uint32_t>(m_MeshData.size()), 1 };
+		m_MeshID_path[m_NextID] = cleanPath;
 
 		m_MeshData.emplace_back(std::move(meshData));
 
@@ -127,6 +227,38 @@ namespace MauRen
 
 	void VulkanMeshManager::PreDraw(VulkanDescriptorContext& descriptorContext, uint32_t frame)
 	{
+		{
+			ME_PROFILE_SCOPE("Mesh GPU uploads")
+
+				// Update the vertex & index buffer
+				for (auto& upload : m_PendingUploads[frame])
+				{
+					auto& data{ m_CPUModelData.at(upload.meshID) };
+					{
+						uint8_t* basePtr{ static_cast<uint8_t*>(m_VertexBuffer[frame].mapped) };
+
+						std::memcpy(basePtr + data.vertexOffset * sizeof(Vertex),
+							data.vertices.data(),
+							data.vertices.size() * sizeof(Vertex));
+					}
+					{
+						uint8_t* basePtr{ static_cast<uint8_t*>(m_IndexBuffer[frame].mapped) };
+
+						std::memcpy(basePtr + data.indexOffset * sizeof(uint32_t),
+							data.indices.data(),
+							data.indices.size() * sizeof(uint32_t));
+					}
+
+					data.uses--;
+
+					if (data.uses == 0)
+					{
+						m_CPUModelData.erase(upload.meshID);
+					}
+				}
+			m_PendingUploads[frame].clear();
+		}
+
 		//TODO only does this when contents change
 		{
 			ME_PROFILE_SCOPE("Mesh instance data update - buffer")
@@ -159,10 +291,10 @@ namespace MauRen
 		ME_PROFILE_FUNCTION()
 
 		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, setCount, pDescriptorSets, 0, nullptr);
-		vkCmdBindIndexBuffer(commandBuffer, m_IndexBuffer.buffer.buffer, 0, VK_INDEX_TYPE_UINT32);
+		vkCmdBindIndexBuffer(commandBuffer, m_IndexBuffer[frame].buffer.buffer, 0, VK_INDEX_TYPE_UINT32);
 
 		VkDeviceSize offset{ 0 };
-		vkCmdBindVertexBuffers(commandBuffer, 0, 1, &m_VertexBuffer.buffer.buffer, &offset);
+		vkCmdBindVertexBuffers(commandBuffer, 0, 1, &m_VertexBuffer[frame].buffer.buffer, &offset);
 		vkCmdDrawIndexedIndirect(
 			commandBuffer,
 			m_DrawCommandBuffers[frame].buffer.buffer,               // Indirect buffer that holds the draw command(s)
@@ -223,30 +355,32 @@ namespace MauRen
 
 	void VulkanMeshManager::CreateVertexAndIndexBuffers() noexcept
 	{
+		for (size_t i { 0 }; i < MAX_FRAMES_IN_FLIGHT; ++i)
 		{
 			VkDeviceSize constexpr BUFFER_SIZE{ sizeof(Vertex) * MAX_VERTICES };
 
-			m_VertexBuffer = (VulkanMappedBuffer{
+			m_VertexBuffer.emplace_back(VulkanMappedBuffer{
 												VulkanBuffer{BUFFER_SIZE,
 																	VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
 																	VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT },
 												nullptr });
 
 			// Persistent mapping
-			vmaMapMemory(VulkanMemoryAllocator::GetInstance().GetAllocator(), m_VertexBuffer.buffer.alloc, &m_VertexBuffer.mapped);
+			vmaMapMemory(VulkanMemoryAllocator::GetInstance().GetAllocator(), m_VertexBuffer.back().buffer.alloc, &m_VertexBuffer.back().mapped);
 		}
 
+		for (size_t i{ 0 }; i < MAX_FRAMES_IN_FLIGHT; ++i)
 		{
 			VkDeviceSize constexpr BUFFER_SIZE{ sizeof(uint32_t) * MAX_INDICES };
 
-			m_IndexBuffer = (VulkanMappedBuffer{
+			m_IndexBuffer.emplace_back(VulkanMappedBuffer{
 												VulkanBuffer{BUFFER_SIZE,
 																	VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
 																	VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT },
 												nullptr });
 
 			// Persistent mapping
-			vmaMapMemory(VulkanMemoryAllocator::GetInstance().GetAllocator(), m_IndexBuffer.buffer.alloc, &m_IndexBuffer.mapped);
+			vmaMapMemory(VulkanMemoryAllocator::GetInstance().GetAllocator(), m_IndexBuffer.back().buffer.alloc, &m_IndexBuffer.back().mapped);
 		}
 	}
 }

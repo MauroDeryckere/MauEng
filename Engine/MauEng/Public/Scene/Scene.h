@@ -7,7 +7,7 @@
 
 #include "ServiceLocator.h"
 #include "../../ECS/Public/ECSWorld.h"
-#include "../../ECS/Public/Entity.h"
+#include "Entity.h"
 
 #include "Components/CTransform.h"
 
@@ -19,7 +19,7 @@ namespace MauEng
 	class Scene
 	{
 	public:
-		Scene() = default;
+		Scene();
 		virtual ~Scene() = default;
 
 		// Called when the scene is loaded

@@ -390,6 +390,22 @@ namespace MauGam
 
 		Scene::Tick();
 
+		// runtime model load test
+		using namespace MauEng;
+		static bool didOnce = false;
+		if (not didOnce)
+		{
+			Entity entFish{ CreateEntity() };
+			auto& transform{ entFish.GetComponent<CTransform>() };
+			transform.Scale({ 100, 100, 100 });
+			transform.Translate({ -50, 0, -50 });
+			entFish.AddComponent<CStaticMesh>("Resources/Models/BarramundiFish/glTF/BarramundiFish.gltf");
+
+			entFish.Destroy();
+		}
+		didOnce = true;
+
+
 		HandleInput();
 
 		bool const shouldSceneRotate{	m_Demo == EDemo::Chess or
@@ -404,8 +420,8 @@ namespace MauGam
 				using namespace MauEng;
 				float constexpr ROTATION_SPEED{ 90.f };
 				MauCor::Rotator const rot{ 0, ROTATION_SPEED * TIME.ElapsedSec() };
-				auto group{ GetECSWorld().Group<CStaticMesh, CTransform>() };
-				group.Each([&rot](CStaticMesh const& m, CTransform& t)
+				auto view{ GetECSWorld().View<CStaticMesh, CTransform>() };
+				view.Each([&rot](CStaticMesh const& m, CTransform& t)
 					{
 						t.Rotate(rot);
 					}, std::execution::par_unseq);
@@ -415,8 +431,8 @@ namespace MauGam
 				using namespace MauEng;
 				float constexpr ROTATION_SPEED{ 15.f };
 				MauCor::Rotator const rot{ 0, ROTATION_SPEED * TIME.ElapsedSec() };
-				auto group{ GetECSWorld().Group<CStaticMesh, CTransform>() };
-				group.Each([&rot](CStaticMesh const& m, CTransform& t)
+				auto view{ GetECSWorld().View<CStaticMesh, CTransform>() };
+				view.Each([&rot](CStaticMesh const& m, CTransform& t)
 					{
 						t.Rotate(rot);
 					}, std::execution::par_unseq);
@@ -525,6 +541,9 @@ namespace MauGam
 
 		input.BindAction("Rotate", MauEng::MouseInfo{ {}, MauEng::MouseInfo::ActionType::Moved });
 		input.BindAction("LeftMBHeld", MauEng::MouseInfo{ {SDL_BUTTON_LEFT}, MauEng::MouseInfo::ActionType::Held });
+
+		input.BindAction("SpawnFish", MauEng::KeyInfo{ {SDLK_V }, MauEng::KeyInfo::ActionType::Up });
+		input.BindAction("DeleteFish", MauEng::KeyInfo{ {SDLK_B}, MauEng::KeyInfo::ActionType::Up });
 
 		//Unbind tests
 		//input.UnBindAction("PrintInfo");
@@ -864,6 +883,38 @@ namespace MauGam
 		{
 			ME_LOG_DEBUG(LogGame, "Left trigger axis start hold");
 		}
+
+		if (player->IsActionExecuted("SpawnFish"))
+		{
+			// Random device for seed 
+			std::random_device rd;
+			// Mersenne Twister generator
+			std::mt19937 gen(rd());
+			// Random translation range
+			std::uniform_real_distribution<float> dis(-300.0f, 300);
+
+			float constexpr FISH_SCALE_MIN{ 10.f };
+			float constexpr FISH_SCALE_MAX{ 20.f };
+			std::uniform_real_distribution<float> disScale(FISH_SCALE_MIN, FISH_SCALE_MAX);
+			float const fishScale{ disScale(gen) };
+			MauEng::Entity entFish{ CreateEntity() };
+			auto& transform{ entFish.GetComponent<MauEng::CTransform>() };
+			transform.Translate({ dis(gen), dis(gen), dis(gen) });
+			transform.Scale({ fishScale, fishScale, fishScale });
+			entFish.AddComponent<MauEng::CStaticMesh>("Resources/Models/BarramundiFish/glTF/BarramundiFish.gltf");
+
+			m_Fishes.emplace_back(entFish);
+		}
+
+		if (player->IsActionExecuted("DeleteFish"))
+		{
+			ME_LOG_ERROR(LogGame, "EXECUTED DELETE FISH");
+			if (not m_Fishes.empty())
+			{
+				m_Fishes.back().Destroy();
+				m_Fishes.pop_back();
+			}
+		}
 	}
 
 	void DemoScene::RenderDebugDemo() const
@@ -1057,7 +1108,10 @@ namespace MauGam
 
 		LOGGER.Log(MauCor::ELogPriority::Info, LogGame, "WASD | ARROWS: Move Camera");
 		LOGGER.Log(MauCor::ELogPriority::Info, LogGame, "Mouse movement: Rotate Camera");
-		LOGGER.Log(MauCor::ELogPriority::Info, LogGame, "Left control: \"Sprint\"");
+		LOGGER.Log(MauCor::ELogPriority::Info, LogGame, "Left control: \"Sprint\"\n");
+
+		LOGGER.Log(MauCor::ELogPriority::Info, LogGame, "V: Spawn fish");
+		LOGGER.Log(MauCor::ELogPriority::Info, LogGame, "B: Delete fish");
 	}
 
 	void DemoScene::OnDelegate(TestEvent const& event)

@@ -6,15 +6,12 @@
 #include "RendererPCH.h"
 #include "VulkanBuffer.h"
 
-#include "Assets/BindlessData.h"
+#include "BindlessData.h"
 
 namespace MauRen
 {
 	// Currently only supports one layout, more layouts is more optimal;
 	// but to get everything working now I put everything is the single layout
-
-	//TODO descriptor update queue
-
 	class VulkanDescriptorContext final
 	{
 	public:
