@@ -15,6 +15,9 @@
 
 namespace MauEng::ECS
 {
+	template<typename ComponentType, typename Func>
+	concept PreDestroyCallable = std::invocable<Func, ComponentType const&, EntityID>;
+
 	class ECSWorld final
 	{
 	public:
@@ -170,10 +173,11 @@ namespace MauEng::ECS
 		{
 			m_pImpl->ConnectOnDestroy<ComponentType>(std::forward<Func>(callback));
 		}
-		template<typename ComponentType>
-		void RegisterPreRemoveCallback(std::function<void(ComponentType const&)>&& callback)
+		template<typename ComponentType, typename Func>
+			requires PreDestroyCallable<ComponentType, Func>
+		void RegisterPreRemoveCallback(Func&& callback)
 		{
-			m_pImpl->RegisterPreRemoveCallback<ComponentType>(std::move(callback));
+			m_pImpl->RegisterPreRemoveCallback<ComponentType>(std::forward<Func>(callback));
 		}
 
 		template<typename ComponentType>

@@ -6,7 +6,7 @@ namespace MauEng
 {
 	Scene::Scene()
 	{
-		m_ECSWorld.RegisterPreRemoveCallback<CStaticMesh>([](CStaticMesh const& mesh)
+		m_ECSWorld.RegisterPreRemoveCallback<CStaticMesh>([](CStaticMesh const& mesh, ECS::EntityID id)
 			{
 				RENDERER.UnloadMesh(mesh.meshID);
 			});

@@ -10,7 +10,7 @@
 namespace MauEng::ECS
 {
 	template<typename ComponentType>
-	using PreRemoveCallbackType = std::function<void(ComponentType const&)>;
+	using PreRemoveCallbackType = std::function<void(ComponentType const&, EntityID)>;
 
 	struct ECSImpl final
 	{
@@ -27,13 +27,13 @@ namespace MauEng::ECS
 		}
 
 		template<typename ComponentType>
-		void RegisterPreRemoveCallback(std::function<void(ComponentType const&)> callback)
+		void RegisterPreRemoveCallback(PreRemoveCallbackType<ComponentType>&& callback)
 		{
 			m_PreRemoveCallbacks[typeid(ComponentType)] =
 				[callback = std::move(callback)](entt::registry& reg, entt::entity ent)
 				{
 					if (auto comp = reg.try_get<ComponentType>(ent))
-						callback(*comp);
+						callback(*comp, static_cast<EntityID>(ent));
 				};
 		}
 
