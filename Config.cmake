@@ -30,7 +30,7 @@ option(MAUENG_ENABLE_TESTS "Enable Tests" ON)
 option(MAUENG_ENABLE_DEBUG_RENDERING "Enable debug rendering" ON)
 option(MAUENG_LOG_TO_FILE "Log to file" OFF)
 option(MAUENG_ENABLE_ASSERTS "Enable asserts" ON)
-option(MAUENG_USE_IMGUI "Load & use IMGUI" ON)
+option(MAUENG_USE_IMGUI "Load & use IMGUI" OFF)
 
 option(MAUENG_ENABLE_PROFILER "Enable profiling" ON)
 option(MAUENG_USE_OPTICK "Use Optick instead of custom profiler" ON)

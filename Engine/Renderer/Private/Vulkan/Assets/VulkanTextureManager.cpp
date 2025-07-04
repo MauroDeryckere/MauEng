@@ -37,7 +37,25 @@ namespace MauRen
 
 	void VulkanTextureManager::PreDraw(uint32_t currentFrame)
 	{
+		for (auto it{ m_TexturesToDestroyWhen3frames.begin() }; it != m_TexturesToDestroyWhen3frames.end(); )
+		{
+			// increment frame count
+			it->second++;
 
+			if (it->second >= 4)
+			{
+				m_Textures[it->first].Destroy();
+				m_FreeTextureSlots.emplace_back(it->first);
+
+				// erase and update iterator
+				it = m_TexturesToDestroyWhen3frames.erase(it);
+			}
+			else
+			{
+				// advance iterator
+				++it;
+			}
+		}
 	}
 
 	bool VulkanTextureManager::IsTextureLoaded(std::string const& textureName) const noexcept
@@ -84,8 +102,7 @@ namespace MauRen
 			ME_LOG_INFO(LogRenderer, "Unloading texture: {} with ID: {}", key, textureID);
 
 			// unload & erase everywhere
-			m_Textures[textureID].Destroy();
-			m_FreeTextureSlots.emplace_back(textureID);
+			m_TexturesToDestroyWhen3frames.emplace_back(textureID, 0);
 			
 			m_TextureID_PathMap.erase(it);
 			m_TextureIDMap.erase(mapIt);

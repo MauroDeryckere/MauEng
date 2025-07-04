@@ -51,6 +51,8 @@ namespace MauRen
 
 		std::deque<uint32_t> m_FreeTextureSlots;
 
+		std::vector<std::pair<uint32_t, uint32_t>> m_TexturesToDestroyWhen3frames;
+
 		void CreateTextureSampler();
 
 		void CreateDefaultTextures(VulkanCommandPoolManager& cmdPoolManager, VulkanDescriptorContext& descriptorContext);

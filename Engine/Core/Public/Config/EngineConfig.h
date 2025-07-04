@@ -94,6 +94,7 @@ namespace MauEng
 
 	bool constexpr LIMIT_FPS{ true };
 	inline bool LOG_FPS{ true };
+
 }
 
 #endif
