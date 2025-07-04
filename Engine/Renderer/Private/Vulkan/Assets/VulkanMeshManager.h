@@ -160,6 +160,30 @@ namespace MauRen
 
 				ranges = std::move(merged);
 			}
+
+			static std::pair<bool, uint32_t> TryUseFreeRange(std::vector<FreeRange>& ranges, uint32_t size)
+			{
+				for (auto it{ ranges.begin() }; it != end(ranges); ++it)
+				{
+					if (it->size >= size)
+					{
+						uint32_t const offset{ it->offset };
+						if (it->size == size)
+						{
+							// Exact fit, remove range
+							ranges.erase(it);
+						}
+						else
+						{
+							// Partial use, shrink the range
+							it->offset += size;
+							it->size -= size;
+						}
+						return { true, offset };
+					}
+				}
+				return { false, 0 };
+			}
 		};
 
 		std::vector<FreeRange> m_FreeIndices{};

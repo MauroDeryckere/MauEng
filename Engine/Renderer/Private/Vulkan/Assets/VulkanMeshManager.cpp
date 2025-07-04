@@ -140,8 +140,33 @@ namespace MauRen
 		}
 
 		LoadedModel const loadedModel{ ModelLoader::LoadModel(path, cmdPoolManager, descriptorContext) };
-		ME_RENDERER_ASSERT(m_CurrentVertexOffset + loadedModel.vertices.size() <= MAX_VERTICES);
-		ME_RENDERER_ASSERT(m_CurrentIndexOffset + loadedModel.indices.size() <= MAX_INDICES);
+		//ME_RENDERER_ASSERT(m_CurrentVertexOffset + loadedModel.vertices.size() <= MAX_VERTICES);
+		//ME_RENDERER_ASSERT(m_CurrentIndexOffset + loadedModel.indices.size() <= MAX_INDICES);
+
+		uint32_t const vertexCount{ static_cast<uint32_t>(loadedModel.vertices.size()) };
+		uint32_t const indexCount{ static_cast<uint32_t>(loadedModel.indices.size()) };
+
+		auto [usedVertexRange, vertexOffset] { FreeRange::TryUseFreeRange(m_FreeVertices, vertexCount) };
+		auto [usedIndexRange, indexOffset] { FreeRange::TryUseFreeRange(m_FreeIndices, indexCount) };
+
+		if (!usedVertexRange)
+		{
+			vertexOffset = m_CurrentVertexOffset;
+			m_CurrentVertexOffset += vertexCount;
+		}
+		else
+		{
+			ME_LOG_INFO(LogRenderer, "Reusing free range in vertex buffer for mesh: {}", path);
+		}
+		if (!usedIndexRange)
+		{
+			indexOffset = m_CurrentIndexOffset;
+			m_CurrentIndexOffset += indexCount;
+		}
+		else
+		{
+			ME_LOG_INFO(LogRenderer, "Reusing free range in index buffer for mesh: {}", path);
+		}
 
 		MeshData meshData;
 		meshData.meshID = m_NextID;
@@ -152,8 +177,8 @@ namespace MauRen
 		for (auto& sub : loadedModel.subMeshes)
 		{
 			SubMeshData entry{ sub };
-			entry.vertexOffset += m_CurrentVertexOffset;
-			entry.firstIndex += m_CurrentIndexOffset;
+			entry.vertexOffset += vertexOffset;
+			entry.firstIndex += indexOffset;
 
 			m_SubMeshes.emplace_back(entry);
 		}
@@ -163,8 +188,8 @@ namespace MauRen
 			.vertices = loadedModel.vertices,
 			.indices = loadedModel.indices,
 
-			.vertexOffset = m_CurrentVertexOffset,
-			.indexOffset = m_CurrentIndexOffset,
+			.vertexOffset = vertexOffset,
+			.indexOffset = indexOffset,
 
 			.uses = 3
 		};
