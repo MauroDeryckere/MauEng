@@ -11,11 +11,7 @@ namespace MauEng
 
 	void Entity::Destroy() noexcept
 	{
-		if (m_pECSWorld->HasComponent<CStaticMesh>(m_ID))
-		{
-			m_pECSWorld->RemoveComponent<CStaticMesh>(m_ID);
-		}
-
+		m_pECSWorld->RemoveComponentWithCallbackCheck<CStaticMesh>(m_ID);
 		m_pECSWorld->DestroyEntity(m_ID);
 	}
 }

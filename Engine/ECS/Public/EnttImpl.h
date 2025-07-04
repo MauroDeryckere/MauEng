@@ -101,11 +101,41 @@ namespace MauEng::ECS
 		{
 			registry.erase<FirstComponentType, OtherComponentTypes...>(static_cast<entt::entity>(id));
 		}
+		template<typename FirstComponentType, typename... OtherComponentTypes>
+		void EraseWithCallbackCheck(EntityID id) noexcept
+		{
+			[&]{
+				auto it{ m_PreRemoveCallbacks.find(typeid(FirstComponentType)) };
+				if (it != m_PreRemoveCallbacks.end())
+				{
+					it->second(registry, static_cast<entt::entity>(id));
+				}
+			}();
+			((
+				[&] {
+					auto it{ m_PreRemoveCallbacks.find(typeid(OtherComponentTypes)) };
+					if (it != m_PreRemoveCallbacks.end())
+					{
+						it->second(registry, static_cast<entt::entity>(id));
+					}
+				}()
+			), ...);
+
+			registry.erase<FirstComponentType, OtherComponentTypes...>(static_cast<entt::entity>(id));
+		}
 
 		template<typename FirstComponentType, typename... OtherComponentTypes, typename Iterator>
 		void Erase(Iterator begin, Iterator end) noexcept
 		{
 			registry.erase<FirstComponentType, OtherComponentTypes...>(begin, end);
+		}
+		template<typename FirstComponentType, typename... OtherComponentTypes, typename Iterator>
+		void EraseWithCallbackCheck(Iterator begin, Iterator end) noexcept
+		{
+			for (auto it{ begin }; it != end; ++it)
+			{
+				EraseWithCallbackCheck<FirstComponentType, OtherComponentTypes...>(*it);
+			}
 		}
 #pragma endregion
 
@@ -141,20 +171,40 @@ namespace MauEng::ECS
 		template <typename... ComponentTypes>
 		[[nodiscard]] bool RemoveComponent(EntityID id) noexcept
 		{
+			return registry.remove<ComponentTypes...>(static_cast<entt::entity>(id)) == sizeof...(ComponentTypes);
+		}
+		template <typename... ComponentTypes>
+		[[nodiscard]] bool RemoveComponentWithCallbackCheck(EntityID id) noexcept
+		{
 			((
 				[&] {
-					auto it = m_PreRemoveCallbacks.find(typeid(ComponentTypes));
+					auto it{ m_PreRemoveCallbacks.find(typeid(ComponentTypes)) };
 					if (it != m_PreRemoveCallbacks.end())
+					{
 						it->second(registry, static_cast<entt::entity>(id));
+					}
 				}()
-					), ...);
+			), ...);
 
 			return registry.remove<ComponentTypes...>(static_cast<entt::entity>(id)) == sizeof...(ComponentTypes);
 		}
+
 		template <typename... ComponentTypes, typename Iterator>
 		[[nodiscard]] bool RemoveComponent(Iterator begin, Iterator end) noexcept
 		{
 			return registry.remove<ComponentTypes...>(begin, end) == sizeof...(ComponentTypes);
+		}
+		template <typename... ComponentTypes, typename Iterator>
+		[[nodiscard]] bool RemoveComponentWithCallbackCheck(Iterator begin, Iterator end) noexcept
+		{
+			bool allPresent{ true };
+			for (auto it{ begin }; it != end; ++it)
+			{
+				bool const removed{ RemoveComponentWithCallbackCheck<ComponentTypes...>(*it) };
+				allPresent = allPresent && removed;
+			}
+
+			return allPresent;
 		}
 
 		template<typename ComponentType>

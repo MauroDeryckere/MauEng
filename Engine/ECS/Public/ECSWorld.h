@@ -100,6 +100,22 @@ namespace MauEng::ECS
 
 			m_pImpl->Erase<FirstType, ComponentTypes...>(id);
 		}
+		/**
+		 * @brief Remove components from the entity.
+		 * @tparam FirstType Type of component to remove.
+		 * @tparam ComponentTypes Other types of component to remove.
+		 * @param id id to remove the component from.
+		 * @note Remove checks if the comp exists first, erase does not.
+		*/
+		template<typename FirstType, typename... ComponentTypes>
+		void EraseWithCallbackCheck(EntityID id) noexcept
+		{
+			ME_ASSERT(IsValid(id));
+			ME_ASSERT(HasComponent<FirstType>(id));
+			ME_ASSERT(HasAllOfComponents<ComponentTypes...>(id));
+
+			m_pImpl->EraseWithCallbackCheck<FirstType, ComponentTypes...>(id);
+		}
 
 		/**
 		 * @brief Remove components from the entity.
@@ -115,6 +131,21 @@ namespace MauEng::ECS
 		void Erase(Iterator begin, Iterator end) noexcept
 		{
 			m_pImpl->Erase<FirstType, ComponentTypes...>(begin, end);
+		}
+		/**
+		 * @brief Remove components from the entity.
+		 * @tparam FirstType Type of component to remove.
+		 * @tparam ComponentTypes Other types of component to remove.
+		 * @tparam Iterator iterator type.
+		 * @param begin start of the range to remove components from.
+		 * @param end end of the range to remove components from.
+		 * @note Remove checks if the comp exists first, erase does not.
+		 * @warning There are no asserts here to check if the componennt exists when asserts are enabled
+		*/
+		template<typename FirstType, typename... ComponentTypes, typename Iterator>
+		void EraseWithCallbackCheck(Iterator begin, Iterator end) noexcept
+		{
+			m_pImpl->EraseWithCallbackCheck<FirstType, ComponentTypes...>(begin, end);
 		}
 
 		/**
@@ -217,6 +248,21 @@ namespace MauEng::ECS
 		 * @brief Remove components from the entity.
 		 * @tparam FirstComponentType Type of component to remove.
 		 * @tparam OtherComponentTypes Other types to remove.
+		 * @param id to remove the components from.
+		 * @return If all listed components were removed.
+		 * @note Remove checks if the comp exists first, erase does not.
+		*/
+		template <typename FirstComponentType, typename... OtherComponentTypes>
+		bool RemoveComponentWithCallbackCheck(EntityID id)& noexcept
+		{
+			ME_ASSERT(IsValid(id));
+			return m_pImpl->RemoveComponentWithCallbackCheck<FirstComponentType, OtherComponentTypes... >(id);
+		}
+
+		/**
+		 * @brief Remove components from the entity.
+		 * @tparam FirstComponentType Type of component to remove.
+		 * @tparam OtherComponentTypes Other types to remove.
 		 * @tparam Iterator iterator type.
 		 * @param begin begin of the range to remove.
 		 * @param end end of the range to remove.
@@ -227,6 +273,22 @@ namespace MauEng::ECS
 		[[nodiscard]] bool RemoveComponent(Iterator begin, Iterator end) noexcept
 		{
 			return m_pImpl->RemoveComponent<FirstComponentType, OtherComponentTypes...>(begin, end);
+		}
+
+		/**
+		 * @brief Remove components from the entity.
+		 * @tparam FirstComponentType Type of component to remove.
+		 * @tparam OtherComponentTypes Other types to remove.
+		 * @tparam Iterator iterator type.
+		 * @param begin begin of the range to remove.
+		 * @param end end of the range to remove.
+		 * @return If all listed components were removed.
+		 * @note Remove checks if the comp exists first, erase does not.
+		*/
+		template <typename FirstComponentType, typename... OtherComponentTypes, typename Iterator>
+		[[nodiscard]] bool RemoveComponentWithCallbackCheck(Iterator begin, Iterator end) noexcept
+		{
+			return m_pImpl->RemoveComponentWithCallbackCheck<FirstComponentType, OtherComponentTypes...>(begin, end);
 		}
 
 		/**
