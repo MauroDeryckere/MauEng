@@ -51,12 +51,13 @@ namespace MauRen
 
 		// Material name, ID in MaterialData[ ]
 		std::unordered_map<std::string, LoadedMaterialInfo> m_MaterialIDMap;
+		std::unordered_map<uint32_t, std::string> m_MaterialID_PathMap;
 
 		// All loaded materials - 1:1 copy of GPU buffer
 		std::vector<MaterialData> m_Materials;
 		std::vector<VulkanMappedBuffer> m_MaterialDataBuffers;
 
-		uint32_t m_NextMaterialID{ 0 };
+		std::deque<uint32_t> m_FreeMaterialIDs;
 
 		void InitMaterialBuffers();
 

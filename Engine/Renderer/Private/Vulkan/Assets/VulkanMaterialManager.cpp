@@ -81,10 +81,40 @@ namespace MauRen
 	{
 		ME_PROFILE_FUNCTION()
 
-		//TODO
-		//m_TextureManager->UnloadTexture();
-		//m_TextureManager->UnloadTexture();
-		//m_TextureManager->UnloadTexture();
+		// Don't unload default material
+		if (materialID == 0)
+		{
+			return;
+		}
+
+		auto const it{ m_MaterialID_PathMap.find(materialID) };
+		if (it == end(m_MaterialID_PathMap))
+		{
+			ME_LOG_ERROR(LogRenderer, "Trying to unload material {} but material does not exist", materialID);
+			return;
+		}
+
+		auto const mapIt{ m_MaterialIDMap.find(it->second) };
+		ME_RENDERER_ASSERT(mapIt != end(m_MaterialIDMap));
+		mapIt->second.useCount--;
+
+		if (mapIt->second.useCount == 0)
+		{
+			auto& mat{ m_Materials[materialID] };
+
+			m_TextureManager->UnloadTexture(mat.albedoTextureID);
+			m_TextureManager->UnloadTexture(mat.metallicTextureID);
+			m_TextureManager->UnloadTexture(mat.normalTextureID);
+
+			m_FreeMaterialIDs.emplace_back(materialID);
+
+			mat = {};
+
+			for (auto& s : m_DirtyMaterialIndices)
+			{
+				s.emplace(materialID);
+			}
+		}
 	}
 
 	uint32_t VulkanMaterialManager::LoadOrGetMaterial(VulkanCommandPoolManager& cmdPoolManager, VulkanDescriptorContext& descriptorContext, Material const& material)
@@ -127,19 +157,27 @@ namespace MauRen
 			vkMat.metallicTextureID = m_TextureManager->LoadOrGetTexture(cmdPoolManager, descriptorContext, material.metalnessRoughnessTexture, true);
 		}
 
-		vkMat.materialID = m_NextMaterialID;
+		vkMat.materialID = (m_FreeMaterialIDs.empty() ? static_cast<uint32_t>(m_Materials.size()) : m_FreeMaterialIDs.front());
+		if (!m_FreeMaterialIDs.empty())
+		{
+			m_Materials[vkMat.materialID] = vkMat;
+			m_FreeMaterialIDs.pop_front();
+		}
+		else
+		{
+			m_Materials.emplace_back(vkMat);
+		}
 
-		m_Materials.emplace_back(vkMat);
-		m_MaterialIDMap[material.name] = { static_cast<uint32_t>(m_Materials.size() - 1), 1};
-		m_NextMaterialID++;
+		m_MaterialIDMap[material.name] = { vkMat.materialID, 1};
+		m_MaterialID_PathMap[vkMat.materialID] = material.name;
 
 		// Upload the material id if new
 		for (auto& s : m_DirtyMaterialIndices)
 		{
-			s.emplace(m_Materials.size() - 1);
+			s.emplace(vkMat.materialID);
 		}
 
-		return static_cast<uint32_t>(m_Materials.size() - 1);
+		return vkMat.materialID;
 	}
 
 	void VulkanMaterialManager::InitMaterialBuffers()
