@@ -22,14 +22,6 @@ add_library(MauEngAudio STATIC
     ${AUDIO_PUBLIC_HEADERS}
 )
 
-target_include_directories(MauEngAudio
-    PUBLIC
-        ${AUDIO_PUBLIC_DIR}
-    PRIVATE
-        ${AUDIO_PRIVATE_DIR}
-)
-
-
 if(WITH_WWISE)
     if(DEFINED ENV{WWISESDK})
         set(WWISESDK $ENV{WWISESDK} CACHE PATH "Path to Wwise SDK (from environment)")
@@ -39,6 +31,13 @@ if(WITH_WWISE)
     add_subdirectory(Wwise)
     target_link_libraries(MauEngAudio PRIVATE MauEngWwiseAudio)
 endif()
+
+target_include_directories(MauEngAudio
+    PUBLIC
+        ${AUDIO_PUBLIC_DIR}
+    PRIVATE
+        ${AUDIO_PRIVATE_DIR}
+)
 
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/Public" PREFIX "Public" FILES ${AUDIO_PUBLIC_HEADERS})
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/Private" PREFIX "Private" FILES ${AUDIO_PRIVATE_HEADERS} ${AUDIO_PRIVATE_SOURCES})

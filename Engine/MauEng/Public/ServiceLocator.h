@@ -5,8 +5,9 @@
 #include "GameTime.h"
 #include "Scene/SceneManager.h"
 #include "Input/InputManager.h"
-
 #include "CoreServiceLocator.h"
+
+#include "../../Audio/Public/SoundSystem.h"
 
 #include <memory>
 
@@ -22,8 +23,12 @@ namespace MauEng
 		[[nodiscard]] static MauEng::SceneManager& GetSceneManager() { return MauEng::SceneManager::GetInstance(); }
 		[[nodiscard]] static MauEng::InputManager& GetInputManager() { return MauEng::InputManager::GetInstance(); }
 
+		static void RegisterSoundSystem(std::unique_ptr<MAudio::SoundSystem>&& pSoundSystem);
+		[[nodiscard]] static MAudio::SoundSystem& GetSoundSystem() { return (*m_pSoundSystem); }
+
 	private:
 		static std::unique_ptr<MauRen::DebugRenderer> m_pDebugRenderer;
+		static std::unique_ptr<MAudio::SoundSystem> m_pSoundSystem;
 	};
 
 #pragma region EasyAccessHelper
@@ -32,6 +37,8 @@ namespace MauEng
 
 	#define SCENE_MANAGER MauEng::ServiceLocator::GetSceneManager()
 	#define INPUT_MANAGER MauEng::ServiceLocator::GetInputManager()
+
+	#define SOUND_SYSTEM MauEng::ServiceLocator::GetSoundSystem()
 
 #pragma endregion
 }

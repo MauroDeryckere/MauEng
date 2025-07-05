@@ -6,7 +6,8 @@ namespace MAudio
 	class SoundSystem
 	{
 	public:
-
+		SoundSystem() = default;
+		virtual ~SoundSystem() = default;
 	};
 }
 

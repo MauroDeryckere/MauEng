@@ -30,6 +30,7 @@ target_include_directories(MauEngWwiseAudio
         ${WWISE_AUDIO_PUBLIC_DIR}
     PRIVATE
         ${WWISE_AUDIO_PRIVATE_DIR}
+        ${AUDIO_PUBLIC_DIR}
 )
 
 target_link_directories(MauEngWwiseAudio PRIVATE

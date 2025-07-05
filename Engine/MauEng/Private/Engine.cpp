@@ -24,7 +24,7 @@
 #include "GUI/ImGUILayer.h"
 #include "Logging/ImGUILogger.h"
 
-#include "SoundSystem.h"
+#include "SoundSystemFactory.h"
 
 namespace MauEng
 {
@@ -59,6 +59,8 @@ namespace MauEng
 
 			MauCor::CoreServiceLocator::RegisterLogger(std::move(std::make_unique<MauEng::ImGUILogger>()));
 		}
+
+		ServiceLocator::RegisterSoundSystem(std::move(MAudio::CreateWWiseSoundSystem()));
 
 		// Also initializes input manager
 		auto& inputManager{ InputManager::GetInstance() };

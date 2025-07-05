@@ -25,15 +25,6 @@ add_library(Engine STATIC
     ${ENGINE_PUBLIC_HEADERS}
 )
 
-target_include_directories(Engine
-    PUBLIC
-        ${ENGINE_PUBLIC_DIR}        # Public headers for Engine
-    PRIVATE
-        ${ENGINE_PRIVATE_DIR}       # Private headers for Engine
-        "${CMAKE_CURRENT_SOURCE_DIR}/../Renderer/Shared"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../Core/Shared"
-)
-
 # Link the Renderer to the Engine
 target_link_libraries(Engine
     PUBLIC
@@ -43,6 +34,15 @@ target_link_libraries(Engine
       #  MauENG_ImGUI
      #   MauENG_ImGUI_Backends
     PRIVATE
+)
+
+target_include_directories(Engine
+    PUBLIC
+        ${ENGINE_PUBLIC_DIR}        # Public headers for Engine
+    PRIVATE
+        ${ENGINE_PRIVATE_DIR}       # Private headers for Engine
+        "${CMAKE_CURRENT_SOURCE_DIR}/../Renderer/Shared"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../Core/Shared"
 )
 
 target_sources(Engine
