@@ -45,6 +45,7 @@ DECLARE_LOG_CATEGORY_EXTERN(LogEngine);
 DECLARE_LOG_CATEGORY_EXTERN(LogRenderer);
 DECLARE_LOG_CATEGORY_EXTERN(LogCore);
 DECLARE_LOG_CATEGORY_EXTERN(LogGame);
+DECLARE_LOG_CATEGORY_EXTERN(LogAudio);
 
 MauCor::ELogPriority constexpr Trace{ MauCor::ELogPriority::Trace };
 MauCor::ELogPriority constexpr Info{ MauCor::ELogPriority::Info };

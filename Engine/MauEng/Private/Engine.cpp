@@ -24,6 +24,8 @@
 #include "GUI/ImGUILayer.h"
 #include "Logging/ImGUILogger.h"
 
+#include "SoundSystem.h"
+
 namespace MauEng
 {
 	Engine::Engine():

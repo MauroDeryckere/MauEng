@@ -6,6 +6,7 @@
 DEFINE_LOG_CATEGORY(LogEngine);
 DEFINE_LOG_CATEGORY(LogRenderer);
 DEFINE_LOG_CATEGORY(LogCore);
+DEFINE_LOG_CATEGORY(LogAudio);
 DEFINE_LOG_CATEGORY(LogGame);
 
 void MauCor::LogCategory::SetPriority(MauCor::ELogPriority priority) noexcept

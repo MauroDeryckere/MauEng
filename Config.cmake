@@ -23,6 +23,8 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
+option(WITH_WWISE "Use Wwise for Audio" ON)
+
 option(MAUENG_DISTRIBUTION "Distrubution Build" OFF)
 
 option(MAUENG_ENABLE_TESTS "Enable Tests" ON)
