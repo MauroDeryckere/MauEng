@@ -11,6 +11,8 @@ namespace MAudio
 		WwiseSoundSystem()  = default;
 		virtual ~WwiseSoundSystem() override = default;
 
+		virtual bool Initialize() noexcept override;
+		virtual bool Destroy() noexcept override;
 	};
 }
 

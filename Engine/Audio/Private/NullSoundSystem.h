@@ -10,6 +10,9 @@ namespace MAudio
 	public:
 		NullSoundSystem() = default;
 		virtual ~NullSoundSystem() override = default;
+
+		virtual bool Initialize() noexcept override { return true; }
+		virtual bool Destroy() noexcept override { return true;  }
 	};
 }
 

@@ -61,6 +61,7 @@ namespace MauEng
 		}
 
 		ServiceLocator::RegisterSoundSystem(std::move(MAudio::CreateWWiseSoundSystem()));
+		ME_ENGINE_CHECK(SOUND_SYSTEM.Initialize());
 
 		// Also initializes input manager
 		auto& inputManager{ InputManager::GetInstance() };
@@ -75,6 +76,8 @@ namespace MauEng
 	Engine::~Engine()
 	{
 		SCENE_MANAGER.Destroy();
+
+		ME_ENGINE_CHECK(SOUND_SYSTEM.Destroy());
 
 		auto& inputManager{ InputManager::GetInstance() };
 		inputManager.Destroy();

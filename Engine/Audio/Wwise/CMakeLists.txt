@@ -19,8 +19,7 @@ file(GLOB_RECURSE WWISE_AUDIO_PUBLIC_HEADERS
 add_library(MauEngWwiseAudio STATIC
     ${WWISE_AUDIO_PRIVATE_SOURCES}
     ${WWISE_AUDIO_PRIVATE_HEADERS}
-    ${WWISE_AUDIO_PUBLIC_HEADERS}
-)
+    ${WWISE_AUDIO_PUBLIC_HEADERS})
 
 target_include_directories(MauEngWwiseAudio PRIVATE
     ${WWISESDK}/include
@@ -42,8 +41,18 @@ if(NOT WIN32)
     return()
 endif()
 
-file(GLOB WWISE_LIBS_RELEASE "${WWISESDK}/win32_vc170/Release/lib/*.lib")
-file(GLOB WWISE_LIBS_DEBUG   "${WWISESDK}/win32_vc170/Debug/lib/*.lib")
+file(GLOB WWISE_LIBS_RELEASE86 "${WWISESDK}/Win32_vc170/Release/lib/*.lib")
+file(GLOB WWISE_LIBS_DEBUG86 "${WWISESDK}/Win32_vc170/Debug/lib/*.lib")
+file(GLOB WWISE_LIBS_RELEASE64 "${WWISESDK}/x64_vc170/Release/lib/*.lib")
+file(GLOB WWISE_LIBS_DEBUG64   "${WWISESDK}/x64_vc170/Debug/lib/*.lib")
+
+if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+    set(WWISE_LIBS_RELEASE ${WWISE_LIBS_RELEASE64})
+    set(WWISE_LIBS_DEBUG   ${WWISE_LIBS_DEBUG64})
+else()
+    set(WWISE_LIBS_RELEASE ${WWISE_LIBS_RELEASE86})
+    set(WWISE_LIBS_DEBUG   ${WWISE_LIBS_DEBUG86})
+endif()
 
 target_link_libraries(MauEngWwiseAudio PRIVATE
     MauEngCore
