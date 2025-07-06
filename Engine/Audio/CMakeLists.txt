@@ -30,11 +30,11 @@ if(WITH_WWISE)
             add_subdirectory(Wwise)
             target_link_libraries(MauEngAudio PRIVATE MauEngWwiseAudio)
 
-           target_compile_definitions(MauEngWwiseAudio PUBLIC
+           target_compile_definitions(MauEngAudio PUBLIC
              $<$<BOOL:ON>:BUILD_WWISE>
            )
     endif()
-    target_compile_definitions(MauEngWwiseAudio PUBLIC
+    target_compile_definitions(MauEngAudio PUBLIC
         $<$<BOOL:OFF>:BUILD_WWISE>
     )
 endif()
