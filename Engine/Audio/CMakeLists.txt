@@ -29,7 +29,14 @@ if(WITH_WWISE)
             message(STATUS "WWISESDK path: ${WWISESDK}")
             add_subdirectory(Wwise)
             target_link_libraries(MauEngAudio PRIVATE MauEngWwiseAudio)
+
+           target_compile_definitions(MauEngWwiseAudio PUBLIC
+             $<$<BOOL:ON>:BUILD_WWISE>
+           )
     endif()
+    target_compile_definitions(MauEngWwiseAudio PUBLIC
+        $<$<BOOL:OFF>:BUILD_WWISE>
+    )
 endif()
 
 target_include_directories(MauEngAudio
