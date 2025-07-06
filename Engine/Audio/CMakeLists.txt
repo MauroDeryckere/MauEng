@@ -25,11 +25,11 @@ add_library(MauEngAudio STATIC
 if(WITH_WWISE)
     if(DEFINED ENV{WWISESDK})
         set(WWISESDK $ENV{WWISESDK} CACHE PATH "Path to Wwise SDK (from environment)")
-    endif()
 
-    message(STATUS "WWISESDK path: ${WWISESDK}")
-    add_subdirectory(Wwise)
-    target_link_libraries(MauEngAudio PRIVATE MauEngWwiseAudio)
+            message(STATUS "WWISESDK path: ${WWISESDK}")
+            add_subdirectory(Wwise)
+            target_link_libraries(MauEngAudio PRIVATE MauEngWwiseAudio)
+    endif()
 endif()
 
 target_include_directories(MauEngAudio
