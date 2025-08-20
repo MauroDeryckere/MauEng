@@ -23,13 +23,13 @@
 	  - [Pipeline Overview](#Pipeline-Overview)
 	  - [Features](#features)
 	  - [Debug Rendering](#debug-rendering)
-  - [Features I want to add inn the near future](#features-i-want-to-add-inn-the-near-future)
-	  - [In the further future](#in-the-further-future)
+  - [Features I want to add soon](#features-i-want-to-add-soon)
+	  - [In the future](#in-the-future)
 
 ## Introduction
 
 ## Demo
-A small demo scene is included in the project, it showcases most of the features of the engine. The demo scene can be found in Game/DemoScene.h and .cpp<br>
+A small demo scene is included in the project, which showcases most of the features of the engine. The demo scene can be found in Game/DemoScene.h and .cpp<br>
 
 **Watch the Demo Video (click):** </br>  
 [![Watch the demo](https://img.youtube.com/vi/kbcXu0AuIoM/0.jpg)](https://www.youtube.com/watch?v=kbcXu0AuIoM)
@@ -165,7 +165,37 @@ void DemoScene::OnDelegate(TestEvent const& event)
 ```
 
 ### Timer Manager
-TODO
+The timer manager works fairly similarly to the event system, but you don't have to store a delegate (storing the timer handle may be beneficial though).
+
+```cpp
+// Set a one-shot timer (2 seconds)
+auto const& handle2{ m_TimerManager += MauCor::TimerDataCallable{ MauCor::Bind([]()
+	{
+		ME_LOG_DEBUG(TestTimers, "Timer 2 fired (one-shot after 2s)");
+	}), 2.f} };
+
+// Set a looping timer (1 second)
+auto const& handle1{ m_TimerManager.SetTimer([&]()
+	{
+		ME_LOG_DEBUG(TestTimers, "Timer 1 fired (looping every 1s)");
+
+		// Remove a timer
+		m_TimerManager.RemoveTimer(handle2);
+	}, 1.f, true) };
+
+m_TimerManager.SetTimer(&DemoScene::OnTimerFires, this, 5.f, true);
+
+// Set timers for the next tick
+m_TimerManager *= MauCor::Bind([&]()
+				{
+					ME_LOG_DEBUG(TestTimers, "Next tick timer fired");
+				});
+m_TimerManager.SetTimerForNextTick(&DemoScene::OnTimerFires, this);
+
+// Check if a timer is active
+m_TimerManager.IsTimerActive(handle2);
+```
+It's also possible to pause timers, reset timers, get the remaining time and so on. Check the timer manager header for the full functionality.
 
 ### UUID
 Small custom UUID library that generates a unique identifier for each object. It is used to identify objects in the engine, such as entities, components, and resources.</br></br>
@@ -175,7 +205,7 @@ Small custom UUID library that generates a unique identifier for each object. It
 The engine has 2 available profilers, a very barebones profiler that simply parses to a .json file and can be uploaded to chrome://tracing/. The other profiler is an integration of the Optick library and provides a lot more information if required.
 
 Profiling requires 2 steps. 
-1. add the macros in all the functions & scopes you wish to profile: 
+1. Add the macros in all the functions & scopes you wish to profile: 
 ```cpp
 // Examples
 void MySleepFunc() {
@@ -205,7 +235,7 @@ Core libraries used all over the engine, that the user may or may not also need 
 TODO
 
 ## Component System
-The engine currently uses a wrapper around entts component system, it supports almost all functions entt offers.
+The engine currently uses a wrapper around entts component system, which supports almost all functions entt offers.
 
 ## Renderer
 ### Coordinate System
@@ -227,12 +257,12 @@ In this project, we use a right-handed 3D coordinate system with the following c
 
 ### Features
 - Instanced Rendering<br>
-As a test I loaded a mesh with 100 000 instances. The mesh is a simple gun and has 1425 indices and 311 vertices. This runs very smoothly on my hardware (RTX 3060, 60 FPS cap but main thread was sleeping for +/-10ms and GPU had a lot of room left)
+As a test, I loaded a mesh with 100,000 instances. The mesh is a simple gun and has 1425 indices and 311 vertices. This runs very smoothly on my hardware (RTX 3060, 60 FPS cap, but main thread was sleeping for +/-10ms and GPU had a lot of room left)
 ![Screenshot](docs/ZoomedOutInstances.png)
 ![Screenshot](docs/ZoomedInInstances.png)
 
 - Bindless (indirect) Rendering<br>
-The renderer uses a global index and vertex buffer, draw commands are batched and issued using vkCmdDrawIndexedIndirect. Textures are in a descriptor array.
+The renderer uses a global index and vertex buffer; draw commands are batched and issued using vkCmdDrawIndexedIndirect. Textures are in a descriptor array.
 
 - Deferred rendering<br>
 
@@ -252,7 +282,7 @@ Default and invalid materials are used to prevent branching on the GPU.
 
 
 ### Debug Rendering
-Easy to use API for debug rendering. See. Debug rendering demo.
+Easy-to-use API for debug rendering. See. Debug rendering demo.
 
 ```cpp
 void GameScene::Tick()
@@ -263,22 +293,22 @@ void GameScene::Tick()
 	DEBUG_RENDERER.DrawLine({0, 0,0 },  {0, 100, 100} );
 	DEBUG_RENDERER.DrawLine({-10 , 10, -10}, {10, 10, 10}, { 0, 1, 0});
 
-	// center, radius, colour, segmenets (per circle), layers
+	// center, radius, colour, segments (per circle), layers
 	DEBUG_RENDERER.DrawSphereComplex({20,20,20}, 20.f, { 1, 1, 1 }, 24, 10);
 }
 ```
 **Watch the Demo Video (click):** </br>  
 [![Watch the demo](https://img.youtube.com/vi/oeMaRM3xfdg/0.jpg)](https://www.youtube.com/watch?v=oeMaRM3xfdg)
 
-## Features I want to add in the near future
-- Image based lighting (skybox)
+## Features I want to add soon
+- Image-based lighting (skybox)
 - Auto exposure
 - GPU frustrum culling
 - Optimized scene AABB calculation for shadow maps
 - Soft shadows
 - ImGUI integration
 
-### In the further future
+### In the future
 - Animations
-- Different Post processing effects
+- Different post-processing effects
 
