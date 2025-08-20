@@ -232,7 +232,42 @@ Core libraries used all over the engine, that the user may or may not also need 
 ## Engine
 
 ## Input System
-TODO
+
+```cpp
+auto& input{ INPUT_MANAGER };
+input.DestroyPlayer(0u);
+input.CreatePlayer<PlayerClass>();
+
+auto const player{ input.GetPlayer() };
+
+input.BindAction("PrintInfo", MauEng::KeyInfo{ SDLK_SPACE, MauEng::KeyInfo::ActionType::Up });
+input.BindAction("PrintInfo", MauEng::KeyInfo{ SDLK_V, MauEng::KeyInfo::ActionType::Up }, "SECONDCONTEXTTEST");
+player->SetMappingContext("SECONDCONTEXTTEST");
+
+input.EraseMappingContext("SECONDCONTEXTTEST", "DEFAULT");
+
+// Unbind tests
+input.UnBindAction("PrintInfo");
+input.UnBindAllActions(MauEng::KeyInfo{ SDLK_UP,MauEng::KeyInfo::ActionType::Held });
+input.UnBindAllActions(MauEng::MouseInfo{ {},MauEng::MouseInfo::ActionType::Moved });
+
+// Responding to an executed action can be done in the following way
+if (player->IsActionExecuted("PrintInfo"))
+{
+	OutputKeybinds();
+}
+
+// Or in the player class
+void PlayerClass::OnActionExecuted(MauEng::InputEvent const& event) noexcept
+{
+	bool constexpr DEBUG_OUT_ACTIONS{ false };
+
+	if constexpr(DEBUG_OUT_ACTIONS)
+	{
+		ME_LOG_DEBUG(LogGame, "Action executed for player class! Action: {}, Player ID: {}", event.action, PlayerID());
+	}
+}
+```
 
 ## Component System
 The engine currently uses a wrapper around entts component system, which supports almost all functions entt offers.
