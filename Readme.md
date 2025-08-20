@@ -91,8 +91,6 @@ Example of console logging (Renderer category, info & trace log level)
 Example of file logging (contains time stamp, category & log level)
 ![Screenshot](docs/LoggerFileExample.png)
 
-I do plan on supporting adding custom categories in the future (similar to Unreal Engines system).
-
 ### Debugging - Asserts
 - Assert only triggers in debug, the message is an optional parameter that will be logged to the console / file logger.
 - Check triggers in all builds, message is an optional parameter that will be logged to the console / file logger.
@@ -112,7 +110,59 @@ ME_VERIFY(CalculateAndValidatePath(), "Path must be valid");
 ```
 
 ### Event System
-TODO 
+The event system is simple to use. The only requirement is storing a Delegate and creating an event class.
+*Note: A MauCor::Delegate<> is implicitly the same type as MauCor::Delegate<void>*
+```cpp
+struct TestEvent
+{
+	int i = 10;
+};
+
+class Scene
+{
+	MauCor::Delegate<TestEvent> m_DelegateTest{};
+	MauCor::Delegate<> m_DelegateVoidTest{};
+};
+```
+
+Broadcasting events and listening to events is also fairly simple, but it comes with different options, as you may want an immediate broadcast (which calls the corresponding function immediately when the event is broadcast). Or a delayed broadcast (which calls the corresponding function at the beginning of the next frame when the event is broadcast).
+
+Similar to broadcasting, unsubscribes can be done immediately and delayed as well. The default here is to do it delayed, which prevents issues where you may unsubscribe, but there's still a lingering function call, resulting in nullptr or invalid ptr usage.
+
+```cpp
+// Subscribe to an event
+m_DelegateTest += MauCor::Bind(&DemoScene::OnDelegate, this);
+
+auto const& handle{ m_DelegateTest += MauCor::Bind<TestEvent>
+(
+	[this](TestEvent const& event) { OnDelegate(event); }
+) };
+
+m_DelegateTest.Get()->Subscribe([this](TestEvent const& event) { OnDelegate(event); }, this);
+
+// Broadcast an event (the default is the immediate broadcast)
+m_DelegateTest.Get()->QueueBroadcast(event);
+m_DelegateTest.QueueBroadcast(event);
+m_DelegateTest << event;
+// Do an immediate broadcast:
+m_DelegateTest.Get()->Broadcast(event);
+m_DelegateTest.Broadcast(event);
+m_DelegateTest < event;
+
+// Unsubscribe from an event
+m_DelegateTest /= this; // Immediate
+m_DelegateTest.UnSubscribeImmediate(handle02.owner);
+m_DelegateTest.UnSubscribeAllByOwnerImmediate(this);
+
+m_DelegateTest -= handle; // Delayed
+m_DelegateTest.UnSubscribe(handle02.owner);
+
+// The function called in this example
+void DemoScene::OnDelegate(TestEvent const& event)
+{
+	ME_LOG_DEBUG(LogGame, "Event test: {}", event.i);
+}
+```
 
 ### Timer Manager
 TODO
