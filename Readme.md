@@ -10,7 +10,7 @@
   - [Core](#core)
 	- [Debugging - Logging](#debugging---logging)
 	- [Debugging - Asserts](#debugging---asserts)
-	- [Event System (delegates)](#event-system-(delegates))
+	- [Event System](#event-system)
 	- [Timer Manager](#timer-manager)
 	- [UUID](#uuid)
 	- [Profiling](#profiling)
@@ -101,7 +101,7 @@ ME_CHECK(pRenderer, "Renderer must be valid");
 ME_VERIFY(CalculateAndValidatePath(), "Path must be valid");
 ```
 
-### Event System (delegates)
+### Event System
 TODO 
 
 ### Timer Manager
