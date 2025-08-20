@@ -62,17 +62,27 @@ Arrows/WASD: Cam movement<br>
 Control: Sprint <br>
 <br>
 ## Core
-The core of the engine contains basic functionality that is used by the engine (and the game). It includes debugging tools, a timer manager, an event system, a UUID generator, and profiling tools.
+The engine's core contains basic functionality used by the engine (and the game). It includes debugging tools, a timer manager, an event system, a UUID generator, and profiling tools.
 
 ### Debugging -Logging
-The logger can log in the console and a file using different log priority levels and categories. Priority of logging can be adjusted to skip logging all levels below set level. Colors of the console logs are configurable.
+The logger can log to the console and a file using different log priority levels and categories. The priority of logging can be adjusted to skip logging all levels below the set level; this priority adjustment can also be done per log category. The colors of the console logs are configurable.
 
-The file logging has a configurable file size, before it rotates to the next file. Currently it simply keeps a single backup. If a full backup is stored and the new rotation happens, the backup is overwritten with the new file. The file also contains the log level more clearly and is timestamped.
+The file logging has a configurable file size, before it rotates to the next file. Currently, it simply keeps a single backup. If a full backup is stored and the new rotation happens, the backup is overwritten with the new file. The file also contains the log level more clearly and is timestamped.
 
 ```cpp
-// logging can be done using the LOG macro or using the specifc _Priority level macro.
+// Logging can be done using the LOG macro or using the specific _Priority level macro.
 ME_LOG(MauCor::LogPriority::Error, MauCor::LogCategory::Game,"test {}", 1000);
 ME_LOG_ERROR(MauCor::LogCategory::Game, "TEST");
+
+// Creating a custom log category can be done in the following way:
+// Define the category in a single cpp file
+DEFINE_LOG_CATEGORY(TestLogCategory)
+DEFINE_LOG_CATEGORY(TestLogCategory2, Warn) // If you wish to set a log priority level for the category
+
+TestLogCategory2.SetPriority(Debug); // Or change it afterward
+
+// In the header / cpp files where you wish to use the log category
+DECLARE_LOG_CATEGORY_EXTERN(TestLogCategory)
 ```
 
 Example of console logging (Renderer category, info & trace log level)
