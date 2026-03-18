@@ -99,7 +99,7 @@ set(PROFILER_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 FetchContent_Declare(
     Profiler
     GIT_REPOSITORY https://github.com/MauroDeryckere/Profiler.git
-    GIT_TAG 47f203a0746b992200d09107606e78d726780b5d
+    GIT_TAG 49dcb705c0aed6cd0d676d8ff896d1a1e36665da
 )
 FetchContent_MakeAvailable(Profiler)
 
