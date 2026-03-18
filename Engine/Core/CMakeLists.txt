@@ -39,7 +39,6 @@ target_compile_definitions(MauEngCore PUBLIC
     $<$<BOOL:${MAUENG_USE_IMGUI}>:MAUENG_USE_IMGUI>
 
     $<$<BOOL:${MAUENG_ENABLE_PROFILER}>:MAUENG_ENABLE_PROFILER>
-    $<$<BOOL:${MAUENG_USE_OPTICK}>:MAUENG_USE_OPTICK>
 )
 
 set(MAU_UUID_BUILD_TESTS OFF)
@@ -91,13 +90,24 @@ add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/Libs/glm")
 
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/Libs/fmt")
 
-add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/Libs/Optick")
+# Profiler library
+include(FetchContent)
+set(PROFILER_ENABLED ${MAUENG_ENABLE_PROFILER} CACHE BOOL "" FORCE)
+set(PROFILER_USE_OPTICK ${MAUENG_USE_OPTICK} CACHE BOOL "" FORCE)
+set(PROFILER_BUILD_EXAMPLE OFF CACHE BOOL "" FORCE)
+set(PROFILER_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+FetchContent_Declare(
+    Profiler
+    GIT_REPOSITORY https://github.com/MauroDeryckere/Profiler.git
+    GIT_TAG 357d7d48e655549b84c5758fca8bdbc184ae91dd
+)
+FetchContent_MakeAvailable(Profiler)
 
 target_link_libraries(MauEngCore
     PUBLIC
         SDL3::SDL3
-        fmt::fmt # While it is not necessary to link against this publicly, users could prefer using this so might as well keep it public 
-        OptickCore
+        fmt::fmt # While it is not necessary to link against this publicly, users could prefer using this so might as well keep it public
+        Profiler::Profiler
         MAU_UUID
     PRIVATE
 )
