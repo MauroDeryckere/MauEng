@@ -32,14 +32,30 @@ add_library(Renderer STATIC
 # Find Vulkan package
 find_package(Vulkan REQUIRED)
 
-# Add the Libs/ directory to the include paths
 
 # for loading models, only used in the renderer.
-set(BUILD_SHARED_LIBS OFF)
-set(ASSIMP_BUILD_ASSIMP_TOOLS OFF)
-set(ASSIMP_BUILD_TESTS OFF)
-set(ASSIMP_INSTALL OFF)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/Libs/Assimp)
+set(ASSIMP_BUILD_ASSIMP_TOOLS OFF CACHE BOOL "" FORCE)
+set(ASSIMP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(ASSIMP_INSTALL OFF CACHE BOOL "" FORCE)
+set(ASSIMP_BUILD_SAMPLES OFF CACHE BOOL "" FORCE)
+set(ASSIMP_NO_EXPORT ON CACHE BOOL "" FORCE)
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+
+# Disable all importers/exporters by default, then enable only glTF, FBX and OBJ importers
+set(ASSIMP_BUILD_ALL_IMPORTERS_BY_DEFAULT OFF CACHE BOOL "" FORCE)
+set(ASSIMP_BUILD_ALL_EXPORTERS_BY_DEFAULT OFF CACHE BOOL "" FORCE)
+set(ASSIMP_BUILD_GLTF_IMPORTER ON CACHE BOOL "" FORCE)
+set(ASSIMP_BUILD_FBX_IMPORTER ON CACHE BOOL "" FORCE)
+set(ASSIMP_BUILD_OBJ_IMPORTER ON CACHE BOOL "" FORCE)
+
+
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/Libs/Assimp EXCLUDE_FROM_ALL)
+
+# Organize Assimp targets in IDE folder
+get_property(assimp_targets DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Libs/Assimp PROPERTY BUILDSYSTEM_TARGETS)
+foreach(target ${assimp_targets})
+    set_target_properties(${target} PROPERTIES FOLDER "Libs/Assimp")
+endforeach()
 
 add_library(stb INTERFACE)
 target_include_directories(stb INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/Libs/stb)
