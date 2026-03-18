@@ -116,7 +116,7 @@ namespace MauEng
 			{
 				if (inputManager.IsActionExecuted("PROFILE"))
 				{
-					PROFILER.Start("Profiling/Run/Run");
+					ME_PROFILE_BEGIN_SESSION("Run", "Profiling/Run/Run", NUM_FRAMES_TO_PROFILE)
 				}
 
 				ME_PROFILE_FRAME()
@@ -181,7 +181,7 @@ namespace MauEng
 				std::this_thread::sleep_for(time.SleepTime());
 			}
 
-			PROFILER.Update();
+			ME_PROFILE_TICK()
 		}
 	}
 }

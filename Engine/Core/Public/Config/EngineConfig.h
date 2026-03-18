@@ -29,7 +29,6 @@ namespace MauEng
 #define USE_IMGUI 0
 
 #define ENABLE_PROFILER 0
-#define	USE_OPTICK_LIBRARY 0
 
 #ifdef MAUENG_DISTRUBUTION
 	#undef DISTRIBUTION_BUILD
@@ -63,19 +62,6 @@ namespace MauEng
 
 #if ENABLE_PROFILER
 	uint32_t constexpr NUM_FRAMES_TO_PROFILE{ 5 };
-
-	// Toggle using ME profiler (w/ google://tracing) or optick library
-	#ifdef MAUENG_USE_OPTICK
-		#undef USE_OPTICK_LIBRARY
-		#define USE_OPTICK_LIBRARY 1
-	#endif
-
-	#if USE_OPTICK_LIBRARY
-		#define USE_OPTICK 1
-	#else
-		#define USE_OPTICK 0
-	#endif
-
 #else
 	uint32_t constexpr NUM_FRAMES_TO_PROFILE{ 0 };
 #endif
